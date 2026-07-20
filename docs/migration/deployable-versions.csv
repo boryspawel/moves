@@ -1,0 +1,9 @@
+Aplikacja|Źródło bazowe|JDK main/master|OS kontenera lub obraz runtime main/master|Spring Boot main/master|Angular main/master|Źródła|Release ref|JDK release|OS kontenera release|Spring Boot release|Angular release
+gra-mateusza/core-service|main|21|eclipse-temurin:21-jre|3.3.0|nie dotyczy|backend/pom.xml; backend/core-service/pom.xml; backend/Dockerfile; ops/docker-compose.yml|brak|brak danych|brak danych|brak danych|brak danych
+gra-mateusza/api-gateway|main|21|eclipse-temurin:21-jre|3.3.0|nie dotyczy|backend/pom.xml; backend/api-gateway/pom.xml; backend/Dockerfile; ops/docker-compose.yml|brak|brak danych|brak danych|brak danych|brak danych
+gra-mateusza/frontend|main|nie dotyczy|nginx:1.25-alpine|nie dotyczy|^17.3.0|frontend/power-rpg-frontend/package.json; frontend/Dockerfile; ops/docker-compose.yml|brak|brak danych|brak danych|brak danych|brak danych
+infra/gra-mateusza/db-migrate|main|nie dotyczy|flyway/flyway:10.15.0|nie dotyczy|nie dotyczy|sql/Dockerfile; ops/docker-compose.yml|brak|brak danych|brak danych|brak danych|brak danych
+infra/gra-mateusza/postgres|main|nie dotyczy|postgres:16|nie dotyczy|nie dotyczy|ops/docker-compose.yml|brak|brak danych|brak danych|brak danych|brak danych
+infra/gra-mateusza/keycloak|main|nie dotyczy|keycloak/keycloak:26.4|nie dotyczy|nie dotyczy|ops/docker-compose.yml|brak|brak danych|brak danych|brak danych|brak danych
+infra/gra-mateusza/minio|main|nie dotyczy|minio/minio:latest|nie dotyczy|nie dotyczy|ops/docker-compose.yml|brak|brak danych|brak danych|brak danych|brak danych
+ruszsie/application|main|25|brak danych|4.1.0|nie dotyczy|pom.xml; compose.yaml|brak|brak danych|brak danych|brak danych|brak danych
