@@ -2,7 +2,7 @@
 
 ## Zasady pracy
 
-- Prompty z `promt.md` są wykonywane kolejno, bez modyfikowania `spec.md` ani repozytoriów źródłowych.
+- Prompty z `prompt.md` są wykonywane kolejno, bez modyfikowania `spec.md` ani repozytoriów źródłowych.
 - Źródła: `../gra-mateusza` i `../ruszsie`; nie wykonujemy merge historii ani cherry-picków.
 - Każde użycie Maven/JVM poprzedza aktywacja Java 25 przez SDKMAN w tej samej powłoce.
 - Brak MCP IntelliJ w bieżącym środowisku jest jawnym odstępstwem narzędziowym. Inspekcja odbywa się przez Git, `rg`, Maven i testy.
@@ -10,7 +10,7 @@
 
 ## Stan wejściowy
 
-- `moves`: branch `main`, HEAD `f049101ae62aa594e418a29ac632313a0e079a96`; `promt.md` i `spec.md` były już staged. Repo istniało przed Promptem 2.
+- `moves`: branch `main`, HEAD `f049101ae62aa594e418a29ac632313a0e079a96`; `prompt.md` i `spec.md` były już staged. Repo istniało przed Promptem 2.
 - `ruszsie`: branch `main`, HEAD `2d7656e8b1b8d5da145a1bf570a6985fa6b0b033`, working tree czysty.
 - `gra-mateusza`: podczas audytu stan zmienił się poza działaniami migracji. Początkowo odczytano HEAD `818707b4be91fe87d6a44f132260b9f8d4517f1d` i wiele lokalnych zmian. O 2026-07-20 16:00:17 +02:00 zmiany zostały zapisane w lokalnym commicie `0b994cb6e35319837a2c81de4fb9a556b1943b90`. Aktualnie branch `main` jest ahead 1 względem `origin/main`, a working tree zawiera nieśledzony `AGENTS.md`.
 - Wskazane SHA `gra-mateusza` (`bdb481...`, `fd539c...`, `f02551...`) nie istnieją w lokalnej bazie obiektów. Read-only próba pobrania patchy z publicznego GitHub zakończyła się HTTP 404. Nie przypisujemy im niezweryfikowanej zawartości.
