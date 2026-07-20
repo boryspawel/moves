@@ -70,7 +70,7 @@ Prompt 8 nie został rozpoczęty. Końcowy audyt musi objąć pełny backend ver
 
 ## Uwagi operacyjne
 
-- `promt.md` i `spec.md` były staged przed rozpoczęciem pracy; ich stan nie został wycofany.
+- `../../prompt.md` i `spec.md` były staged przed rozpoczęciem pracy; ich stan nie został wycofany.
 - Worktree `moves` zawiera liczne nowe, niecommitowane pliki zgodnie z wykonywaną migracją.
 - Nie należy uznawać Promptu 7 ani całej migracji za ukończone, dopóki powyższy dług blokujący nie zostanie zamknięty i Prompt 8 nie przejdzie.
 - Podczas edycji istniejących plików sporadycznie zawodził sandbox `bwrap` (`Failed RTM_NEWADDR`). W kilku miejscach po nieudanych próbach `apply_patch` zastosowano wąskie `sed -i`; należy polegać na diffie i buildzie, nie na założeniu poprawności tych zmian.
