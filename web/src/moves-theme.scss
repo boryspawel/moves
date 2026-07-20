@@ -1,0 +1,25 @@
+@use '@angular/material' as mat;
+
+html { @include mat.theme((color: (primary: mat.$azure-palette, tertiary: mat.$cyan-palette), typography: Roboto, density: 0)); }
+:root { color-scheme: dark; --background: #08111f; --surface: #101d2e; --surface-strong: #1a2a40; --line: #2c3d53; --ink: #f4f7fb; --muted: #a8b6c8; --accent: #76d7c4; --danger: #ff9a9a; }
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: radial-gradient(circle at top, #152d46 0, var(--background) 42rem); color: var(--ink); font-family: Roboto, system-ui, sans-serif; }
+body { min-width: 320px; }
+h1, h2, h3 { line-height: 1.15; letter-spacing: -.025em; }
+p { line-height: 1.6; }
+.skip-link { position: fixed; left: 1rem; top: -5rem; z-index: 100; background: white; color: black; padding: .75rem; }
+.skip-link:focus { top: 1rem; }
+.panel { background: color-mix(in srgb, var(--surface) 94%, transparent); border: 1px solid var(--line); border-radius: 1.25rem; padding: clamp(1.25rem, 3vw, 2rem); box-shadow: 0 20px 60px #0004; }
+.grid { display: grid; gap: 1rem; }
+.two-column { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+.form-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
+.full { grid-column: 1 / -1; }
+.muted { color: var(--muted); }
+.error { color: var(--danger); }
+.success { color: var(--accent); }
+.status { min-height: 1.5rem; }
+.card-list { display: grid; gap: 1rem; list-style: none; padding: 0; }
+.card-list > li { border: 1px solid var(--line); border-radius: 1rem; padding: 1rem; background: #ffffff08; }
+mat-form-field { width: 100%; }
+button + button, button + a, a + button { margin-left: .5rem; }
+:focus-visible { outline: 3px solid #ffd166; outline-offset: 3px; }

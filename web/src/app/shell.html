@@ -1,0 +1,29 @@
+<a class="skip-link" href="#main-content">Przejdź do treści</a>
+<mat-toolbar class="app-toolbar">
+  <a class="brand" routerLink="/" aria-label="moves — strona główna">moves</a>
+  <nav aria-label="Główna nawigacja">
+    @if (auth.authenticated()) {
+      <a mat-button routerLink="/onboarding" routerLinkActive="active">Profil</a>
+      <a mat-button routerLink="/catalog" routerLinkActive="active">Katalog</a>
+      @if (auth.hasRole('PARTICIPANT')) {
+        <a mat-button routerLink="/sessions" routerLinkActive="active">Sesje</a>
+        <a mat-button routerLink="/gamification" routerLinkActive="active">Punkty</a>
+      }
+      @if (auth.hasRole('SPECIALIST')) {
+        <a mat-button routerLink="/plan" routerLinkActive="active">Nowy plan</a>
+        <a mat-button routerLink="/specialist-alerts" routerLinkActive="active">Alerty</a>
+      }
+    }
+  </nav>
+  <span class="spacer"></span>
+  @if (auth.authenticated()) {
+    <span class="user-name">{{ auth.displayName() }}</span>
+    <button mat-stroked-button type="button" (click)="logout()">Wyloguj</button>
+  } @else {
+    <a mat-flat-button routerLink="/login">Zaloguj</a>
+  }
+</mat-toolbar>
+<main id="main-content" class="page-shell" tabindex="-1">
+  <router-outlet />
+</main>
+<footer>moves · bezpieczeństwo i prywatność są nadrzędne wobec mechanizmów motywacyjnych</footer>
