@@ -3,7 +3,7 @@ import Keycloak, { KeycloakProfile, KeycloakTokenParsed } from 'keycloak-js';
 import { environment } from '../../environments/environment';
 
 interface RealmToken extends KeycloakTokenParsed {
-  realm_access?: { roles?: string[] };
+  realm_access?: { roles: string[] };
 }
 
 @Injectable({ providedIn: 'root' })
