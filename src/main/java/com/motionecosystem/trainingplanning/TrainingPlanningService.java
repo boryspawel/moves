@@ -14,6 +14,7 @@ import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.specialist.SpecialistRelationshipService;
 import com.motionecosystem.trainingplanning.PlannedSession.SessionKind;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
+@RequiredArgsConstructor
 public class TrainingPlanningService {
 
     private final JdbcTemplate jdbc;
@@ -29,20 +31,6 @@ public class TrainingPlanningService {
     private final CatalogService catalog;
     private final AuditRecorder audit;
     private final Clock clock;
-
-    public TrainingPlanningService(JdbcTemplate jdbc,
-                                   CurrentAccountService accounts,
-                                   SpecialistRelationshipService relationships,
-                                   CatalogService catalog,
-                                   AuditRecorder audit,
-                                   Clock clock) {
-        this.jdbc = jdbc;
-        this.accounts = accounts;
-        this.relationships = relationships;
-        this.catalog = catalog;
-        this.audit = audit;
-        this.clock = clock;
-    }
 
     @Transactional
     public PlanBundle createSpecialistPlan(String subject, CreatePlanCommand command) {

@@ -12,12 +12,14 @@ import java.util.UUID;
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
+@RequiredArgsConstructor
 public class ParticipantSafetyService {
 
     public static final String NON_DIAGNOSTIC_NOTICE =
@@ -28,18 +30,6 @@ public class ParticipantSafetyService {
     private final ReadinessCheckInRepository checkIns;
     private final AuditRecorder audit;
     private final Clock clock;
-
-    ParticipantSafetyService(CurrentAccountService accounts,
-                             ParticipantRestrictionRepository restrictions,
-                             ReadinessCheckInRepository checkIns,
-                             AuditRecorder audit,
-                             Clock clock) {
-        this.accounts = accounts;
-        this.restrictions = restrictions;
-        this.checkIns = checkIns;
-        this.audit = audit;
-        this.clock = clock;
-    }
 
     @Transactional
     public SafetyView replaceRestrictions(String subject, Collection<String> requested) {

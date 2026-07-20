@@ -10,21 +10,18 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
+@RequiredArgsConstructor
 public class RecurringAvailabilityService {
 
     private final RecurringSlotRepository slots;
     private final Clock clock;
-
-    RecurringAvailabilityService(RecurringSlotRepository slots, Clock clock) {
-        this.slots = slots;
-        this.clock = clock;
-    }
 
     @Transactional
     public List<Slot> replace(UUID accountId, List<Slot> requested) {

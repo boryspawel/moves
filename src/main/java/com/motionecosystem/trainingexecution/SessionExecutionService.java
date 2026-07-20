@@ -16,6 +16,7 @@ import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.safety.ParticipantSafetyService;
 import com.motionecosystem.specialist.SpecialistRelationshipService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
+@RequiredArgsConstructor
 public class SessionExecutionService {
 
     private final JdbcTemplate jdbc;
@@ -32,22 +34,6 @@ public class SessionExecutionService {
     private final ParticipantSafetyService safety;
     private final AuditRecorder audit;
     private final Clock clock;
-
-    public SessionExecutionService(JdbcTemplate jdbc,
-                                   CurrentAccountService accounts,
-                                   SpecialistRelationshipService relationships,
-                                   CatalogService catalog,
-                                   ParticipantSafetyService safety,
-                                   AuditRecorder audit,
-                                   Clock clock) {
-        this.jdbc = jdbc;
-        this.accounts = accounts;
-        this.relationships = relationships;
-        this.catalog = catalog;
-        this.safety = safety;
-        this.audit = audit;
-        this.clock = clock;
-    }
 
     @Transactional
     public ExecutionView declare(String subject, UUID plannedSessionId, String idempotencyKey,

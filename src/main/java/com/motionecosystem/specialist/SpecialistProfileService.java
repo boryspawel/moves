@@ -4,21 +4,18 @@ import java.time.Clock;
 import java.util.Optional;
 import java.util.UUID;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
+@RequiredArgsConstructor
 public class SpecialistProfileService {
 
     private final SpecialistProfileRepository profiles;
     private final Clock clock;
-
-    SpecialistProfileService(SpecialistProfileRepository profiles, Clock clock) {
-        this.profiles = profiles;
-        this.clock = clock;
-    }
 
     @Transactional
     public ProfileView save(UUID accountId, String displayName, SpecialistKind kind) {

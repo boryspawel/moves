@@ -15,6 +15,7 @@ import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.trainingexecution.ExecutionQualificationPort;
 import com.motionecosystem.trainingexecution.ExecutionQualificationPort.QualifyingExecution;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
+@RequiredArgsConstructor
 public class GamificationService {
 
     private final JdbcTemplate jdbc;
@@ -29,18 +31,6 @@ public class GamificationService {
     private final ExecutionQualificationPort executions;
     private final AuditRecorder audit;
     private final Clock clock;
-
-    public GamificationService(JdbcTemplate jdbc,
-                               CurrentAccountService accounts,
-                               ExecutionQualificationPort executions,
-                               AuditRecorder audit,
-                               Clock clock) {
-        this.jdbc = jdbc;
-        this.accounts = accounts;
-        this.executions = executions;
-        this.audit = audit;
-        this.clock = clock;
-    }
 
     @Transactional
     public ProfileView updateProfile(String subject, ProfileCommand command) {

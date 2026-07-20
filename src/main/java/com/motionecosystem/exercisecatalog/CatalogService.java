@@ -12,28 +12,20 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.motionecosystem.audit.AuditRecorder;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
+@RequiredArgsConstructor
 public class CatalogService {
 
     private final ExerciseRepository exercises;
     private final ExerciseVersionRepository versions;
     private final AuditRecorder audit;
     private final Clock clock;
-
-    CatalogService(ExerciseRepository exercises,
-                   ExerciseVersionRepository versions,
-                   AuditRecorder audit,
-                   Clock clock) {
-        this.exercises = exercises;
-        this.versions = versions;
-        this.audit = audit;
-        this.clock = clock;
-    }
 
     @Transactional
     public VersionView create(String actorSubject, String canonicalName, VersionCommand requested) {

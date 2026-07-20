@@ -5,21 +5,18 @@ import java.util.Objects;
 
 import com.motionecosystem.identityaccess.domain.PrincipalAccount;
 import com.motionecosystem.identityaccess.domain.PrincipalAccountRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
+@RequiredArgsConstructor
 public class CurrentAccountService {
 
     private final PrincipalAccountRepository accounts;
     private final Clock clock;
-
-    public CurrentAccountService(PrincipalAccountRepository accounts, Clock clock) {
-        this.accounts = accounts;
-        this.clock = clock;
-    }
 
     @Transactional
     public CurrentAccount requireActive(String externalSubject) {

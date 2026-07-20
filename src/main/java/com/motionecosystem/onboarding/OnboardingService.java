@@ -12,12 +12,14 @@ import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.participant.ParticipantProfileService;
 import com.motionecosystem.specialist.SpecialistKind;
 import com.motionecosystem.specialist.SpecialistProfileService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
+@RequiredArgsConstructor
 public class OnboardingService {
 
     private final CurrentAccountService accounts;
@@ -26,20 +28,6 @@ public class OnboardingService {
     private final SpecialistProfileService specialistProfiles;
     private final RecurringAvailabilityService availability;
     private final AuditRecorder audit;
-
-    OnboardingService(CurrentAccountService accounts,
-                      LegalAcknowledgementService legal,
-                      ParticipantProfileService participantProfiles,
-                      SpecialistProfileService specialistProfiles,
-                      RecurringAvailabilityService availability,
-                      AuditRecorder audit) {
-        this.accounts = accounts;
-        this.legal = legal;
-        this.participantProfiles = participantProfiles;
-        this.specialistProfiles = specialistProfiles;
-        this.availability = availability;
-        this.audit = audit;
-    }
 
     @Transactional
     public State state(String subject) {
