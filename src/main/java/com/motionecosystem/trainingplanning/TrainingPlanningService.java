@@ -1,0 +1,233 @@
+package com.motionecosystem.trainingplanning;
+
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.time.Clock;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+import com.motionecosystem.audit.AuditRecorder;
+import com.motionecosystem.exercisecatalog.CatalogService;
+import com.motionecosystem.identityaccess.api.CurrentAccount;
+import com.motionecosystem.identityaccess.api.CurrentAccountService;
+import com.motionecosystem.identityaccess.api.ProfileType;
+import com.motionecosystem.specialist.SpecialistRelationshipService;
+import com.motionecosystem.trainingplanning.PlannedSession.SessionKind;
+import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+@Service
+public class TrainingPlanningService {
+
+    private final JdbcTemplate jdbc;
+    private final CurrentAccountService accounts;
+    private final SpecialistRelationshipService relationships;
+    private final CatalogService catalog;
+    private final AuditRecorder audit;
+    private final Clock clock;
+
+    public TrainingPlanningService(JdbcTemplate jdbc,
+                                   CurrentAccountService accounts,
+                                   SpecialistRelationshipService relationships,
+                                   CatalogService catalog,
+                                   AuditRecorder audit,
+                                   Clock clock) {
+        this.jdbc = jdbc;
+        this.accounts = accounts;
+        this.relationships = relationships;
+        this.catalog = catalog;
+        this.audit = audit;
+        this.clock = clock;
+    }
+
+    @Transactional
+    public PlanBundle createSpecialistPlan(String subject, CreatePlanCommand command) {
+        CurrentAccount specialist = accounts.requireActive(subject);
+        requireProfile(specialist, ProfileType.SPECIALIST, "specialist profile is required");
+        if (command == null || command.participantAccountId() == null) {
+            throw badRequest("participant account is required");
+        }
+        requireParticipant(command.participantAccountId());
+        relationships.requireActive(specialist.id(), command.participantAccountId());
+        List<PrescriptionCommand> requested = validatePrescriptions(command.prescriptions());
+        requested.forEach(item -> catalog.published(item.exerciseVersionId()));
+
+        Instant now = clock.instant();
+        TrainingGoal goal = new TrainingGoal(UUID.randomUUID(), command.participantAccountId(),
+                text(command.goalName(), "goal name"), specialist.id(), now);
+        TrainingPlan plan = new TrainingPlan(UUID.randomUUID(), goal.id(), command.participantAccountId(),
+                specialist.id(), text(command.planName(), "plan name"),
+                TrainingPlan.PlanMode.SPECIALIST_ASSIGNED, TrainingPlan.PlanStatus.ACTIVE, now);
+        TrainingCycle cycle = new TrainingCycle(UUID.randomUUID(), plan.id(), 1,
+                text(command.cycleName(), "cycle name"));
+        Microcycle microcycle = new Microcycle(UUID.randomUUID(), cycle.id(), 1,
+                text(command.microcycleName(), "microcycle name"));
+        SessionKind kind = command.sessionKind() == null ? SessionKind.SELF_GUIDED : command.sessionKind();
+        PlannedSession session = new PlannedSession(UUID.randomUUID(), microcycle.id(),
+                command.participantAccountId(), text(command.sessionTitle(), "session title"), kind,
+                PlannedSession.SessionStatus.ASSIGNED, now);
+
+        jdbc.update("""
+                INSERT INTO training_planning.training_goal
+                    (id, participant_account_id, name, created_by_account_id, created_at)
+                VALUES (?, ?, ?, ?, ?)
+                """, goal.id(), goal.participantAccountId(), goal.name(), goal.createdByAccountId(),
+                Timestamp.from(goal.createdAt()));
+        jdbc.update("""
+                INSERT INTO training_planning.training_plan
+                    (id, goal_id, participant_account_id, created_by_account_id, name, plan_mode, status, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, plan.id(), plan.goalId(), plan.participantAccountId(), plan.createdByAccountId(), plan.name(),
+                plan.mode().name(), plan.status().name(), Timestamp.from(plan.createdAt()));
+        jdbc.update("INSERT INTO training_planning.training_cycle (id, plan_id, sequence_number, name) VALUES (?, ?, ?, ?)",
+                cycle.id(), cycle.planId(), cycle.sequenceNumber(), cycle.name());
+        jdbc.update("INSERT INTO training_planning.microcycle (id, cycle_id, sequence_number, name) VALUES (?, ?, ?, ?)",
+                microcycle.id(), microcycle.cycleId(), microcycle.sequenceNumber(), microcycle.name());
+        jdbc.update("""
+                INSERT INTO training_planning.planned_session
+                    (id, microcycle_id, participant_account_id, title, session_kind, status, assigned_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, session.id(), session.microcycleId(), session.participantAccountId(), session.title(),
+                session.kind().name(), session.status().name(), Timestamp.from(session.assignedAt()));
+
+        List<ExercisePrescription> prescriptions = java.util.stream.IntStream.range(0, requested.size())
+                .mapToObj(index -> prescription(session.id(), index + 1, requested.get(index)))
+                .toList();
+        prescriptions.forEach(item -> jdbc.update("""
+                INSERT INTO training_planning.exercise_prescription
+                    (id, planned_session_id, exercise_version_id, position, target_sets,
+                     target_repetitions, target_duration_seconds, target_load_kg, notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, item.id(), item.plannedSessionId(), item.exerciseVersionId(), item.position(),
+                item.targetSets(), item.targetRepetitions(), item.targetDurationSeconds(), item.targetLoadKg(), item.notes()));
+        audit.record(subject, "TRAINING_PLAN_ASSIGNED", "TrainingPlan", plan.id());
+        return new PlanBundle(goal, plan, cycle, microcycle, session, prescriptions);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SessionView> participantSessions(String subject) {
+        CurrentAccount participant = accounts.requireActive(subject);
+        requireProfile(participant, ProfileType.PARTICIPANT, "participant profile is required");
+        return jdbc.query("""
+                SELECT id, title, session_kind, status, assigned_at
+                FROM training_planning.planned_session
+                WHERE participant_account_id = ?
+                ORDER BY assigned_at, id
+                """, (rs, row) -> new SessionView(
+                rs.getObject("id", UUID.class),
+                rs.getString("title"),
+                SessionKind.valueOf(rs.getString("session_kind")),
+                PlannedSession.SessionStatus.valueOf(rs.getString("status")),
+                rs.getTimestamp("assigned_at").toInstant(),
+                prescriptions(rs.getObject("id", UUID.class))), participant.id());
+    }
+
+    private List<PrescriptionView> prescriptions(UUID sessionId) {
+        return jdbc.query("""
+                SELECT id, exercise_version_id, position, target_sets, target_repetitions,
+                       target_duration_seconds, target_load_kg, notes
+                FROM training_planning.exercise_prescription
+                WHERE planned_session_id = ?
+                ORDER BY position
+                """, (rs, row) -> new PrescriptionView(
+                rs.getObject("id", UUID.class), rs.getObject("exercise_version_id", UUID.class),
+                rs.getInt("position"), (Integer) rs.getObject("target_sets"),
+                (Integer) rs.getObject("target_repetitions"),
+                (Integer) rs.getObject("target_duration_seconds"), rs.getBigDecimal("target_load_kg"),
+                rs.getString("notes")), sessionId);
+    }
+
+    private void requireParticipant(UUID accountId) {
+        List<String> types = jdbc.query("""
+                SELECT profile_type FROM identity_access.principal_account
+                WHERE id = ? AND status = 'ACTIVE'
+                """, (rs, row) -> rs.getString(1), accountId);
+        if (types.size() != 1 || !ProfileType.PARTICIPANT.name().equals(types.getFirst())) {
+            throw badRequest("active participant account is required");
+        }
+    }
+
+    private static ExercisePrescription prescription(UUID sessionId, int position, PrescriptionCommand command) {
+        if (command.targetSets() != null && command.targetSets() <= 0
+                || command.targetRepetitions() != null && command.targetRepetitions() <= 0
+                || command.targetDurationSeconds() != null && command.targetDurationSeconds() <= 0
+                || command.targetLoadKg() != null && command.targetLoadKg().signum() < 0) {
+            throw badRequest("prescription targets are outside range");
+        }
+        String notes = optionalText(command.notes(), 500, "prescription notes");
+        return new ExercisePrescription(UUID.randomUUID(), sessionId, command.exerciseVersionId(), position,
+                command.targetSets(), command.targetRepetitions(), command.targetDurationSeconds(),
+                command.targetLoadKg(), notes);
+    }
+
+    private static List<PrescriptionCommand> validatePrescriptions(List<PrescriptionCommand> requested) {
+        if (requested == null || requested.isEmpty()) {
+            throw badRequest("at least one exercise prescription is required");
+        }
+        requested.forEach(item -> {
+            if (item == null || item.exerciseVersionId() == null) {
+                throw badRequest("every exercise prescription must reference an exercise version");
+            }
+        });
+        return List.copyOf(requested);
+    }
+
+    private static void requireProfile(CurrentAccount account, ProfileType expected, String message) {
+        if (account.profileType() != expected) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, message);
+        }
+    }
+
+    private static String text(String value, String field) {
+        String normalized = value == null ? "" : value.trim();
+        if (normalized.isEmpty() || normalized.length() > 160) {
+            throw badRequest(field + " is required and must not exceed 160 characters");
+        }
+        return normalized;
+    }
+
+    private static String optionalText(String value, int max, String field) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String normalized = value.trim();
+        if (normalized.length() > max) {
+            throw badRequest(field + " is too long");
+        }
+        return normalized;
+    }
+
+    private static ResponseStatusException badRequest(String message) {
+        return new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
+    }
+
+    public record CreatePlanCommand(UUID participantAccountId, String goalName, String planName,
+                                    String cycleName, String microcycleName, String sessionTitle,
+                                    SessionKind sessionKind, List<PrescriptionCommand> prescriptions) {
+    }
+
+    public record PrescriptionCommand(UUID exerciseVersionId, Integer targetSets,
+                                      Integer targetRepetitions, Integer targetDurationSeconds,
+                                      BigDecimal targetLoadKg, String notes) {
+    }
+
+    public record PlanBundle(TrainingGoal goal, TrainingPlan plan, TrainingCycle cycle,
+                             Microcycle microcycle, PlannedSession session,
+                             List<ExercisePrescription> prescriptions) {
+    }
+
+    public record SessionView(UUID id, String title, SessionKind kind,
+                              PlannedSession.SessionStatus status, Instant assignedAt,
+                              List<PrescriptionView> prescriptions) {
+    }
+
+    public record PrescriptionView(UUID id, UUID exerciseVersionId, int position,
+                                   Integer targetSets, Integer targetRepetitions,
+                                   Integer targetDurationSeconds, BigDecimal targetLoadKg,
+                                   String notes) {
+    }
+}

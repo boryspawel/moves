@@ -1,0 +1,38 @@
+{
+  "realm": "motion-local",
+  "enabled": true,
+  "roles": {
+    "realm": [
+      { "name": "PARTICIPANT" },
+      { "name": "SPECIALIST" },
+      { "name": "CONTENT_ADMIN" },
+      { "name": "SYSTEM_ADMIN" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "motion-web",
+      "name": "Motion Web",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["http://localhost:4200/*"],
+      "webOrigins": ["http://localhost:4200"],
+      "attributes": { "pkce.code.challenge.method": "S256" },
+      "protocolMappers": [
+        {
+          "name": "motion-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "motion-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ]
+}
