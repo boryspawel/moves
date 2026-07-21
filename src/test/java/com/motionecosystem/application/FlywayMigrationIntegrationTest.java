@@ -42,6 +42,28 @@ class FlywayMigrationIntegrationTest {
     }
 
     @Test
+    void createsIndexedAnatomyReferenceSchemaWithoutProductionTaxonomySeed() {
+        Integer applied = jdbc.queryForObject("""
+                SELECT COUNT(*) FROM flyway_schema_history
+                WHERE success = TRUE AND script = 'V007__create_anatomy_reference.sql'
+                """, Integer.class);
+        Integer tables = jdbc.queryForObject("""
+                SELECT COUNT(*) FROM information_schema.tables
+                WHERE table_schema = 'anatomy_reference'
+                  AND table_name IN ('anatomical_structure', 'anatomical_structure_relation', 'hierarchy_guard')
+                """, Integer.class);
+        Integer taxonomyRows = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM anatomy_reference.anatomical_structure", Integer.class);
+        Integer guardRows = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM anatomy_reference.hierarchy_guard", Integer.class);
+
+        assertThat(applied).isEqualTo(1);
+        assertThat(tables).isEqualTo(3);
+        assertThat(taxonomyRows).isZero();
+        assertThat(guardRows).isEqualTo(1);
+    }
+
+    @Test
     @Transactional
     void keepsLegacyOfflineAppointmentsButRejectsNewPlanningAppointments() {
         UUID microcycleId = planningHierarchy();

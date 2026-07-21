@@ -1,5 +1,6 @@
 package com.motionecosystem.architecture;
 
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
@@ -29,6 +30,30 @@ class ModuleBoundaryTest {
                         "jakarta.persistence..",
                         "..api..")
                 .allowEmptyShould(true)
+                .check(productionClasses);
+    }
+
+    @Test
+    void anatomyDomainIsFrameworkIndependentAndOnlyPublicApiCanBeUsedAcrossModules() {
+        noClasses().that().resideInAPackage("com.motionecosystem.anatomyreference.domain..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "org.springframework..",
+                        "jakarta.persistence..",
+                        "com.motionecosystem.anatomyreference.api..",
+                        "com.motionecosystem.anatomyreference.application..",
+                        "com.motionecosystem.anatomyreference.infrastructure..")
+                .check(productionClasses);
+
+        noClasses().that().resideOutsideOfPackage("com.motionecosystem.anatomyreference..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "com.motionecosystem.anatomyreference.domain..",
+                        "com.motionecosystem.anatomyreference.application..",
+                        "com.motionecosystem.anatomyreference.infrastructure..")
+                .check(productionClasses);
+
+        classes().that().resideInAPackage("com.motionecosystem.anatomyreference.infrastructure..")
+                .and().areAnnotatedWith(jakarta.persistence.Entity.class)
+                .should().notBePublic()
                 .check(productionClasses);
     }
 
