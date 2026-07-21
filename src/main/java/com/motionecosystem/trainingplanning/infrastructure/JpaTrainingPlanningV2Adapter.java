@@ -244,6 +244,20 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
                         item.high, item.unit, item.action)).toList()));
     }
 
+    @Override
+    public Optional<PlanRevisionSnapshot> findActiveRevision(UUID participantAccountId) {
+        List<UUID> revisionIds = entityManager.createQuery("""
+                SELECT plan.currentRevisionId FROM TrainingPlanJpaEntity plan
+                WHERE plan.participantAccountId = :participantAccountId
+                  AND plan.status = 'ACTIVE' AND plan.currentRevisionId IS NOT NULL
+                ORDER BY plan.id
+                """, UUID.class)
+                .setParameter("participantAccountId", participantAccountId)
+                .setMaxResults(1)
+                .getResultList();
+        return revisionIds.stream().findFirst().flatMap(this::findRevision);
+    }
+
     private void touch(UUID revisionId, long expectedVersion, Instant updatedAt) {
         PlanRevisionJpaEntity revision = entityManager.find(PlanRevisionJpaEntity.class, revisionId);
         if (revision == null) {

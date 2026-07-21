@@ -12,6 +12,8 @@ public interface PlanRevisionQueryPort {
 
     Optional<PlanRevisionSnapshot> findRevision(UUID revisionId);
 
+    Optional<PlanRevisionSnapshot> findActiveRevision(UUID participantAccountId);
+
     record PlanRevisionSnapshot(
             UUID revisionId, UUID planId, UUID participantAccountId, int revisionNumber,
             UUID basedOnRevisionId, long revisionVersion, String status,
