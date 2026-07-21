@@ -240,9 +240,11 @@ class GamificationIntegrationTest {
                 """, goal, participantId, participantId);
         jdbc.update("""
                 INSERT INTO training_planning.training_plan
-                    (id, goal_id, participant_account_id, created_by_account_id, name, plan_mode, status, created_at)
-                VALUES (?, ?, ?, ?, 'Self test plan', 'SELF_DIRECTED', 'ACTIVE', now())
-                """, plan, goal, participantId, participantId);
+                    (id, goal_id, participant_account_id, created_by_account_id, name, plan_mode,
+                     status, created_at, purpose, owner_account_id)
+                VALUES (?, ?, ?, ?, 'Self test plan', 'SELF_DIRECTED', 'ACTIVE', now(),
+                        'Legacy gamification fixture', ?)
+                """, plan, goal, participantId, participantId, participantId);
         jdbc.update("INSERT INTO training_planning.training_cycle (id, plan_id, sequence_number, name) VALUES (?, ?, 1, 'Cycle')",
                 cycle, plan);
         jdbc.update("INSERT INTO training_planning.microcycle (id, cycle_id, sequence_number, name) VALUES (?, ?, 1, 'Week')",

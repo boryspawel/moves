@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -29,9 +31,10 @@ class TrainingPlanningController {
 
     @PostMapping("/training-plans")
     @PreAuthorize("hasRole('SPECIALIST')")
-    @Operation(summary = "Create and assign a simple specialist-authored training plan")
+    @Operation(summary = "Deprecated V1 plan creation endpoint", deprecated = true)
     PlanBundle create(@AuthenticationPrincipal Jwt jwt, @RequestBody CreatePlanCommand command) {
-        return planning.createSpecialistPlan(jwt.getSubject(), command);
+        throw new ResponseStatusException(HttpStatus.GONE,
+                "V1 active-plan creation was retired; use the V2 draft and revision workflow");
     }
 
     @GetMapping("/planned-sessions")

@@ -136,9 +136,10 @@ class FlywayMigrationIntegrationTest {
         jdbc.update("""
                 INSERT INTO training_planning.training_plan
                     (id, goal_id, participant_account_id, created_by_account_id, name,
-                     plan_mode, status, created_at)
-                VALUES (?, ?, ?, ?, 'Migration plan', 'SPECIALIST_ASSIGNED', 'ACTIVE', now())
-                """, planId, goalId, participantId, authorId);
+                     plan_mode, status, created_at, purpose, owner_account_id)
+                VALUES (?, ?, ?, ?, 'Migration plan', 'SPECIALIST_ASSIGNED', 'ACTIVE', now(),
+                        'Legacy migration fixture', ?)
+                """, planId, goalId, participantId, authorId, authorId);
         jdbc.update("""
                 INSERT INTO training_planning.training_cycle (id, plan_id, sequence_number, name)
                 VALUES (?, ?, 1, 'Migration cycle')

@@ -96,15 +96,7 @@ class TrainingPlanningExecutionIntegrationTest {
 
     @Test
     void activeSpecialistAssignsExactVersionAndParticipantDeclaresIdempotentExecution() throws Exception {
-        mvc.perform(post("/api/v1/training-plans")
-                        .with(role("specialist", "SPECIALIST"))
-                        .contentType("application/json")
-                        .content(planRequest("SELF_GUIDED")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.plan.mode").value("SPECIALIST_ASSIGNED"))
-                .andExpect(jsonPath("$.session.kind").value("SELF_GUIDED"))
-                .andExpect(jsonPath("$.prescriptions[0].exerciseVersionId")
-                        .value(exerciseVersionId.toString()));
+        createPlan();
 
         UUID sessionId = jdbc.queryForObject("SELECT id FROM training_planning.planned_session", UUID.class);
         UUID prescriptionId = jdbc.queryForObject(
@@ -175,13 +167,13 @@ class TrainingPlanningExecutionIntegrationTest {
                         .with(role("foreign-specialist", "SPECIALIST"))
                         .contentType("application/json")
                         .content(planRequest("SELF_GUIDED")))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isGone());
 
         mvc.perform(post("/api/v1/training-plans")
                         .with(role("specialist", "SPECIALIST"))
                         .contentType("application/json")
                         .content(planRequest("OFFLINE_APPOINTMENT")))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isGone());
 
         assertThat(jdbc.queryForObject(
                 "SELECT COUNT(*) FROM training_planning.planned_session", Long.class)).isZero();
@@ -261,6 +253,13 @@ class TrainingPlanningExecutionIntegrationTest {
         mvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.paths['/api/v1/training-plans']").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/training-plans'].post.deprecated").value(true))
+                .andExpect(jsonPath("$.paths['/api/v2/training-plans']").exists())
+                .andExpect(jsonPath("$.paths['/api/v2/training-plans/revisions/{revisionId}/goals']").exists())
+                .andExpect(jsonPath("$.paths['/api/v2/training-plans/revisions/{revisionId}/prescriptions']")
+                        .exists())
+                .andExpect(jsonPath("$.paths['/api/v2/training-plans/revisions/{revisionId}/structural-validation']")
+                        .exists())
                 .andExpect(jsonPath("$.paths['/api/v1/planned-sessions/{sessionId}/executions']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/session-executions/{executionId}/corrections']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/specialist/participants/{participantAccountId}/executions']")
@@ -302,11 +301,61 @@ class TrainingPlanningExecutionIntegrationTest {
     }
 
     private void createPlan() throws Exception {
-        mvc.perform(post("/api/v1/training-plans")
-                        .with(role("specialist", "SPECIALIST"))
-                        .contentType("application/json")
-                        .content(planRequest("SELF_GUIDED")))
-                .andExpect(status().isOk());
+        UUID goalId = UUID.randomUUID();
+        UUID planId = UUID.randomUUID();
+        UUID revisionId = UUID.randomUUID();
+        UUID cycleId = UUID.randomUUID();
+        UUID microcycleId = UUID.randomUUID();
+        UUID sessionId = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO training_planning.training_goal
+                    (id, participant_account_id, name, created_by_account_id, created_at,
+                     perspective, category, title, priority, status)
+                VALUES (?, ?, 'Legacy execution goal', ?, now(),
+                        'GENERAL_FITNESS', 'LEGACY', 'Legacy execution goal', 50, 'ACTIVE')
+                """, goalId, participantId, specialistId);
+        jdbc.update("""
+                INSERT INTO training_planning.training_plan
+                    (id, goal_id, participant_account_id, created_by_account_id, name,
+                     plan_mode, status, created_at, purpose, owner_account_id, version)
+                VALUES (?, ?, ?, ?, 'Legacy execution fixture',
+                        'SPECIALIST_ASSIGNED', 'ACTIVE', now(), 'Legacy execution fixture', ?, 0)
+                """, planId, goalId, participantId, specialistId, specialistId);
+        jdbc.update("""
+                INSERT INTO training_planning.plan_revision
+                    (id, plan_id, revision_number, status, phase_intent, author_account_id,
+                     author_capability, migration_origin, assessment_status,
+                     draft_updated_at, created_at, version)
+                VALUES (?, ?, 1, 'ACTIVE', 'Legacy execution fixture', ?, 'LEGACY_AUTHOR',
+                        'LEGACY_V1', 'NOT_ASSESSED', now(), now(), 0)
+                """, revisionId, planId, specialistId);
+        jdbc.update("UPDATE training_planning.training_plan SET current_revision_id = ? WHERE id = ?",
+                revisionId, planId);
+        jdbc.update("UPDATE training_planning.training_goal SET revision_id = ? WHERE id = ?",
+                revisionId, goalId);
+        jdbc.update("""
+                INSERT INTO training_planning.training_cycle
+                    (id, plan_id, revision_id, sequence_number, name, phase_intent)
+                VALUES (?, ?, ?, 1, 'Legacy execution cycle', 'Legacy fixture')
+                """, cycleId, planId, revisionId);
+        jdbc.update("""
+                INSERT INTO training_planning.microcycle
+                    (id, cycle_id, sequence_number, name, phase_intent)
+                VALUES (?, ?, 1, 'Legacy execution microcycle', 'Legacy fixture')
+                """, microcycleId, cycleId);
+        jdbc.update("""
+                INSERT INTO training_planning.planned_session
+                    (id, microcycle_id, participant_account_id, title, session_kind,
+                     status, assigned_at, creation_source)
+                VALUES (?, ?, ?, 'Supported strength', 'SELF_GUIDED',
+                        'ASSIGNED', now(), 'LEGACY_V1')
+                """, sessionId, microcycleId, participantId);
+        jdbc.update("""
+                INSERT INTO training_planning.exercise_prescription
+                    (id, planned_session_id, exercise_version_id, position,
+                     target_sets, target_repetitions, target_load_kg, notes)
+                VALUES (?, ?, ?, 1, 3, 8, 0, 'Legacy execution fixture')
+                """, UUID.randomUUID(), sessionId, exerciseVersionId);
     }
 
     private UUID sessionId() {

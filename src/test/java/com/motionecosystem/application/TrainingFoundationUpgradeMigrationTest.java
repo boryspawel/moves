@@ -50,6 +50,18 @@ class TrainingFoundationUpgradeMigrationTest {
                     SELECT contraindication_tag FROM exercise_catalog.exercise_version_contraindication
                     WHERE exercise_version_id = ?
                     """, String.class, exerciseVersionId)).containsExactly("LEGACY_KNEE_TAG");
+            assertThat(jdbc.queryForMap("""
+                    SELECT revision.revision_number, revision.migration_origin,
+                           revision.assessment_status, revision.status
+                    FROM training_planning.planned_session session
+                    JOIN training_planning.microcycle microcycle ON microcycle.id = session.microcycle_id
+                    JOIN training_planning.training_cycle cycle ON cycle.id = microcycle.cycle_id
+                    JOIN training_planning.plan_revision revision ON revision.id = cycle.revision_id
+                    WHERE session.id = ?
+                    """, sessionId)).containsEntry("revision_number", 1)
+                    .containsEntry("migration_origin", "LEGACY_V1")
+                    .containsEntry("assessment_status", "NOT_ASSESSED")
+                    .containsEntry("status", "ACTIVE");
         }
     }
 

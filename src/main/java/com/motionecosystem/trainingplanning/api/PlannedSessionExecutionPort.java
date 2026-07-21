@@ -19,5 +19,5 @@ public interface PlannedSessionExecutionPort {
     record PrescriptionSnapshot(UUID id, UUID exerciseVersionId, int position) {
     }
 
-    enum SessionState { ASSIGNED, COMPLETED, CANCELLED }
+    enum SessionState { DRAFT, ASSIGNED, COMPLETED, CANCELLED }
 }

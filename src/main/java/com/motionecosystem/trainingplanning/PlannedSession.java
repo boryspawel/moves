@@ -8,5 +8,5 @@ public record PlannedSession(UUID id, UUID microcycleId, UUID participantAccount
                              Instant assignedAt) {
 
     public enum SessionKind { SELF_GUIDED, OFFLINE_APPOINTMENT }
-    public enum SessionStatus { ASSIGNED, COMPLETED, CANCELLED }
+    public enum SessionStatus { DRAFT, ASSIGNED, COMPLETED, CANCELLED }
 }

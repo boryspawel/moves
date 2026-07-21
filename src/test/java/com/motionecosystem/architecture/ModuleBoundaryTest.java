@@ -70,6 +70,20 @@ class ModuleBoundaryTest {
     }
 
     @Test
+    void trainingPlanningIsConsumedOnlyThroughPublicSnapshotPorts() {
+        noClasses().that().resideOutsideOfPackage("com.motionecosystem.trainingplanning..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "com.motionecosystem.trainingplanning",
+                        "com.motionecosystem.trainingplanning.infrastructure..")
+                .check(productionClasses);
+
+        classes().that().resideInAPackage("com.motionecosystem.trainingplanning.infrastructure..")
+                .and().areAnnotatedWith(jakarta.persistence.Entity.class)
+                .should().notBePublic()
+                .check(productionClasses);
+    }
+
+    @Test
     void modulesDoNotUseAnotherModulesInfrastructureOrRepositories() {
         noClasses().that().resideOutsideOfPackages(
                         "com.motionecosystem.trainingplanning..")

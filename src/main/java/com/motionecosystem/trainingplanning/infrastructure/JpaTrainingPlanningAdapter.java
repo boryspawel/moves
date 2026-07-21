@@ -41,9 +41,11 @@ public class JpaTrainingPlanningAdapter implements TrainingPlanningPersistence, 
         List<PlannedSessionJpaEntity> sessions = entityManager.createQuery("""
                 SELECT session FROM PlannedSessionJpaEntity session
                 WHERE session.participantAccountId = :participantAccountId
+                  AND session.status <> :draftStatus
                 ORDER BY session.assignedAt, session.id
                 """, PlannedSessionJpaEntity.class)
                 .setParameter("participantAccountId", participantAccountId)
+                .setParameter("draftStatus", PlannedSession.SessionStatus.DRAFT)
                 .getResultList();
         if (sessions.isEmpty()) {
             return List.of();
