@@ -30,6 +30,7 @@ class TrainingFoundationUpgradeMigrationTest {
             UUID participantAccountId = insertLegacyAccount(jdbc, "legacy-participant", "PARTICIPANT");
             UUID specialistAccountId = insertLegacyAccount(jdbc, "legacy-specialist", "SPECIALIST");
             insertLegacySpecialistProfile(jdbc, specialistAccountId);
+            insertLegacyParticipantRestriction(jdbc, participantAccountId);
 
             Flyway.configure()
                     .dataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())
@@ -77,6 +78,13 @@ class TrainingFoundationUpgradeMigrationTest {
                     SELECT verification_status FROM specialist.professional_scope
                     WHERE specialist_account_id = ? AND scope_type = 'TRAINER'
                     """, String.class, specialistAccountId)).isEqualTo("VERIFIED");
+            assertThat(jdbc.queryForObject("""
+                    SELECT contraindication_tag FROM safety.participant_restriction
+                    WHERE account_id = ?
+                    """, String.class, participantAccountId)).isEqualTo("LEGACY_KNEE_TAG");
+            assertThat(jdbc.queryForObject("""
+                    SELECT count(*) FROM safety.restriction WHERE participant_account_id = ?
+                    """, Integer.class, participantAccountId)).isZero();
         }
     }
 
@@ -153,6 +161,14 @@ class TrainingFoundationUpgradeMigrationTest {
                 INSERT INTO specialist.specialist_profile
                     (id, account_id, display_name, specialist_kind, created_at, updated_at, version)
                 VALUES (?, ?, 'Legacy trainer', 'TRAINER', now(), now(), 0)
+                """, UUID.randomUUID(), accountId);
+    }
+
+    private static void insertLegacyParticipantRestriction(JdbcTemplate jdbc, UUID accountId) {
+        jdbc.update("""
+                INSERT INTO safety.participant_restriction
+                    (id, account_id, contraindication_tag, recorded_at)
+                VALUES (?, ?, 'LEGACY_KNEE_TAG', now())
                 """, UUID.randomUUID(), accountId);
     }
 }

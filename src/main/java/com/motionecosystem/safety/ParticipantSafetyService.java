@@ -2,11 +2,7 @@ package com.motionecosystem.safety;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 import java.util.UUID;
 
 import com.motionecosystem.audit.AuditRecorder;
@@ -30,20 +26,6 @@ public class ParticipantSafetyService {
     private final ReadinessCheckInRepository checkIns;
     private final AuditRecorder audit;
     private final Clock clock;
-
-    @Transactional
-    public SafetyView replaceRestrictions(String subject, Collection<String> requested) {
-        CurrentAccount account = accounts.requireActive(subject);
-        Set<String> tags = normalizeTags(requested);
-        restrictions.deleteByAccountId(account.id());
-        restrictions.flush();
-        Instant now = clock.instant();
-        restrictions.saveAll(tags.stream()
-                .map(tag -> new ParticipantRestriction(account.id(), tag, now))
-                .toList());
-        audit.record(subject, "PARTICIPANT_RESTRICTIONS_REPLACED", "PrincipalAccount", account.id());
-        return view(account.id());
-    }
 
     @Transactional
     public SafetyView checkIn(String subject, int painLevel, int readinessLevel, String painArea) {
@@ -75,21 +57,6 @@ public class ParticipantSafetyService {
                         item.id, item.painLevel, item.readinessLevel, item.painArea, item.recordedAt))
                 .orElse(null);
         return new SafetyView(tags, latest, NON_DIAGNOSTIC_NOTICE);
-    }
-
-    private static Set<String> normalizeTags(Collection<String> requested) {
-        if (requested == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "restriction tags are required");
-        }
-        LinkedHashSet<String> tags = new LinkedHashSet<>();
-        requested.forEach(value -> {
-            String tag = value == null ? "" : value.trim().toUpperCase(Locale.ROOT);
-            if (tag.isEmpty() || tag.length() > 80) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "restriction tag is invalid");
-            }
-            tags.add(tag);
-        });
-        return Set.copyOf(tags);
     }
 
     public record CheckInView(UUID id, int painLevel, int readinessLevel, String painArea, Instant recordedAt) {

@@ -95,6 +95,33 @@ class ModuleBoundaryTest {
     }
 
     @Test
+    void safetyRulesArePureAndOtherModulesUseOnlyTheSafetyApi() {
+        noClasses().that().resideInAPackage("com.motionecosystem.safety.domain..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "org.springframework..",
+                        "jakarta.persistence..",
+                        "com.motionecosystem.safety.api..",
+                        "com.motionecosystem.loadanalysis..",
+                        "com.motionecosystem.trainingplanning..",
+                        "com.motionecosystem.anatomyreference..",
+                        "com.motionecosystem.specialist..",
+                        "com.motionecosystem.consent..")
+                .check(productionClasses);
+
+        noClasses().that().resideOutsideOfPackage("com.motionecosystem.safety..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "com.motionecosystem.safety.domain..",
+                        "com.motionecosystem.safety")
+                .allowEmptyShould(true)
+                .check(productionClasses);
+
+        classes().that().resideInAPackage("com.motionecosystem.safety..")
+                .and().areAnnotatedWith(jakarta.persistence.Entity.class)
+                .should().notBePublic()
+                .check(productionClasses);
+    }
+
+    @Test
     void modulesDoNotUseAnotherModulesInfrastructureOrRepositories() {
         noClasses().that().resideOutsideOfPackages(
                         "com.motionecosystem.trainingplanning..")

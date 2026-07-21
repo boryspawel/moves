@@ -218,17 +218,20 @@ class CatalogAndSafetyIntegrationTest {
                 .andExpect(jsonPath("$.paths['/api/v1/exercises']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/exercises/versions/{versionId}']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/admin/exercises/versions/{versionId}/contributions']")
+                        .exists())
+                .andExpect(jsonPath("$.paths['/api/v1/safety/me/restrictions']").doesNotExist())
+                .andExpect(jsonPath("$.paths['/api/v2/safety/me/restrictions']").exists())
+                .andExpect(jsonPath("$.paths['/api/v2/safety/admin/legacy/participant-restrictions']")
                         .exists());
     }
 
     @Test
-    void safetyInputsRemainNonDiagnosticAndIsolatedPerAuthenticatedSubject() throws Exception {
+    void safetyInputsRemainNonDiagnosticAndLegacyReplaceAllIsRemoved() throws Exception {
         mvc.perform(get("/api/v1/safety/me")).andExpect(status().isUnauthorized());
         mvc.perform(put("/api/v1/safety/me/restrictions").with(participant("first"))
                         .contentType("application/json")
                         .content("{\"contraindicationTags\":[\"acute_knee_pain\"]}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.contraindicationTags[0]").value("ACUTE_KNEE_PAIN"));
+                .andExpect(status().isNotFound());
         mvc.perform(post("/api/v1/safety/me/check-ins").with(participant("first"))
                         .contentType("application/json")
                         .content("{\"painLevel\":7,\"readinessLevel\":2,\"painArea\":\"knee\"}"))
