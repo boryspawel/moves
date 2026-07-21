@@ -38,7 +38,7 @@ public class OnboardingService {
     public State selectProfileType(String subject, ProfileType type) {
         CurrentAccount before = accounts.requireActive(subject);
         CurrentAccount account = accounts.selectProfileType(subject, type);
-        if (before.profileType() == null) {
+        if (!before.hasProfile(type)) {
             audit.record(subject, "ONBOARDING_PROFILE_TYPE_SELECTED", "PrincipalAccount", account.id());
         }
         return stateFor(account);
@@ -74,7 +74,7 @@ public class OnboardingService {
     @Transactional
     public State replaceAvailability(String subject, List<RecurringAvailabilityService.Slot> slots) {
         CurrentAccount account = accounts.requireActive(subject);
-        if (account.profileType() == null) {
+        if (account.profiles().isEmpty()) {
             throw conflict("profile type must be selected first");
         }
         availability.replace(account.id(), slots);
@@ -84,7 +84,7 @@ public class OnboardingService {
 
     private CurrentAccount requireProfileType(String subject, ProfileType expected) {
         CurrentAccount account = accounts.requireActive(subject);
-        if (account.profileType() != expected) {
+        if (!account.hasProfile(expected)) {
             throw conflict("selected profile type does not allow this profile");
         }
         return account;

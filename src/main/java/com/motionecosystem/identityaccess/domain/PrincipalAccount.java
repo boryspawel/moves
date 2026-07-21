@@ -61,10 +61,9 @@ public class PrincipalAccount {
     }
 
     public void selectProfileType(ProfileType selected) {
-        if (profileType != null && profileType != selected) {
-            throw new IllegalStateException("profile type is already selected");
+        if (profileType == null) {
+            profileType = selected;
         }
-        profileType = selected;
     }
 
     public UUID id() {

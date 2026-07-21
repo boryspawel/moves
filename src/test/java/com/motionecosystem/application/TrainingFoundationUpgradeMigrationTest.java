@@ -27,6 +27,9 @@ class TrainingFoundationUpgradeMigrationTest {
                     postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword()));
             UUID sessionId = insertLegacyOfflineAppointment(jdbc);
             UUID exerciseVersionId = insertLegacyExerciseVersion(jdbc);
+            UUID participantAccountId = insertLegacyAccount(jdbc, "legacy-participant", "PARTICIPANT");
+            UUID specialistAccountId = insertLegacyAccount(jdbc, "legacy-specialist", "SPECIALIST");
+            insertLegacySpecialistProfile(jdbc, specialistAccountId);
 
             Flyway.configure()
                     .dataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())
@@ -62,6 +65,18 @@ class TrainingFoundationUpgradeMigrationTest {
                     .containsEntry("migration_origin", "LEGACY_V1")
                     .containsEntry("assessment_status", "NOT_ASSESSED")
                     .containsEntry("status", "ACTIVE");
+            assertThat(jdbc.queryForObject("""
+                    SELECT status FROM identity_access.account_domain_profile
+                    WHERE account_id = ? AND profile_type = 'PARTICIPANT'
+                    """, String.class, participantAccountId)).isEqualTo("ACTIVE");
+            assertThat(jdbc.queryForObject("""
+                    SELECT status FROM identity_access.account_domain_profile
+                    WHERE account_id = ? AND profile_type = 'SPECIALIST'
+                    """, String.class, specialistAccountId)).isEqualTo("ACTIVE");
+            assertThat(jdbc.queryForObject("""
+                    SELECT verification_status FROM specialist.professional_scope
+                    WHERE specialist_account_id = ? AND scope_type = 'TRAINER'
+                    """, String.class, specialistAccountId)).isEqualTo("VERIFIED");
         }
     }
 
@@ -121,5 +136,23 @@ class TrainingFoundationUpgradeMigrationTest {
                 VALUES (?, 'LEGACY_KNEE_TAG')
                 """, versionId);
         return versionId;
+    }
+
+    private static UUID insertLegacyAccount(JdbcTemplate jdbc, String subject, String profileType) {
+        UUID accountId = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO identity_access.principal_account
+                    (id, external_subject, status, profile_type, created_at, version)
+                VALUES (?, ?, 'ACTIVE', ?, now(), 0)
+                """, accountId, subject, profileType);
+        return accountId;
+    }
+
+    private static void insertLegacySpecialistProfile(JdbcTemplate jdbc, UUID accountId) {
+        jdbc.update("""
+                INSERT INTO specialist.specialist_profile
+                    (id, account_id, display_name, specialist_kind, created_at, updated_at, version)
+                VALUES (?, ?, 'Legacy trainer', 'TRAINER', now(), now(), 0)
+                """, UUID.randomUUID(), accountId);
     }
 }

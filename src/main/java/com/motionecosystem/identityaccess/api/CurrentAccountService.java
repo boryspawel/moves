@@ -39,15 +39,14 @@ public class CurrentAccountService {
     public CurrentAccount selectProfileType(String externalSubject, ProfileType profileType) {
         CurrentAccount current = requireActive(externalSubject);
         PrincipalAccount account = accounts.findById(current.id()).orElseThrow();
-        try {
-            account.selectProfileType(Objects.requireNonNull(profileType));
-        } catch (IllegalStateException conflict) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, conflict.getMessage(), conflict);
-        }
+        ProfileType selected = Objects.requireNonNull(profileType);
+        account.selectProfileType(selected);
+        accounts.activateProfile(account.id(), selected, clock.instant());
         return view(account);
     }
 
-    private static CurrentAccount view(PrincipalAccount account) {
-        return new CurrentAccount(account.id(), account.externalSubject(), account.profileType());
+    private CurrentAccount view(PrincipalAccount account) {
+        return new CurrentAccount(account.id(), account.externalSubject(), account.profileType(),
+                accounts.findActiveProfileTypes(account.id()));
     }
 }

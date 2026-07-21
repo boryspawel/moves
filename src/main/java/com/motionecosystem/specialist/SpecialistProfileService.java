@@ -15,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class SpecialistProfileService {
 
     private final SpecialistProfileRepository profiles;
+    private final ProfessionalScopeRepository scopes;
     private final Clock clock;
 
     @Transactional
@@ -26,6 +27,9 @@ public class SpecialistProfileService {
         SpecialistProfile profile = profiles.findByAccountId(accountId)
                 .orElseGet(() -> new SpecialistProfile(accountId, name, kind, clock.instant()));
         profile.update(name, kind, clock.instant());
+        if (!scopes.existsById(new ProfessionalScope.Id(accountId, kind))) {
+            scopes.save(new ProfessionalScope(accountId, kind, clock.instant()));
+        }
         return view(profiles.save(profile));
     }
 

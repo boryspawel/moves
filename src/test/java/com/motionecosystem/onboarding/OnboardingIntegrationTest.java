@@ -135,11 +135,17 @@ class OnboardingIntegrationTest {
     }
 
     @Test
-    void specialistKindIsDomainDataAndProfileTypeCannotBeChanged() throws Exception {
+    void specialistKindIsDomainDataAndLegacyEndpointCanAddASecondProfile() throws Exception {
         put("specialist", "/profile-type", "{\"profileType\":\"SPECIALIST\"}")
                 .andExpect(status().isOk());
         put("specialist", "/profile-type", "{\"profileType\":\"PARTICIPANT\"}")
-                .andExpect(status().isConflict());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.profileType").value("SPECIALIST"));
+        assertThat(jdbc.queryForObject("""
+                SELECT count(*) FROM identity_access.account_domain_profile profile
+                JOIN identity_access.principal_account account ON account.id = profile.account_id
+                WHERE account.external_subject = 'specialist' AND profile.status = 'ACTIVE'
+                """, Integer.class)).isEqualTo(2);
         put("specialist", "/legal-acknowledgements",
                 "{\"termsAccepted\":true,\"privacyNoticeAcknowledged\":true}")
                 .andExpect(status().isOk());
