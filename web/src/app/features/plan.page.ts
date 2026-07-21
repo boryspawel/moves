@@ -52,7 +52,7 @@ export class PlanPage {
     const value = this.form.getRawValue();
     this.failed.set(false);
     try {
-      const result = await this.api.create({ createPlanCommand: {
+      const result = await this.api.createLegacyTrainingPlan({ createPlanCommand: {
         participantAccountId: value.participantAccountId, goalName: value.goalName, planName: value.planName,
         cycleName: value.cycleName, microcycleName: value.microcycleName, sessionTitle: value.sessionTitle,
         sessionKind: value.sessionKind as CreatePlanCommandSessionKindEnum,

@@ -3,7 +3,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import type { VersionView } from '../api/generated/src';
+import type { CatalogItem } from '../api/generated/src';
 import { ApiFacade } from '../core/api.facade';
 
 @Component({
@@ -22,9 +22,7 @@ import { ApiFacade } from '../core/api.facade';
         @for (exercise of exercises(); track exercise.versionId) {
           <li>
             <h2>{{ exercise.canonicalName }} <small>v{{ exercise.versionNumber }}</small></h2>
-            <p>{{ exercise.instruction }}</p>
-            <p class="muted">{{ exercise.movementPattern }} · {{ exercise.technicalLevel }} · {{ exercise.environment }}</p>
-            @if (exercise.requiredEquipment?.size) { <p>Sprzęt: {{ values(exercise.requiredEquipment).join(', ') }}</p> }
+            <p class="muted">{{ exercise.primaryMovementPattern }} · {{ exercise.technicalLevel }} · {{ exercise.environment }}</p>
           </li>
         } @empty { <li>Brak ćwiczeń spełniających kryteria.</li> }
       </ul>
@@ -35,14 +33,17 @@ import { ApiFacade } from '../core/api.facade';
 export class CatalogPage {
   private readonly api = inject(ApiFacade).catalog;
   protected readonly query = new FormControl('', { nonNullable: true });
-  protected readonly exercises = signal<VersionView[]>([]);
+  protected readonly exercises = signal<CatalogItem[]>([]);
   protected readonly status = signal('Ładowanie…');
   protected readonly error = signal(false);
   constructor() { void this.load(); }
   protected async load(): Promise<void> {
     this.error.set(false);
-    try { this.exercises.set(await this.api.list({ query: this.query.value || undefined })); this.status.set(`${this.exercises().length} wyników.`); }
+    try {
+      const page = await this.api.list({ query: this.query.value || undefined });
+      this.exercises.set(page.content ?? []);
+      this.status.set(`${page.totalElements ?? this.exercises().length} wyników.`);
+    }
     catch { this.error.set(true); this.status.set('Nie udało się pobrać katalogu.'); }
   }
-  protected values(values: Set<string>): string[] { return [...values]; }
 }

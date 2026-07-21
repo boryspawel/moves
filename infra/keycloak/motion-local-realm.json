@@ -1,6 +1,7 @@
 {
   "realm": "motion-local",
   "enabled": true,
+  "registrationAllowed": true,
   "roles": {
     "realm": [
       { "name": "PARTICIPANT" },
@@ -19,6 +20,7 @@
       "directAccessGrantsEnabled": false,
       "redirectUris": ["http://localhost:4200/*"],
       "webOrigins": ["http://localhost:4200"],
+      "adminUrl": "http://localhost:4200",
       "attributes": { "pkce.code.challenge.method": "S256" },
       "protocolMappers": [
         {
@@ -33,6 +35,42 @@
           }
         }
       ]
+    }
+  ],
+  "users": [
+    {
+      "id": "8f6e9cc1-1c1e-4f7a-98f4-3c0c3f40ac01",
+      "username": "demo.participant",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "Uczestnik",
+      "email": "demo.participant@local.test",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo-participant-local-only",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["PARTICIPANT"]
+    },
+    {
+      "id": "8f6e9cc1-1c1e-4f7a-98f4-3c0c3f40ac02",
+      "username": "demo.editor",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "Redaktor",
+      "email": "demo.editor@local.test",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo-editor-local-only",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["CONTENT_ADMIN", "SYSTEM_ADMIN"]
     }
   ]
 }

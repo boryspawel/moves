@@ -200,11 +200,11 @@ class CatalogAndSafetyIntegrationTest {
         UUID versionId = createExercise("Legacy-safe hinge").versionId();
         assertThat(jdbc.queryForObject(
                 "SELECT COUNT(*) FROM exercise_catalog.exercise_version_contraindication", Long.class)).isZero();
-        completeAndPublish(versionId, structureId);
         jdbc.update("""
                 INSERT INTO exercise_catalog.exercise_version_contraindication
                     (exercise_version_id, contraindication_tag) VALUES (?, 'ACUTE_KNEE_PAIN')
                 """, versionId);
+        completeAndPublish(versionId, structureId);
 
         mvc.perform(get("/api/v1/exercises").with(participant("participant")))
                 .andExpect(status().isOk())

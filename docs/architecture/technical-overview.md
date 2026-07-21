@@ -23,6 +23,7 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
 - `availability`: cykliczne przedziały i przyszłe wyjątki;
 - `anatomyreference`: wersjonowana taksonomia struktur anatomicznych;
 - `exercisecatalog`: ćwiczenia, niezmienne wersje i publikacja;
+- `exerciseimport`: artefakty JSONL, staging, mapowania, deduplikacja i przekazanie szkicu do katalogu;
 - `trainingplanning`: cel, owner, collaborators, rewizja, cykl, mikrocykl, sesja i recepta;
 - `loadanalysis`: wersjonowane profile planned i executed load bez globalnego score;
 - `planworkflow`: walidacja, acknowledgement i atomowa aktywacja rewizji;
@@ -36,6 +37,7 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
 
 - Gamifikacja otrzymuje wyłącznie neutralne zdarzenie kwalifikacji wykonania; nie zależy od encji safety ani medycznych DTO.
 - Plan wskazuje identyfikator konkretnej opublikowanej wersji ćwiczenia.
+- Import nie zapisuje wersji opublikowanych; cross-source match zawsze wymaga decyzji człowieka.
 - Execution wskazuje planowaną sesję i receptę, a korekta dopisuje rekord.
 - Uprawnienia zasobowe są sprawdzane w przypadkach użycia, nie tylko w route guards lub rolach tokenu.
 - Operacja specjalisty wskazuje jawny kontekst zawodowy i purpose; capability, relacja i zgoda są sprawdzane centralnie przy każdym dostępie.

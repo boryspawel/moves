@@ -5,6 +5,9 @@
     @if (auth.authenticated()) {
       <a mat-button routerLink="/onboarding" routerLinkActive="active">Profil</a>
       <a mat-button routerLink="/catalog" routerLinkActive="active">Katalog</a>
+      @if (auth.hasRole('CONTENT_ADMIN')) {
+        <a mat-button routerLink="/admin/exercise-import" routerLinkActive="active">Import ćwiczeń</a>
+      }
       @if (auth.hasRole('PARTICIPANT')) {
         <a mat-button routerLink="/sessions" routerLinkActive="active">Sesje</a>
         <a mat-button routerLink="/gamification" routerLinkActive="active">Punkty</a>

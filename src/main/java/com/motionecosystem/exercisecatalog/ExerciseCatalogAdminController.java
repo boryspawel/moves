@@ -2,6 +2,8 @@ package com.motionecosystem.exercisecatalog;
 
 import java.util.List;
 import java.util.UUID;
+import com.motionecosystem.exercisecatalog.api.PublishExerciseVersion;
+import com.motionecosystem.exercisecatalog.api.ReviewExerciseVersion;
 
 import com.motionecosystem.exercisecatalog.CatalogService.ContributionCommand;
 import com.motionecosystem.exercisecatalog.CatalogService.EvidenceCommand;
@@ -25,9 +27,11 @@ import org.springframework.web.bind.annotation.RestController;
 class ExerciseCatalogAdminController {
 
     private final CatalogService catalog;
+    private final ExerciseEditorialWorkflowService workflow;
 
-    ExerciseCatalogAdminController(CatalogService catalog) {
+    ExerciseCatalogAdminController(CatalogService catalog, ExerciseEditorialWorkflowService workflow) {
         this.catalog = catalog;
+        this.workflow = workflow;
     }
 
     @PostMapping
@@ -83,13 +87,18 @@ class ExerciseCatalogAdminController {
     }
 
     @PostMapping("/versions/{versionId}/approve")
-    CatalogService.VersionView approve(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID versionId) {
-        return catalog.approve(jwt.getSubject(), versionId);
+    ReviewExerciseVersion.ReviewResult approve(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID versionId) {
+        ReviewExerciseVersion.ReviewResult result = null;
+        for (String area : List.of("CONTENT", "TECHNIQUE", "ANATOMY_EXPOSURE", "LICENSE")) {
+            result = workflow.review(versionId, jwt.getSubject(),
+                    new ReviewExerciseVersion.ReviewCommand(area, "APPROVED", "Legacy aggregate approval", null));
+        }
+        return result;
     }
 
     @PostMapping("/versions/{versionId}/publish")
-    CatalogService.VersionView publish(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID versionId) {
-        return catalog.publish(jwt.getSubject(), versionId);
+    PublishExerciseVersion.PublicationResult publish(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID versionId) {
+        return workflow.publish(versionId, jwt.getSubject(), null);
     }
 
     @PostMapping("/versions/{versionId}/withdraw")

@@ -7,6 +7,11 @@ spring:
     password: ${DB_PASSWORD:motion-local}
   flyway:
     enabled: true
+  batch:
+    jdbc:
+      initialize-schema: never
+    job:
+      enabled: false
   jpa:
     hibernate:
       ddl-auto: validate
@@ -42,3 +47,10 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+exercise-import:
+  artifacts:
+    directory: ${EXERCISE_IMPORT_ARTIFACT_DIR:./data/exercise-import}
+  limits:
+    file-bytes: ${EXERCISE_IMPORT_MAX_FILE_BYTES:10485760}
+    record-bytes: ${EXERCISE_IMPORT_MAX_RECORD_BYTES:262144}

@@ -55,7 +55,7 @@ export class SessionsPage {
     const form = this.executionForm.getRawValue();
     this.failed.set(false);
     try {
-      const execution = await this.api.execution.declare({
+      const execution = await this.api.execution.declare1({
         sessionId: session.id,
         idempotencyKey: crypto.randomUUID(),
         declareExecutionCommand: {

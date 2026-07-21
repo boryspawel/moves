@@ -295,13 +295,24 @@ class GamificationIntegrationTest {
                     (id, exercise_id, version_number, status, instruction, movement_pattern,
                      stimulus_type, fatigue_profile, technical_level, environment,
                      created_at, published_at, version)
-                VALUES (?, ?, 1, 'PUBLISHED', 'Controlled movement instruction', 'SQUAT',
-                        'STRENGTH', 'MODERATE', 'FOUNDATIONAL', 'ANY', now(), now(), 0)
+                VALUES (?, ?, 1, 'APPROVED', 'Controlled movement instruction', 'SQUAT',
+                        'STRENGTH', 'MODERATE', 'FOUNDATIONAL', 'ANY', now(), NULL, 0)
                 """, version, exercise);
         jdbc.update("""
                 INSERT INTO exercise_catalog.exercise_version_contraindication
                     (exercise_version_id, contraindication_tag)
                 VALUES (?, 'ACUTE_KNEE_PAIN')
+                """, version);
+        jdbc.update("""
+                INSERT INTO exercise_catalog.exercise_review
+                    (id, exercise_version_id, review_area, decision, reviewer_subject, reviewed_at)
+                SELECT gen_random_uuid(), ?, area, 'APPROVED', 'gamification-fixture-reviewer', now()
+                FROM unnest(ARRAY['CONTENT','TECHNIQUE','ANATOMY_EXPOSURE','LICENSE']) area
+                """, version);
+        jdbc.update("""
+                UPDATE exercise_catalog.exercise_version
+                SET status = 'PUBLISHED', published_at = now()
+                WHERE id = ?
                 """, version);
         return version;
     }

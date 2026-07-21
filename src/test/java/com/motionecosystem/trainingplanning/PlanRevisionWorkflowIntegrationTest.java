@@ -372,7 +372,7 @@ class PlanRevisionWorkflowIntegrationTest {
         workflow.validate("workflow-participant", revisionId,
                 new ValidateWorkflowCommand(version(editor), null));
 
-        jdbc.update("UPDATE exercise_catalog.exercise_version SET status='WITHDRAWN' WHERE id=?",
+        jdbc.update("UPDATE exercise_catalog.exercise_version SET status='WITHDRAWN', withdrawn_at=now() WHERE id=?",
                 exerciseVersion);
 
         assertConflict(() -> workflow.activate("workflow-participant", revisionId, "withdrawn",
@@ -484,9 +484,9 @@ class PlanRevisionWorkflowIntegrationTest {
                      stimulus_type, fatigue_profile, technical_level, environment,
                      profile_schema_version, reviewed_by_subject, reviewed_at,
                      created_at, published_at, version)
-                VALUES (?, ?, 1, 'PUBLISHED', 'Controlled split squat.', 'SQUAT',
+                VALUES (?, ?, 1, 'APPROVED', 'Controlled split squat.', 'SQUAT',
                         'STRENGTH', 'MODERATE', 'FOUNDATIONAL', 'ANY', 2,
-                        'workflow-reviewer', now(), now(), now(), 0)
+                        'workflow-reviewer', now(), now(), NULL, 0)
                 """, version, exercise);
         jdbc.update("""
                 INSERT INTO exercise_catalog.exercise_version_movement_pattern
@@ -513,6 +513,17 @@ class PlanRevisionWorkflowIntegrationTest {
                 INSERT INTO exercise_catalog.exercise_contribution_evidence
                     (id, contribution_id, evidence_source_id) VALUES (?, ?, ?)
                 """, UUID.randomUUID(), contribution, evidence);
+        jdbc.update("""
+                INSERT INTO exercise_catalog.exercise_review
+                    (id, exercise_version_id, review_area, decision, reviewer_subject, reviewed_at)
+                SELECT gen_random_uuid(), ?, area, 'APPROVED', 'workflow-fixture-reviewer', now()
+                FROM unnest(ARRAY['CONTENT','TECHNIQUE','ANATOMY_EXPOSURE','LICENSE']) area
+                """, version);
+        jdbc.update("""
+                UPDATE exercise_catalog.exercise_version
+                SET status = 'PUBLISHED', published_at = now()
+                WHERE id = ?
+                """, version);
         return version;
     }
 

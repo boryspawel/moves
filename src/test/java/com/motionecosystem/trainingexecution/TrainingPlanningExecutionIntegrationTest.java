@@ -52,6 +52,7 @@ class TrainingPlanningExecutionIntegrationTest {
     UUID specialistId;
     UUID foreignSpecialistId;
     UUID exerciseVersionId;
+    UUID executionStructureId;
 
     @BeforeEach
     void setUp() {
@@ -405,21 +406,18 @@ class TrainingPlanningExecutionIntegrationTest {
     }
 
     @Test
-    void failedProjectionIsMarkedAndRecoveredWhenCatalogVersionReturns() throws Exception {
+    void failedProjectionRemainsAuditableWhenPinnedVersionIsWithdrawn() throws Exception {
         executionContribution();
         createPlan();
         declare(sessionId(), prescriptionId(), "recover-execution", 0, 4);
         UUID executionId = jdbc.queryForObject("SELECT id FROM training_execution.session_execution", UUID.class);
-        jdbc.update("UPDATE exercise_catalog.exercise_version SET status='WITHDRAWN' WHERE id=?", exerciseVersionId);
+        jdbc.update("UPDATE exercise_catalog.exercise_version SET status='WITHDRAWN', withdrawn_at=now() WHERE id=?",
+                exerciseVersionId);
         assertThat(projections.recover(Instant.now().plusSeconds(60)).failed()).isEqualTo(1);
         assertThat(jdbc.queryForObject(
                 "SELECT projection_status FROM training_execution.session_execution", String.class)).isEqualTo("FAILED");
-        jdbc.update("UPDATE exercise_catalog.exercise_version SET status='PUBLISHED' WHERE id=?", exerciseVersionId);
-        assertThat(projections.recover(Instant.now().plusSeconds(60)).projected()).isEqualTo(1);
         assertThat(jdbc.queryForObject(
-                "SELECT projection_status FROM training_execution.session_execution", String.class)).isEqualTo("PROJECTED");
-        assertThat(jdbc.queryForObject(
-                "SELECT COUNT(*) FROM training_execution.execution_projection_receipt", Long.class)).isEqualTo(1);
+                "SELECT COUNT(*) FROM training_execution.execution_projection_receipt", Long.class)).isZero();
         assertThat(executionId).isNotNull();
     }
 
@@ -466,18 +464,34 @@ class TrainingPlanningExecutionIntegrationTest {
                     (id, exercise_id, version_number, status, instruction, movement_pattern,
                      stimulus_type, fatigue_profile, technical_level, environment,
                      created_at, published_at, version)
-                VALUES (?, ?, 1, 'PUBLISHED', 'Perform a controlled supported squat.', 'SQUAT',
-                        'STRENGTH', 'MODERATE', 'FOUNDATIONAL', 'ANY', now(), now(), 0)
+                VALUES (?, ?, 1, 'APPROVED', 'Perform a controlled supported squat.', 'SQUAT',
+                        'STRENGTH', 'MODERATE', 'FOUNDATIONAL', 'ANY', now(), NULL, 0)
                 """, versionId, exerciseId);
         jdbc.update("""
                 INSERT INTO exercise_catalog.exercise_version_contraindication
                     (exercise_version_id, contraindication_tag)
                 VALUES (?, 'ACUTE_KNEE_PAIN')
                 """, versionId);
+        executionStructureId = addExecutionContributions(versionId);
+        jdbc.update("""
+                INSERT INTO exercise_catalog.exercise_review
+                    (id, exercise_version_id, review_area, decision, reviewer_subject, reviewed_at)
+                SELECT gen_random_uuid(), ?, area, 'APPROVED', 'execution-fixture-reviewer', now()
+                FROM unnest(ARRAY['CONTENT','TECHNIQUE','ANATOMY_EXPOSURE','LICENSE']) area
+                """, versionId);
+        jdbc.update("""
+                UPDATE exercise_catalog.exercise_version
+                SET status = 'PUBLISHED', published_at = now()
+                WHERE id = ?
+                """, versionId);
         return versionId;
     }
 
     private UUID executionContribution() {
+        return executionStructureId;
+    }
+
+    private UUID addExecutionContributions(UUID versionId) {
         UUID structureId = UUID.randomUUID();
         jdbc.update("""
                 INSERT INTO anatomy_reference.anatomical_structure
@@ -494,7 +508,7 @@ class TrainingPlanningExecutionIntegrationTest {
                      created_at, created_by_subject)
                 VALUES (?, ?, ?, 'PRIMARY', 'DYN_EXU', 'HIGH', 0.5, 1.0,
                         'TEST', 'TEST', 'ALLOCATION', 'AS_PRESCRIBED', now(), 'test')
-                """, UUID.randomUUID(), exerciseVersionId, structureId);
+                """, UUID.randomUUID(), versionId, structureId);
         jdbc.update("""
                 INSERT INTO exercise_catalog.exercise_contribution
                     (id, exercise_version_id, anatomical_structure_id, contribution_role,
@@ -503,7 +517,7 @@ class TrainingPlanningExecutionIntegrationTest {
                      created_at, created_by_subject)
                 VALUES (?, ?, ?, 'PRIMARY', 'ISO_SEC', 'MODERATE', 0.25, 0.5,
                         'TEST', 'TEST', 'ALLOCATION', 'RIGHT', now(), 'test')
-                """, UUID.randomUUID(), exerciseVersionId, structureId);
+                """, UUID.randomUUID(), versionId, structureId);
         jdbc.update("""
                 INSERT INTO exercise_catalog.exercise_contribution
                     (id, exercise_version_id, anatomical_structure_id, contribution_role,
@@ -512,7 +526,7 @@ class TrainingPlanningExecutionIntegrationTest {
                      created_at, created_by_subject)
                 VALUES (?, ?, ?, 'PRIMARY', 'IMPACT_CONTACTS', 'MODERATE', 0.1, 0.2,
                         'TEST', 'TEST', 'ALLOCATION', 'BILATERAL', now(), 'test')
-                """, UUID.randomUUID(), exerciseVersionId, structureId);
+                """, UUID.randomUUID(), versionId, structureId);
         return structureId;
     }
 

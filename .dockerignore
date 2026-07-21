@@ -1,0 +1,12 @@
+.git
+.github
+.idea
+.env
+target
+web
+node_modules
+**/node_modules
+**/dist
+test-results
+playwright-report
+*.iml

@@ -279,13 +279,28 @@ class TrainingPlanningV2IntegrationTest {
                     (id, exercise_id, version_number, status, instruction, movement_pattern,
                      stimulus_type, fatigue_profile, technical_level, environment,
                      created_at, published_at, version)
-                VALUES (?, ?, 1, 'PUBLISHED', 'Perform a controlled squat.', 'SQUAT',
-                        'STRENGTH', 'MODERATE', 'FOUNDATIONAL', 'ANY', now(), now(), 0)
+                VALUES (?, ?, 1, 'APPROVED', 'Perform a controlled squat.', 'SQUAT',
+                        'STRENGTH', 'MODERATE', 'FOUNDATIONAL', 'ANY', now(), NULL, 0)
                 """, versionId, exerciseId);
         jdbc.update("""
                 INSERT INTO exercise_catalog.exercise_version_movement_pattern
                     (exercise_version_id, movement_pattern) VALUES (?, 'SQUAT')
                 """, versionId);
+        addFixtureReviews(versionId);
+        jdbc.update("""
+                UPDATE exercise_catalog.exercise_version
+                SET status = 'PUBLISHED', published_at = now()
+                WHERE id = ?
+                """, versionId);
         return versionId;
+    }
+
+    private void addFixtureReviews(UUID versionId) {
+        jdbc.update("""
+                INSERT INTO exercise_catalog.exercise_review
+                    (id, exercise_version_id, review_area, decision, reviewer_subject, reviewed_at)
+                SELECT gen_random_uuid(), ?, area, 'APPROVED', 'planning-fixture-reviewer', now()
+                FROM unnest(ARRAY['CONTENT','TECHNIQUE','ANATOMY_EXPOSURE','LICENSE']) area
+                """, versionId);
     }
 }

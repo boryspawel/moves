@@ -38,6 +38,10 @@ export class AuthService {
     return this.client.login({ redirectUri: window.location.origin });
   }
 
+  register(): Promise<void> {
+    return this.client.register({ redirectUri: window.location.origin });
+  }
+
   logout(): Promise<void> {
     return this.client.logout({ redirectUri: window.location.origin });
   }
