@@ -19,176 +19,183 @@ import { mapValues } from '../runtime';
  * @interface VersionCommand
  */
 export interface VersionCommand {
-    /**
-     *
-     * @type {string}
-     * @memberof VersionCommand
-     */
-    instruction?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof VersionCommand
-     */
-    mediaReference?: string;
-    /**
-     *
-     * @type {VersionCommandMovementPatternEnum}
-     * @memberof VersionCommand
-     */
-    movementPattern?: VersionCommandMovementPatternEnum;
-    /**
-     *
-     * @type {VersionCommandStimulusTypeEnum}
-     * @memberof VersionCommand
-     */
-    stimulusType?: VersionCommandStimulusTypeEnum;
-    /**
-     *
-     * @type {VersionCommandFatigueProfileEnum}
-     * @memberof VersionCommand
-     */
-    fatigueProfile?: VersionCommandFatigueProfileEnum;
-    /**
-     *
-     * @type {VersionCommandTechnicalLevelEnum}
-     * @memberof VersionCommand
-     */
-    technicalLevel?: VersionCommandTechnicalLevelEnum;
-    /**
-     *
-     * @type {VersionCommandEnvironmentEnum}
-     * @memberof VersionCommand
-     */
-    environment?: VersionCommandEnvironmentEnum;
-    /**
-     *
-     * @type {Set<string>}
-     * @memberof VersionCommand
-     */
-    requiredEquipment?: Set<string>;
-    /**
-     *
-     * @type {Set<string>}
-     * @memberof VersionCommand
-     */
-    contraindicationTags?: Set<string>;
+  /**
+   *
+   * @type {string}
+   * @memberof VersionCommand
+   */
+  instruction?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof VersionCommand
+   */
+  mediaReference?: string;
+  /**
+   *
+   * @type {Set<VersionCommandMovementPatternsEnum>}
+   * @memberof VersionCommand
+   */
+  movementPatterns?: Set<VersionCommandMovementPatternsEnum>;
+  /**
+   *
+   * @type {VersionCommandStimulusTypeEnum}
+   * @memberof VersionCommand
+   */
+  stimulusType?: VersionCommandStimulusTypeEnum;
+  /**
+   *
+   * @type {VersionCommandFatigueProfileEnum}
+   * @memberof VersionCommand
+   */
+  fatigueProfile?: VersionCommandFatigueProfileEnum;
+  /**
+   *
+   * @type {VersionCommandTechnicalLevelEnum}
+   * @memberof VersionCommand
+   */
+  technicalLevel?: VersionCommandTechnicalLevelEnum;
+  /**
+   *
+   * @type {VersionCommandEnvironmentEnum}
+   * @memberof VersionCommand
+   */
+  environment?: VersionCommandEnvironmentEnum;
+  /**
+   *
+   * @type {Set<string>}
+   * @memberof VersionCommand
+   */
+  requiredEquipment?: Set<string>;
 }
-
 
 /**
  * @export
  */
-export const VersionCommandMovementPatternEnum = {
-    Squat: 'SQUAT',
-    Hinge: 'HINGE',
-    Push: 'PUSH',
-    Pull: 'PULL',
-    Lunge: 'LUNGE',
-    Carry: 'CARRY',
-    Rotation: 'ROTATION',
-    Locomotion: 'LOCOMOTION',
-    Breathing: 'BREATHING',
-    Mobility: 'MOBILITY',
-    Other: 'OTHER'
+export const VersionCommandMovementPatternsEnum = {
+  Squat: 'SQUAT',
+  Hinge: 'HINGE',
+  Push: 'PUSH',
+  Pull: 'PULL',
+  Lunge: 'LUNGE',
+  Carry: 'CARRY',
+  Rotation: 'ROTATION',
+  Locomotion: 'LOCOMOTION',
+  Breathing: 'BREATHING',
+  Mobility: 'MOBILITY',
+  Other: 'OTHER',
 } as const;
-export type VersionCommandMovementPatternEnum = typeof VersionCommandMovementPatternEnum[keyof typeof VersionCommandMovementPatternEnum];
+export type VersionCommandMovementPatternsEnum =
+  (typeof VersionCommandMovementPatternsEnum)[keyof typeof VersionCommandMovementPatternsEnum];
 
 /**
  * @export
  */
 export const VersionCommandStimulusTypeEnum = {
-    Strength: 'STRENGTH',
-    Endurance: 'ENDURANCE',
-    Power: 'POWER',
-    Mobility: 'MOBILITY',
-    Balance: 'BALANCE',
-    MotorControl: 'MOTOR_CONTROL',
-    Recovery: 'RECOVERY'
+  Strength: 'STRENGTH',
+  Endurance: 'ENDURANCE',
+  Power: 'POWER',
+  Mobility: 'MOBILITY',
+  Balance: 'BALANCE',
+  MotorControl: 'MOTOR_CONTROL',
+  Recovery: 'RECOVERY',
 } as const;
-export type VersionCommandStimulusTypeEnum = typeof VersionCommandStimulusTypeEnum[keyof typeof VersionCommandStimulusTypeEnum];
+export type VersionCommandStimulusTypeEnum =
+  (typeof VersionCommandStimulusTypeEnum)[keyof typeof VersionCommandStimulusTypeEnum];
 
 /**
  * @export
  */
 export const VersionCommandFatigueProfileEnum = {
-    Low: 'LOW',
-    Moderate: 'MODERATE',
-    High: 'HIGH'
+  Low: 'LOW',
+  Moderate: 'MODERATE',
+  High: 'HIGH',
 } as const;
-export type VersionCommandFatigueProfileEnum = typeof VersionCommandFatigueProfileEnum[keyof typeof VersionCommandFatigueProfileEnum];
+export type VersionCommandFatigueProfileEnum =
+  (typeof VersionCommandFatigueProfileEnum)[keyof typeof VersionCommandFatigueProfileEnum];
 
 /**
  * @export
  */
 export const VersionCommandTechnicalLevelEnum = {
-    Foundational: 'FOUNDATIONAL',
-    Intermediate: 'INTERMEDIATE',
-    Advanced: 'ADVANCED'
+  Foundational: 'FOUNDATIONAL',
+  Intermediate: 'INTERMEDIATE',
+  Advanced: 'ADVANCED',
 } as const;
-export type VersionCommandTechnicalLevelEnum = typeof VersionCommandTechnicalLevelEnum[keyof typeof VersionCommandTechnicalLevelEnum];
+export type VersionCommandTechnicalLevelEnum =
+  (typeof VersionCommandTechnicalLevelEnum)[keyof typeof VersionCommandTechnicalLevelEnum];
 
 /**
  * @export
  */
 export const VersionCommandEnvironmentEnum = {
-    Home: 'HOME',
-    Gym: 'GYM',
-    Outdoor: 'OUTDOOR',
-    Clinic: 'CLINIC',
-    Any: 'ANY'
+  Home: 'HOME',
+  Gym: 'GYM',
+  Outdoor: 'OUTDOOR',
+  Clinic: 'CLINIC',
+  Any: 'ANY',
 } as const;
-export type VersionCommandEnvironmentEnum = typeof VersionCommandEnvironmentEnum[keyof typeof VersionCommandEnvironmentEnum];
-
+export type VersionCommandEnvironmentEnum =
+  (typeof VersionCommandEnvironmentEnum)[keyof typeof VersionCommandEnvironmentEnum];
 
 /**
  * Check if a given object implements the VersionCommand interface.
  */
 export function instanceOfVersionCommand(value: object): value is VersionCommand {
-    return true;
+  return true;
 }
 
 export function VersionCommandFromJSON(json: any): VersionCommand {
-    return VersionCommandFromJSONTyped(json, false);
+  return VersionCommandFromJSONTyped(json, false);
 }
 
-export function VersionCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): VersionCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'instruction': json['instruction'] == null ? undefined : json['instruction'],
-        'mediaReference': json['mediaReference'] == null ? undefined : json['mediaReference'],
-        'movementPattern': json['movementPattern'] == null ? undefined : json['movementPattern'],
-        'stimulusType': json['stimulusType'] == null ? undefined : json['stimulusType'],
-        'fatigueProfile': json['fatigueProfile'] == null ? undefined : json['fatigueProfile'],
-        'technicalLevel': json['technicalLevel'] == null ? undefined : json['technicalLevel'],
-        'environment': json['environment'] == null ? undefined : json['environment'],
-        'requiredEquipment': json['requiredEquipment'] == null ? undefined : new Set(json['requiredEquipment']),
-        'contraindicationTags': json['contraindicationTags'] == null ? undefined : new Set(json['contraindicationTags']),
-    };
+export function VersionCommandFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): VersionCommand {
+  if (json == null) {
+    return json;
+  }
+  return {
+    instruction: json['instruction'] == null ? undefined : json['instruction'],
+    mediaReference: json['mediaReference'] == null ? undefined : json['mediaReference'],
+    movementPatterns:
+      json['movementPatterns'] == null ? undefined : new Set(json['movementPatterns']),
+    stimulusType: json['stimulusType'] == null ? undefined : json['stimulusType'],
+    fatigueProfile: json['fatigueProfile'] == null ? undefined : json['fatigueProfile'],
+    technicalLevel: json['technicalLevel'] == null ? undefined : json['technicalLevel'],
+    environment: json['environment'] == null ? undefined : json['environment'],
+    requiredEquipment:
+      json['requiredEquipment'] == null ? undefined : new Set(json['requiredEquipment']),
+  };
 }
 
 export function VersionCommandToJSON(json: any): VersionCommand {
-    return VersionCommandToJSONTyped(json, false);
+  return VersionCommandToJSONTyped(json, false);
 }
 
-export function VersionCommandToJSONTyped(value?: VersionCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function VersionCommandToJSONTyped(
+  value?: VersionCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'instruction': value['instruction'],
-        'mediaReference': value['mediaReference'],
-        'movementPattern': value['movementPattern'],
-        'stimulusType': value['stimulusType'],
-        'fatigueProfile': value['fatigueProfile'],
-        'technicalLevel': value['technicalLevel'],
-        'environment': value['environment'],
-        'requiredEquipment': value['requiredEquipment'] == null ? undefined : Array.from(value['requiredEquipment'] as Set<any>),
-        'contraindicationTags': value['contraindicationTags'] == null ? undefined : Array.from(value['contraindicationTags'] as Set<any>),
-    };
+  return {
+    instruction: value['instruction'],
+    mediaReference: value['mediaReference'],
+    movementPatterns:
+      value['movementPatterns'] == null
+        ? undefined
+        : Array.from(value['movementPatterns'] as Set<any>),
+    stimulusType: value['stimulusType'],
+    fatigueProfile: value['fatigueProfile'],
+    technicalLevel: value['technicalLevel'],
+    environment: value['environment'],
+    requiredEquipment:
+      value['requiredEquipment'] == null
+        ? undefined
+        : Array.from(value['requiredEquipment'] as Set<any>),
+  };
 }

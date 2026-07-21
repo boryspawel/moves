@@ -15,17 +15,24 @@
 import { mapValues } from '../runtime';
 import type { CorrectionView } from './CorrectionView';
 import {
-    CorrectionViewFromJSON,
-    CorrectionViewFromJSONTyped,
-    CorrectionViewToJSON,
-    CorrectionViewToJSONTyped,
+  CorrectionViewFromJSON,
+  CorrectionViewFromJSONTyped,
+  CorrectionViewToJSON,
+  CorrectionViewToJSONTyped,
 } from './CorrectionView';
+import type { AlertData } from './AlertData';
+import {
+  AlertDataFromJSON,
+  AlertDataFromJSONTyped,
+  AlertDataToJSON,
+  AlertDataToJSONTyped,
+} from './AlertData';
 import type { ResultView } from './ResultView';
 import {
-    ResultViewFromJSON,
-    ResultViewFromJSONTyped,
-    ResultViewToJSON,
-    ResultViewToJSONTyped,
+  ResultViewFromJSON,
+  ResultViewFromJSONTyped,
+  ResultViewToJSON,
+  ResultViewToJSONTyped,
 } from './ResultView';
 
 /**
@@ -34,126 +41,167 @@ import {
  * @interface ExecutionView
  */
 export interface ExecutionView {
-    /**
-     *
-     * @type {string}
-     * @memberof ExecutionView
-     */
-    id?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof ExecutionView
-     */
-    plannedSessionId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof ExecutionView
-     */
-    participantAccountId?: string;
-    /**
-     *
-     * @type {boolean}
-     * @memberof ExecutionView
-     */
-    declaredCompletion?: boolean;
-    /**
-     *
-     * @type {Date}
-     * @memberof ExecutionView
-     */
-    recordedAt?: Date;
-    /**
-     *
-     * @type {number}
-     * @memberof ExecutionView
-     */
-    painLevel?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof ExecutionView
-     */
-    difficultyLevel?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof ExecutionView
-     */
-    note?: string;
-    /**
-     *
-     * @type {Array<ResultView>}
-     * @memberof ExecutionView
-     */
-    results?: Array<ResultView>;
-    /**
-     *
-     * @type {Array<CorrectionView>}
-     * @memberof ExecutionView
-     */
-    corrections?: Array<CorrectionView>;
-    /**
-     *
-     * @type {Array<string>}
-     * @memberof ExecutionView
-     */
-    alerts?: Array<string>;
+  /**
+   *
+   * @type {string}
+   * @memberof ExecutionView
+   */
+  id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ExecutionView
+   */
+  plannedSessionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ExecutionView
+   */
+  participantAccountId?: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof ExecutionView
+   */
+  declaredCompletion?: boolean;
+  /**
+   *
+   * @type {Date}
+   * @memberof ExecutionView
+   */
+  recordedAt?: Date;
+  /**
+   *
+   * @type {number}
+   * @memberof ExecutionView
+   */
+  painLevel?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof ExecutionView
+   */
+  difficultyLevel?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof ExecutionView
+   */
+  note?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof ExecutionView
+   */
+  sessionRpe?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof ExecutionView
+   */
+  observationMode?: string;
+  /**
+   *
+   * @type {Array<ResultView>}
+   * @memberof ExecutionView
+   */
+  results?: Array<ResultView>;
+  /**
+   *
+   * @type {Array<CorrectionView>}
+   * @memberof ExecutionView
+   */
+  corrections?: Array<CorrectionView>;
+  /**
+   *
+   * @type {Array<string>}
+   * @memberof ExecutionView
+   */
+  alerts?: Array<string>;
+  /**
+   *
+   * @type {Array<AlertData>}
+   * @memberof ExecutionView
+   */
+  safetyAlerts?: Array<AlertData>;
 }
 
 /**
  * Check if a given object implements the ExecutionView interface.
  */
 export function instanceOfExecutionView(value: object): value is ExecutionView {
-    return true;
+  return true;
 }
 
 export function ExecutionViewFromJSON(json: any): ExecutionView {
-    return ExecutionViewFromJSONTyped(json, false);
+  return ExecutionViewFromJSONTyped(json, false);
 }
 
 export function ExecutionViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): ExecutionView {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'id': json['id'] == null ? undefined : json['id'],
-        'plannedSessionId': json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
-        'participantAccountId': json['participantAccountId'] == null ? undefined : json['participantAccountId'],
-        'declaredCompletion': json['declaredCompletion'] == null ? undefined : json['declaredCompletion'],
-        'recordedAt': json['recordedAt'] == null ? undefined : (new Date(json['recordedAt'])),
-        'painLevel': json['painLevel'] == null ? undefined : json['painLevel'],
-        'difficultyLevel': json['difficultyLevel'] == null ? undefined : json['difficultyLevel'],
-        'note': json['note'] == null ? undefined : json['note'],
-        'results': json['results'] == null ? undefined : ((json['results'] as Array<any>).map(ResultViewFromJSON)),
-        'corrections': json['corrections'] == null ? undefined : ((json['corrections'] as Array<any>).map(CorrectionViewFromJSON)),
-        'alerts': json['alerts'] == null ? undefined : json['alerts'],
-    };
+  if (json == null) {
+    return json;
+  }
+  return {
+    id: json['id'] == null ? undefined : json['id'],
+    plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
+    participantAccountId:
+      json['participantAccountId'] == null ? undefined : json['participantAccountId'],
+    declaredCompletion: json['declaredCompletion'] == null ? undefined : json['declaredCompletion'],
+    recordedAt: json['recordedAt'] == null ? undefined : new Date(json['recordedAt']),
+    painLevel: json['painLevel'] == null ? undefined : json['painLevel'],
+    difficultyLevel: json['difficultyLevel'] == null ? undefined : json['difficultyLevel'],
+    note: json['note'] == null ? undefined : json['note'],
+    sessionRpe: json['sessionRpe'] == null ? undefined : json['sessionRpe'],
+    observationMode: json['observationMode'] == null ? undefined : json['observationMode'],
+    results:
+      json['results'] == null ? undefined : (json['results'] as Array<any>).map(ResultViewFromJSON),
+    corrections:
+      json['corrections'] == null
+        ? undefined
+        : (json['corrections'] as Array<any>).map(CorrectionViewFromJSON),
+    alerts: json['alerts'] == null ? undefined : json['alerts'],
+    safetyAlerts:
+      json['safetyAlerts'] == null
+        ? undefined
+        : (json['safetyAlerts'] as Array<any>).map(AlertDataFromJSON),
+  };
 }
 
 export function ExecutionViewToJSON(json: any): ExecutionView {
-    return ExecutionViewToJSONTyped(json, false);
+  return ExecutionViewToJSONTyped(json, false);
 }
 
-export function ExecutionViewToJSONTyped(value?: ExecutionView | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ExecutionViewToJSONTyped(
+  value?: ExecutionView | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'id': value['id'],
-        'plannedSessionId': value['plannedSessionId'],
-        'participantAccountId': value['participantAccountId'],
-        'declaredCompletion': value['declaredCompletion'],
-        'recordedAt': value['recordedAt'] == null ? value['recordedAt'] : value['recordedAt'].toISOString(),
-        'painLevel': value['painLevel'],
-        'difficultyLevel': value['difficultyLevel'],
-        'note': value['note'],
-        'results': value['results'] == null ? undefined : ((value['results'] as Array<any>).map(ResultViewToJSON)),
-        'corrections': value['corrections'] == null ? undefined : ((value['corrections'] as Array<any>).map(CorrectionViewToJSON)),
-        'alerts': value['alerts'],
-    };
+  return {
+    id: value['id'],
+    plannedSessionId: value['plannedSessionId'],
+    participantAccountId: value['participantAccountId'],
+    declaredCompletion: value['declaredCompletion'],
+    recordedAt:
+      value['recordedAt'] == null ? value['recordedAt'] : value['recordedAt'].toISOString(),
+    painLevel: value['painLevel'],
+    difficultyLevel: value['difficultyLevel'],
+    note: value['note'],
+    sessionRpe: value['sessionRpe'],
+    observationMode: value['observationMode'],
+    results:
+      value['results'] == null ? undefined : (value['results'] as Array<any>).map(ResultViewToJSON),
+    corrections:
+      value['corrections'] == null
+        ? undefined
+        : (value['corrections'] as Array<any>).map(CorrectionViewToJSON),
+    alerts: value['alerts'],
+    safetyAlerts:
+      value['safetyAlerts'] == null
+        ? undefined
+        : (value['safetyAlerts'] as Array<any>).map(AlertDataToJSON),
+  };
 }

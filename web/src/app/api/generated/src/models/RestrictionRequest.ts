@@ -19,46 +19,54 @@ import { mapValues } from '../runtime';
  * @interface RestrictionRequest
  */
 export interface RestrictionRequest {
-    /**
-     *
-     * @type {Set<string>}
-     * @memberof RestrictionRequest
-     */
-    contraindicationTags?: Set<string>;
+  /**
+   *
+   * @type {Set<string>}
+   * @memberof RestrictionRequest
+   */
+  contraindicationTags?: Set<string>;
 }
 
 /**
  * Check if a given object implements the RestrictionRequest interface.
  */
 export function instanceOfRestrictionRequest(value: object): value is RestrictionRequest {
-    return true;
+  return true;
 }
 
 export function RestrictionRequestFromJSON(json: any): RestrictionRequest {
-    return RestrictionRequestFromJSONTyped(json, false);
+  return RestrictionRequestFromJSONTyped(json, false);
 }
 
-export function RestrictionRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): RestrictionRequest {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'contraindicationTags': json['contraindicationTags'] == null ? undefined : new Set(json['contraindicationTags']),
-    };
+export function RestrictionRequestFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): RestrictionRequest {
+  if (json == null) {
+    return json;
+  }
+  return {
+    contraindicationTags:
+      json['contraindicationTags'] == null ? undefined : new Set(json['contraindicationTags']),
+  };
 }
 
 export function RestrictionRequestToJSON(json: any): RestrictionRequest {
-    return RestrictionRequestToJSONTyped(json, false);
+  return RestrictionRequestToJSONTyped(json, false);
 }
 
-export function RestrictionRequestToJSONTyped(value?: RestrictionRequest | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function RestrictionRequestToJSONTyped(
+  value?: RestrictionRequest | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'contraindicationTags': value['contraindicationTags'] == null ? undefined : Array.from(value['contraindicationTags'] as Set<any>),
-    };
+  return {
+    contraindicationTags:
+      value['contraindicationTags'] == null
+        ? undefined
+        : Array.from(value['contraindicationTags'] as Set<any>),
+  };
 }

@@ -19,62 +19,66 @@ import { mapValues } from '../runtime';
  * @interface CheckInRequest
  */
 export interface CheckInRequest {
-    /**
-     *
-     * @type {number}
-     * @memberof CheckInRequest
-     */
-    painLevel?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof CheckInRequest
-     */
-    readinessLevel?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof CheckInRequest
-     */
-    painArea?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof CheckInRequest
+   */
+  painLevel?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof CheckInRequest
+   */
+  readinessLevel?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof CheckInRequest
+   */
+  painArea?: string;
 }
 
 /**
  * Check if a given object implements the CheckInRequest interface.
  */
 export function instanceOfCheckInRequest(value: object): value is CheckInRequest {
-    return true;
+  return true;
 }
 
 export function CheckInRequestFromJSON(json: any): CheckInRequest {
-    return CheckInRequestFromJSONTyped(json, false);
+  return CheckInRequestFromJSONTyped(json, false);
 }
 
-export function CheckInRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): CheckInRequest {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'painLevel': json['painLevel'] == null ? undefined : json['painLevel'],
-        'readinessLevel': json['readinessLevel'] == null ? undefined : json['readinessLevel'],
-        'painArea': json['painArea'] == null ? undefined : json['painArea'],
-    };
+export function CheckInRequestFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): CheckInRequest {
+  if (json == null) {
+    return json;
+  }
+  return {
+    painLevel: json['painLevel'] == null ? undefined : json['painLevel'],
+    readinessLevel: json['readinessLevel'] == null ? undefined : json['readinessLevel'],
+    painArea: json['painArea'] == null ? undefined : json['painArea'],
+  };
 }
 
 export function CheckInRequestToJSON(json: any): CheckInRequest {
-    return CheckInRequestToJSONTyped(json, false);
+  return CheckInRequestToJSONTyped(json, false);
 }
 
-export function CheckInRequestToJSONTyped(value?: CheckInRequest | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function CheckInRequestToJSONTyped(
+  value?: CheckInRequest | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'painLevel': value['painLevel'],
-        'readinessLevel': value['readinessLevel'],
-        'painArea': value['painArea'],
-    };
+  return {
+    painLevel: value['painLevel'],
+    readinessLevel: value['readinessLevel'],
+    painArea: value['painArea'],
+  };
 }

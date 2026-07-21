@@ -74,7 +74,7 @@ class ConsentGrant {
     @Version
     long version;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(
             name = "consent_grant_scope",
             schema = "consent",

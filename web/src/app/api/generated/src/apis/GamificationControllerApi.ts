@@ -13,389 +13,406 @@
  */
 
 import * as runtime from '../runtime';
+import { type LedgerView, LedgerViewFromJSON, LedgerViewToJSON } from '../models/LedgerView';
 import {
-    type LedgerView,
-    LedgerViewFromJSON,
-    LedgerViewToJSON,
-} from '../models/LedgerView';
-import {
-    type ProfileCommand,
-    ProfileCommandFromJSON,
-    ProfileCommandToJSON,
+  type ProfileCommand,
+  ProfileCommandFromJSON,
+  ProfileCommandToJSON,
 } from '../models/ProfileCommand';
+import { type ProfileView, ProfileViewFromJSON, ProfileViewToJSON } from '../models/ProfileView';
 import {
-    type ProfileView,
-    ProfileViewFromJSON,
-    ProfileViewToJSON,
-} from '../models/ProfileView';
-import {
-    type ProgressView,
-    ProgressViewFromJSON,
-    ProgressViewToJSON,
+  type ProgressView,
+  ProgressViewFromJSON,
+  ProgressViewToJSON,
 } from '../models/ProgressView';
 import {
-    type QualificationView,
-    QualificationViewFromJSON,
-    QualificationViewToJSON,
+  type QualificationView,
+  QualificationViewFromJSON,
+  QualificationViewToJSON,
 } from '../models/QualificationView';
+import { type RankingRow, RankingRowFromJSON, RankingRowToJSON } from '../models/RankingRow';
 import {
-    type RankingRow,
-    RankingRowFromJSON,
-    RankingRowToJSON,
-} from '../models/RankingRow';
-import {
-    type ReversalCommand,
-    ReversalCommandFromJSON,
-    ReversalCommandToJSON,
+  type ReversalCommand,
+  ReversalCommandFromJSON,
+  ReversalCommandToJSON,
 } from '../models/ReversalCommand';
-import {
-    type RuleCommand,
-    RuleCommandFromJSON,
-    RuleCommandToJSON,
-} from '../models/RuleCommand';
-import {
-    type RuleView,
-    RuleViewFromJSON,
-    RuleViewToJSON,
-} from '../models/RuleView';
+import { type RuleCommand, RuleCommandFromJSON, RuleCommandToJSON } from '../models/RuleCommand';
+import { type RuleView, RuleViewFromJSON, RuleViewToJSON } from '../models/RuleView';
 
 export interface ProfileRequest {
-    profileCommand: ProfileCommand;
+  profileCommand: ProfileCommand;
 }
 
 export interface PublishRuleRequest {
-    ruleCommand: RuleCommand;
+  ruleCommand: RuleCommand;
 }
 
 export interface QualifyRequest {
-    executionId: string;
-    idempotencyKey: string;
+  executionId: string;
+  idempotencyKey: string;
 }
 
 export interface ReverseRequest {
-    entryId: string;
-    reversalCommand: ReversalCommand;
+  entryId: string;
+  reversalCommand: ReversalCommand;
 }
 
 /**
  *
  */
 export class GamificationControllerApi extends runtime.BaseAPI {
-
-    /**
-     * Creates request options for profile without sending the request
-     */
-    async profileRequestOpts(requestParameters: ProfileRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['profileCommand'] == null) {
-            throw new runtime.RequiredError(
-                'profileCommand',
-                'Required parameter "profileCommand" was null or undefined when calling profile().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/v1/gamification/me/profile`;
-
-        return {
-            path: urlPath,
-            method: 'PUT',
-            headers: headerParameters,
-            query: queryParameters,
-            body: ProfileCommandToJSON(requestParameters['profileCommand']),
-        };
+  /**
+   * Creates request options for profile without sending the request
+   */
+  async profileRequestOpts(requestParameters: ProfileRequest): Promise<runtime.RequestOpts> {
+    if (requestParameters['profileCommand'] == null) {
+      throw new runtime.RequiredError(
+        'profileCommand',
+        'Required parameter "profileCommand" was null or undefined when calling profile().',
+      );
     }
 
-    /**
-     * Enable, disable or configure the private gamification profile
-     */
-    async profileRaw(requestParameters: ProfileRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ProfileView>> {
-        const requestOptions = await this.profileRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
+    const queryParameters: any = {};
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => ProfileViewFromJSON(jsonValue));
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v1/gamification/me/profile`;
+
+    return {
+      path: urlPath,
+      method: 'PUT',
+      headers: headerParameters,
+      query: queryParameters,
+      body: ProfileCommandToJSON(requestParameters['profileCommand']),
+    };
+  }
+
+  /**
+   * Enable, disable or configure the private gamification profile
+   */
+  async profileRaw(
+    requestParameters: ProfileRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<ProfileView>> {
+    const requestOptions = await this.profileRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => ProfileViewFromJSON(jsonValue));
+  }
+
+  /**
+   * Enable, disable or configure the private gamification profile
+   */
+  async profile(
+    requestParameters: ProfileRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<ProfileView> {
+    const response = await this.profileRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for progress without sending the request
+   */
+  async progressRequestOpts(): Promise<runtime.RequestOpts> {
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v1/gamification/me`;
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   * Return private points and a non-medical ledger view
+   */
+  async progressRaw(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<ProgressView>> {
+    const requestOptions = await this.progressRequestOpts();
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => ProgressViewFromJSON(jsonValue));
+  }
+
+  /**
+   * Return private points and a non-medical ledger view
+   */
+  async progress(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<ProgressView> {
+    const response = await this.progressRaw(initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for publishRule without sending the request
+   */
+  async publishRuleRequestOpts(
+    requestParameters: PublishRuleRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['ruleCommand'] == null) {
+      throw new runtime.RequiredError(
+        'ruleCommand',
+        'Required parameter "ruleCommand" was null or undefined when calling publishRule().',
+      );
     }
 
-    /**
-     * Enable, disable or configure the private gamification profile
-     */
-    async profile(requestParameters: ProfileRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ProfileView> {
-        const response = await this.profileRaw(requestParameters, initOverrides);
-        return await response.value();
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v1/admin/gamification/rules`;
+
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+      body: RuleCommandToJSON(requestParameters['ruleCommand']),
+    };
+  }
+
+  /**
+   * Publish an immutable point rule version
+   */
+  async publishRuleRaw(
+    requestParameters: PublishRuleRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<RuleView>> {
+    const requestOptions = await this.publishRuleRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => RuleViewFromJSON(jsonValue));
+  }
+
+  /**
+   * Publish an immutable point rule version
+   */
+  async publishRule(
+    requestParameters: PublishRuleRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<RuleView> {
+    const response = await this.publishRuleRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for qualify without sending the request
+   */
+  async qualifyRequestOpts(requestParameters: QualifyRequest): Promise<runtime.RequestOpts> {
+    if (requestParameters['executionId'] == null) {
+      throw new runtime.RequiredError(
+        'executionId',
+        'Required parameter "executionId" was null or undefined when calling qualify().',
+      );
     }
 
-    /**
-     * Creates request options for progress without sending the request
-     */
-    async progressRequestOpts(): Promise<runtime.RequestOpts> {
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-
-        let urlPath = `/api/v1/gamification/me`;
-
-        return {
-            path: urlPath,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        };
+    if (requestParameters['idempotencyKey'] == null) {
+      throw new runtime.RequiredError(
+        'idempotencyKey',
+        'Required parameter "idempotencyKey" was null or undefined when calling qualify().',
+      );
     }
 
-    /**
-     * Return private points and a non-medical ledger view
-     */
-    async progressRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ProgressView>> {
-        const requestOptions = await this.progressRequestOpts();
-        const response = await this.request(requestOptions, initOverrides);
+    const queryParameters: any = {};
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => ProgressViewFromJSON(jsonValue));
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (requestParameters['idempotencyKey'] != null) {
+      headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
     }
 
-    /**
-     * Return private points and a non-medical ledger view
-     */
-    async progress(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ProgressView> {
-        const response = await this.progressRaw(initOverrides);
-        return await response.value();
+    let urlPath = `/api/v1/gamification/executions/{executionId}/qualifications`;
+    urlPath = urlPath.replace(
+      '{executionId}',
+      encodeURIComponent(String(requestParameters['executionId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   * Qualify a declared execution for points
+   */
+  async qualifyRaw(
+    requestParameters: QualifyRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<QualificationView>> {
+    const requestOptions = await this.qualifyRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      QualificationViewFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   * Qualify a declared execution for points
+   */
+  async qualify(
+    requestParameters: QualifyRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<QualificationView> {
+    const response = await this.qualifyRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for ranking without sending the request
+   */
+  async rankingRequestOpts(): Promise<runtime.RequestOpts> {
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v1/gamification/ranking`;
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   * Return the opt-in pseudonymous ranking
+   */
+  async rankingRaw(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<RankingRow>>> {
+    const requestOptions = await this.rankingRequestOpts();
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(RankingRowFromJSON));
+  }
+
+  /**
+   * Return the opt-in pseudonymous ranking
+   */
+  async ranking(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<RankingRow>> {
+    const response = await this.rankingRaw(initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for rebuild without sending the request
+   */
+  async rebuildRequestOpts(): Promise<runtime.RequestOpts> {
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v1/admin/gamification/ranking/rebuild`;
+
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   * Rebuild the ranking projection from the point ledger
+   */
+  async rebuildRaw(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<RankingRow>>> {
+    const requestOptions = await this.rebuildRequestOpts();
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(RankingRowFromJSON));
+  }
+
+  /**
+   * Rebuild the ranking projection from the point ledger
+   */
+  async rebuild(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<RankingRow>> {
+    const response = await this.rebuildRaw(initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for reverse without sending the request
+   */
+  async reverseRequestOpts(requestParameters: ReverseRequest): Promise<runtime.RequestOpts> {
+    if (requestParameters['entryId'] == null) {
+      throw new runtime.RequiredError(
+        'entryId',
+        'Required parameter "entryId" was null or undefined when calling reverse().',
+      );
     }
 
-    /**
-     * Creates request options for publishRule without sending the request
-     */
-    async publishRuleRequestOpts(requestParameters: PublishRuleRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['ruleCommand'] == null) {
-            throw new runtime.RequiredError(
-                'ruleCommand',
-                'Required parameter "ruleCommand" was null or undefined when calling publishRule().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/v1/admin/gamification/rules`;
-
-        return {
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: RuleCommandToJSON(requestParameters['ruleCommand']),
-        };
+    if (requestParameters['reversalCommand'] == null) {
+      throw new runtime.RequiredError(
+        'reversalCommand',
+        'Required parameter "reversalCommand" was null or undefined when calling reverse().',
+      );
     }
 
-    /**
-     * Publish an immutable point rule version
-     */
-    async publishRuleRaw(requestParameters: PublishRuleRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<RuleView>> {
-        const requestOptions = await this.publishRuleRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
+    const queryParameters: any = {};
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => RuleViewFromJSON(jsonValue));
-    }
+    const headerParameters: runtime.HTTPHeaders = {};
 
-    /**
-     * Publish an immutable point rule version
-     */
-    async publishRule(requestParameters: PublishRuleRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<RuleView> {
-        const response = await this.publishRuleRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+    headerParameters['Content-Type'] = 'application/json';
 
-    /**
-     * Creates request options for qualify without sending the request
-     */
-    async qualifyRequestOpts(requestParameters: QualifyRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['executionId'] == null) {
-            throw new runtime.RequiredError(
-                'executionId',
-                'Required parameter "executionId" was null or undefined when calling qualify().'
-            );
-        }
+    let urlPath = `/api/v1/admin/gamification/ledger/{entryId}/reversals`;
+    urlPath = urlPath.replace(
+      '{entryId}',
+      encodeURIComponent(String(requestParameters['entryId'])),
+    );
 
-        if (requestParameters['idempotencyKey'] == null) {
-            throw new runtime.RequiredError(
-                'idempotencyKey',
-                'Required parameter "idempotencyKey" was null or undefined when calling qualify().'
-            );
-        }
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+      body: ReversalCommandToJSON(requestParameters['reversalCommand']),
+    };
+  }
 
-        const queryParameters: any = {};
+  /**
+   * Append a point reversal without changing ledger history
+   */
+  async reverseRaw(
+    requestParameters: ReverseRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<LedgerView>> {
+    const requestOptions = await this.reverseRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
 
-        const headerParameters: runtime.HTTPHeaders = {};
+    return new runtime.JSONApiResponse(response, (jsonValue) => LedgerViewFromJSON(jsonValue));
+  }
 
-        if (requestParameters['idempotencyKey'] != null) {
-            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
-        }
-
-
-        let urlPath = `/api/v1/gamification/executions/{executionId}/qualifications`;
-        urlPath = urlPath.replace('{executionId}', encodeURIComponent(String(requestParameters['executionId'])));
-
-        return {
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-        };
-    }
-
-    /**
-     * Qualify a declared execution for points
-     */
-    async qualifyRaw(requestParameters: QualifyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<QualificationView>> {
-        const requestOptions = await this.qualifyRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => QualificationViewFromJSON(jsonValue));
-    }
-
-    /**
-     * Qualify a declared execution for points
-     */
-    async qualify(requestParameters: QualifyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<QualificationView> {
-        const response = await this.qualifyRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
-    /**
-     * Creates request options for ranking without sending the request
-     */
-    async rankingRequestOpts(): Promise<runtime.RequestOpts> {
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-
-        let urlPath = `/api/v1/gamification/ranking`;
-
-        return {
-            path: urlPath,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        };
-    }
-
-    /**
-     * Return the opt-in pseudonymous ranking
-     */
-    async rankingRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<RankingRow>>> {
-        const requestOptions = await this.rankingRequestOpts();
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(RankingRowFromJSON));
-    }
-
-    /**
-     * Return the opt-in pseudonymous ranking
-     */
-    async ranking(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<RankingRow>> {
-        const response = await this.rankingRaw(initOverrides);
-        return await response.value();
-    }
-
-    /**
-     * Creates request options for rebuild without sending the request
-     */
-    async rebuildRequestOpts(): Promise<runtime.RequestOpts> {
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-
-        let urlPath = `/api/v1/admin/gamification/ranking/rebuild`;
-
-        return {
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-        };
-    }
-
-    /**
-     * Rebuild the ranking projection from the point ledger
-     */
-    async rebuildRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<RankingRow>>> {
-        const requestOptions = await this.rebuildRequestOpts();
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(RankingRowFromJSON));
-    }
-
-    /**
-     * Rebuild the ranking projection from the point ledger
-     */
-    async rebuild(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<RankingRow>> {
-        const response = await this.rebuildRaw(initOverrides);
-        return await response.value();
-    }
-
-    /**
-     * Creates request options for reverse without sending the request
-     */
-    async reverseRequestOpts(requestParameters: ReverseRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['entryId'] == null) {
-            throw new runtime.RequiredError(
-                'entryId',
-                'Required parameter "entryId" was null or undefined when calling reverse().'
-            );
-        }
-
-        if (requestParameters['reversalCommand'] == null) {
-            throw new runtime.RequiredError(
-                'reversalCommand',
-                'Required parameter "reversalCommand" was null or undefined when calling reverse().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/v1/admin/gamification/ledger/{entryId}/reversals`;
-        urlPath = urlPath.replace('{entryId}', encodeURIComponent(String(requestParameters['entryId'])));
-
-        return {
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: ReversalCommandToJSON(requestParameters['reversalCommand']),
-        };
-    }
-
-    /**
-     * Append a point reversal without changing ledger history
-     */
-    async reverseRaw(requestParameters: ReverseRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<LedgerView>> {
-        const requestOptions = await this.reverseRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => LedgerViewFromJSON(jsonValue));
-    }
-
-    /**
-     * Append a point reversal without changing ledger history
-     */
-    async reverse(requestParameters: ReverseRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<LedgerView> {
-        const response = await this.reverseRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
+  /**
+   * Append a point reversal without changing ledger history
+   */
+  async reverse(
+    requestParameters: ReverseRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<LedgerView> {
+    const response = await this.reverseRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
 }

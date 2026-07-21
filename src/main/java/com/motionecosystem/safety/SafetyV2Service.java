@@ -117,6 +117,53 @@ public class SafetyV2Service implements SafetyAssessmentPort {
         return view(item);
     }
 
+    @Transactional
+    public RestrictionView revisePhysiotherapistRestriction(
+            UUID actor, UUID participant, ActingContext context, UUID restrictionId,
+            RestrictionCommand command) {
+        authorization.requireCapabilities(actor, participant, context,
+                Set.of(Capability.SET_CLINICAL_RESTRICTION),
+                SpecialistAuthorizationPort.Purpose.CLINICAL_REVIEW);
+        RestrictionEntity previous = requireRestriction(restrictionId);
+        if (!previous.participantId.equals(participant)
+                || previous.sourceType != SourceType.PHYSIOTHERAPIST
+                || !previous.authorAccountId.equals(actor)
+                || previous.status != RestrictionEntity.Status.ACTIVE) {
+            throw forbidden("physiotherapist can revise only their own active clinical restriction");
+        }
+        RestrictionEntity revision = create(participant, SourceType.PHYSIOTHERAPIST,
+                command, actor, Capability.SET_CLINICAL_RESTRICTION.name());
+        revision.rootId = previous.rootId;
+        revision.revisionNumber = previous.revisionNumber + 1;
+        revision.supersedesRestrictionId = previous.id;
+        previous.status = RestrictionEntity.Status.SUPERSEDED;
+        restrictions.save(revision);
+        audit.record(actor.toString(), "CLINICAL_RESTRICTION_REVISED", "Restriction", revision.id);
+        return view(revision);
+    }
+
+    @Transactional(readOnly = true)
+    public List<EffectiveRestrictionView> effectiveRestrictions(
+            UUID actor, UUID participant, ActingContext context) {
+        authorization.requireCapabilities(actor, participant, context,
+                Set.of(Capability.VIEW_EFFECTIVE_RESTRICTION), purpose(context));
+        Instant now = clock.instant();
+        return restrictions.findByParticipantIdAndStatus(participant, RestrictionEntity.Status.ACTIVE)
+                .stream().filter(item -> item.activeAt(now)).map(item -> new EffectiveRestrictionView(
+                        item.id, item.validFrom, item.validTo,
+                        "ACTIVE_" + item.semanticType.name(), targetView(item))).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClinicalRestrictionView> clinicalRestrictions(
+            UUID actor, UUID participant, ActingContext context) {
+        authorization.requireCapabilities(actor, participant, context,
+                Set.of(Capability.VIEW_CLINICAL_RATIONALE),
+                SpecialistAuthorizationPort.Purpose.CLINICAL_REVIEW);
+        return restrictions.findByParticipantIdOrderByCreatedAt(participant).stream()
+                .map(item -> new ClinicalRestrictionView(view(item), item.clinicalRationaleRef)).toList();
+    }
+
     @Transactional(readOnly = true)
     public List<RestrictionView> history(UUID participantId) {
         return restrictions.findByParticipantIdOrderByCreatedAt(participantId).stream()
@@ -440,18 +487,21 @@ public class SafetyV2Service implements SafetyAssessmentPort {
                 item.validTo,
                 item.authorCapability,
                 item.participantExplanation,
-                new TargetView(
-                        item.target.structureId,
-                        item.target.movementPattern,
-                        item.target.channel,
-                        item.target.loadCharacteristic,
-                        item.target.side,
-                        item.target.rangeOfMotion,
-                        item.target.contractionType,
-                        item.target.limitLow,
-                        item.target.limitHigh,
-                        item.target.unit,
-                        item.target.minimumRecoveryHours));
+                targetView(item));
+    }
+
+    private static TargetView targetView(RestrictionEntity item) {
+        return new TargetView(item.target.structureId, item.target.movementPattern,
+                item.target.channel, item.target.loadCharacteristic, item.target.side,
+                item.target.rangeOfMotion, item.target.contractionType, item.target.limitLow,
+                item.target.limitHigh, item.target.unit, item.target.minimumRecoveryHours);
+    }
+
+    private static SpecialistAuthorizationPort.Purpose purpose(ActingContext context) {
+        if (context == null || context.role() == null) throw badRequest("acting context is required");
+        return context.role() == SpecialistAuthorizationPort.ProfessionalRole.TRAINER
+                ? SpecialistAuthorizationPort.Purpose.PERFORMANCE_PLANNING
+                : SpecialistAuthorizationPort.Purpose.FUNCTIONAL_RECOVERY;
     }
 
     private static String restrictionSnapshot(RestrictionEntity item) {
@@ -565,6 +615,12 @@ public class SafetyV2Service implements SafetyAssessmentPort {
             String participantExplanation,
             TargetView target) {
     }
+
+    /** Planning-safe envelope: no source, diagnosis or clinical rationale is exposed. */
+    public record EffectiveRestrictionView(UUID restrictionId, Instant validFrom, Instant validTo,
+                                           String explanationCode, TargetView target) { }
+
+    public record ClinicalRestrictionView(RestrictionView restriction, String clinicalRationaleRef) { }
 
     public record OverrideCommand(
             String reasonCode,

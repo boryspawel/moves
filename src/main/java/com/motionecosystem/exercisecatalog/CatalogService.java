@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import com.motionecosystem.anatomyreference.api.AnatomyReferenceQueryPort;
 import com.motionecosystem.anatomyreference.api.AnatomyReferenceQueryPort.StructureStatus;
 import com.motionecosystem.audit.AuditRecorder;
+import com.motionecosystem.identityaccess.api.EditorialCapability;
 import com.motionecosystem.exercisecatalog.api.ExerciseCatalogQueryPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -186,6 +187,8 @@ public class CatalogService implements ExerciseCatalogQueryPort {
             throw conflict(invalidState.getMessage(), invalidState);
         }
         audit.record(actorSubject, "EXERCISE_VERSION_PUBLISHED", "ExerciseVersion", version.id);
+        audit.record(actorSubject, "CAPABILITY_" + EditorialCapability.PUBLISH_EXERCISE_CONTENT,
+                "ExerciseVersion", version.id);
         return view(exercise(version.exerciseId), version);
     }
 

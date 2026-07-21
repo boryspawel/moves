@@ -14,159 +14,107 @@
 
 import * as runtime from '../runtime';
 import {
-    type CheckInRequest,
-    CheckInRequestFromJSON,
-    CheckInRequestToJSON,
+  type CheckInRequest,
+  CheckInRequestFromJSON,
+  CheckInRequestToJSON,
 } from '../models/CheckInRequest';
-import {
-    type RestrictionRequest,
-    RestrictionRequestFromJSON,
-    RestrictionRequestToJSON,
-} from '../models/RestrictionRequest';
-import {
-    type SafetyView,
-    SafetyViewFromJSON,
-    SafetyViewToJSON,
-} from '../models/SafetyView';
+import { type SafetyView, SafetyViewFromJSON, SafetyViewToJSON } from '../models/SafetyView';
 
 export interface CheckInOperationRequest {
-    checkInRequest: CheckInRequest;
-}
-
-export interface RestrictionsRequest {
-    restrictionRequest: RestrictionRequest;
+  checkInRequest: CheckInRequest;
 }
 
 /**
  *
  */
 export class ParticipantSafetyControllerApi extends runtime.BaseAPI {
-
-    /**
-     * Creates request options for checkIn without sending the request
-     */
-    async checkInRequestOpts(requestParameters: CheckInOperationRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['checkInRequest'] == null) {
-            throw new runtime.RequiredError(
-                'checkInRequest',
-                'Required parameter "checkInRequest" was null or undefined when calling checkIn().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/v1/safety/me/check-ins`;
-
-        return {
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: CheckInRequestToJSON(requestParameters['checkInRequest']),
-        };
+  /**
+   * Creates request options for checkIn without sending the request
+   */
+  async checkInRequestOpts(
+    requestParameters: CheckInOperationRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['checkInRequest'] == null) {
+      throw new runtime.RequiredError(
+        'checkInRequest',
+        'Required parameter "checkInRequest" was null or undefined when calling checkIn().',
+      );
     }
 
-    /**
-     */
-    async checkInRaw(requestParameters: CheckInOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SafetyView>> {
-        const requestOptions = await this.checkInRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
+    const queryParameters: any = {};
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => SafetyViewFromJSON(jsonValue));
-    }
+    const headerParameters: runtime.HTTPHeaders = {};
 
-    /**
-     */
-    async checkIn(requestParameters: CheckInOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SafetyView> {
-        const response = await this.checkInRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+    headerParameters['Content-Type'] = 'application/json';
 
-    /**
-     * Creates request options for current without sending the request
-     */
-    async currentRequestOpts(): Promise<runtime.RequestOpts> {
-        const queryParameters: any = {};
+    let urlPath = `/api/v1/safety/me/check-ins`;
 
-        const headerParameters: runtime.HTTPHeaders = {};
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+      body: CheckInRequestToJSON(requestParameters['checkInRequest']),
+    };
+  }
 
+  /**
+   */
+  async checkInRaw(
+    requestParameters: CheckInOperationRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<SafetyView>> {
+    const requestOptions = await this.checkInRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
 
-        let urlPath = `/api/v1/safety/me`;
+    return new runtime.JSONApiResponse(response, (jsonValue) => SafetyViewFromJSON(jsonValue));
+  }
 
-        return {
-            path: urlPath,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        };
-    }
+  /**
+   */
+  async checkIn(
+    requestParameters: CheckInOperationRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<SafetyView> {
+    const response = await this.checkInRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
 
-    /**
-     * Return only the authenticated participant\'s non-diagnostic safety inputs
-     */
-    async currentRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SafetyView>> {
-        const requestOptions = await this.currentRequestOpts();
-        const response = await this.request(requestOptions, initOverrides);
+  /**
+   * Creates request options for current without sending the request
+   */
+  async currentRequestOpts(): Promise<runtime.RequestOpts> {
+    const queryParameters: any = {};
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => SafetyViewFromJSON(jsonValue));
-    }
+    const headerParameters: runtime.HTTPHeaders = {};
 
-    /**
-     * Return only the authenticated participant\'s non-diagnostic safety inputs
-     */
-    async current(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SafetyView> {
-        const response = await this.currentRaw(initOverrides);
-        return await response.value();
-    }
+    let urlPath = `/api/v1/safety/me`;
 
-    /**
-     * Creates request options for restrictions without sending the request
-     */
-    async restrictionsRequestOpts(requestParameters: RestrictionsRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['restrictionRequest'] == null) {
-            throw new runtime.RequiredError(
-                'restrictionRequest',
-                'Required parameter "restrictionRequest" was null or undefined when calling restrictions().'
-            );
-        }
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
 
-        const queryParameters: any = {};
+  /**
+   * Return only the authenticated participant\'s non-diagnostic safety inputs
+   */
+  async currentRaw(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<SafetyView>> {
+    const requestOptions = await this.currentRequestOpts();
+    const response = await this.request(requestOptions, initOverrides);
 
-        const headerParameters: runtime.HTTPHeaders = {};
+    return new runtime.JSONApiResponse(response, (jsonValue) => SafetyViewFromJSON(jsonValue));
+  }
 
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/v1/safety/me/restrictions`;
-
-        return {
-            path: urlPath,
-            method: 'PUT',
-            headers: headerParameters,
-            query: queryParameters,
-            body: RestrictionRequestToJSON(requestParameters['restrictionRequest']),
-        };
-    }
-
-    /**
-     */
-    async restrictionsRaw(requestParameters: RestrictionsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SafetyView>> {
-        const requestOptions = await this.restrictionsRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => SafetyViewFromJSON(jsonValue));
-    }
-
-    /**
-     */
-    async restrictions(requestParameters: RestrictionsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SafetyView> {
-        const response = await this.restrictionsRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
+  /**
+   * Return only the authenticated participant\'s non-diagnostic safety inputs
+   */
+  async current(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SafetyView> {
+    const response = await this.currentRaw(initOverrides);
+    return await response.value();
+  }
 }

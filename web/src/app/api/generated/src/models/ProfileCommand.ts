@@ -19,62 +19,66 @@ import { mapValues } from '../runtime';
  * @interface ProfileCommand
  */
 export interface ProfileCommand {
-    /**
-     *
-     * @type {boolean}
-     * @memberof ProfileCommand
-     */
-    enabled?: boolean;
-    /**
-     *
-     * @type {string}
-     * @memberof ProfileCommand
-     */
-    pseudonym?: string;
-    /**
-     *
-     * @type {boolean}
-     * @memberof ProfileCommand
-     */
-    rankingVisible?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof ProfileCommand
+   */
+  enabled?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof ProfileCommand
+   */
+  pseudonym?: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof ProfileCommand
+   */
+  rankingVisible?: boolean;
 }
 
 /**
  * Check if a given object implements the ProfileCommand interface.
  */
 export function instanceOfProfileCommand(value: object): value is ProfileCommand {
-    return true;
+  return true;
 }
 
 export function ProfileCommandFromJSON(json: any): ProfileCommand {
-    return ProfileCommandFromJSONTyped(json, false);
+  return ProfileCommandFromJSONTyped(json, false);
 }
 
-export function ProfileCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): ProfileCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'enabled': json['enabled'] == null ? undefined : json['enabled'],
-        'pseudonym': json['pseudonym'] == null ? undefined : json['pseudonym'],
-        'rankingVisible': json['rankingVisible'] == null ? undefined : json['rankingVisible'],
-    };
+export function ProfileCommandFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): ProfileCommand {
+  if (json == null) {
+    return json;
+  }
+  return {
+    enabled: json['enabled'] == null ? undefined : json['enabled'],
+    pseudonym: json['pseudonym'] == null ? undefined : json['pseudonym'],
+    rankingVisible: json['rankingVisible'] == null ? undefined : json['rankingVisible'],
+  };
 }
 
 export function ProfileCommandToJSON(json: any): ProfileCommand {
-    return ProfileCommandToJSONTyped(json, false);
+  return ProfileCommandToJSONTyped(json, false);
 }
 
-export function ProfileCommandToJSONTyped(value?: ProfileCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ProfileCommandToJSONTyped(
+  value?: ProfileCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'enabled': value['enabled'],
-        'pseudonym': value['pseudonym'],
-        'rankingVisible': value['rankingVisible'],
-    };
+  return {
+    enabled: value['enabled'],
+    pseudonym: value['pseudonym'],
+    rankingVisible: value['rankingVisible'],
+  };
 }

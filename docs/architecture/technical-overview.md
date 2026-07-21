@@ -4,7 +4,7 @@ Status: dokument rozwijany wraz z migracją. `spec.md` jest źródłem nadrzędn
 
 ## Kontekst i topologia
 
-`moves` powstaje jako modularny monolit Java 25 / Spring Boot 4.1 z PostgreSQL i Flyway. Klienci komunikują się wyłącznie przez wersjonowane REST API `/api/v1` opisane OpenAPI. Keycloak jest zewnętrznym dostawcą OIDC; backend nie implementuje logowania ani refresh tokenów.
+`moves` powstaje jako modularny monolit Java 25 / Spring Boot 4.1 z PostgreSQL i Flyway. Klienci komunikują się wyłącznie przez wersjonowane REST API `/api/v1` i `/api/v2` opisane OpenAPI. Keycloak jest zewnętrznym dostawcą OIDC; backend nie implementuje logowania ani refresh tokenów.
 
 Początkowe deploymenty:
 
@@ -21,10 +21,13 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
 - `specialist`: profil specjalisty i relacja do uczestnika;
 - `consent`: wersje dokumentów, granty, wycofanie i ważność;
 - `availability`: cykliczne przedziały i przyszłe wyjątki;
+- `anatomyreference`: wersjonowana taksonomia struktur anatomicznych;
 - `exercisecatalog`: ćwiczenia, niezmienne wersje i publikacja;
-- `trainingplanning`: cel, plan, cykl, mikrocykl, sesja i recepta;
-- `trainingexecution`: append-only wykonanie, wyniki, raport bólu/trudności, alerty i korekty;
-- `safety`: ograniczenia, readiness, ból i alerty;
+- `trainingplanning`: cel, owner, collaborators, rewizja, cykl, mikrocykl, sesja i recepta;
+- `loadanalysis`: wersjonowane profile planned i executed load bez globalnego score;
+- `planworkflow`: walidacja, acknowledgement i atomowa aktywacja rewizji;
+- `trainingexecution`: append-only wykonanie i dawka rzeczywista, projekcje, raport bólu/post24h, alerty i korekty;
+- `safety`: wersjonowane ograniczenia, niezmienne assessmenty i jawne override;
 - `calendar`, `notification`: późniejsze moduły zakresu MVP;
 - `gamification`: opt-in i append-only ledger bez danych medycznych;
 - `audit`: istotne operacje i dostęp do danych wrażliwych.
@@ -35,6 +38,7 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
 - Plan wskazuje identyfikator konkretnej opublikowanej wersji ćwiczenia.
 - Execution wskazuje planowaną sesję i receptę, a korekta dopisuje rekord.
 - Uprawnienia zasobowe są sprawdzane w przypadkach użycia, nie tylko w route guards lub rolach tokenu.
+- Operacja specjalisty wskazuje jawny kontekst zawodowy i purpose; capability, relacja i zgoda są sprawdzane centralnie przy każdym dostępie.
 - Każdy moduł posiada własny schemat/tabele i nie odczytuje repozytorium innego modułu bez jawnego portu.
 
 ## Dane i czas
@@ -49,6 +53,8 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
 - OAuth2 Resource Server waliduje issuer i audience; role Keycloak są mapowane do `ROLE_*`.
 - Health i kontrakt OpenAPI mogą być publiczne; domenowe API domyślnie wymaga tokenu.
 - Ból, ograniczenia, wywiad i notatki nie trafiają do gamifikacji ani publicznego profilu.
+- Trener widzi wyłącznie effective safety envelope. Clinical rationale jest osobnym widokiem fizjoterapeuty objętym osobną zgodą.
+- Collaborator planu ma jawny zakres, który nie zastępuje kontroli capability, relacji i consent.
 - System zapisuje deklarację, regułę i alert, ale nie diagnozuje i nie generuje planu medycznego.
 
 ## Testowanie

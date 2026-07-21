@@ -51,12 +51,13 @@ public interface TrainingPlanningV2Persistence {
     List<RevisionHistoryItem> revisionHistory(UUID planId);
 
     record PlanAccess(UUID planId, UUID participantAccountId, String name, String purpose,
-                      UUID ownerAccountId, String mode, String status, UUID currentRevisionId) {
+                      UUID ownerAccountId, String mode, String status, UUID currentRevisionId,
+                      String ownerCapability) {
     }
 
     record RevisionAccess(UUID revisionId, UUID planId, UUID participantAccountId,
                           UUID ownerAccountId, String mode, String status,
-                          int revisionNumber, long version) {
+                          int revisionNumber, long version, String authorCapability) {
     }
 
     record RevisionHistoryItem(UUID revisionId, int revisionNumber, UUID basedOnRevisionId,

@@ -68,7 +68,7 @@ class RestrictionEntity {
     @Version
     long version;
 
-    @OneToOne(mappedBy = "restriction", cascade = CascadeType.ALL, fetch = FetchType.EAGER, optional = false)
+    @OneToOne(mappedBy = "restriction", cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
     RestrictionTargetEntity target;
 
     protected RestrictionEntity() {
@@ -181,7 +181,7 @@ class SafetyAssessmentEntity {
     @Column(name = "assessed_at")
     Instant assessedAt;
 
-    @OneToMany(mappedBy = "assessment", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "assessment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     List<SafetyFactorEntity> factors = new ArrayList<>();
 
     protected SafetyAssessmentEntity() {

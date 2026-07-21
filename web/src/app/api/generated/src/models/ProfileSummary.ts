@@ -19,65 +19,68 @@ import { mapValues } from '../runtime';
  * @interface ProfileSummary
  */
 export interface ProfileSummary {
-    /**
-     *
-     * @type {string}
-     * @memberof ProfileSummary
-     */
-    displayName?: string;
-    /**
-     *
-     * @type {ProfileSummarySpecialistKindEnum}
-     * @memberof ProfileSummary
-     */
-    specialistKind?: ProfileSummarySpecialistKindEnum;
+  /**
+   *
+   * @type {string}
+   * @memberof ProfileSummary
+   */
+  displayName?: string;
+  /**
+   *
+   * @type {ProfileSummarySpecialistKindEnum}
+   * @memberof ProfileSummary
+   */
+  specialistKind?: ProfileSummarySpecialistKindEnum;
 }
-
 
 /**
  * @export
  */
 export const ProfileSummarySpecialistKindEnum = {
-    Trainer: 'TRAINER',
-    Physiotherapist: 'PHYSIOTHERAPIST'
+  Trainer: 'TRAINER',
+  Physiotherapist: 'PHYSIOTHERAPIST',
 } as const;
-export type ProfileSummarySpecialistKindEnum = typeof ProfileSummarySpecialistKindEnum[keyof typeof ProfileSummarySpecialistKindEnum];
-
+export type ProfileSummarySpecialistKindEnum =
+  (typeof ProfileSummarySpecialistKindEnum)[keyof typeof ProfileSummarySpecialistKindEnum];
 
 /**
  * Check if a given object implements the ProfileSummary interface.
  */
 export function instanceOfProfileSummary(value: object): value is ProfileSummary {
-    return true;
+  return true;
 }
 
 export function ProfileSummaryFromJSON(json: any): ProfileSummary {
-    return ProfileSummaryFromJSONTyped(json, false);
+  return ProfileSummaryFromJSONTyped(json, false);
 }
 
-export function ProfileSummaryFromJSONTyped(json: any, ignoreDiscriminator: boolean): ProfileSummary {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'displayName': json['displayName'] == null ? undefined : json['displayName'],
-        'specialistKind': json['specialistKind'] == null ? undefined : json['specialistKind'],
-    };
+export function ProfileSummaryFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): ProfileSummary {
+  if (json == null) {
+    return json;
+  }
+  return {
+    displayName: json['displayName'] == null ? undefined : json['displayName'],
+    specialistKind: json['specialistKind'] == null ? undefined : json['specialistKind'],
+  };
 }
 
 export function ProfileSummaryToJSON(json: any): ProfileSummary {
-    return ProfileSummaryToJSONTyped(json, false);
+  return ProfileSummaryToJSONTyped(json, false);
 }
 
-export function ProfileSummaryToJSONTyped(value?: ProfileSummary | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ProfileSummaryToJSONTyped(
+  value?: ProfileSummary | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'displayName': value['displayName'],
-        'specialistKind': value['specialistKind'],
-    };
+  return {
+    displayName: value['displayName'],
+    specialistKind: value['specialistKind'],
+  };
 }

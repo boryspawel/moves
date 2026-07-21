@@ -18,6 +18,8 @@ import java.util.concurrent.TimeUnit;
 
 import com.motionecosystem.application.MotionEcosystemApplication;
 import com.motionecosystem.exercisecatalog.api.ExerciseCatalogQueryPort;
+import com.motionecosystem.identityaccess.api.EditorialCapability;
+import com.motionecosystem.safety.domain.SafetyRules;
 import com.motionecosystem.support.PostgresTestConfiguration;
 import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.SessionFactory;
@@ -127,6 +129,11 @@ class CatalogAndSafetyIntegrationTest {
                         .with(contentAdmin()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PUBLISHED"));
+        assertThat(jdbc.queryForObject("""
+                SELECT COUNT(*) FROM audit.audit_event
+                WHERE event_type = 'CAPABILITY_PUBLISH_EXERCISE_CONTENT'
+                  AND aggregate_id = ?
+                """, Long.class, versionId)).isOne();
         mvc.perform(post("/api/v1/admin/exercises/versions/{id}/evidence", versionId)
                         .with(contentAdmin()).contentType("application/json").content(evidenceRequest()))
                 .andExpect(status().isConflict());
@@ -210,6 +217,10 @@ class CatalogAndSafetyIntegrationTest {
 
     @Test
     void contentAdministrationIsProtectedAndOpenApiSeparatesListFromEditorialProfile() throws Exception {
+        assertThat(EditorialCapability.values()).containsExactly(
+                EditorialCapability.PUBLISH_EXERCISE_CONTENT,
+                EditorialCapability.PUBLISH_SAFETY_RULE);
+        assertThat(SafetyRules.PUBLICATION_CAPABILITY).isEqualTo("PUBLISH_SAFETY_RULE");
         mvc.perform(post("/api/v1/admin/exercises").with(participant("participant"))
                         .contentType("application/json").content(createExerciseRequest("Forbidden")))
                 .andExpect(status().isForbidden());

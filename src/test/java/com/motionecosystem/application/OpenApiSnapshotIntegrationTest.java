@@ -32,7 +32,17 @@ class OpenApiSnapshotIntegrationTest {
                 .build();
         String contract = mvc.perform(get("/v3/api-docs"))
                 .andReturn().getResponse().getContentAsString();
-        assertThat(contract).contains("/api/v1/onboarding", "/api/v1/planned-sessions", "/api/v1/gamification/me");
+        assertThat(contract).contains(
+                "/api/v1/onboarding",
+                "/api/v1/planned-sessions",
+                "/api/v1/gamification/me",
+                "/api/v2/training-plans/{planId}/collaborators",
+                "/api/v2/training-plans/{planId}/collaborators/{collaboratorId}",
+                "/api/v2/training-plans/revisions/{revisionId}/reviews",
+                "/api/v2/training-plans/reviews/{reviewId}/decision",
+                "/api/v2/safety/participants/{participantId}/effective-restrictions",
+                "/api/v2/safety/participants/{participantId}/clinical-restrictions",
+                "/api/v2/safety/participants/{participantId}/restrictions/{restrictionId}");
 
         String output = System.getProperty("openapi.snapshot");
         if (output != null && !output.isBlank()) {

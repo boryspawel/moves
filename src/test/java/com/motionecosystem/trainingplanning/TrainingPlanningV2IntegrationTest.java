@@ -11,6 +11,10 @@ import java.util.List;
 import java.util.UUID;
 
 import com.motionecosystem.application.MotionEcosystemApplication;
+import com.motionecosystem.consent.ConsentGrantService;
+import com.motionecosystem.consent.api.ConsentDecisionPort;
+import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
+import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ProfessionalRole;
 import com.motionecosystem.support.PostgresTestConfiguration;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.BudgetAction;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.DoseType;
@@ -45,6 +49,7 @@ import org.springframework.web.server.ResponseStatusException;
 class TrainingPlanningV2IntegrationTest {
 
     @Autowired TrainingPlanningV2Service planning;
+    @Autowired ConsentGrantService consents;
     @Autowired JdbcTemplate jdbc;
 
     UUID participantId;
@@ -60,6 +65,12 @@ class TrainingPlanningV2IntegrationTest {
         specialistId = account("planning-specialist", "SPECIALIST");
         foreignSpecialistId = account("foreign-planning-specialist", "SPECIALIST");
         relationship(specialistId, participantId);
+        scope(specialistId, "TRAINER");
+        UUID template = consents.publishTemplate(
+                "PLANNING_TEST", 1, "urn:test:planning", "EXPLICIT_CONSENT").id();
+        consents.grant("planning-participant", new ConsentGrantService.GrantCommand(
+                specialistId, ConsentDecisionPort.Purpose.PERFORMANCE_PLANNING, template,
+                java.util.Set.of(ConsentDecisionPort.DataScope.PLAN), null, null));
         exerciseVersionId = publishedExerciseVersion();
     }
 
@@ -68,9 +79,11 @@ class TrainingPlanningV2IntegrationTest {
         jdbc.execute("""
                 TRUNCATE TABLE
                     audit.audit_event,
+                    consent.consent_template_version,
                     training_planning.training_plan,
                     training_planning.training_goal,
                     specialist.participant_specialist_relationship,
+                    specialist.professional_scope,
                     exercise_catalog.exercise,
                     identity_access.principal_account
                 CASCADE
@@ -197,7 +210,8 @@ class TrainingPlanningV2IntegrationTest {
     private EditorView specialistDraft() {
         return planning.createDraft("planning-specialist", new CreateDraftCommand(participantId,
                 "Foundation plan", "Prepare gradual training", PlanMode.SPECIALIST,
-                "Foundation phase", LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31)));
+                "Foundation phase", LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31),
+                new ActingContext(ProfessionalRole.TRAINER)));
     }
 
     private EditorView addDose(EditorView editor, UUID sessionId, int position, DoseType type,
@@ -242,6 +256,14 @@ class TrainingPlanningV2IntegrationTest {
                     (id, specialist_account_id, participant_account_id, status, activated_at)
                 VALUES (?, ?, ?, 'ACTIVE', now())
                 """, UUID.randomUUID(), specialist, participant);
+    }
+
+    private void scope(UUID specialist, String type) {
+        jdbc.update("""
+                INSERT INTO specialist.professional_scope
+                    (specialist_account_id, scope_type, verification_status, verified_at, created_at)
+                VALUES (?, ?, 'VERIFIED', now(), now())
+                """, specialist, type);
     }
 
     private UUID publishedExerciseVersion() {

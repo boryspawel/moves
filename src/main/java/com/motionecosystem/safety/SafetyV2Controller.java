@@ -5,6 +5,8 @@ import com.motionecosystem.safety.SafetyV2Service.OverrideCommand;
 import com.motionecosystem.safety.SafetyV2Service.OverrideView;
 import com.motionecosystem.safety.SafetyV2Service.RestrictionCommand;
 import com.motionecosystem.safety.SafetyV2Service.RestrictionView;
+import com.motionecosystem.safety.SafetyV2Service.EffectiveRestrictionView;
+import com.motionecosystem.safety.SafetyV2Service.ClinicalRestrictionView;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.util.UUID;
@@ -66,6 +68,35 @@ class SafetyV2Controller {
         UUID actor = accounts.requireActive(jwt.getSubject()).id();
         return safety.createPhysiotherapistRestriction(
                 actor, participantId, actingContext.value(), command);
+    }
+
+    @PatchMapping("/participants/{participantId}/restrictions/{restrictionId}")
+    @PreAuthorize("hasRole('SPECIALIST')")
+    RestrictionView reviseClinicalRestriction(
+            @AuthenticationPrincipal Jwt jwt, @PathVariable UUID participantId,
+            @PathVariable UUID restrictionId, @RequestParam SpecialistContext actingContext,
+            @RequestBody RestrictionCommand command) {
+        UUID actor = accounts.requireActive(jwt.getSubject()).id();
+        return safety.revisePhysiotherapistRestriction(
+                actor, participantId, actingContext.value(), restrictionId, command);
+    }
+
+    @GetMapping("/participants/{participantId}/effective-restrictions")
+    @PreAuthorize("hasRole('SPECIALIST')")
+    java.util.List<EffectiveRestrictionView> effectiveRestrictions(
+            @AuthenticationPrincipal Jwt jwt, @PathVariable UUID participantId,
+            @RequestParam SpecialistContext actingContext) {
+        UUID actor = accounts.requireActive(jwt.getSubject()).id();
+        return safety.effectiveRestrictions(actor, participantId, actingContext.value());
+    }
+
+    @GetMapping("/participants/{participantId}/clinical-restrictions")
+    @PreAuthorize("hasRole('SPECIALIST')")
+    java.util.List<ClinicalRestrictionView> clinicalRestrictions(
+            @AuthenticationPrincipal Jwt jwt, @PathVariable UUID participantId,
+            @RequestParam SpecialistContext actingContext) {
+        UUID actor = accounts.requireActive(jwt.getSubject()).id();
+        return safety.clinicalRestrictions(actor, participantId, actingContext.value());
     }
 
     @PostMapping("/participants/{participantId}/assessments/{assessmentId}/factors/{factorId}/overrides")

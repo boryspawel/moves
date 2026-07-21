@@ -19,70 +19,71 @@ import { mapValues } from '../runtime';
  * @interface TrainingCycle
  */
 export interface TrainingCycle {
-    /**
-     *
-     * @type {string}
-     * @memberof TrainingCycle
-     */
-    id?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof TrainingCycle
-     */
-    planId?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof TrainingCycle
-     */
-    sequenceNumber?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof TrainingCycle
-     */
-    name?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof TrainingCycle
+   */
+  id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof TrainingCycle
+   */
+  planId?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof TrainingCycle
+   */
+  sequenceNumber?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof TrainingCycle
+   */
+  name?: string;
 }
 
 /**
  * Check if a given object implements the TrainingCycle interface.
  */
 export function instanceOfTrainingCycle(value: object): value is TrainingCycle {
-    return true;
+  return true;
 }
 
 export function TrainingCycleFromJSON(json: any): TrainingCycle {
-    return TrainingCycleFromJSONTyped(json, false);
+  return TrainingCycleFromJSONTyped(json, false);
 }
 
 export function TrainingCycleFromJSONTyped(json: any, ignoreDiscriminator: boolean): TrainingCycle {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'id': json['id'] == null ? undefined : json['id'],
-        'planId': json['planId'] == null ? undefined : json['planId'],
-        'sequenceNumber': json['sequenceNumber'] == null ? undefined : json['sequenceNumber'],
-        'name': json['name'] == null ? undefined : json['name'],
-    };
+  if (json == null) {
+    return json;
+  }
+  return {
+    id: json['id'] == null ? undefined : json['id'],
+    planId: json['planId'] == null ? undefined : json['planId'],
+    sequenceNumber: json['sequenceNumber'] == null ? undefined : json['sequenceNumber'],
+    name: json['name'] == null ? undefined : json['name'],
+  };
 }
 
 export function TrainingCycleToJSON(json: any): TrainingCycle {
-    return TrainingCycleToJSONTyped(json, false);
+  return TrainingCycleToJSONTyped(json, false);
 }
 
-export function TrainingCycleToJSONTyped(value?: TrainingCycle | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function TrainingCycleToJSONTyped(
+  value?: TrainingCycle | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'id': value['id'],
-        'planId': value['planId'],
-        'sequenceNumber': value['sequenceNumber'],
-        'name': value['name'],
-    };
+  return {
+    id: value['id'],
+    planId: value['planId'],
+    sequenceNumber: value['sequenceNumber'],
+    name: value['name'],
+  };
 }

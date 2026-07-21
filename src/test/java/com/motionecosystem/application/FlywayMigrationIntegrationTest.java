@@ -86,6 +86,34 @@ class FlywayMigrationIntegrationTest {
     }
 
     @Test
+    void createsScopedPlanCollaborationAndOpenReviewConstraint() {
+        Integer applied = jdbc.queryForObject("""
+                SELECT COUNT(*) FROM flyway_schema_history
+                WHERE success = TRUE
+                  AND script = 'V015__create_plan_collaboration_and_review.sql'
+                """, Integer.class);
+        Integer tables = jdbc.queryForObject("""
+                SELECT COUNT(*) FROM information_schema.tables
+                WHERE table_schema = 'training_planning'
+                  AND table_name IN (
+                      'plan_collaborator', 'plan_collaborator_scope', 'plan_review_request'
+                  )
+                """, Integer.class);
+        String openReviewPredicate = jdbc.queryForObject("""
+                SELECT pg_get_expr(index.indpred, index.indrelid)
+                FROM pg_index index
+                JOIN pg_class relation ON relation.oid = index.indexrelid
+                JOIN pg_namespace namespace ON namespace.oid = relation.relnamespace
+                WHERE namespace.nspname = 'training_planning'
+                  AND relation.relname = 'uq_open_plan_review'
+                """, String.class);
+
+        assertThat(applied).isEqualTo(1);
+        assertThat(tables).isEqualTo(3);
+        assertThat(openReviewPredicate).contains("status", "OPEN");
+    }
+
+    @Test
     @Transactional
     void keepsLegacyOfflineAppointmentsButRejectsNewPlanningAppointments() {
         UUID microcycleId = planningHierarchy();

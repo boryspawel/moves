@@ -19,7 +19,11 @@ import com.motionecosystem.identityaccess.api.ActiveParticipantPort;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
-import com.motionecosystem.specialist.SpecialistRelationshipService;
+import com.motionecosystem.specialist.api.SpecialistAuthorizationPort;
+import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
+import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.Capability;
+import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ProfessionalRole;
+import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.Purpose;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.BudgetAction;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.DoseType;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.GoalPerspective;
@@ -47,7 +51,8 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
 
     private final CurrentAccountService accounts;
     private final ActiveParticipantPort participants;
-    private final SpecialistRelationshipService relationships;
+    private final SpecialistAuthorizationPort authorization;
+    private final PlanCollaborationPersistence collaborations;
     private final ExerciseCatalogQueryPort catalog;
     private final TrainingPlanningV2Persistence persistence;
     private final PlanRevisionQueryPort revisions;
@@ -79,7 +84,7 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
             if (mode == PlanMode.SELF_DIRECTED) {
                 throw badRequest("specialist-authored plan must be specialist or collaborative");
             }
-            relationships.requireActive(actor.id(), participantId);
+            requireSpecialistPlanning(actor.id(), participantId, command.actingContext());
         } else {
             throw forbidden("selected profile cannot create a training plan");
         }
@@ -93,7 +98,7 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
                 actor.id(), mode, PlanStatus.DRAFT, revisionId, actor.id(), now);
         var revision = new TrainingPlanningModel.Revision(revisionId, planId, 1, null,
                 RevisionStatus.DRAFT, text(command.phaseIntent(), 500, "phase intent"),
-                command.validFrom(), command.validTo(), actor.id(), capability(actor),
+                command.validFrom(), command.validTo(), actor.id(), capability(actor, command.actingContext()),
                 "NATIVE_V2", "NOT_ASSESSED", now, now, 0);
         mutate(() -> persistence.createDraft(plan, revision));
         audit.record(subject, "TRAINING_PLAN_DRAFT_CREATED", "TrainingPlan", planId);
@@ -105,6 +110,14 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
         var access = requireEditable(subject, revisionId, command == null ? null : command.expectedVersion());
         if (command.perspective() == null) {
             throw badRequest("goal perspective is required");
+        }
+        if (access.actingRole() == ProfessionalRole.TRAINER
+                && command.perspective() != GoalPerspective.PERFORMANCE) {
+            throw forbidden("trainer context can create only performance goals");
+        }
+        if (access.actingRole() == ProfessionalRole.PHYSIOTHERAPIST
+                && command.perspective() != GoalPerspective.FUNCTIONAL_RECOVERY) {
+            throw forbidden("physiotherapist context can create only functional recovery goals");
         }
         List<OutcomeCommand> requested = command.outcomes() == null ? List.of() : List.copyOf(command.outcomes());
         if (requested.stream().anyMatch(Objects::isNull)) {
@@ -228,6 +241,14 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
     @Transactional
     public EditorView addLoadBudget(String subject, UUID revisionId, AddLoadBudgetCommand command) {
         var access = requireEditable(subject, revisionId, command == null ? null : command.expectedVersion());
+        if (access.actor().hasProfile(ProfileType.SPECIALIST)) {
+            if (access.actingRole() != ProfessionalRole.TRAINER) {
+                throw forbidden("only trainer context can set a performance load budget");
+            }
+            authorization.requireCapabilities(access.actor().id(), access.participantAccountId(),
+                    new ActingContext(access.actingRole()), Set.of(Capability.SET_PERFORMANCE_BUDGET),
+                    Purpose.PERFORMANCE_PLANNING);
+        }
         if (command.action() == null || command.low() == null || command.high() == null
                 || command.low().signum() < 0 || command.high().compareTo(command.low()) < 0) {
             throw badRequest("load budget range and action are invalid");
@@ -245,8 +266,13 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
             throw badRequest("base revision is required");
         }
         Access access = requirePlanEditor(subject, planId);
+        if (access.actor().hasProfile(ProfileType.SPECIALIST)
+                && (command.actingContext() == null
+                || command.actingContext().role() != access.actingRole())) {
+            throw forbidden("revision requires the explicit plan owner acting context");
+        }
         UUID revisionId = mutateResult(() -> persistence.cloneRevision(planId, command.basedOnRevisionId(),
-                access.actor().id(), capability(access.actor()), clock.instant()));
+                access.actor().id(), capability(access.actor(), command.actingContext()), clock.instant()));
         audit.record(subject, "TRAINING_PLAN_REVISION_CREATED", "TrainingPlan", planId);
         return editorView(planId, revisionId);
     }
@@ -348,8 +374,9 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
     }
 
     private void requireOwnerForEdit(Access access) {
-        if (!access.ownerAccountId().equals(access.actor().id())) {
-            throw forbidden("only the plan owner can edit it");
+        if (!access.ownerAccountId().equals(access.actor().id())
+                && !access.collaborationScopes().contains("EDIT_DRAFT")) {
+            throw forbidden("plan edit requires ownership or EDIT_DRAFT collaboration scope");
         }
         if (access.actor().profileType() == ProfileType.PARTICIPANT && !"SELF_DIRECTED".equals(access.mode())) {
             throw forbidden("participant can only edit a self-directed plan");
@@ -360,27 +387,45 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
         CurrentAccount actor = accounts.requireActive(subject);
         var access = persistence.findRevisionAccess(revisionId)
                 .orElseThrow(() -> notFound("plan revision not found"));
-        authorizeResource(actor, access.participantAccountId());
+        var resource = authorizeResource(actor, access.planId(), access.participantAccountId(),
+                access.ownerAccountId(), access.authorCapability());
         return new Access(actor, access.planId(), access.participantAccountId(), access.ownerAccountId(),
-                access.mode(), access.status(), access.revisionNumber(), access.version());
+                access.mode(), access.status(), access.revisionNumber(), access.version(),
+                resource.role(), resource.scopes());
     }
 
     private Access requirePlanView(String subject, UUID planId) {
         CurrentAccount actor = accounts.requireActive(subject);
         var access = persistence.findPlanAccess(planId).orElseThrow(() -> notFound("training plan not found"));
-        authorizeResource(actor, access.participantAccountId());
+        var resource = authorizeResource(actor, access.planId(), access.participantAccountId(),
+                access.ownerAccountId(), access.ownerCapability());
         return new Access(actor, access.planId(), access.participantAccountId(), access.ownerAccountId(),
-                access.mode(), access.status(), 0, 0);
+                access.mode(), access.status(), 0, 0, resource.role(), resource.scopes());
     }
 
-    private void authorizeResource(CurrentAccount actor, UUID participantId) {
+    private ResourceAuthorization authorizeResource(CurrentAccount actor, UUID planId, UUID participantId,
+                                                     UUID ownerId, String ownerCapability) {
         if (actor.profileType() == ProfileType.PARTICIPANT) {
             if (!actor.id().equals(participantId)) throw forbidden("plan belongs to another participant");
-            return;
+            return new ResourceAuthorization(null, Set.of());
         }
         if (actor.profileType() == ProfileType.SPECIALIST) {
-            relationships.requireActive(actor.id(), participantId);
-            return;
+            ProfessionalRole role;
+            Set<String> scopes;
+            if (actor.id().equals(ownerId)) {
+                role = role(ownerCapability);
+                scopes = Set.of("VIEW_PLAN", "EDIT_DRAFT", "REVIEW_SAFETY");
+            } else {
+                var collaborator = collaborations.findActiveCollaborator(planId, actor.id())
+                        .filter(item -> item.scopes().contains("VIEW_PLAN")
+                                || item.scopes().contains("EDIT_DRAFT")
+                                || item.scopes().contains("REVIEW_SAFETY"))
+                        .orElseThrow(() -> forbidden("active plan collaboration scope is required"));
+                role = ProfessionalRole.valueOf(collaborator.professionalRole());
+                scopes = collaborator.scopes();
+            }
+            requireSpecialistPlanning(actor.id(), participantId, new ActingContext(role));
+            return new ResourceAuthorization(role, scopes);
         }
         throw forbidden("selected profile cannot access training plans");
     }
@@ -464,8 +509,24 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
         }
     }
 
-    private static String capability(CurrentAccount actor) {
-        return actor.profileType() == ProfileType.SPECIALIST ? "SPECIALIST_LEGACY" : "SELF_DIRECTED_LEGACY";
+    private void requireSpecialistPlanning(UUID actor, UUID participant, ActingContext context) {
+        if (context == null || context.role() == null) {
+            throw forbidden("explicit specialist acting context is required");
+        }
+        authorization.requireCapabilities(actor, participant, context,
+                Set.of(PlanCollaborationService.planCapability(context.role())),
+                PlanCollaborationService.purpose(context.role()));
+    }
+
+    private static ProfessionalRole role(String capability) {
+        return Capability.PLAN_FUNCTIONAL_RECOVERY.name().equals(capability)
+                ? ProfessionalRole.PHYSIOTHERAPIST : ProfessionalRole.TRAINER;
+    }
+
+    private static String capability(CurrentAccount actor, ActingContext context) {
+        if (actor.profileType() != ProfileType.SPECIALIST) return "PARTICIPANT_SELF_DIRECTED";
+        if (context == null || context.role() == null) throw forbidden("explicit specialist acting context is required");
+        return PlanCollaborationService.planCapability(context.role()).name();
     }
 
     private static void validateDateRange(LocalDate start, LocalDate end, String field) {
@@ -557,11 +618,19 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
 
     private record Access(CurrentAccount actor, UUID planId, UUID participantAccountId,
                           UUID ownerAccountId, String mode, String revisionStatus,
-                          int revisionNumber, long revisionVersion) {
+                          int revisionNumber, long revisionVersion, ProfessionalRole actingRole,
+                          Set<String> collaborationScopes) {
     }
 
+    private record ResourceAuthorization(ProfessionalRole role, Set<String> scopes) { }
+
     public record CreateDraftCommand(UUID participantAccountId, String name, String purpose, PlanMode mode,
-                                     String phaseIntent, LocalDate validFrom, LocalDate validTo) {
+                                     String phaseIntent, LocalDate validFrom, LocalDate validTo,
+                                     ActingContext actingContext) {
+        public CreateDraftCommand(UUID participantAccountId, String name, String purpose, PlanMode mode,
+                                  String phaseIntent, LocalDate validFrom, LocalDate validTo) {
+            this(participantAccountId, name, purpose, mode, phaseIntent, validFrom, validTo, null);
+        }
     }
     public record AddGoalCommand(long expectedVersion, GoalPerspective perspective, String category,
                                  String title, String description, Integer priority, GoalStatus status,
@@ -594,7 +663,8 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
     public record AddLoadBudgetCommand(long expectedVersion, String channel, BigDecimal low,
                                        BigDecimal high, String unit, BudgetAction action) {
     }
-    public record CreateRevisionCommand(UUID basedOnRevisionId) {
+    public record CreateRevisionCommand(UUID basedOnRevisionId, ActingContext actingContext) {
+        public CreateRevisionCommand(UUID basedOnRevisionId) { this(basedOnRevisionId, null); }
     }
     public record ValidateCommand(long expectedVersion) {
     }

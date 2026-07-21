@@ -21,6 +21,11 @@ import com.motionecosystem.planworkflow.PlanRevisionWorkflowService.AcknowledgeW
 import com.motionecosystem.planworkflow.PlanRevisionWorkflowService.ActivateWorkflowCommand;
 import com.motionecosystem.planworkflow.PlanRevisionWorkflowService.SafetyBlockException;
 import com.motionecosystem.planworkflow.PlanRevisionWorkflowService.ValidateWorkflowCommand;
+import com.motionecosystem.trainingplanning.PlanCollaborationService.CollaborationScope;
+import com.motionecosystem.trainingplanning.PlanCollaborationService.CollaboratorCommand;
+import com.motionecosystem.trainingplanning.PlanCollaborationService.ReviewDecision;
+import com.motionecosystem.trainingplanning.PlanCollaborationService.ReviewDecisionCommand;
+import com.motionecosystem.trainingplanning.PlanCollaborationService.ReviewRequestCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.DoseType;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.GoalPerspective;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.IntensityType;
@@ -60,6 +65,7 @@ import org.springframework.web.server.ResponseStatusException;
 class PlanRevisionWorkflowIntegrationTest {
 
     @Autowired TrainingPlanningV2Service planning;
+    @Autowired PlanCollaborationService collaboration;
     @Autowired PlanRevisionWorkflowService workflow;
     @Autowired SafetyV2Service safety;
     @Autowired ConsentGrantService consents;
@@ -230,6 +236,72 @@ class PlanRevisionWorkflowIntegrationTest {
     }
 
     @Test
+    void trainerAndPhysiotherapistCollaborateWithoutClinicalLeakAndRevocationIsImmediate() {
+        var clinical = safety.createPhysiotherapistRestriction(
+                physio, participant, new ActingContext(ProfessionalRole.PHYSIOTHERAPIST),
+                clinicalRestriction());
+        var revisedClinical = safety.revisePhysiotherapistRestriction(
+                physio, participant, new ActingContext(ProfessionalRole.PHYSIOTHERAPIST),
+                clinical.id(), new RestrictionCommand(SemanticType.CONTRAINDICATION, null, null,
+                        "Updated participant-visible planning constraint.",
+                        "urn:clinical:updated-reference", target()));
+        UUID template = jdbc.queryForObject("""
+                SELECT id FROM consent.consent_template_version WHERE template_code='PLAN_WORKFLOW'
+                """, UUID.class);
+        UUID effectiveGrant = consents.grant("workflow-participant", new ConsentGrantService.GrantCommand(
+                trainer, ConsentDecisionPort.Purpose.PERFORMANCE_PLANNING, template,
+                Set.of(ConsentDecisionPort.DataScope.EFFECTIVE_RESTRICTION), null, null)).id();
+
+        var safeEnvelope = safety.effectiveRestrictions(trainer, participant,
+                new ActingContext(ProfessionalRole.TRAINER));
+        assertThat(safeEnvelope).singleElement().satisfies(item -> {
+            assertThat(item.restrictionId()).isEqualTo(revisedClinical.id());
+            assertThat(item.explanationCode()).isEqualTo("ACTIVE_CONTRAINDICATION");
+            assertThat(item.toString()).doesNotContain("urn:clinical");
+        });
+        assertForbidden(() -> safety.clinicalRestrictions(trainer, participant,
+                new ActingContext(ProfessionalRole.TRAINER)));
+        assertThat(safety.clinicalRestrictions(physio, participant,
+                new ActingContext(ProfessionalRole.PHYSIOTHERAPIST)))
+                .extracting(item -> item.clinicalRationaleRef())
+                .containsExactly("urn:clinical:test-reference", "urn:clinical:updated-reference");
+
+        EditorView plan = completePlan("workflow-trainer", participant, PlanMode.COLLABORATIVE);
+        var collaborator = collaboration.addCollaborator("workflow-trainer", plan.planId(),
+                new ActingContext(ProfessionalRole.TRAINER),
+                new CollaboratorCommand(physio, ProfessionalRole.PHYSIOTHERAPIST,
+                        Set.of(CollaborationScope.VIEW_PLAN, CollaborationScope.REVIEW_SAFETY)));
+        var validation = workflow.validate("workflow-trainer", plan.revision().revisionId(),
+                new ValidateWorkflowCommand(version(plan), new ActingContext(ProfessionalRole.TRAINER)));
+        assertThat(validation.status()).isEqualTo("BLOCKED");
+        var review = collaboration.requestReview("workflow-trainer", plan.revision().revisionId(),
+                new ReviewRequestCommand(physio, "review:blocked-envelope"));
+        var decision = collaboration.decideReview("workflow-physio", review.id(),
+                new ActingContext(ProfessionalRole.PHYSIOTHERAPIST),
+                new ReviewDecisionCommand(ReviewDecision.PROPOSE_CHANGE, "proposal:reduce-left-load"));
+        assertThat(decision.status()).isEqualTo("CHANGE_PROPOSED");
+        collaboration.endCollaborator("workflow-trainer", plan.planId(), collaborator.id(),
+                new ActingContext(ProfessionalRole.TRAINER));
+        assertForbidden(() -> collaboration.requestReview("workflow-trainer", plan.revision().revisionId(),
+                new ReviewRequestCommand(physio, "review:after-collaboration-ended")));
+
+        consents.revoke("workflow-participant", effectiveGrant);
+        assertForbidden(() -> safety.effectiveRestrictions(trainer, participant,
+                new ActingContext(ProfessionalRole.TRAINER)));
+        jdbc.update("""
+                UPDATE specialist.participant_specialist_relationship
+                SET status='ENDED', ended_at=now()
+                WHERE specialist_account_id=? AND participant_account_id=?
+                """, physio, participant);
+        assertForbidden(() -> safety.clinicalRestrictions(physio, participant,
+                new ActingContext(ProfessionalRole.PHYSIOTHERAPIST)));
+        assertThat(jdbc.queryForObject("""
+                SELECT COUNT(*) FROM audit.audit_event
+                WHERE event_type IN ('BLOCKED_PLAN_SENT_TO_PHYSIO_REVIEW', 'PLAN_REVIEW_PROPOSE_CHANGE')
+                """, Long.class)).isEqualTo(2);
+    }
+
+    @Test
     void concurrentActivationSupersedesPreviousRevisionAndRejectsUnauthorizedActors() throws Exception {
         EditorView first = completePlan("workflow-participant", null, PlanMode.SELF_DIRECTED);
         UUID firstRevision = first.revision().revisionId();
@@ -326,7 +398,9 @@ class PlanRevisionWorkflowIntegrationTest {
                 mode,
                 "Foundation phase",
                 LocalDate.of(2026, 8, 1),
-                LocalDate.of(2026, 8, 31)));
+                LocalDate.of(2026, 8, 31),
+                targetParticipant == null ? null : new ActingContext(subject.contains("physio")
+                        ? ProfessionalRole.PHYSIOTHERAPIST : ProfessionalRole.TRAINER)));
         UUID revisionId = editor.revision().revisionId();
         editor = planning.addGoal(subject, revisionId, new AddGoalCommand(
                 version(editor),

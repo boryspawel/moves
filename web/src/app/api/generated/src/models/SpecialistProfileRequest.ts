@@ -19,65 +19,70 @@ import { mapValues } from '../runtime';
  * @interface SpecialistProfileRequest
  */
 export interface SpecialistProfileRequest {
-    /**
-     *
-     * @type {string}
-     * @memberof SpecialistProfileRequest
-     */
-    displayName?: string;
-    /**
-     *
-     * @type {SpecialistProfileRequestSpecialistKindEnum}
-     * @memberof SpecialistProfileRequest
-     */
-    specialistKind?: SpecialistProfileRequestSpecialistKindEnum;
+  /**
+   *
+   * @type {string}
+   * @memberof SpecialistProfileRequest
+   */
+  displayName?: string;
+  /**
+   *
+   * @type {SpecialistProfileRequestSpecialistKindEnum}
+   * @memberof SpecialistProfileRequest
+   */
+  specialistKind?: SpecialistProfileRequestSpecialistKindEnum;
 }
-
 
 /**
  * @export
  */
 export const SpecialistProfileRequestSpecialistKindEnum = {
-    Trainer: 'TRAINER',
-    Physiotherapist: 'PHYSIOTHERAPIST'
+  Trainer: 'TRAINER',
+  Physiotherapist: 'PHYSIOTHERAPIST',
 } as const;
-export type SpecialistProfileRequestSpecialistKindEnum = typeof SpecialistProfileRequestSpecialistKindEnum[keyof typeof SpecialistProfileRequestSpecialistKindEnum];
-
+export type SpecialistProfileRequestSpecialistKindEnum =
+  (typeof SpecialistProfileRequestSpecialistKindEnum)[keyof typeof SpecialistProfileRequestSpecialistKindEnum];
 
 /**
  * Check if a given object implements the SpecialistProfileRequest interface.
  */
-export function instanceOfSpecialistProfileRequest(value: object): value is SpecialistProfileRequest {
-    return true;
+export function instanceOfSpecialistProfileRequest(
+  value: object,
+): value is SpecialistProfileRequest {
+  return true;
 }
 
 export function SpecialistProfileRequestFromJSON(json: any): SpecialistProfileRequest {
-    return SpecialistProfileRequestFromJSONTyped(json, false);
+  return SpecialistProfileRequestFromJSONTyped(json, false);
 }
 
-export function SpecialistProfileRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): SpecialistProfileRequest {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'displayName': json['displayName'] == null ? undefined : json['displayName'],
-        'specialistKind': json['specialistKind'] == null ? undefined : json['specialistKind'],
-    };
+export function SpecialistProfileRequestFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): SpecialistProfileRequest {
+  if (json == null) {
+    return json;
+  }
+  return {
+    displayName: json['displayName'] == null ? undefined : json['displayName'],
+    specialistKind: json['specialistKind'] == null ? undefined : json['specialistKind'],
+  };
 }
 
 export function SpecialistProfileRequestToJSON(json: any): SpecialistProfileRequest {
-    return SpecialistProfileRequestToJSONTyped(json, false);
+  return SpecialistProfileRequestToJSONTyped(json, false);
 }
 
-export function SpecialistProfileRequestToJSONTyped(value?: SpecialistProfileRequest | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function SpecialistProfileRequestToJSONTyped(
+  value?: SpecialistProfileRequest | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'displayName': value['displayName'],
-        'specialistKind': value['specialistKind'],
-    };
+  return {
+    displayName: value['displayName'],
+    specialistKind: value['specialistKind'],
+  };
 }

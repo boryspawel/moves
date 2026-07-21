@@ -19,62 +19,160 @@ import { mapValues } from '../runtime';
  * @interface CorrectionCommand
  */
 export interface CorrectionCommand {
-    /**
-     *
-     * @type {string}
-     * @memberof CorrectionCommand
-     */
-    reason?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof CorrectionCommand
-     */
-    correctedPainLevel?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof CorrectionCommand
-     */
-    correctedDifficultyLevel?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof CorrectionCommand
+   */
+  reason?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof CorrectionCommand
+   */
+  correctedPainLevel?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof CorrectionCommand
+   */
+  correctedDifficultyLevel?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof CorrectionCommand
+   */
+  exercisePrescriptionId?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof CorrectionCommand
+   */
+  correctedSets?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof CorrectionCommand
+   */
+  correctedRepetitions?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof CorrectionCommand
+   */
+  correctedDurationSeconds?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof CorrectionCommand
+   */
+  correctedContacts?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof CorrectionCommand
+   */
+  correctedExternalLoadValue?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof CorrectionCommand
+   */
+  correctedExternalLoadUnit?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof CorrectionCommand
+   */
+  correctedSide?: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof CorrectionCommand
+   */
+  correctedModified?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof CorrectionCommand
+   */
+  correctedSkipped?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof CorrectionCommand
+   */
+  observationMode?: string;
 }
 
 /**
  * Check if a given object implements the CorrectionCommand interface.
  */
 export function instanceOfCorrectionCommand(value: object): value is CorrectionCommand {
-    return true;
+  return true;
 }
 
 export function CorrectionCommandFromJSON(json: any): CorrectionCommand {
-    return CorrectionCommandFromJSONTyped(json, false);
+  return CorrectionCommandFromJSONTyped(json, false);
 }
 
-export function CorrectionCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): CorrectionCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'reason': json['reason'] == null ? undefined : json['reason'],
-        'correctedPainLevel': json['correctedPainLevel'] == null ? undefined : json['correctedPainLevel'],
-        'correctedDifficultyLevel': json['correctedDifficultyLevel'] == null ? undefined : json['correctedDifficultyLevel'],
-    };
+export function CorrectionCommandFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): CorrectionCommand {
+  if (json == null) {
+    return json;
+  }
+  return {
+    reason: json['reason'] == null ? undefined : json['reason'],
+    correctedPainLevel: json['correctedPainLevel'] == null ? undefined : json['correctedPainLevel'],
+    correctedDifficultyLevel:
+      json['correctedDifficultyLevel'] == null ? undefined : json['correctedDifficultyLevel'],
+    exercisePrescriptionId:
+      json['exercisePrescriptionId'] == null ? undefined : json['exercisePrescriptionId'],
+    correctedSets: json['correctedSets'] == null ? undefined : json['correctedSets'],
+    correctedRepetitions:
+      json['correctedRepetitions'] == null ? undefined : json['correctedRepetitions'],
+    correctedDurationSeconds:
+      json['correctedDurationSeconds'] == null ? undefined : json['correctedDurationSeconds'],
+    correctedContacts: json['correctedContacts'] == null ? undefined : json['correctedContacts'],
+    correctedExternalLoadValue:
+      json['correctedExternalLoadValue'] == null ? undefined : json['correctedExternalLoadValue'],
+    correctedExternalLoadUnit:
+      json['correctedExternalLoadUnit'] == null ? undefined : json['correctedExternalLoadUnit'],
+    correctedSide: json['correctedSide'] == null ? undefined : json['correctedSide'],
+    correctedModified: json['correctedModified'] == null ? undefined : json['correctedModified'],
+    correctedSkipped: json['correctedSkipped'] == null ? undefined : json['correctedSkipped'],
+    observationMode: json['observationMode'] == null ? undefined : json['observationMode'],
+  };
 }
 
 export function CorrectionCommandToJSON(json: any): CorrectionCommand {
-    return CorrectionCommandToJSONTyped(json, false);
+  return CorrectionCommandToJSONTyped(json, false);
 }
 
-export function CorrectionCommandToJSONTyped(value?: CorrectionCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function CorrectionCommandToJSONTyped(
+  value?: CorrectionCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'reason': value['reason'],
-        'correctedPainLevel': value['correctedPainLevel'],
-        'correctedDifficultyLevel': value['correctedDifficultyLevel'],
-    };
+  return {
+    reason: value['reason'],
+    correctedPainLevel: value['correctedPainLevel'],
+    correctedDifficultyLevel: value['correctedDifficultyLevel'],
+    exercisePrescriptionId: value['exercisePrescriptionId'],
+    correctedSets: value['correctedSets'],
+    correctedRepetitions: value['correctedRepetitions'],
+    correctedDurationSeconds: value['correctedDurationSeconds'],
+    correctedContacts: value['correctedContacts'],
+    correctedExternalLoadValue: value['correctedExternalLoadValue'],
+    correctedExternalLoadUnit: value['correctedExternalLoadUnit'],
+    correctedSide: value['correctedSide'],
+    correctedModified: value['correctedModified'],
+    correctedSkipped: value['correctedSkipped'],
+    observationMode: value['observationMode'],
+  };
 }

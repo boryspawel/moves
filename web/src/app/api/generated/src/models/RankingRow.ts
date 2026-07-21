@@ -19,62 +19,63 @@ import { mapValues } from '../runtime';
  * @interface RankingRow
  */
 export interface RankingRow {
-    /**
-     *
-     * @type {number}
-     * @memberof RankingRow
-     */
-    position?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof RankingRow
-     */
-    pseudonym?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof RankingRow
-     */
-    points?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof RankingRow
+   */
+  position?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof RankingRow
+   */
+  pseudonym?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof RankingRow
+   */
+  points?: number;
 }
 
 /**
  * Check if a given object implements the RankingRow interface.
  */
 export function instanceOfRankingRow(value: object): value is RankingRow {
-    return true;
+  return true;
 }
 
 export function RankingRowFromJSON(json: any): RankingRow {
-    return RankingRowFromJSONTyped(json, false);
+  return RankingRowFromJSONTyped(json, false);
 }
 
 export function RankingRowFromJSONTyped(json: any, ignoreDiscriminator: boolean): RankingRow {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'position': json['position'] == null ? undefined : json['position'],
-        'pseudonym': json['pseudonym'] == null ? undefined : json['pseudonym'],
-        'points': json['points'] == null ? undefined : json['points'],
-    };
+  if (json == null) {
+    return json;
+  }
+  return {
+    position: json['position'] == null ? undefined : json['position'],
+    pseudonym: json['pseudonym'] == null ? undefined : json['pseudonym'],
+    points: json['points'] == null ? undefined : json['points'],
+  };
 }
 
 export function RankingRowToJSON(json: any): RankingRow {
-    return RankingRowToJSONTyped(json, false);
+  return RankingRowToJSONTyped(json, false);
 }
 
-export function RankingRowToJSONTyped(value?: RankingRow | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function RankingRowToJSONTyped(
+  value?: RankingRow | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'position': value['position'],
-        'pseudonym': value['pseudonym'],
-        'points': value['points'],
-    };
+  return {
+    position: value['position'],
+    pseudonym: value['pseudonym'],
+    points: value['points'],
+  };
 }

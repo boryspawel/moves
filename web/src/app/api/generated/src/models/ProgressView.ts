@@ -15,17 +15,17 @@
 import { mapValues } from '../runtime';
 import type { LedgerView } from './LedgerView';
 import {
-    LedgerViewFromJSON,
-    LedgerViewFromJSONTyped,
-    LedgerViewToJSON,
-    LedgerViewToJSONTyped,
+  LedgerViewFromJSON,
+  LedgerViewFromJSONTyped,
+  LedgerViewToJSON,
+  LedgerViewToJSONTyped,
 } from './LedgerView';
 import type { ProfileView } from './ProfileView';
 import {
-    ProfileViewFromJSON,
-    ProfileViewFromJSONTyped,
-    ProfileViewToJSON,
-    ProfileViewToJSONTyped,
+  ProfileViewFromJSON,
+  ProfileViewFromJSONTyped,
+  ProfileViewToJSON,
+  ProfileViewToJSONTyped,
 } from './ProfileView';
 
 /**
@@ -34,62 +34,65 @@ import {
  * @interface ProgressView
  */
 export interface ProgressView {
-    /**
-     *
-     * @type {ProfileView}
-     * @memberof ProgressView
-     */
-    profile?: ProfileView;
-    /**
-     *
-     * @type {number}
-     * @memberof ProgressView
-     */
-    points?: number;
-    /**
-     *
-     * @type {Array<LedgerView>}
-     * @memberof ProgressView
-     */
-    ledger?: Array<LedgerView>;
+  /**
+   *
+   * @type {ProfileView}
+   * @memberof ProgressView
+   */
+  profile?: ProfileView;
+  /**
+   *
+   * @type {number}
+   * @memberof ProgressView
+   */
+  points?: number;
+  /**
+   *
+   * @type {Array<LedgerView>}
+   * @memberof ProgressView
+   */
+  ledger?: Array<LedgerView>;
 }
 
 /**
  * Check if a given object implements the ProgressView interface.
  */
 export function instanceOfProgressView(value: object): value is ProgressView {
-    return true;
+  return true;
 }
 
 export function ProgressViewFromJSON(json: any): ProgressView {
-    return ProgressViewFromJSONTyped(json, false);
+  return ProgressViewFromJSONTyped(json, false);
 }
 
 export function ProgressViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): ProgressView {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'profile': json['profile'] == null ? undefined : ProfileViewFromJSON(json['profile']),
-        'points': json['points'] == null ? undefined : json['points'],
-        'ledger': json['ledger'] == null ? undefined : ((json['ledger'] as Array<any>).map(LedgerViewFromJSON)),
-    };
+  if (json == null) {
+    return json;
+  }
+  return {
+    profile: json['profile'] == null ? undefined : ProfileViewFromJSON(json['profile']),
+    points: json['points'] == null ? undefined : json['points'],
+    ledger:
+      json['ledger'] == null ? undefined : (json['ledger'] as Array<any>).map(LedgerViewFromJSON),
+  };
 }
 
 export function ProgressViewToJSON(json: any): ProgressView {
-    return ProgressViewToJSONTyped(json, false);
+  return ProgressViewToJSONTyped(json, false);
 }
 
-export function ProgressViewToJSONTyped(value?: ProgressView | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ProgressViewToJSONTyped(
+  value?: ProgressView | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'profile': ProfileViewToJSON(value['profile']),
-        'points': value['points'],
-        'ledger': value['ledger'] == null ? undefined : ((value['ledger'] as Array<any>).map(LedgerViewToJSON)),
-    };
+  return {
+    profile: ProfileViewToJSON(value['profile']),
+    points: value['points'],
+    ledger:
+      value['ledger'] == null ? undefined : (value['ledger'] as Array<any>).map(LedgerViewToJSON),
+  };
 }

@@ -19,102 +19,105 @@ import { mapValues } from '../runtime';
  * @interface RuleCommand
  */
 export interface RuleCommand {
-    /**
-     *
-     * @type {string}
-     * @memberof RuleCommand
-     */
-    versionName?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof RuleCommand
-     */
-    basePoints?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof RuleCommand
-     */
-    dailyLimit?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof RuleCommand
-     */
-    weeklyLimit?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof RuleCommand
-     */
-    cooldownSeconds?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof RuleCommand
-     */
-    repeatWindowDays?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof RuleCommand
-     */
-    fullRewardOccurrences?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof RuleCommand
-     */
-    reducedRewardPercent?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof RuleCommand
+   */
+  versionName?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof RuleCommand
+   */
+  basePoints?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof RuleCommand
+   */
+  dailyLimit?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof RuleCommand
+   */
+  weeklyLimit?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof RuleCommand
+   */
+  cooldownSeconds?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof RuleCommand
+   */
+  repeatWindowDays?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof RuleCommand
+   */
+  fullRewardOccurrences?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof RuleCommand
+   */
+  reducedRewardPercent?: number;
 }
 
 /**
  * Check if a given object implements the RuleCommand interface.
  */
 export function instanceOfRuleCommand(value: object): value is RuleCommand {
-    return true;
+  return true;
 }
 
 export function RuleCommandFromJSON(json: any): RuleCommand {
-    return RuleCommandFromJSONTyped(json, false);
+  return RuleCommandFromJSONTyped(json, false);
 }
 
 export function RuleCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): RuleCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'versionName': json['versionName'] == null ? undefined : json['versionName'],
-        'basePoints': json['basePoints'] == null ? undefined : json['basePoints'],
-        'dailyLimit': json['dailyLimit'] == null ? undefined : json['dailyLimit'],
-        'weeklyLimit': json['weeklyLimit'] == null ? undefined : json['weeklyLimit'],
-        'cooldownSeconds': json['cooldownSeconds'] == null ? undefined : json['cooldownSeconds'],
-        'repeatWindowDays': json['repeatWindowDays'] == null ? undefined : json['repeatWindowDays'],
-        'fullRewardOccurrences': json['fullRewardOccurrences'] == null ? undefined : json['fullRewardOccurrences'],
-        'reducedRewardPercent': json['reducedRewardPercent'] == null ? undefined : json['reducedRewardPercent'],
-    };
+  if (json == null) {
+    return json;
+  }
+  return {
+    versionName: json['versionName'] == null ? undefined : json['versionName'],
+    basePoints: json['basePoints'] == null ? undefined : json['basePoints'],
+    dailyLimit: json['dailyLimit'] == null ? undefined : json['dailyLimit'],
+    weeklyLimit: json['weeklyLimit'] == null ? undefined : json['weeklyLimit'],
+    cooldownSeconds: json['cooldownSeconds'] == null ? undefined : json['cooldownSeconds'],
+    repeatWindowDays: json['repeatWindowDays'] == null ? undefined : json['repeatWindowDays'],
+    fullRewardOccurrences:
+      json['fullRewardOccurrences'] == null ? undefined : json['fullRewardOccurrences'],
+    reducedRewardPercent:
+      json['reducedRewardPercent'] == null ? undefined : json['reducedRewardPercent'],
+  };
 }
 
 export function RuleCommandToJSON(json: any): RuleCommand {
-    return RuleCommandToJSONTyped(json, false);
+  return RuleCommandToJSONTyped(json, false);
 }
 
-export function RuleCommandToJSONTyped(value?: RuleCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function RuleCommandToJSONTyped(
+  value?: RuleCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'versionName': value['versionName'],
-        'basePoints': value['basePoints'],
-        'dailyLimit': value['dailyLimit'],
-        'weeklyLimit': value['weeklyLimit'],
-        'cooldownSeconds': value['cooldownSeconds'],
-        'repeatWindowDays': value['repeatWindowDays'],
-        'fullRewardOccurrences': value['fullRewardOccurrences'],
-        'reducedRewardPercent': value['reducedRewardPercent'],
-    };
+  return {
+    versionName: value['versionName'],
+    basePoints: value['basePoints'],
+    dailyLimit: value['dailyLimit'],
+    weeklyLimit: value['weeklyLimit'],
+    cooldownSeconds: value['cooldownSeconds'],
+    repeatWindowDays: value['repeatWindowDays'],
+    fullRewardOccurrences: value['fullRewardOccurrences'],
+    reducedRewardPercent: value['reducedRewardPercent'],
+  };
 }

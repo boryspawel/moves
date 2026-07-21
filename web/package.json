@@ -6,7 +6,12 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "api:snapshot": "cd .. && mvn -q -Dtest=OpenApiSnapshotIntegrationTest -Dopenapi.snapshot=web/openapi/openapi.json test",
+    "api:generate": "openapi-generator-cli generate -i openapi/openapi.json -g typescript-fetch -o src/app/api/generated --additional-properties=npmName=@moves/api-client,npmVersion=1.0.0",
+    "api:format": "prettier --write src/app/api/generated",
+    "api:refresh": "npm run api:snapshot && npm run api:generate && npm run api:format",
+    "api:verify": "npm run api:refresh && git diff --exit-code -- openapi/openapi.json src/app/api/generated"
   },
   "private": true,
   "packageManager": "npm@11.12.1",

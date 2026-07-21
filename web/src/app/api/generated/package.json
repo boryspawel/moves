@@ -1,6 +1,6 @@
 {
   "name": "@moves/api-client",
-  "version": "v1",
+  "version": "1.0.0",
   "description": "OpenAPI client for @moves/api-client",
   "author": "OpenAPI-Generator",
   "repository": {

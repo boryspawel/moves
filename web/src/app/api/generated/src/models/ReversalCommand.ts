@@ -19,46 +19,50 @@ import { mapValues } from '../runtime';
  * @interface ReversalCommand
  */
 export interface ReversalCommand {
-    /**
-     *
-     * @type {string}
-     * @memberof ReversalCommand
-     */
-    reason?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ReversalCommand
+   */
+  reason?: string;
 }
 
 /**
  * Check if a given object implements the ReversalCommand interface.
  */
 export function instanceOfReversalCommand(value: object): value is ReversalCommand {
-    return true;
+  return true;
 }
 
 export function ReversalCommandFromJSON(json: any): ReversalCommand {
-    return ReversalCommandFromJSONTyped(json, false);
+  return ReversalCommandFromJSONTyped(json, false);
 }
 
-export function ReversalCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): ReversalCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'reason': json['reason'] == null ? undefined : json['reason'],
-    };
+export function ReversalCommandFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): ReversalCommand {
+  if (json == null) {
+    return json;
+  }
+  return {
+    reason: json['reason'] == null ? undefined : json['reason'],
+  };
 }
 
 export function ReversalCommandToJSON(json: any): ReversalCommand {
-    return ReversalCommandToJSONTyped(json, false);
+  return ReversalCommandToJSONTyped(json, false);
 }
 
-export function ReversalCommandToJSONTyped(value?: ReversalCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ReversalCommandToJSONTyped(
+  value?: ReversalCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'reason': value['reason'],
-    };
+  return {
+    reason: value['reason'],
+  };
 }

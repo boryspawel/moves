@@ -31,7 +31,8 @@ class TrainingPlanningController {
 
     @PostMapping("/training-plans")
     @PreAuthorize("hasRole('SPECIALIST')")
-    @Operation(summary = "Deprecated V1 plan creation endpoint", deprecated = true)
+    @Operation(operationId = "createLegacyTrainingPlan",
+            summary = "Deprecated V1 plan creation endpoint", deprecated = true)
     PlanBundle create(@AuthenticationPrincipal Jwt jwt, @RequestBody CreatePlanCommand command) {
         throw new ResponseStatusException(HttpStatus.GONE,
                 "V1 active-plan creation was retired; use the V2 draft and revision workflow");

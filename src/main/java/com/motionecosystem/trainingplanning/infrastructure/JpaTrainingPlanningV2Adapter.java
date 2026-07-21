@@ -174,8 +174,12 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
     @Override
     public Optional<PlanAccess> findPlanAccess(UUID planId) {
         TrainingPlanJpaEntity plan = entityManager.find(TrainingPlanJpaEntity.class, planId);
-        return Optional.ofNullable(plan).map(item -> new PlanAccess(item.id, item.participantAccountId,
-                item.name, item.purpose, item.ownerAccountId, item.mode, item.status, item.currentRevisionId));
+        if (plan == null) return Optional.empty();
+        PlanRevisionJpaEntity revision = plan.currentRevisionId == null ? null
+                : entityManager.find(PlanRevisionJpaEntity.class, plan.currentRevisionId);
+        return Optional.of(new PlanAccess(plan.id, plan.participantAccountId,
+                plan.name, plan.purpose, plan.ownerAccountId, plan.mode, plan.status, plan.currentRevisionId,
+                revision == null ? "LEGACY_AUTHOR" : revision.authorCapability));
     }
 
     @Override
@@ -186,7 +190,8 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
         }
         TrainingPlanJpaEntity plan = entityManager.find(TrainingPlanJpaEntity.class, revision.planId);
         return Optional.of(new RevisionAccess(revision.id, revision.planId, plan.participantAccountId,
-                plan.ownerAccountId, plan.mode, revision.status, revision.revisionNumber, revision.version));
+                plan.ownerAccountId, plan.mode, revision.status, revision.revisionNumber, revision.version,
+                revision.authorCapability));
     }
 
     @Override

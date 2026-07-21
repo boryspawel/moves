@@ -2,18 +2,16 @@
 
 All URIs are relative to *http://localhost*
 
-| Method | HTTP request | Description |
-|------------- | ------------- | -------------|
-| [**create**](TrainingPlanningControllerApi.md#create) | **POST** /api/v1/training-plans | Create and assign a simple specialist-authored training plan |
-| [**sessions**](TrainingPlanningControllerApi.md#sessions) | **GET** /api/v1/planned-sessions | List planned sessions assigned to the current participant |
+| Method                                                                                    | HTTP request                     | Description                                               |
+| ----------------------------------------------------------------------------------------- | -------------------------------- | --------------------------------------------------------- |
+| [**createLegacyTrainingPlan**](TrainingPlanningControllerApi.md#createlegacytrainingplan) | **POST** /api/v1/training-plans  | Deprecated V1 plan creation endpoint                      |
+| [**sessions**](TrainingPlanningControllerApi.md#sessions)                                 | **GET** /api/v1/planned-sessions | List planned sessions assigned to the current participant |
 
+## createLegacyTrainingPlan
 
+> PlanBundle createLegacyTrainingPlan(createPlanCommand)
 
-## create
-
-> PlanBundle create(createPlanCommand)
-
-Create and assign a simple specialist-authored training plan
+Deprecated V1 plan creation endpoint
 
 ### Example
 
@@ -22,7 +20,7 @@ import {
   Configuration,
   TrainingPlanningControllerApi,
 } from '@moves/api-client';
-import type { CreateRequest } from '@moves/api-client';
+import type { CreateLegacyTrainingPlanRequest } from '@moves/api-client';
 
 async function example() {
   console.log("🚀 Testing @moves/api-client SDK...");
@@ -33,10 +31,10 @@ async function example() {
   const body = {
     // CreatePlanCommand
     createPlanCommand: ...,
-  } satisfies CreateRequest;
+  } satisfies CreateLegacyTrainingPlanRequest;
 
   try {
-    const data = await api.create(body);
+    const data = await api.createLegacyTrainingPlan(body);
     console.log(data);
   } catch (error) {
     console.error(error);
@@ -49,10 +47,9 @@ example().catch(console.error);
 
 ### Parameters
 
-
-| Name | Type | Description  | Notes |
-|------------- | ------------- | ------------- | -------------|
-| **createPlanCommand** | [CreatePlanCommand](CreatePlanCommand.md) |  | |
+| Name                  | Type                                      | Description | Notes |
+| --------------------- | ----------------------------------------- | ----------- | ----- |
+| **createPlanCommand** | [CreatePlanCommand](CreatePlanCommand.md) |             |       |
 
 ### Return type
 
@@ -67,14 +64,13 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-
 ### HTTP response details
+
 | Status code | Description | Response headers |
-|-------------|-------------|------------------|
-| **200** | OK |  -  |
+| ----------- | ----------- | ---------------- |
+| **200**     | OK          | -                |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
-
 
 ## sessions
 
@@ -85,16 +81,12 @@ List planned sessions assigned to the current participant
 ### Example
 
 ```ts
-import {
-  Configuration,
-  TrainingPlanningControllerApi,
-} from '@moves/api-client';
+import { Configuration, TrainingPlanningControllerApi } from '@moves/api-client';
 import type { SessionsRequest } from '@moves/api-client';
 
 async function example() {
-  console.log("🚀 Testing @moves/api-client SDK...");
-  const config = new Configuration({
-  });
+  console.log('🚀 Testing @moves/api-client SDK...');
+  const config = new Configuration({});
   const api = new TrainingPlanningControllerApi(config);
 
   try {
@@ -126,10 +118,10 @@ This endpoint does not need any parameter.
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-
 ### HTTP response details
+
 | Status code | Description | Response headers |
-|-------------|-------------|------------------|
-| **200** | OK |  -  |
+| ----------- | ----------- | ---------------- |
+| **200**     | OK          | -                |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)

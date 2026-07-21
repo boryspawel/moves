@@ -12,6 +12,7 @@ import java.util.UUID;
 
 /** Explicit Java strategies for Safety V2. No medical inference or diagnosis is performed here. */
 public final class SafetyRules {
+    public static final String PUBLICATION_CAPABILITY = "PUBLISH_SAFETY_RULE";
 
     public static final String RULESET_CODE = "SAFETY_V2";
     public static final int RULESET_VERSION = 1;

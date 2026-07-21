@@ -19,110 +19,115 @@ import { mapValues } from '../runtime';
  * @interface ExercisePrescription
  */
 export interface ExercisePrescription {
-    /**
-     *
-     * @type {string}
-     * @memberof ExercisePrescription
-     */
-    id?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof ExercisePrescription
-     */
-    plannedSessionId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof ExercisePrescription
-     */
-    exerciseVersionId?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof ExercisePrescription
-     */
-    position?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof ExercisePrescription
-     */
-    targetSets?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof ExercisePrescription
-     */
-    targetRepetitions?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof ExercisePrescription
-     */
-    targetDurationSeconds?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof ExercisePrescription
-     */
-    targetLoadKg?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof ExercisePrescription
-     */
-    notes?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ExercisePrescription
+   */
+  id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ExercisePrescription
+   */
+  plannedSessionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ExercisePrescription
+   */
+  exerciseVersionId?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof ExercisePrescription
+   */
+  position?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof ExercisePrescription
+   */
+  targetSets?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof ExercisePrescription
+   */
+  targetRepetitions?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof ExercisePrescription
+   */
+  targetDurationSeconds?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof ExercisePrescription
+   */
+  targetLoadKg?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof ExercisePrescription
+   */
+  notes?: string;
 }
 
 /**
  * Check if a given object implements the ExercisePrescription interface.
  */
 export function instanceOfExercisePrescription(value: object): value is ExercisePrescription {
-    return true;
+  return true;
 }
 
 export function ExercisePrescriptionFromJSON(json: any): ExercisePrescription {
-    return ExercisePrescriptionFromJSONTyped(json, false);
+  return ExercisePrescriptionFromJSONTyped(json, false);
 }
 
-export function ExercisePrescriptionFromJSONTyped(json: any, ignoreDiscriminator: boolean): ExercisePrescription {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'id': json['id'] == null ? undefined : json['id'],
-        'plannedSessionId': json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
-        'exerciseVersionId': json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
-        'position': json['position'] == null ? undefined : json['position'],
-        'targetSets': json['targetSets'] == null ? undefined : json['targetSets'],
-        'targetRepetitions': json['targetRepetitions'] == null ? undefined : json['targetRepetitions'],
-        'targetDurationSeconds': json['targetDurationSeconds'] == null ? undefined : json['targetDurationSeconds'],
-        'targetLoadKg': json['targetLoadKg'] == null ? undefined : json['targetLoadKg'],
-        'notes': json['notes'] == null ? undefined : json['notes'],
-    };
+export function ExercisePrescriptionFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): ExercisePrescription {
+  if (json == null) {
+    return json;
+  }
+  return {
+    id: json['id'] == null ? undefined : json['id'],
+    plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
+    exerciseVersionId: json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
+    position: json['position'] == null ? undefined : json['position'],
+    targetSets: json['targetSets'] == null ? undefined : json['targetSets'],
+    targetRepetitions: json['targetRepetitions'] == null ? undefined : json['targetRepetitions'],
+    targetDurationSeconds:
+      json['targetDurationSeconds'] == null ? undefined : json['targetDurationSeconds'],
+    targetLoadKg: json['targetLoadKg'] == null ? undefined : json['targetLoadKg'],
+    notes: json['notes'] == null ? undefined : json['notes'],
+  };
 }
 
 export function ExercisePrescriptionToJSON(json: any): ExercisePrescription {
-    return ExercisePrescriptionToJSONTyped(json, false);
+  return ExercisePrescriptionToJSONTyped(json, false);
 }
 
-export function ExercisePrescriptionToJSONTyped(value?: ExercisePrescription | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ExercisePrescriptionToJSONTyped(
+  value?: ExercisePrescription | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'id': value['id'],
-        'plannedSessionId': value['plannedSessionId'],
-        'exerciseVersionId': value['exerciseVersionId'],
-        'position': value['position'],
-        'targetSets': value['targetSets'],
-        'targetRepetitions': value['targetRepetitions'],
-        'targetDurationSeconds': value['targetDurationSeconds'],
-        'targetLoadKg': value['targetLoadKg'],
-        'notes': value['notes'],
-    };
+  return {
+    id: value['id'],
+    plannedSessionId: value['plannedSessionId'],
+    exerciseVersionId: value['exerciseVersionId'],
+    position: value['position'],
+    targetSets: value['targetSets'],
+    targetRepetitions: value['targetRepetitions'],
+    targetDurationSeconds: value['targetDurationSeconds'],
+    targetLoadKg: value['targetLoadKg'],
+    notes: value['notes'],
+  };
 }

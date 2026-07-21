@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { SlotRequest } from './SlotRequest';
 import {
-    SlotRequestFromJSON,
-    SlotRequestFromJSONTyped,
-    SlotRequestToJSON,
-    SlotRequestToJSONTyped,
+  SlotRequestFromJSON,
+  SlotRequestFromJSONTyped,
+  SlotRequestToJSON,
+  SlotRequestToJSONTyped,
 } from './SlotRequest';
 
 /**
@@ -27,46 +27,52 @@ import {
  * @interface AvailabilityRequest
  */
 export interface AvailabilityRequest {
-    /**
-     *
-     * @type {Array<SlotRequest>}
-     * @memberof AvailabilityRequest
-     */
-    slots?: Array<SlotRequest>;
+  /**
+   *
+   * @type {Array<SlotRequest>}
+   * @memberof AvailabilityRequest
+   */
+  slots?: Array<SlotRequest>;
 }
 
 /**
  * Check if a given object implements the AvailabilityRequest interface.
  */
 export function instanceOfAvailabilityRequest(value: object): value is AvailabilityRequest {
-    return true;
+  return true;
 }
 
 export function AvailabilityRequestFromJSON(json: any): AvailabilityRequest {
-    return AvailabilityRequestFromJSONTyped(json, false);
+  return AvailabilityRequestFromJSONTyped(json, false);
 }
 
-export function AvailabilityRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): AvailabilityRequest {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'slots': json['slots'] == null ? undefined : ((json['slots'] as Array<any>).map(SlotRequestFromJSON)),
-    };
+export function AvailabilityRequestFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): AvailabilityRequest {
+  if (json == null) {
+    return json;
+  }
+  return {
+    slots:
+      json['slots'] == null ? undefined : (json['slots'] as Array<any>).map(SlotRequestFromJSON),
+  };
 }
 
 export function AvailabilityRequestToJSON(json: any): AvailabilityRequest {
-    return AvailabilityRequestToJSONTyped(json, false);
+  return AvailabilityRequestToJSONTyped(json, false);
 }
 
-export function AvailabilityRequestToJSONTyped(value?: AvailabilityRequest | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function AvailabilityRequestToJSONTyped(
+  value?: AvailabilityRequest | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'slots': value['slots'] == null ? undefined : ((value['slots'] as Array<any>).map(SlotRequestToJSON)),
-    };
+  return {
+    slots:
+      value['slots'] == null ? undefined : (value['slots'] as Array<any>).map(SlotRequestToJSON),
+  };
 }

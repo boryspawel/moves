@@ -13,154 +13,175 @@
  */
 
 import * as runtime from '../runtime';
+import { type CatalogPage, CatalogPageFromJSON, CatalogPageToJSON } from '../models/CatalogPage';
 import {
-    type VersionView,
-    VersionViewFromJSON,
-    VersionViewToJSON,
-} from '../models/VersionView';
+  type PublishedExerciseVersionSnapshot,
+  PublishedExerciseVersionSnapshotFromJSON,
+  PublishedExerciseVersionSnapshotToJSON,
+} from '../models/PublishedExerciseVersionSnapshot';
 
 export interface ListRequest {
-    query?: string;
-    movementPattern?: ListMovementPatternEnum;
-    technicalLevel?: ListTechnicalLevelEnum;
-    equipment?: string;
-    excludedContraindicationTag?: string;
+  query?: string;
+  movementPattern?: ListMovementPatternEnum;
+  technicalLevel?: ListTechnicalLevelEnum;
+  equipment?: string;
+  page?: number;
+  size?: number;
 }
 
 export interface VersionRequest {
-    versionId: string;
+  versionId: string;
 }
 
 /**
  *
  */
 export class ExerciseCatalogControllerApi extends runtime.BaseAPI {
+  /**
+   * Creates request options for list without sending the request
+   */
+  async listRequestOpts(requestParameters: ListRequest): Promise<runtime.RequestOpts> {
+    const queryParameters: any = {};
 
-    /**
-     * Creates request options for list without sending the request
-     */
-    async listRequestOpts(requestParameters: ListRequest): Promise<runtime.RequestOpts> {
-        const queryParameters: any = {};
-
-        if (requestParameters['query'] != null) {
-            queryParameters['query'] = requestParameters['query'];
-        }
-
-        if (requestParameters['movementPattern'] != null) {
-            queryParameters['movementPattern'] = requestParameters['movementPattern'];
-        }
-
-        if (requestParameters['technicalLevel'] != null) {
-            queryParameters['technicalLevel'] = requestParameters['technicalLevel'];
-        }
-
-        if (requestParameters['equipment'] != null) {
-            queryParameters['equipment'] = requestParameters['equipment'];
-        }
-
-        if (requestParameters['excludedContraindicationTag'] != null) {
-            queryParameters['excludedContraindicationTag'] = requestParameters['excludedContraindicationTag'];
-        }
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-
-        let urlPath = `/api/v1/exercises`;
-
-        return {
-            path: urlPath,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        };
+    if (requestParameters['query'] != null) {
+      queryParameters['query'] = requestParameters['query'];
     }
 
-    /**
-     * Search published exercise versions using explicitly allowed filters
-     */
-    async listRaw(requestParameters: ListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<VersionView>>> {
-        const requestOptions = await this.listRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(VersionViewFromJSON));
+    if (requestParameters['movementPattern'] != null) {
+      queryParameters['movementPattern'] = requestParameters['movementPattern'];
     }
 
-    /**
-     * Search published exercise versions using explicitly allowed filters
-     */
-    async list(requestParameters: ListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<VersionView>> {
-        const response = await this.listRaw(requestParameters, initOverrides);
-        return await response.value();
+    if (requestParameters['technicalLevel'] != null) {
+      queryParameters['technicalLevel'] = requestParameters['technicalLevel'];
     }
 
-    /**
-     * Creates request options for version without sending the request
-     */
-    async versionRequestOpts(requestParameters: VersionRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['versionId'] == null) {
-            throw new runtime.RequiredError(
-                'versionId',
-                'Required parameter "versionId" was null or undefined when calling version().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-
-        let urlPath = `/api/v1/exercises/versions/{versionId}`;
-        urlPath = urlPath.replace('{versionId}', encodeURIComponent(String(requestParameters['versionId'])));
-
-        return {
-            path: urlPath,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        };
+    if (requestParameters['equipment'] != null) {
+      queryParameters['equipment'] = requestParameters['equipment'];
     }
 
-    /**
-     */
-    async versionRaw(requestParameters: VersionRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<VersionView>> {
-        const requestOptions = await this.versionRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => VersionViewFromJSON(jsonValue));
+    if (requestParameters['page'] != null) {
+      queryParameters['page'] = requestParameters['page'];
     }
 
-    /**
-     */
-    async version(requestParameters: VersionRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<VersionView> {
-        const response = await this.versionRaw(requestParameters, initOverrides);
-        return await response.value();
+    if (requestParameters['size'] != null) {
+      queryParameters['size'] = requestParameters['size'];
     }
 
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v1/exercises`;
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   * Search published exercise versions using explicitly allowed filters
+   */
+  async listRaw(
+    requestParameters: ListRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<CatalogPage>> {
+    const requestOptions = await this.listRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => CatalogPageFromJSON(jsonValue));
+  }
+
+  /**
+   * Search published exercise versions using explicitly allowed filters
+   */
+  async list(
+    requestParameters: ListRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<CatalogPage> {
+    const response = await this.listRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for version without sending the request
+   */
+  async versionRequestOpts(requestParameters: VersionRequest): Promise<runtime.RequestOpts> {
+    if (requestParameters['versionId'] == null) {
+      throw new runtime.RequiredError(
+        'versionId',
+        'Required parameter "versionId" was null or undefined when calling version().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v1/exercises/versions/{versionId}`;
+    urlPath = urlPath.replace(
+      '{versionId}',
+      encodeURIComponent(String(requestParameters['versionId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   */
+  async versionRaw(
+    requestParameters: VersionRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<PublishedExerciseVersionSnapshot>> {
+    const requestOptions = await this.versionRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      PublishedExerciseVersionSnapshotFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async version(
+    requestParameters: VersionRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<PublishedExerciseVersionSnapshot> {
+    const response = await this.versionRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
 }
 
 /**
  * @export
  */
 export const ListMovementPatternEnum = {
-    Squat: 'SQUAT',
-    Hinge: 'HINGE',
-    Push: 'PUSH',
-    Pull: 'PULL',
-    Lunge: 'LUNGE',
-    Carry: 'CARRY',
-    Rotation: 'ROTATION',
-    Locomotion: 'LOCOMOTION',
-    Breathing: 'BREATHING',
-    Mobility: 'MOBILITY',
-    Other: 'OTHER'
+  Squat: 'SQUAT',
+  Hinge: 'HINGE',
+  Push: 'PUSH',
+  Pull: 'PULL',
+  Lunge: 'LUNGE',
+  Carry: 'CARRY',
+  Rotation: 'ROTATION',
+  Locomotion: 'LOCOMOTION',
+  Breathing: 'BREATHING',
+  Mobility: 'MOBILITY',
+  Other: 'OTHER',
 } as const;
-export type ListMovementPatternEnum = typeof ListMovementPatternEnum[keyof typeof ListMovementPatternEnum];
+export type ListMovementPatternEnum =
+  (typeof ListMovementPatternEnum)[keyof typeof ListMovementPatternEnum];
 /**
  * @export
  */
 export const ListTechnicalLevelEnum = {
-    Foundational: 'FOUNDATIONAL',
-    Intermediate: 'INTERMEDIATE',
-    Advanced: 'ADVANCED'
+  Foundational: 'FOUNDATIONAL',
+  Intermediate: 'INTERMEDIATE',
+  Advanced: 'ADVANCED',
 } as const;
-export type ListTechnicalLevelEnum = typeof ListTechnicalLevelEnum[keyof typeof ListTechnicalLevelEnum];
+export type ListTechnicalLevelEnum =
+  (typeof ListTechnicalLevelEnum)[keyof typeof ListTechnicalLevelEnum];

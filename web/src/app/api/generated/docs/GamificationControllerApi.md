@@ -2,17 +2,15 @@
 
 All URIs are relative to *http://localhost*
 
-| Method | HTTP request | Description |
-|------------- | ------------- | -------------|
-| [**profile**](GamificationControllerApi.md#profile) | **PUT** /api/v1/gamification/me/profile | Enable, disable or configure the private gamification profile |
-| [**progress**](GamificationControllerApi.md#progress) | **GET** /api/v1/gamification/me | Return private points and a non-medical ledger view |
-| [**publishRule**](GamificationControllerApi.md#publishrule) | **POST** /api/v1/admin/gamification/rules | Publish an immutable point rule version |
-| [**qualify**](GamificationControllerApi.md#qualify) | **POST** /api/v1/gamification/executions/{executionId}/qualifications | Qualify a declared execution for points |
-| [**ranking**](GamificationControllerApi.md#ranking) | **GET** /api/v1/gamification/ranking | Return the opt-in pseudonymous ranking |
-| [**rebuild**](GamificationControllerApi.md#rebuild) | **POST** /api/v1/admin/gamification/ranking/rebuild | Rebuild the ranking projection from the point ledger |
-| [**reverse**](GamificationControllerApi.md#reverse) | **POST** /api/v1/admin/gamification/ledger/{entryId}/reversals | Append a point reversal without changing ledger history |
-
-
+| Method                                                      | HTTP request                                                          | Description                                                   |
+| ----------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------- |
+| [**profile**](GamificationControllerApi.md#profile)         | **PUT** /api/v1/gamification/me/profile                               | Enable, disable or configure the private gamification profile |
+| [**progress**](GamificationControllerApi.md#progress)       | **GET** /api/v1/gamification/me                                       | Return private points and a non-medical ledger view           |
+| [**publishRule**](GamificationControllerApi.md#publishrule) | **POST** /api/v1/admin/gamification/rules                             | Publish an immutable point rule version                       |
+| [**qualify**](GamificationControllerApi.md#qualify)         | **POST** /api/v1/gamification/executions/{executionId}/qualifications | Qualify a declared execution for points                       |
+| [**ranking**](GamificationControllerApi.md#ranking)         | **GET** /api/v1/gamification/ranking                                  | Return the opt-in pseudonymous ranking                        |
+| [**rebuild**](GamificationControllerApi.md#rebuild)         | **POST** /api/v1/admin/gamification/ranking/rebuild                   | Rebuild the ranking projection from the point ledger          |
+| [**reverse**](GamificationControllerApi.md#reverse)         | **POST** /api/v1/admin/gamification/ledger/{entryId}/reversals        | Append a point reversal without changing ledger history       |
 
 ## profile
 
@@ -54,10 +52,9 @@ example().catch(console.error);
 
 ### Parameters
 
-
-| Name | Type | Description  | Notes |
-|------------- | ------------- | ------------- | -------------|
-| **profileCommand** | [ProfileCommand](ProfileCommand.md) |  | |
+| Name               | Type                                | Description | Notes |
+| ------------------ | ----------------------------------- | ----------- | ----- |
+| **profileCommand** | [ProfileCommand](ProfileCommand.md) |             |       |
 
 ### Return type
 
@@ -72,14 +69,13 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-
 ### HTTP response details
+
 | Status code | Description | Response headers |
-|-------------|-------------|------------------|
-| **200** | OK |  -  |
+| ----------- | ----------- | ---------------- |
+| **200**     | OK          | -                |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
-
 
 ## progress
 
@@ -90,16 +86,12 @@ Return private points and a non-medical ledger view
 ### Example
 
 ```ts
-import {
-  Configuration,
-  GamificationControllerApi,
-} from '@moves/api-client';
+import { Configuration, GamificationControllerApi } from '@moves/api-client';
 import type { ProgressRequest } from '@moves/api-client';
 
 async function example() {
-  console.log("🚀 Testing @moves/api-client SDK...");
-  const config = new Configuration({
-  });
+  console.log('🚀 Testing @moves/api-client SDK...');
+  const config = new Configuration({});
   const api = new GamificationControllerApi(config);
 
   try {
@@ -131,14 +123,13 @@ This endpoint does not need any parameter.
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-
 ### HTTP response details
+
 | Status code | Description | Response headers |
-|-------------|-------------|------------------|
-| **200** | OK |  -  |
+| ----------- | ----------- | ---------------- |
+| **200**     | OK          | -                |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
-
 
 ## publishRule
 
@@ -180,10 +171,9 @@ example().catch(console.error);
 
 ### Parameters
 
-
-| Name | Type | Description  | Notes |
-|------------- | ------------- | ------------- | -------------|
-| **ruleCommand** | [RuleCommand](RuleCommand.md) |  | |
+| Name            | Type                          | Description | Notes |
+| --------------- | ----------------------------- | ----------- | ----- |
+| **ruleCommand** | [RuleCommand](RuleCommand.md) |             |       |
 
 ### Return type
 
@@ -198,14 +188,13 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-
 ### HTTP response details
+
 | Status code | Description | Response headers |
-|-------------|-------------|------------------|
-| **200** | OK |  -  |
+| ----------- | ----------- | ---------------- |
+| **200**     | OK          | -                |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
-
 
 ## qualify
 
@@ -249,11 +238,10 @@ example().catch(console.error);
 
 ### Parameters
 
-
-| Name | Type | Description  | Notes |
-|------------- | ------------- | ------------- | -------------|
-| **executionId** | `string` |  | [Defaults to `undefined`] |
-| **idempotencyKey** | `string` |  | [Defaults to `undefined`] |
+| Name               | Type     | Description | Notes                     |
+| ------------------ | -------- | ----------- | ------------------------- |
+| **executionId**    | `string` |             | [Defaults to `undefined`] |
+| **idempotencyKey** | `string` |             | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -268,14 +256,13 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-
 ### HTTP response details
+
 | Status code | Description | Response headers |
-|-------------|-------------|------------------|
-| **200** | OK |  -  |
+| ----------- | ----------- | ---------------- |
+| **200**     | OK          | -                |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
-
 
 ## ranking
 
@@ -286,16 +273,12 @@ Return the opt-in pseudonymous ranking
 ### Example
 
 ```ts
-import {
-  Configuration,
-  GamificationControllerApi,
-} from '@moves/api-client';
+import { Configuration, GamificationControllerApi } from '@moves/api-client';
 import type { RankingRequest } from '@moves/api-client';
 
 async function example() {
-  console.log("🚀 Testing @moves/api-client SDK...");
-  const config = new Configuration({
-  });
+  console.log('🚀 Testing @moves/api-client SDK...');
+  const config = new Configuration({});
   const api = new GamificationControllerApi(config);
 
   try {
@@ -327,14 +310,13 @@ This endpoint does not need any parameter.
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-
 ### HTTP response details
+
 | Status code | Description | Response headers |
-|-------------|-------------|------------------|
-| **200** | OK |  -  |
+| ----------- | ----------- | ---------------- |
+| **200**     | OK          | -                |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
-
 
 ## rebuild
 
@@ -345,16 +327,12 @@ Rebuild the ranking projection from the point ledger
 ### Example
 
 ```ts
-import {
-  Configuration,
-  GamificationControllerApi,
-} from '@moves/api-client';
+import { Configuration, GamificationControllerApi } from '@moves/api-client';
 import type { RebuildRequest } from '@moves/api-client';
 
 async function example() {
-  console.log("🚀 Testing @moves/api-client SDK...");
-  const config = new Configuration({
-  });
+  console.log('🚀 Testing @moves/api-client SDK...');
+  const config = new Configuration({});
   const api = new GamificationControllerApi(config);
 
   try {
@@ -386,14 +364,13 @@ This endpoint does not need any parameter.
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-
 ### HTTP response details
+
 | Status code | Description | Response headers |
-|-------------|-------------|------------------|
-| **200** | OK |  -  |
+| ----------- | ----------- | ---------------- |
+| **200**     | OK          | -                |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
-
 
 ## reverse
 
@@ -437,11 +414,10 @@ example().catch(console.error);
 
 ### Parameters
 
-
-| Name | Type | Description  | Notes |
-|------------- | ------------- | ------------- | -------------|
-| **entryId** | `string` |  | [Defaults to `undefined`] |
-| **reversalCommand** | [ReversalCommand](ReversalCommand.md) |  | |
+| Name                | Type                                  | Description | Notes                     |
+| ------------------- | ------------------------------------- | ----------- | ------------------------- |
+| **entryId**         | `string`                              |             | [Defaults to `undefined`] |
+| **reversalCommand** | [ReversalCommand](ReversalCommand.md) |             |                           |
 
 ### Return type
 
@@ -456,10 +432,10 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-
 ### HTTP response details
+
 | Status code | Description | Response headers |
-|-------------|-------------|------------------|
-| **200** | OK |  -  |
+| ----------- | ----------- | ---------------- |
+| **200**     | OK          | -                |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
