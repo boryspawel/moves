@@ -9,6 +9,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import com.motionecosystem.application.MotionEcosystemApplication;
 import com.motionecosystem.support.PostgresTestConfiguration;
@@ -39,6 +44,7 @@ class TrainingPlanningExecutionIntegrationTest {
 
     MockMvc mvc;
     UUID participantId;
+    UUID otherParticipantId;
     UUID specialistId;
     UUID foreignSpecialistId;
     UUID exerciseVersionId;
@@ -49,6 +55,7 @@ class TrainingPlanningExecutionIntegrationTest {
                 .addFilters(securityFilterChain)
                 .build();
         participantId = account("participant", "PARTICIPANT");
+        otherParticipantId = account("other-participant", "PARTICIPANT");
         specialistId = account("specialist", "SPECIALIST");
         foreignSpecialistId = account("foreign-specialist", "SPECIALIST");
         jdbc.update("""
@@ -174,8 +181,12 @@ class TrainingPlanningExecutionIntegrationTest {
                         .with(role("specialist", "SPECIALIST"))
                         .contentType("application/json")
                         .content(planRequest("OFFLINE_APPOINTMENT")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.session.kind").value("OFFLINE_APPOINTMENT"));
+                .andExpect(status().isBadRequest());
+
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM training_planning.planned_session", Long.class)).isZero();
+
+        createPlan();
 
         UUID sessionId = jdbc.queryForObject("SELECT id FROM training_planning.planned_session", UUID.class);
         UUID prescriptionId = jdbc.queryForObject(
@@ -198,6 +209,51 @@ class TrainingPlanningExecutionIntegrationTest {
         mvc.perform(get("/api/v1/specialist/participants/{id}/executions", participantId)
                         .with(role("foreign-specialist", "SPECIALIST")))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void anotherParticipantCannotExecuteAssignedSession() throws Exception {
+        createPlan();
+        UUID sessionId = sessionId();
+        UUID prescriptionId = prescriptionId();
+
+        mvc.perform(post("/api/v1/planned-sessions/{id}/executions", sessionId)
+                        .with(role("other-participant", "PARTICIPANT"))
+                        .header("Idempotency-Key", "foreign-participant-execution")
+                        .contentType("application/json")
+                        .content(executionRequest(prescriptionId, true, 0, 4)))
+                .andExpect(status().isNotFound());
+
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM training_execution.session_execution", Long.class)).isZero();
+    }
+
+    @Test
+    void concurrentRetryWithSameKeyReturnsStableExecution() throws Exception {
+        createPlan();
+        UUID sessionId = sessionId();
+        String request = executionRequest(prescriptionId(), true, 0, 4);
+
+        List<Integer> statuses = concurrentDeclarations(sessionId, request, "same-key", "same-key");
+
+        assertThat(statuses).containsExactlyInAnyOrder(200, 200);
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM training_execution.session_execution", Long.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(DISTINCT id) FROM training_execution.session_execution", Long.class)).isEqualTo(1);
+    }
+
+    @Test
+    void concurrentDifferentKeysAllowOnlyOneSuccessfulExecution() throws Exception {
+        createPlan();
+        UUID sessionId = sessionId();
+        String request = executionRequest(prescriptionId(), true, 0, 4);
+
+        List<Integer> statuses = concurrentDeclarations(sessionId, request, "first-key", "second-key");
+
+        assertThat(statuses).containsExactlyInAnyOrder(200, 409);
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM training_execution.session_execution", Long.class)).isEqualTo(1);
     }
 
     @Test
@@ -243,6 +299,49 @@ class TrainingPlanningExecutionIntegrationTest {
                 VALUES (?, 'ACUTE_KNEE_PAIN')
                 """, versionId);
         return versionId;
+    }
+
+    private void createPlan() throws Exception {
+        mvc.perform(post("/api/v1/training-plans")
+                        .with(role("specialist", "SPECIALIST"))
+                        .contentType("application/json")
+                        .content(planRequest("SELF_GUIDED")))
+                .andExpect(status().isOk());
+    }
+
+    private UUID sessionId() {
+        return jdbc.queryForObject("SELECT id FROM training_planning.planned_session", UUID.class);
+    }
+
+    private UUID prescriptionId() {
+        return jdbc.queryForObject("SELECT id FROM training_planning.exercise_prescription", UUID.class);
+    }
+
+    private List<Integer> concurrentDeclarations(UUID sessionId, String request,
+                                                 String firstKey, String secondKey) throws Exception {
+        CountDownLatch ready = new CountDownLatch(2);
+        CountDownLatch start = new CountDownLatch(1);
+        try (ExecutorService executor = Executors.newFixedThreadPool(2)) {
+            Future<Integer> first = executor.submit(() -> declarationStatus(
+                    sessionId, request, firstKey, ready, start));
+            Future<Integer> second = executor.submit(() -> declarationStatus(
+                    sessionId, request, secondKey, ready, start));
+            assertThat(ready.await(10, TimeUnit.SECONDS)).isTrue();
+            start.countDown();
+            return List.of(first.get(20, TimeUnit.SECONDS), second.get(20, TimeUnit.SECONDS));
+        }
+    }
+
+    private int declarationStatus(UUID sessionId, String request, String key,
+                                  CountDownLatch ready, CountDownLatch start) throws Exception {
+        ready.countDown();
+        assertThat(start.await(10, TimeUnit.SECONDS)).isTrue();
+        return mvc.perform(post("/api/v1/planned-sessions/{id}/executions", sessionId)
+                        .with(role("participant", "PARTICIPANT"))
+                        .header("Idempotency-Key", key)
+                        .contentType("application/json")
+                        .content(request))
+                .andReturn().getResponse().getStatus();
     }
 
     private String planRequest(String sessionKind) {

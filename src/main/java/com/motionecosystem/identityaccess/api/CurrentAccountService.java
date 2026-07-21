@@ -8,6 +8,7 @@ import com.motionecosystem.identityaccess.domain.PrincipalAccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -18,7 +19,7 @@ public class CurrentAccountService {
     private final PrincipalAccountRepository accounts;
     private final Clock clock;
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public CurrentAccount requireActive(String externalSubject) {
         String subject = Objects.requireNonNull(externalSubject, "externalSubject").trim();
         if (subject.isEmpty() || subject.length() > 255) {
@@ -29,8 +30,9 @@ public class CurrentAccountService {
         if (!account.isActive()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "account is not active");
         }
-        account.seenAt(clock.instant());
-        return view(account);
+        CurrentAccount current = view(account);
+        accounts.updateLastSeenAt(account.id(), clock.instant());
+        return current;
     }
 
     @Transactional

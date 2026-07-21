@@ -1,7 +1,6 @@
 package com.motionecosystem.trainingplanning;
 
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
@@ -9,6 +8,7 @@ import java.util.UUID;
 
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.exercisecatalog.CatalogService;
+import com.motionecosystem.identityaccess.api.ActiveParticipantPort;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
@@ -16,7 +16,6 @@ import com.motionecosystem.specialist.SpecialistRelationshipService;
 import com.motionecosystem.trainingplanning.PlannedSession.SessionKind;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -25,10 +24,11 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class TrainingPlanningService {
 
-    private final JdbcTemplate jdbc;
     private final CurrentAccountService accounts;
+    private final ActiveParticipantPort participants;
     private final SpecialistRelationshipService relationships;
     private final CatalogService catalog;
+    private final TrainingPlanningPersistence persistence;
     private final AuditRecorder audit;
     private final Clock clock;
 
@@ -55,43 +55,17 @@ public class TrainingPlanningService {
         Microcycle microcycle = new Microcycle(UUID.randomUUID(), cycle.id(), 1,
                 text(command.microcycleName(), "microcycle name"));
         SessionKind kind = command.sessionKind() == null ? SessionKind.SELF_GUIDED : command.sessionKind();
+        if (kind == SessionKind.OFFLINE_APPOINTMENT) {
+            throw badRequest("offline appointments belong to the calendar and cannot be planned as sessions");
+        }
         PlannedSession session = new PlannedSession(UUID.randomUUID(), microcycle.id(),
                 command.participantAccountId(), text(command.sessionTitle(), "session title"), kind,
                 PlannedSession.SessionStatus.ASSIGNED, now);
 
-        jdbc.update("""
-                INSERT INTO training_planning.training_goal
-                    (id, participant_account_id, name, created_by_account_id, created_at)
-                VALUES (?, ?, ?, ?, ?)
-                """, goal.id(), goal.participantAccountId(), goal.name(), goal.createdByAccountId(),
-                Timestamp.from(goal.createdAt()));
-        jdbc.update("""
-                INSERT INTO training_planning.training_plan
-                    (id, goal_id, participant_account_id, created_by_account_id, name, plan_mode, status, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """, plan.id(), plan.goalId(), plan.participantAccountId(), plan.createdByAccountId(), plan.name(),
-                plan.mode().name(), plan.status().name(), Timestamp.from(plan.createdAt()));
-        jdbc.update("INSERT INTO training_planning.training_cycle (id, plan_id, sequence_number, name) VALUES (?, ?, ?, ?)",
-                cycle.id(), cycle.planId(), cycle.sequenceNumber(), cycle.name());
-        jdbc.update("INSERT INTO training_planning.microcycle (id, cycle_id, sequence_number, name) VALUES (?, ?, ?, ?)",
-                microcycle.id(), microcycle.cycleId(), microcycle.sequenceNumber(), microcycle.name());
-        jdbc.update("""
-                INSERT INTO training_planning.planned_session
-                    (id, microcycle_id, participant_account_id, title, session_kind, status, assigned_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, session.id(), session.microcycleId(), session.participantAccountId(), session.title(),
-                session.kind().name(), session.status().name(), Timestamp.from(session.assignedAt()));
-
         List<ExercisePrescription> prescriptions = java.util.stream.IntStream.range(0, requested.size())
                 .mapToObj(index -> prescription(session.id(), index + 1, requested.get(index)))
                 .toList();
-        prescriptions.forEach(item -> jdbc.update("""
-                INSERT INTO training_planning.exercise_prescription
-                    (id, planned_session_id, exercise_version_id, position, target_sets,
-                     target_repetitions, target_duration_seconds, target_load_kg, notes)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, item.id(), item.plannedSessionId(), item.exerciseVersionId(), item.position(),
-                item.targetSets(), item.targetRepetitions(), item.targetDurationSeconds(), item.targetLoadKg(), item.notes()));
+        persistence.save(goal, plan, cycle, microcycle, session, prescriptions);
         audit.record(subject, "TRAINING_PLAN_ASSIGNED", "TrainingPlan", plan.id());
         return new PlanBundle(goal, plan, cycle, microcycle, session, prescriptions);
     }
@@ -100,41 +74,18 @@ public class TrainingPlanningService {
     public List<SessionView> participantSessions(String subject) {
         CurrentAccount participant = accounts.requireActive(subject);
         requireProfile(participant, ProfileType.PARTICIPANT, "participant profile is required");
-        return jdbc.query("""
-                SELECT id, title, session_kind, status, assigned_at
-                FROM training_planning.planned_session
-                WHERE participant_account_id = ?
-                ORDER BY assigned_at, id
-                """, (rs, row) -> new SessionView(
-                rs.getObject("id", UUID.class),
-                rs.getString("title"),
-                SessionKind.valueOf(rs.getString("session_kind")),
-                PlannedSession.SessionStatus.valueOf(rs.getString("status")),
-                rs.getTimestamp("assigned_at").toInstant(),
-                prescriptions(rs.getObject("id", UUID.class))), participant.id());
-    }
-
-    private List<PrescriptionView> prescriptions(UUID sessionId) {
-        return jdbc.query("""
-                SELECT id, exercise_version_id, position, target_sets, target_repetitions,
-                       target_duration_seconds, target_load_kg, notes
-                FROM training_planning.exercise_prescription
-                WHERE planned_session_id = ?
-                ORDER BY position
-                """, (rs, row) -> new PrescriptionView(
-                rs.getObject("id", UUID.class), rs.getObject("exercise_version_id", UUID.class),
-                rs.getInt("position"), (Integer) rs.getObject("target_sets"),
-                (Integer) rs.getObject("target_repetitions"),
-                (Integer) rs.getObject("target_duration_seconds"), rs.getBigDecimal("target_load_kg"),
-                rs.getString("notes")), sessionId);
+        return persistence.findParticipantSessions(participant.id()).stream()
+                .map(session -> new SessionView(session.id(), session.title(), session.kind(), session.status(),
+                        session.assignedAt(), session.prescriptions().stream()
+                        .map(item -> new PrescriptionView(item.id(), item.exerciseVersionId(), item.position(),
+                                item.targetSets(), item.targetRepetitions(), item.targetDurationSeconds(),
+                                item.targetLoadKg(), item.notes()))
+                        .toList()))
+                .toList();
     }
 
     private void requireParticipant(UUID accountId) {
-        List<String> types = jdbc.query("""
-                SELECT profile_type FROM identity_access.principal_account
-                WHERE id = ? AND status = 'ACTIVE'
-                """, (rs, row) -> rs.getString(1), accountId);
-        if (types.size() != 1 || !ProfileType.PARTICIPANT.name().equals(types.getFirst())) {
+        if (participants.findActiveParticipant(accountId).isEmpty()) {
             throw badRequest("active participant account is required");
         }
     }

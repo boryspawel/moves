@@ -1,9 +1,10 @@
 package com.motionecosystem.trainingexecution;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import com.motionecosystem.trainingplanning.api.PlannedSessionExecutionPort;
 import org.springframework.http.HttpStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -13,15 +14,27 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class ExecutionQualificationPort {
 
-    private final ExecutionQualificationRepository executions;
+    private final SessionExecutionPersistence executions;
+    private final PlannedSessionExecutionPort plannedSessions;
 
     public QualifyingExecution requireDeclared(UUID executionId) {
-        List<QualifyingExecution> matches = executions.findByExecutionId(executionId);
-        if (matches.size() != 1 || !matches.getFirst().declaredCompletion()) {
+        var execution = executions.findById(executionId)
+                .map(SessionExecutionPersistence.ExecutionAggregate::execution)
+                .filter(SessionExecutionPersistence.ExecutionData::declaredCompletion)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "qualifying declared execution not found"));
+        var session = plannedSessions.findSession(execution.plannedSessionId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "qualifying planned session not found"));
+        String activityKey = session.prescriptions().stream()
+                .map(item -> item.exerciseVersionId().toString())
+                .collect(Collectors.joining(","));
+        if (activityKey.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "qualifying declared execution not found");
         }
-        return matches.getFirst();
+        return new QualifyingExecution(execution.id(), execution.participantAccountId(),
+                execution.recordedAt(), true, activityKey);
     }
 
     public record QualifyingExecution(UUID executionId, UUID participantAccountId,
