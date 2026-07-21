@@ -16,7 +16,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import com.motionecosystem.anatomyreference.api.AnatomyReferenceQueryPort;
-import com.motionecosystem.anatomyreference.domain.PublicationStatus;
+import com.motionecosystem.anatomyreference.api.AnatomyReferenceQueryPort.StructureStatus;
 import com.motionecosystem.application.MotionEcosystemApplication;
 import com.motionecosystem.support.PostgresTestConfiguration;
 import org.junit.jupiter.api.AfterEach;
@@ -74,7 +74,7 @@ class AnatomyReferenceIntegrationTest {
         UUID regionId = create("LOWER_LIMB", "BODY_REGION", "Lower limb");
         assertThat(queries.findStructure(kneeId)).get()
                 .extracting(AnatomyReferenceQueryPort.AnatomicalStructureSnapshot::status)
-                .isEqualTo(PublicationStatus.DRAFT);
+                .isEqualTo(StructureStatus.DRAFT);
 
         mvc.perform(post("/api/v1/admin/anatomical-structures/{id}/publish", kneeId)
                         .with(contentAdmin()))

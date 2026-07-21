@@ -9,11 +9,9 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.motionecosystem.audit.AuditRecorder;
-import com.motionecosystem.exercisecatalog.CatalogService;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
-import com.motionecosystem.safety.ParticipantSafetyService;
 import com.motionecosystem.specialist.SpecialistRelationshipService;
 import com.motionecosystem.trainingexecution.SessionExecutionPersistence.AlertData;
 import com.motionecosystem.trainingexecution.SessionExecutionPersistence.CorrectionData;
@@ -35,8 +33,6 @@ public class SessionExecutionService {
 
     private final CurrentAccountService accounts;
     private final SpecialistRelationshipService relationships;
-    private final CatalogService catalog;
-    private final ParticipantSafetyService safety;
     private final PlannedSessionExecutionPort plannedSessions;
     private final SessionExecutionPersistence persistence;
     private final AuditRecorder audit;
@@ -86,7 +82,6 @@ public class SessionExecutionService {
                 .map(item -> new PrescriptionReference(item.id(), item.exerciseVersionId()))
                 .toList();
         validateResults(prescribed, command.results());
-        requireNotHardBlocked(subject, prescribed);
         validatePainDifficulty(command.painLevel(), command.difficultyLevel());
 
         Instant now = clock.instant();
@@ -153,19 +148,6 @@ public class SessionExecutionService {
         requireProfile(specialist, ProfileType.SPECIALIST, "specialist profile is required");
         relationships.requireActive(specialist.id(), participantAccountId);
         return persistence.findByParticipant(participantAccountId).stream().map(this::view).toList();
-    }
-
-    private void requireNotHardBlocked(String subject, List<PrescriptionReference> prescribed) {
-        Set<String> restrictions = Set.copyOf(safety.current(subject).contraindicationTags());
-        boolean blocked = prescribed.stream()
-                .map(PrescriptionReference::exerciseVersionId)
-                .map(catalog::published)
-                .flatMap(version -> version.contraindicationTags().stream())
-                .anyMatch(restrictions::contains);
-        if (blocked) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "session execution is blocked by an explicit participant restriction");
-        }
     }
 
     private static void validateResults(List<PrescriptionReference> prescribed, List<ResultCommand> results) {

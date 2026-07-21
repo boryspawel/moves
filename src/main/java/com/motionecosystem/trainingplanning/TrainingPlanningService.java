@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.motionecosystem.audit.AuditRecorder;
-import com.motionecosystem.exercisecatalog.CatalogService;
+import com.motionecosystem.exercisecatalog.api.ExerciseCatalogQueryPort;
 import com.motionecosystem.identityaccess.api.ActiveParticipantPort;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
@@ -27,7 +27,7 @@ public class TrainingPlanningService {
     private final CurrentAccountService accounts;
     private final ActiveParticipantPort participants;
     private final SpecialistRelationshipService relationships;
-    private final CatalogService catalog;
+    private final ExerciseCatalogQueryPort catalog;
     private final TrainingPlanningPersistence persistence;
     private final AuditRecorder audit;
     private final Clock clock;
@@ -42,7 +42,8 @@ public class TrainingPlanningService {
         requireParticipant(command.participantAccountId());
         relationships.requireActive(specialist.id(), command.participantAccountId());
         List<PrescriptionCommand> requested = validatePrescriptions(command.prescriptions());
-        requested.forEach(item -> catalog.published(item.exerciseVersionId()));
+        requested.forEach(item -> catalog.findPublishedVersion(item.exerciseVersionId())
+                .orElseThrow(() -> badRequest("prescription requires a published exercise version")));
 
         Instant now = clock.instant();
         TrainingGoal goal = new TrainingGoal(UUID.randomUUID(), command.participantAccountId(),

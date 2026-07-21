@@ -1,8 +1,8 @@
 package com.motionecosystem.exercisecatalog;
 
-import java.util.List;
 import java.util.UUID;
 
+import com.motionecosystem.exercisecatalog.api.ExerciseCatalogQueryPort.PublishedExerciseVersionSnapshot;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,17 +24,18 @@ class ExerciseCatalogController {
 
     @GetMapping
     @Operation(summary = "Search published exercise versions using explicitly allowed filters")
-    List<CatalogService.VersionView> list(
+    CatalogService.CatalogPage list(
             @RequestParam(required = false) String query,
             @RequestParam(required = false) MovementPattern movementPattern,
             @RequestParam(required = false) TechnicalLevel technicalLevel,
             @RequestParam(required = false) String equipment,
-            @RequestParam(required = false) String excludedContraindicationTag) {
-        return catalog.listPublished(query, movementPattern, technicalLevel, equipment, excludedContraindicationTag);
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return catalog.listPublished(query, movementPattern, technicalLevel, equipment, page, size);
     }
 
     @GetMapping("/versions/{versionId}")
-    CatalogService.VersionView version(@PathVariable UUID versionId) {
+    PublishedExerciseVersionSnapshot version(@PathVariable UUID versionId) {
         return catalog.published(versionId);
     }
 }

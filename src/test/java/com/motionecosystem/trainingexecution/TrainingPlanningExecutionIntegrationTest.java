@@ -170,7 +170,7 @@ class TrainingPlanningExecutionIntegrationTest {
     }
 
     @Test
-    void foreignSpecialistIsRejectedAndExplicitRestrictionHardBlocksExecution() throws Exception {
+    void foreignSpecialistIsRejectedAndLegacyTagsDoNotDriveNewExecutionSafety() throws Exception {
         mvc.perform(post("/api/v1/training-plans")
                         .with(role("foreign-specialist", "SPECIALIST"))
                         .contentType("application/json")
@@ -199,12 +199,12 @@ class TrainingPlanningExecutionIntegrationTest {
 
         mvc.perform(post("/api/v1/planned-sessions/{id}/executions", sessionId)
                         .with(role("participant", "PARTICIPANT"))
-                        .header("Idempotency-Key", "blocked-execution")
+                        .header("Idempotency-Key", "legacy-tag-execution")
                         .contentType("application/json")
                         .content(executionRequest(prescriptionId, true, 0, 4)))
-                .andExpect(status().isConflict());
+                .andExpect(status().isOk());
         assertThat(jdbc.queryForObject(
-                "SELECT COUNT(*) FROM training_execution.session_execution", Long.class)).isZero();
+                "SELECT COUNT(*) FROM training_execution.session_execution", Long.class)).isEqualTo(1);
 
         mvc.perform(get("/api/v1/specialist/participants/{id}/executions", participantId)
                         .with(role("foreign-specialist", "SPECIALIST")))

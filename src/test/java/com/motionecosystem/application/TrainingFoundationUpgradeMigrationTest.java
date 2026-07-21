@@ -26,6 +26,7 @@ class TrainingFoundationUpgradeMigrationTest {
             JdbcTemplate jdbc = new JdbcTemplate(new DriverManagerDataSource(
                     postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword()));
             UUID sessionId = insertLegacyOfflineAppointment(jdbc);
+            UUID exerciseVersionId = insertLegacyExerciseVersion(jdbc);
 
             Flyway.configure()
                     .dataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())
@@ -38,6 +39,17 @@ class TrainingFoundationUpgradeMigrationTest {
             assertThat(jdbc.queryForObject("""
                     SELECT session_kind FROM training_planning.planned_session WHERE id = ?
                     """, String.class, sessionId)).isEqualTo("OFFLINE_APPOINTMENT");
+            assertThat(jdbc.queryForObject("""
+                    SELECT profile_schema_version FROM exercise_catalog.exercise_version WHERE id = ?
+                    """, Integer.class, exerciseVersionId)).isEqualTo(1);
+            assertThat(jdbc.queryForList("""
+                    SELECT movement_pattern FROM exercise_catalog.exercise_version_movement_pattern
+                    WHERE exercise_version_id = ?
+                    """, String.class, exerciseVersionId)).containsExactly("SQUAT");
+            assertThat(jdbc.queryForList("""
+                    SELECT contraindication_tag FROM exercise_catalog.exercise_version_contraindication
+                    WHERE exercise_version_id = ?
+                    """, String.class, exerciseVersionId)).containsExactly("LEGACY_KNEE_TAG");
         }
     }
 
@@ -74,5 +86,28 @@ class TrainingFoundationUpgradeMigrationTest {
                 VALUES (?, ?, ?, 'Legacy appointment', 'OFFLINE_APPOINTMENT', 'ASSIGNED', now())
                 """, sessionId, microcycleId, participantId);
         return sessionId;
+    }
+
+    private static UUID insertLegacyExerciseVersion(JdbcTemplate jdbc) {
+        UUID exerciseId = UUID.randomUUID();
+        UUID versionId = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO exercise_catalog.exercise
+                    (id, canonical_name, created_at, created_by_subject)
+                VALUES (?, 'Legacy squat', now(), 'legacy-editor')
+                """, exerciseId);
+        jdbc.update("""
+                INSERT INTO exercise_catalog.exercise_version
+                    (id, exercise_id, version_number, status, instruction, movement_pattern,
+                     stimulus_type, fatigue_profile, technical_level, environment, created_at, version)
+                VALUES (?, ?, 1, 'DRAFT', 'Legacy instruction', 'SQUAT', 'STRENGTH',
+                        'MODERATE', 'FOUNDATIONAL', 'ANY', now(), 0)
+                """, versionId, exerciseId);
+        jdbc.update("""
+                INSERT INTO exercise_catalog.exercise_version_contraindication
+                    (exercise_version_id, contraindication_tag)
+                VALUES (?, 'LEGACY_KNEE_TAG')
+                """, versionId);
+        return versionId;
     }
 }

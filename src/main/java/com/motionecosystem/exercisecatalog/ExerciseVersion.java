@@ -37,6 +37,12 @@ class ExerciseVersion {
     @Enumerated(EnumType.STRING)
     @Column(name = "movement_pattern", nullable = false)
     MovementPattern movementPattern;
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "exercise_version_movement_pattern", schema = "exercise_catalog",
+            joinColumns = @JoinColumn(name = "exercise_version_id"))
+    @Column(name = "movement_pattern")
+    @Enumerated(EnumType.STRING)
+    Set<MovementPattern> movementPatterns = new LinkedHashSet<>();
     @Enumerated(EnumType.STRING)
     @Column(name = "stimulus_type", nullable = false)
     StimulusType stimulusType;
@@ -49,12 +55,12 @@ class ExerciseVersion {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     ExerciseEnvironment environment;
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "exercise_version_equipment", schema = "exercise_catalog",
             joinColumns = @JoinColumn(name = "exercise_version_id"))
     @Column(name = "equipment")
     Set<String> requiredEquipment = new LinkedHashSet<>();
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "exercise_version_contraindication", schema = "exercise_catalog",
             joinColumns = @JoinColumn(name = "exercise_version_id"))
     @Column(name = "contraindication_tag")
@@ -65,6 +71,12 @@ class ExerciseVersion {
     Instant publishedAt;
     @Column(name = "withdrawn_at")
     Instant withdrawnAt;
+    @Column(name = "profile_schema_version", nullable = false)
+    int profileSchemaVersion;
+    @Column(name = "reviewed_by_subject")
+    String reviewedBySubject;
+    @Column(name = "reviewed_at")
+    Instant reviewedAt;
     @Version
     long version;
 
@@ -76,17 +88,43 @@ class ExerciseVersion {
         this.exerciseId = exerciseId;
         this.versionNumber = versionNumber;
         status = ExerciseVersionStatus.DRAFT;
+        profileSchemaVersion = 2;
         createdAt = now;
         apply(command);
     }
 
     void update(CatalogService.VersionCommand command) {
-        requireDraft();
+        requireEditable();
         apply(command);
     }
 
+    void submitForReview() {
+        requireEditable();
+        status = ExerciseVersionStatus.IN_REVIEW;
+    }
+
+    void requestChanges() {
+        if (status != ExerciseVersionStatus.IN_REVIEW) {
+            throw new IllegalStateException("only a version in review can have changes requested");
+        }
+        status = ExerciseVersionStatus.CHANGES_REQUESTED;
+        reviewedBySubject = null;
+        reviewedAt = null;
+    }
+
+    void approve(String reviewerSubject, Instant now) {
+        if (status != ExerciseVersionStatus.IN_REVIEW) {
+            throw new IllegalStateException("only a version in review can be approved");
+        }
+        status = ExerciseVersionStatus.APPROVED;
+        reviewedBySubject = reviewerSubject;
+        reviewedAt = now;
+    }
+
     void publish(Instant now) {
-        requireDraft();
+        if (status != ExerciseVersionStatus.APPROVED || reviewedAt == null) {
+            throw new IllegalStateException("exercise version must be reviewed and approved before publication");
+        }
         status = ExerciseVersionStatus.PUBLISHED;
         publishedAt = now;
     }
@@ -102,18 +140,18 @@ class ExerciseVersion {
     private void apply(CatalogService.VersionCommand command) {
         instruction = command.instruction();
         mediaReference = command.mediaReference();
-        movementPattern = command.movementPattern();
+        movementPatterns = new LinkedHashSet<>(command.movementPatterns());
+        movementPattern = movementPatterns.stream().sorted().findFirst().orElseThrow();
         stimulusType = command.stimulusType();
         fatigueProfile = command.fatigueProfile();
         technicalLevel = command.technicalLevel();
         environment = command.environment();
         requiredEquipment = new LinkedHashSet<>(command.requiredEquipment());
-        contraindicationTags = new LinkedHashSet<>(command.contraindicationTags());
     }
 
-    private void requireDraft() {
-        if (status != ExerciseVersionStatus.DRAFT) {
-            throw new IllegalStateException("published or withdrawn versions are immutable");
+    void requireEditable() {
+        if (status != ExerciseVersionStatus.DRAFT && status != ExerciseVersionStatus.CHANGES_REQUESTED) {
+            throw new IllegalStateException("only draft or changes-requested versions are editable");
         }
     }
 }

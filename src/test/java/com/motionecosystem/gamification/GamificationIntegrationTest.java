@@ -175,7 +175,7 @@ class GamificationIntegrationTest {
     }
 
     @Test
-    void hardBlockedSessionCannotProduceAnExecutionOrPoints() throws Exception {
+    void legacyTaggedSessionCanExecuteButDoesNotAutomaticallyProducePoints() throws Exception {
         publishRule();
         mvc.perform(put("/api/v1/gamification/me/profile")
                         .with(participant())
@@ -194,15 +194,15 @@ class GamificationIntegrationTest {
 
         mvc.perform(post("/api/v1/planned-sessions/{id}/executions", sessionId)
                         .with(participant())
-                        .header("Idempotency-Key", "blocked-session")
+                        .header("Idempotency-Key", "legacy-tagged-session")
                         .contentType("application/json")
                         .content("""
                                 {"declaredCompletion":true,"painLevel":0,"difficultyLevel":3,
                                  "results":[{"exercisePrescriptionId":"%s","actualRepetitions":8}]}
                                 """.formatted(prescriptionId)))
-                .andExpect(status().isConflict());
+                .andExpect(status().isOk());
         assertThat(jdbc.queryForObject(
-                "SELECT COUNT(*) FROM training_execution.session_execution", Long.class)).isZero();
+                "SELECT COUNT(*) FROM training_execution.session_execution", Long.class)).isEqualTo(1);
         assertThat(ledgerCount()).isZero();
     }
 

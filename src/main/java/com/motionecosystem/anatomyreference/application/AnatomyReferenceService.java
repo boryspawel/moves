@@ -139,7 +139,7 @@ public class AnatomyReferenceService implements AnatomyReferenceQueryPort {
         Map<UUID, AnatomicalStructure> structures = persistence.findAll(ids);
         return paths.stream().map(path -> new AncestorPath(path.stream()
                         .map(edge -> new AncestorStep(snapshot(required(structures, edge.parentId())),
-                                edge.relationType()))
+                                StructureRelationType.valueOf(edge.relationType().name())))
                         .toList()))
                 .sorted(Comparator.comparing(AnatomyReferenceService::pathKey))
                 .toList();
@@ -208,8 +208,10 @@ public class AnatomyReferenceService implements AnatomyReferenceQueryPort {
     }
 
     private static AnatomicalStructureSnapshot snapshot(AnatomicalStructure structure) {
-        return new AnatomicalStructureSnapshot(structure.id(), structure.code(), structure.type(),
-                structure.displayName(), structure.sidePolicy(), structure.status(), structure.externalOntology(),
+        return new AnatomicalStructureSnapshot(structure.id(), structure.code(),
+                StructureType.valueOf(structure.type().name()), structure.displayName(),
+                StructureSidePolicy.valueOf(structure.sidePolicy().name()),
+                StructureStatus.valueOf(structure.status().name()), structure.externalOntology(),
                 structure.externalOntologyId(), structure.taxonomyVersion(), structure.createdAt(),
                 structure.publishedAt(), structure.withdrawnAt());
     }

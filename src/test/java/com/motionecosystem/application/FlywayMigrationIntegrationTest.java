@@ -64,6 +64,28 @@ class FlywayMigrationIntegrationTest {
     }
 
     @Test
+    void upgradesExerciseCatalogToVersionedExposureProfilesWithoutMappingLegacyTags() {
+        Integer applied = jdbc.queryForObject("""
+                SELECT COUNT(*) FROM flyway_schema_history
+                WHERE success = TRUE AND script = 'V008__create_exercise_catalog_v2.sql'
+                """, Integer.class);
+        Integer profileTables = jdbc.queryForObject("""
+                SELECT COUNT(*) FROM information_schema.tables
+                WHERE table_schema = 'exercise_catalog'
+                  AND table_name IN (
+                      'exercise_version_movement_pattern', 'exercise_load_characteristic',
+                      'evidence_source', 'exercise_contribution', 'exercise_contribution_evidence'
+                  )
+                """, Integer.class);
+        Integer legacyRows = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM exercise_catalog.exercise_version_contraindication", Integer.class);
+
+        assertThat(applied).isEqualTo(1);
+        assertThat(profileTables).isEqualTo(5);
+        assertThat(legacyRows).isZero();
+    }
+
+    @Test
     @Transactional
     void keepsLegacyOfflineAppointmentsButRejectsNewPlanningAppointments() {
         UUID microcycleId = planningHierarchy();
