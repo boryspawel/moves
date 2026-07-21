@@ -84,6 +84,17 @@ class ModuleBoundaryTest {
     }
 
     @Test
+    void loadAnalysisDomainIsPureAndPersistenceEntitiesStayInternal() {
+        noClasses().that().resideInAPackage("com.motionecosystem.loadanalysis.domain..")
+                .should().dependOnClassesThat().resideInAnyPackage("org.springframework..", "jakarta.persistence..")
+                .check(productionClasses);
+        classes().that().resideInAPackage("com.motionecosystem.loadanalysis.infrastructure..")
+                .and().areAnnotatedWith(jakarta.persistence.Entity.class)
+                .should().notBePublic()
+                .check(productionClasses);
+    }
+
+    @Test
     void modulesDoNotUseAnotherModulesInfrastructureOrRepositories() {
         noClasses().that().resideOutsideOfPackages(
                         "com.motionecosystem.trainingplanning..")

@@ -454,7 +454,7 @@ public class CatalogService implements ExerciseCatalogQueryPort {
             List<ExerciseLoadCharacteristic> characteristicItems,
             Map<UUID, List<EvidenceSource>> evidenceByContribution) {
         return new PublishedExerciseVersionSnapshot(exercise.id, exercise.canonicalName,
-                version.id, version.versionNumber,
+                version.id, version.versionNumber, version.profileSchemaVersion,
                 patterns.stream().map(value -> MovementPatternValue.valueOf(value.name()))
                         .collect(Collectors.toUnmodifiableSet()),
                 equipment,

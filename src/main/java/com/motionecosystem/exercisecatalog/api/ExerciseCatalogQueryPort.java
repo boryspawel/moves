@@ -19,6 +19,7 @@ public interface ExerciseCatalogQueryPort {
             String canonicalName,
             UUID versionId,
             int versionNumber,
+            int profileSchemaVersion,
             Set<MovementPatternValue> movementPatterns,
             Set<String> requiredEquipment,
             List<ContributionSnapshot> contributions,

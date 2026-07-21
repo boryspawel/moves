@@ -260,6 +260,8 @@ class TrainingPlanningExecutionIntegrationTest {
                         .exists())
                 .andExpect(jsonPath("$.paths['/api/v2/training-plans/revisions/{revisionId}/structural-validation']")
                         .exists())
+                .andExpect(jsonPath("$.paths['/api/v1/training-plans/revisions/{revisionId}/load-preview']")
+                        .exists())
                 .andExpect(jsonPath("$.paths['/api/v1/planned-sessions/{sessionId}/executions']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/session-executions/{executionId}/corrections']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/specialist/participants/{participantAccountId}/executions']")
