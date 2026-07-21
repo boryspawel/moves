@@ -211,6 +211,25 @@ public class SafetyV2Service implements SafetyAssessmentPort {
         return assessments.findById(assessmentId).map(item -> snapshot(item, at));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isRestrictionSnapshotFresh(
+            UUID assessmentId, UUID participantAccountId, Instant effectiveAt) {
+        Instant at = effectiveAt == null ? clock.instant() : effectiveAt;
+        SafetyAssessmentEntity assessment = assessments.findById(assessmentId).orElse(null);
+        if (assessment == null || !assessment.participantId.equals(participantAccountId)) {
+            return false;
+        }
+        String current = restrictions.findByParticipantIdAndStatus(
+                        participantAccountId, RestrictionEntity.Status.ACTIVE)
+                .stream()
+                .filter(item -> item.activeAt(at))
+                .map(SafetyV2Service::restrictionSnapshot)
+                .sorted()
+                .collect(Collectors.joining("\n"));
+        return assessment.restrictionSnapshot.equals(current);
+    }
+
     @Transactional
     public OverrideView overrideFactor(
             UUID actor,

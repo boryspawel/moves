@@ -12,7 +12,9 @@ public final class TrainingPlanningModel {
 
     public enum PlanMode { SPECIALIST, SELF_DIRECTED, COLLABORATIVE }
     public enum PlanStatus { DRAFT, ACTIVE, COMPLETED, ARCHIVED }
-    public enum RevisionStatus { DRAFT, VALIDATING, READY, ACTIVE, SUPERSEDED, COMPLETED }
+    public enum RevisionStatus {
+        DRAFT, VALIDATING, READY, NEEDS_REVIEW, BLOCKED, ACTIVE, SUPERSEDED, COMPLETED
+    }
     public enum GoalPerspective { PERFORMANCE, FUNCTIONAL_RECOVERY, GENERAL_FITNESS }
     public enum GoalStatus { ACTIVE, ACHIEVED, CANCELLED }
     public enum PrescriptionSide { LEFT, RIGHT, BILATERAL, NOT_APPLICABLE }

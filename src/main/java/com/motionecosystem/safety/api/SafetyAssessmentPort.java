@@ -18,6 +18,9 @@ public interface SafetyAssessmentPort {
 
     Optional<AssessmentSnapshot> findAssessment(UUID assessmentId, Instant effectiveAt);
 
+    boolean isRestrictionSnapshotFresh(
+            UUID assessmentId, UUID participantAccountId, Instant effectiveAt);
+
     enum Result {
         PASS,
         INFO,

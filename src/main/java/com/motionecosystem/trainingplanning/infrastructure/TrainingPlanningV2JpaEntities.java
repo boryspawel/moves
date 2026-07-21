@@ -30,6 +30,10 @@ class PlanRevisionJpaEntity {
     @Column(name = "assessment_status", nullable = false) String assessmentStatus;
     @Column(name = "draft_updated_at", nullable = false) Instant draftUpdatedAt;
     @Column(name = "created_at", nullable = false) Instant createdAt;
+    @Column(name = "validation_checksum") String validationChecksum;
+    @Column(name = "load_snapshot_id") UUID loadSnapshotId;
+    @Column(name = "safety_assessment_id") UUID safetyAssessmentId;
+    @Column(name = "workflow_validated_at") Instant workflowValidatedAt;
     @Version long version;
 
     protected PlanRevisionJpaEntity() {

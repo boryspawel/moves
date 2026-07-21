@@ -31,6 +31,7 @@ import com.motionecosystem.trainingplanning.TrainingPlanningModel.PrescriptionSi
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.RevisionStatus;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.ValidationResult;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort;
+import com.motionecosystem.trainingplanning.api.TrainingPlanningWorkflowPort;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort.PlanRevisionSnapshot;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -42,7 +43,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
-public class TrainingPlanningV2Service {
+public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
 
     private final CurrentAccountService accounts;
     private final ActiveParticipantPort participants;
@@ -254,6 +255,28 @@ public class TrainingPlanningV2Service {
     public StructuralValidationView validateStructurally(String subject, UUID revisionId,
                                                          ValidateCommand command) {
         var access = requireEditable(subject, revisionId, command == null ? null : command.expectedVersion());
+        return performStructuralValidation(subject, revisionId, access);
+    }
+
+    @Transactional
+    @Override
+    public TrainingPlanningWorkflowPort.StructuralValidationSnapshot validateForWorkflow(
+            String subject, UUID revisionId, long expectedVersion) {
+        Access access = requireView(subject, revisionId);
+        if (access.revisionVersion() != expectedVersion) {
+            throw conflict("draft was modified by another editor", null);
+        }
+        if (!Set.of("DRAFT", "READY", "NEEDS_REVIEW", "BLOCKED").contains(access.revisionStatus())) {
+            throw conflict("revision workflow state does not allow validation", null);
+        }
+        requireOwnerForEdit(access);
+        StructuralValidationView result = performStructuralValidation(subject, revisionId, access);
+        return new TrainingPlanningWorkflowPort.StructuralValidationSnapshot(
+                result.result() == ValidationResult.PASS, result.violations());
+    }
+
+    private StructuralValidationView performStructuralValidation(
+            String subject, UUID revisionId, Access access) {
         PlanRevisionSnapshot snapshot = requireSnapshot(revisionId);
         List<String> violations = structuralViolations(snapshot);
         String checksum = checksum(snapshot);
