@@ -5,7 +5,7 @@ import java.util.UUID;
 
 public interface TransactionalOutbox {
 
-    void append(
+    UUID append(
             String aggregateType,
             UUID aggregateId,
             String eventType,

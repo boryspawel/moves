@@ -6,6 +6,10 @@ import java.util.UUID;
 import com.motionecosystem.trainingexecution.SessionExecutionService.CorrectionCommand;
 import com.motionecosystem.trainingexecution.SessionExecutionService.DeclareExecutionCommand;
 import com.motionecosystem.trainingexecution.SessionExecutionService.ExecutionView;
+import com.motionecosystem.trainingexecution.ExecutionProjectionService.AlertTransitionCommand;
+import com.motionecosystem.trainingexecution.ExecutionProjectionService.Post24hCommand;
+import com.motionecosystem.trainingexecution.SessionExecutionPersistence.AlertData;
+import com.motionecosystem.trainingexecution.SessionExecutionPersistence.Post24hData;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,9 +29,11 @@ import org.springframework.web.bind.annotation.RestController;
 class SessionExecutionController {
 
     private final SessionExecutionService executions;
+    private final ExecutionProjectionService projections;
 
-    SessionExecutionController(SessionExecutionService executions) {
+    SessionExecutionController(SessionExecutionService executions, ExecutionProjectionService projections) {
         this.executions = executions;
+        this.projections = projections;
     }
 
     @PostMapping("/planned-sessions/{sessionId}/executions")
@@ -45,8 +51,9 @@ class SessionExecutionController {
     @Operation(summary = "Append an audited correction without changing execution history")
     ExecutionView correct(@AuthenticationPrincipal Jwt jwt,
                           @PathVariable UUID executionId,
+                          @RequestHeader("Idempotency-Key") String idempotencyKey,
                           @RequestBody CorrectionCommand command) {
-        return executions.correct(jwt.getSubject(), executionId, command);
+        return executions.correct(jwt.getSubject(), executionId, idempotencyKey, command);
     }
 
     @GetMapping("/specialist/participants/{participantAccountId}/executions")
@@ -55,5 +62,27 @@ class SessionExecutionController {
     List<ExecutionView> specialistExecutions(@AuthenticationPrincipal Jwt jwt,
                                              @PathVariable UUID participantAccountId) {
         return executions.specialistExecutions(jwt.getSubject(), participantAccountId);
+    }
+
+    @PostMapping("/session-executions/{executionId}/post-24h-responses")
+    @PreAuthorize("hasRole('PARTICIPANT')")
+    @Operation(summary = "Append an idempotent post-24h session response")
+    Post24hData post24h(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID executionId,
+            @RequestHeader("Idempotency-Key") String idempotencyKey,
+            @RequestBody Post24hCommand command) {
+        return projections.reportPost24h(jwt.getSubject(), executionId, idempotencyKey, command);
+    }
+
+    @PostMapping("/session-executions/{executionId}/alerts/{alertId}/transitions")
+    @PreAuthorize("hasAnyRole('PARTICIPANT', 'SPECIALIST')")
+    @Operation(summary = "Acknowledge, resolve or reopen an execution safety alert")
+    AlertData transitionAlert(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID executionId,
+            @PathVariable UUID alertId,
+            @RequestBody AlertTransitionCommand command) {
+        return projections.transitionAlert(jwt.getSubject(), executionId, alertId, command);
     }
 }

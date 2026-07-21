@@ -23,6 +23,10 @@ public class ExecutionQualificationPort {
                 .filter(SessionExecutionPersistence.ExecutionData::declaredCompletion)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "qualifying declared execution not found"));
+        if (!executions.hasActiveQualification(executionId, "COMPLETED_SESSION")) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "execution has not been neutrally qualified");
+        }
         var session = plannedSessions.findSession(execution.plannedSessionId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "qualifying planned session not found"));

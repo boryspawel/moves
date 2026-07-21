@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.motionecosystem.audit.AuditRecorder;
+import com.motionecosystem.audit.api.TransactionalOutbox;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
@@ -36,6 +37,8 @@ public class SessionExecutionService {
     private final PlannedSessionExecutionPort plannedSessions;
     private final SessionExecutionPersistence persistence;
     private final AuditRecorder audit;
+    private final TransactionalOutbox outbox;
+    private final ExecutionProjectionService projections;
     private final Clock clock;
 
     @Transactional
@@ -83,37 +86,57 @@ public class SessionExecutionService {
                 .toList();
         validateResults(prescribed, command.results());
         validatePainDifficulty(command.painLevel(), command.difficultyLevel());
+        if (command.sessionRpe() != null && (command.sessionRpe() < 1 || command.sessionRpe() > 10)) {
+            throw badRequest("session RPE is outside range");
+        }
 
         Instant now = clock.instant();
-        SessionExecution execution = new SessionExecution(UUID.randomUUID(), plannedSessionId, participant.id(),
+        UUID executionId = UUID.randomUUID();
+        UUID eventId = outbox.append("SessionExecution", executionId, "SessionExecutionDeclared",
+                "{\"executionId\":\"" + executionId + "\",\"participantId\":\""
+                        + participant.id() + "\",\"plannedSessionId\":\"" + plannedSessionId + "\"}", now);
+        SessionExecution execution = new SessionExecution(executionId, plannedSessionId, participant.id(),
                 true, key, now);
-        List<ExerciseResult> results = command.results().stream().map(requested -> {
-            validateResultValues(requested);
-            return new ExerciseResult(UUID.randomUUID(), execution.id(),
-                    requested.exercisePrescriptionId(), requested.actualRepetitions(),
-                    requested.actualDurationSeconds(), requested.actualLoadKg());
-        }).toList();
-
         PainDifficultyReport report = new PainDifficultyReport(UUID.randomUUID(), execution.id(),
                 command.painLevel(), command.difficultyLevel(), optionalText(command.note(), 500), now);
-        List<AlertData> alerts = report.painLevel() > 0
-                ? List.of(new AlertData(UUID.randomUUID(), execution.id(), "PAIN_REPORTED", now))
-                : List.of();
+        List<AlertData> alerts = new java.util.ArrayList<>();
+        if (report.painLevel() > 0) {
+            alerts.add(new AlertData(UUID.randomUUID(), execution.id(), "PAIN_REPORTED",
+                        report.painLevel() >= 7 ? "HIGH" : "MEDIUM", null, "OPEN",
+                        now.plusSeconds(report.painLevel() >= 7 ? 4 * 60 * 60 : 24 * 60 * 60),
+                        report.id(), now));
+        }
+        if (report.difficultyLevel() >= 8) {
+            alerts.add(new AlertData(UUID.randomUUID(), execution.id(), "DIFFICULTY_REPORTED",
+                    "MEDIUM", null, "OPEN", now.plusSeconds(24 * 60 * 60), report.id(), now));
+        }
         persistence.save(new ExecutionData(execution.id(), execution.plannedSessionId(),
                         execution.participantAccountId(), execution.declaredCompletion(),
-                        execution.idempotencyKey(), execution.recordedAt()),
-                results.stream().map(item -> new ResultData(item.id(), item.sessionExecutionId(),
-                        item.exercisePrescriptionId(), item.actualRepetitions(), item.actualDurationSeconds(),
-                        item.actualLoadKg())).toList(),
+                        execution.idempotencyKey(), execution.recordedAt(), eventId, "PENDING"),
+                command.results().stream().map(item -> {
+                    validateResultValues(item);
+                    PrescriptionReference reference = prescribed.stream()
+                            .filter(value -> value.id().equals(item.exercisePrescriptionId()))
+                            .findFirst().orElseThrow();
+                    return new ResultData(UUID.randomUUID(), execution.id(), item.exercisePrescriptionId(),
+                            reference.exerciseVersionId(), item.actualSets(), item.actualRepetitions(),
+                            item.actualDurationSeconds(), item.actualContacts(), item.actualDistanceMeters(),
+                            item.actualLoadKg(), item.actualExternalLoadValue(), item.actualExternalLoadUnit(),
+                            item.actualIntensityType(), item.actualIntensityValue(), item.actualIntensityZone(),
+                            item.side(), Boolean.TRUE.equals(item.modified()),
+                            Boolean.TRUE.equals(item.skipped()), mode(item.observationMode()));
+                }).toList(),
                 new ReportData(report.id(), report.sessionExecutionId(), report.painLevel(),
-                        report.difficultyLevel(), report.note(), report.reportedAt()), alerts);
+                        report.difficultyLevel(), report.note(), command.sessionRpe(),
+                        mode(command.observationMode()), report.reportedAt()), alerts);
         plannedSessions.markCompleted(plannedSessionId);
         audit.record(subject, "SESSION_EXECUTION_DECLARED", "SessionExecution", execution.id());
         return execution(execution.id());
     }
 
     @Transactional
-    public ExecutionView correct(String subject, UUID executionId, CorrectionCommand command) {
+    public ExecutionView correct(String subject, UUID executionId, String idempotencyKey,
+                                 CorrectionCommand command) {
         CurrentAccount actor = accounts.requireActive(subject);
         ExecutionOwner owner = owner(executionId);
         if (actor.profileType() == ProfileType.PARTICIPANT) {
@@ -128,16 +151,41 @@ public class SessionExecutionService {
         if (command == null) {
             throw badRequest("correction is required");
         }
+        String key = requiredText(idempotencyKey, 120, "Idempotency-Key");
+        if (persistence.findCorrectionByIdempotencyKey(executionId, key).isPresent()) {
+            return execution(executionId);
+        }
         String reason = requiredText(command.reason(), 500, "correction reason");
         validateOptionalPainDifficulty(command.correctedPainLevel(), command.correctedDifficultyLevel());
-        if (command.correctedPainLevel() == null && command.correctedDifficultyLevel() == null) {
+        validateCorrectionValues(command);
+        if (command.correctedPainLevel() == null && command.correctedDifficultyLevel() == null
+                && command.exercisePrescriptionId() == null) {
             throw badRequest("at least one corrected value is required");
         }
+        UUID resultId = command.exercisePrescriptionId() == null ? null : persistence.findById(executionId)
+                .orElseThrow().results().stream()
+                .filter(item -> item.exercisePrescriptionId().equals(command.exercisePrescriptionId()))
+                .map(ResultData::id).findFirst()
+                .orElseThrow(() -> badRequest("corrected result must belong to execution"));
         ExecutionCorrection correction = new ExecutionCorrection(UUID.randomUUID(), executionId, actor.id(), reason,
                 command.correctedPainLevel(), command.correctedDifficultyLevel(), clock.instant());
         persistence.appendCorrection(new CorrectionData(correction.id(), correction.sessionExecutionId(),
                 correction.correctedByAccountId(), correction.reason(), correction.correctedPainLevel(),
-                correction.correctedDifficultyLevel(), correction.correctedAt()));
+                correction.correctedDifficultyLevel(), resultId, command.correctedSets(),
+                command.correctedRepetitions(), command.correctedDurationSeconds(),
+                command.correctedContacts(), command.correctedExternalLoadValue(),
+                command.correctedExternalLoadUnit(), command.correctedSide(), command.correctedModified(),
+                command.correctedSkipped(), mode(command.observationMode()),
+                key, correction.correctedAt()));
+        if (resultId != null) {
+            boolean reversed = persistence.reverseQualification(executionId, correction.correctedAt());
+            projections.rebuild(executionId);
+            if (reversed) {
+                outbox.append("SessionExecution", executionId, "ExecutionQualificationReversed",
+                        "{\"executionId\":\"" + executionId
+                                + "\",\"qualificationType\":\"COMPLETED_SESSION\"}", correction.correctedAt());
+            }
+        }
         audit.record(subject, "SESSION_EXECUTION_CORRECTED", "SessionExecution", executionId);
         return execution(executionId);
     }
@@ -167,10 +215,27 @@ public class SessionExecutionService {
     }
 
     private static void validateResultValues(ResultCommand result) {
-        if (result.actualRepetitions() != null && result.actualRepetitions() < 0
+        if (result.actualSets() != null && result.actualSets() < 0
+                || result.actualRepetitions() != null && result.actualRepetitions() < 0
                 || result.actualDurationSeconds() != null && result.actualDurationSeconds() < 0
-                || result.actualLoadKg() != null && result.actualLoadKg().signum() < 0) {
+                || result.actualContacts() != null && result.actualContacts() < 0
+                || result.actualDistanceMeters() != null && result.actualDistanceMeters().signum() < 0
+                || result.actualLoadKg() != null && result.actualLoadKg().signum() < 0
+                || result.actualExternalLoadValue() != null && result.actualExternalLoadValue().signum() < 0
+                || result.actualIntensityValue() != null && result.actualIntensityValue().signum() < 0) {
             throw badRequest("exercise result values are outside range");
+        }
+        if (result.side() != null && !Set.of("LEFT", "RIGHT", "BILATERAL", "NOT_APPLICABLE")
+                .contains(result.side())) {
+            throw badRequest("exercise result side is invalid");
+        }
+        if (Boolean.TRUE.equals(result.skipped()) && (positive(result.actualSets())
+                || positive(result.actualRepetitions()) || positive(result.actualDurationSeconds())
+                || positive(result.actualContacts()))) {
+            throw badRequest("skipped result cannot contain a positive dose");
+        }
+        if (!Set.of("DECLARED", "DEVICE", "ESTIMATED").contains(mode(result.observationMode()))) {
+            throw badRequest("observation mode is invalid");
         }
     }
 
@@ -185,6 +250,31 @@ public class SessionExecutionService {
                 || difficulty != null && (difficulty < 1 || difficulty > 10)) {
             throw badRequest("corrected pain or difficulty level is outside range");
         }
+    }
+
+    private static void validateCorrectionValues(CorrectionCommand command) {
+        if (negative(command.correctedSets()) || negative(command.correctedRepetitions())
+                || negative(command.correctedDurationSeconds()) || negative(command.correctedContacts())
+                || command.correctedExternalLoadValue() != null
+                && command.correctedExternalLoadValue().signum() < 0) {
+            throw badRequest("corrected exercise result values are outside range");
+        }
+        if (command.correctedSide() != null
+                && !Set.of("LEFT", "RIGHT", "BILATERAL", "NOT_APPLICABLE")
+                .contains(command.correctedSide())) {
+            throw badRequest("corrected exercise result side is invalid");
+        }
+        if (!Set.of("DECLARED", "DEVICE", "ESTIMATED").contains(mode(command.observationMode()))) {
+            throw badRequest("observation mode is invalid");
+        }
+    }
+
+    private static boolean negative(Integer value) {
+        return value != null && value < 0;
+    }
+
+    private static boolean positive(Integer value) {
+        return value != null && value > 0;
     }
 
     private ExecutionOwner owner(UUID executionId) {
@@ -205,11 +295,20 @@ public class SessionExecutionService {
         ReportData report = aggregate.report();
         return new ExecutionView(execution.id(), execution.plannedSessionId(), execution.participantAccountId(),
                 execution.declaredCompletion(), execution.recordedAt(), report.painLevel(), report.difficultyLevel(),
-                report.note(), aggregate.results().stream().map(item -> new ResultView(
-                item.exercisePrescriptionId(), item.actualRepetitions(), item.actualDurationSeconds(),
-                item.actualLoadKg())).toList(), aggregate.corrections().stream().map(item -> new CorrectionView(
+                report.note(), report.sessionRpe(), report.observationMode(),
+                aggregate.results().stream().map(item -> new ResultView(
+                item.exercisePrescriptionId(), item.exerciseVersionId(), item.actualSets(),
+                item.actualRepetitions(), item.actualDurationSeconds(), item.actualContacts(),
+                item.actualDistanceMeters(), item.actualLoadKg(), item.actualExternalLoadValue(),
+                item.actualExternalLoadUnit(), item.actualIntensityType(), item.actualIntensityValue(),
+                item.actualIntensityZone(), item.side(), item.modified(), item.skipped(),
+                item.observationMode())).toList(), aggregate.corrections().stream().map(item -> new CorrectionView(
                 item.id(), item.reason(), item.correctedPainLevel(), item.correctedDifficultyLevel(),
-                item.correctedAt())).toList(), aggregate.alerts().stream().map(AlertData::alertType).toList());
+                item.correctedResultId(), item.correctedSets(), item.correctedRepetitions(),
+                item.correctedDurationSeconds(), item.correctedContacts(), item.correctedExternalLoadValue(),
+                item.correctedExternalLoadUnit(), item.correctedSide(), item.correctedModified(),
+                item.correctedSkipped(), item.observationMode(), item.correctedAt())).toList(),
+                aggregate.alerts().stream().map(AlertData::alertType).toList(), aggregate.alerts());
     }
 
     private static void requireProfile(CurrentAccount account, ProfileType expected, String message) {
@@ -247,29 +346,55 @@ public class SessionExecutionService {
     private record ExecutionOwner(UUID id, UUID participantAccountId) {
     }
 
+    private static String mode(String value) {
+        return value == null || value.isBlank() ? "DECLARED" : value;
+    }
+
     public record DeclareExecutionCommand(boolean declaredCompletion, List<ResultCommand> results,
-                                          int painLevel, int difficultyLevel, String note) {
+                                          int painLevel, int difficultyLevel, String note,
+                                          Integer sessionRpe, String observationMode) {
     }
 
-    public record ResultCommand(UUID exercisePrescriptionId, Integer actualRepetitions,
-                                Integer actualDurationSeconds, BigDecimal actualLoadKg) {
+    public record ResultCommand(
+            UUID exercisePrescriptionId, Integer actualSets, Integer actualRepetitions,
+            Integer actualDurationSeconds, Integer actualContacts, BigDecimal actualDistanceMeters,
+            BigDecimal actualLoadKg, BigDecimal actualExternalLoadValue, String actualExternalLoadUnit,
+            String actualIntensityType, BigDecimal actualIntensityValue, String actualIntensityZone,
+            String side, Boolean modified, Boolean skipped, String observationMode) {
     }
 
-    public record CorrectionCommand(String reason, Integer correctedPainLevel,
-                                    Integer correctedDifficultyLevel) {
+    public record CorrectionCommand(
+            String reason, Integer correctedPainLevel, Integer correctedDifficultyLevel,
+            UUID exercisePrescriptionId, Integer correctedSets, Integer correctedRepetitions,
+            Integer correctedDurationSeconds, Integer correctedContacts,
+            BigDecimal correctedExternalLoadValue, String correctedExternalLoadUnit,
+            String correctedSide, Boolean correctedModified, Boolean correctedSkipped,
+            String observationMode) {
     }
 
     public record ExecutionView(UUID id, UUID plannedSessionId, UUID participantAccountId,
                                 boolean declaredCompletion, Instant recordedAt, int painLevel,
-                                int difficultyLevel, String note, List<ResultView> results,
-                                List<CorrectionView> corrections, List<String> alerts) {
+                                int difficultyLevel, String note, Integer sessionRpe,
+                                String observationMode, List<ResultView> results,
+                                List<CorrectionView> corrections, List<String> alerts,
+                                List<AlertData> safetyAlerts) {
     }
 
-    public record ResultView(UUID exercisePrescriptionId, Integer actualRepetitions,
-                             Integer actualDurationSeconds, BigDecimal actualLoadKg) {
+    public record ResultView(
+            UUID exercisePrescriptionId, UUID exerciseVersionId, Integer actualSets,
+            Integer actualRepetitions, Integer actualDurationSeconds, Integer actualContacts,
+            BigDecimal actualDistanceMeters, BigDecimal actualLoadKg,
+            BigDecimal actualExternalLoadValue, String actualExternalLoadUnit,
+            String actualIntensityType, BigDecimal actualIntensityValue, String actualIntensityZone, String side,
+            boolean modified, boolean skipped, String observationMode) {
     }
 
     public record CorrectionView(UUID id, String reason, Integer correctedPainLevel,
-                                 Integer correctedDifficultyLevel, Instant correctedAt) {
+                                 Integer correctedDifficultyLevel, UUID correctedResultId,
+                                 Integer correctedSets, Integer correctedRepetitions,
+                                 Integer correctedDurationSeconds, Integer correctedContacts,
+                                 BigDecimal correctedExternalLoadValue, String correctedExternalLoadUnit,
+                                 String correctedSide, Boolean correctedModified, Boolean correctedSkipped,
+                                 String observationMode, Instant correctedAt) {
     }
 }

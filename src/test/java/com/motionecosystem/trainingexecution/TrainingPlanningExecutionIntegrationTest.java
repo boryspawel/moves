@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.List;
 import java.util.UUID;
+import java.time.Instant;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,6 +17,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import com.motionecosystem.application.MotionEcosystemApplication;
+import com.motionecosystem.audit.api.TransactionalOutbox.OutboxMessage;
 import com.motionecosystem.support.PostgresTestConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +43,8 @@ class TrainingPlanningExecutionIntegrationTest {
     FilterChainProxy securityFilterChain;
     @Autowired
     JdbcTemplate jdbc;
+    @Autowired
+    ExecutionProjectionService projections;
 
     MockMvc mvc;
     UUID participantId;
@@ -70,7 +74,14 @@ class TrainingPlanningExecutionIntegrationTest {
     void clean() {
         jdbc.execute("""
                 TRUNCATE TABLE
+                    audit.outbox_event,
                     audit.audit_event,
+                    training_execution.executed_load_aggregate,
+                    training_execution.execution_alert_history,
+                    training_execution.post_24h_response,
+                    training_execution.execution_projection_receipt,
+                    training_execution.execution_qualification,
+                    training_execution.executed_load_observation,
                     training_execution.execution_alert,
                     training_execution.execution_correction,
                     training_execution.pain_difficulty_report,
@@ -87,8 +98,10 @@ class TrainingPlanningExecutionIntegrationTest {
                     safety.readiness_check_in,
                     exercise_catalog.exercise_version_contraindication,
                     exercise_catalog.exercise_version_equipment,
+                    exercise_catalog.exercise_contribution,
                     exercise_catalog.exercise_version,
                     exercise_catalog.exercise,
+                    anatomy_reference.anatomical_structure,
                     identity_access.principal_account
                 CASCADE
                 """);
@@ -149,6 +162,7 @@ class TrainingPlanningExecutionIntegrationTest {
 
         mvc.perform(post("/api/v1/session-executions/{id}/corrections", executionId)
                         .with(role("specialist", "SPECIALIST"))
+                        .header("Idempotency-Key", "correction-1")
                         .contentType("application/json")
                         .content("{\"reason\":\"Participant clarified the scale\",\"correctedPainLevel\":2}"))
                 .andExpect(status().isOk())
@@ -249,6 +263,167 @@ class TrainingPlanningExecutionIntegrationTest {
     }
 
     @Test
+    void actualDoseIsProjectedOnceAndCorrectionRebuildsItWithQualificationReversal() throws Exception {
+        UUID structureId = executionContribution();
+        createPlan();
+        UUID sessionId = sessionId();
+        UUID prescriptionId = prescriptionId();
+        String request = """
+                {
+                  "declaredCompletion":true,
+                  "painLevel":0,
+                  "difficultyLevel":6,
+                  "sessionRpe":7,
+                  "observationMode":"DECLARED",
+                  "results":[{
+                    "exercisePrescriptionId":"%s",
+                    "actualSets":2,
+                    "actualRepetitions":5,
+                    "actualDurationSeconds":30,
+                    "actualContacts":6,
+                    "actualExternalLoadValue":12.5,
+                    "actualExternalLoadUnit":"kg",
+                    "side":"LEFT",
+                    "modified":true,
+                    "observationMode":"DEVICE"
+                  }]
+                }
+                """.formatted(prescriptionId);
+
+        mvc.perform(post("/api/v1/planned-sessions/{id}/executions", sessionId)
+                        .with(role("participant", "PARTICIPANT"))
+                        .header("Idempotency-Key", "actual-dose")
+                        .contentType("application/json").content(request))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.results[0].exerciseVersionId").value(exerciseVersionId.toString()))
+                .andExpect(jsonPath("$.results[0].actualSets").value(2))
+                .andExpect(jsonPath("$.results[0].side").value("LEFT"))
+                .andExpect(jsonPath("$.sessionRpe").value(7))
+                .andExpect(jsonPath("$.results[0].observationMode").value("DEVICE"));
+
+        UUID executionId = jdbc.queryForObject("SELECT id FROM training_execution.session_execution", UUID.class);
+        OutboxMessage declaration = declarationEvent(executionId);
+        assertThat(projections.consume(declaration).created()).isTrue();
+        assertThat(projections.consume(declaration).created()).isFalse();
+        assertThat(jdbc.queryForObject("""
+                SELECT value_low FROM training_execution.executed_load_observation
+                WHERE anatomical_structure_id=? AND channel='DYN_EXU'
+                """, java.math.BigDecimal.class, structureId)).isEqualByComparingTo("5.000000");
+        assertThat(jdbc.queryForObject("""
+                SELECT value_high FROM training_execution.executed_load_observation
+                WHERE anatomical_structure_id=? AND channel='DYN_EXU'
+                """, java.math.BigDecimal.class, structureId)).isEqualByComparingTo("10.000000");
+        assertThat(jdbc.queryForList("""
+                SELECT channel || ':' || side FROM training_execution.executed_load_observation
+                ORDER BY channel
+                """, String.class)).containsExactly(
+                        "DYN_EXU:LEFT", "IMPACT_CONTACTS:BILATERAL", "ISO_SEC:RIGHT");
+        assertThat(jdbc.queryForObject("""
+                SELECT value_high FROM training_execution.executed_load_observation
+                WHERE channel='ISO_SEC'
+                """, java.math.BigDecimal.class)).isEqualByComparingTo("30.000000");
+        assertThat(jdbc.queryForObject(
+                "SELECT target_sets * target_repetitions FROM training_planning.exercise_prescription",
+                Integer.class)).isEqualTo(24);
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM training_execution.executed_load_aggregate", Long.class)).isEqualTo(9);
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM training_execution.execution_qualification", Long.class)).isEqualTo(1);
+
+        String correction = """
+                {"reason":"Device upload corrected the repetitions",
+                 "exercisePrescriptionId":"%s","correctedSets":1,"correctedRepetitions":4,
+                 "correctedSide":"RIGHT","observationMode":"DEVICE"}
+                """.formatted(prescriptionId);
+        for (int retry = 0; retry < 2; retry++) {
+            mvc.perform(post("/api/v1/session-executions/{id}/corrections", executionId)
+                            .with(role("participant", "PARTICIPANT"))
+                            .header("Idempotency-Key", "device-correction")
+                            .contentType("application/json").content(correction))
+                    .andExpect(status().isOk());
+        }
+        mvc.perform(get("/api/v1/specialist/participants/{id}/executions", participantId)
+                        .with(role("specialist", "SPECIALIST")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].corrections[0].correctedSets").value(1))
+                .andExpect(jsonPath("$[0].corrections[0].observationMode").value("DEVICE"));
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM training_execution.execution_correction", Long.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject(
+                "SELECT value_high FROM training_execution.executed_load_observation WHERE channel='DYN_EXU'",
+                java.math.BigDecimal.class)).isEqualByComparingTo("4.000000");
+        assertThat(jdbc.queryForObject(
+                "SELECT side FROM training_execution.executed_load_observation WHERE channel='DYN_EXU'",
+                String.class)).isEqualTo("RIGHT");
+        assertThat(jdbc.queryForObject(
+                "SELECT status FROM training_execution.execution_qualification", String.class)).isEqualTo("REVERSED");
+        assertThat(jdbc.queryForObject("""
+                SELECT COUNT(*) FROM audit.outbox_event
+                WHERE event_type='ExecutionQualificationReversed'
+                """, Long.class)).isEqualTo(1);
+        assertThat(jdbc.queryForList("SELECT payload FROM audit.outbox_event", String.class))
+                .noneMatch(payload -> payload.toLowerCase().matches(".*(pain|difficulty|note|clinical|restriction).*"));
+    }
+
+    @Test
+    void post24hAlertsHaveAuthorizedLifecycleAndIdempotentHistory() throws Exception {
+        createPlan();
+        declare(sessionId(), prescriptionId(), "alert-execution", 2, 6);
+        UUID executionId = jdbc.queryForObject("SELECT id FROM training_execution.session_execution", UUID.class);
+        String response = "{\"painLevel\":8,\"difficultyLevel\":9,\"note\":\"Private follow-up\","
+                + "\"observationMode\":\"DECLARED\"}";
+        for (int retry = 0; retry < 2; retry++) {
+            mvc.perform(post("/api/v1/session-executions/{id}/post-24h-responses", executionId)
+                            .with(role("participant", "PARTICIPANT"))
+                            .header("Idempotency-Key", "post24-once")
+                            .contentType("application/json").content(response))
+                    .andExpect(status().isOk());
+        }
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM training_execution.post_24h_response", Long.class)).isEqualTo(1);
+        UUID alertId = jdbc.queryForObject("""
+                SELECT id FROM training_execution.execution_alert WHERE alert_type='POST_24H_PAIN'
+                """, UUID.class);
+        assertThat(jdbc.queryForObject("""
+                SELECT COUNT(*) FROM training_execution.execution_alert
+                WHERE alert_type IN ('PAIN_REPORTED', 'POST_24H_PAIN', 'POST_24H_DIFFICULTY')
+                """, Long.class)).isEqualTo(3);
+        mvc.perform(post("/api/v1/session-executions/{id}/alerts/{alertId}/transitions", executionId, alertId)
+                        .with(role("participant", "PARTICIPANT"))
+                        .contentType("application/json").content("{\"action\":\"RESOLVE\"}"))
+                .andExpect(status().isForbidden());
+        transition(executionId, alertId, "participant", "PARTICIPANT", "ACKNOWLEDGE", null, 200);
+        transition(executionId, alertId, "specialist", "SPECIALIST", "RESOLVE", null, 200);
+        transition(executionId, alertId, "specialist", "SPECIALIST", "REOPEN", null, 200);
+        transition(executionId, alertId, "specialist", "SPECIALIST", "ASSIGN", specialistId, 200);
+        transition(executionId, alertId, "foreign-specialist", "SPECIALIST", "RESOLVE", null, 403);
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM training_execution.execution_alert_history", Long.class)).isEqualTo(4);
+        assertThat(jdbc.queryForObject(
+                "SELECT owner_account_id FROM training_execution.execution_alert WHERE id=?",
+                UUID.class, alertId)).isEqualTo(specialistId);
+    }
+
+    @Test
+    void failedProjectionIsMarkedAndRecoveredWhenCatalogVersionReturns() throws Exception {
+        executionContribution();
+        createPlan();
+        declare(sessionId(), prescriptionId(), "recover-execution", 0, 4);
+        UUID executionId = jdbc.queryForObject("SELECT id FROM training_execution.session_execution", UUID.class);
+        jdbc.update("UPDATE exercise_catalog.exercise_version SET status='WITHDRAWN' WHERE id=?", exerciseVersionId);
+        assertThat(projections.recover(Instant.now().plusSeconds(60)).failed()).isEqualTo(1);
+        assertThat(jdbc.queryForObject(
+                "SELECT projection_status FROM training_execution.session_execution", String.class)).isEqualTo("FAILED");
+        jdbc.update("UPDATE exercise_catalog.exercise_version SET status='PUBLISHED' WHERE id=?", exerciseVersionId);
+        assertThat(projections.recover(Instant.now().plusSeconds(60)).projected()).isEqualTo(1);
+        assertThat(jdbc.queryForObject(
+                "SELECT projection_status FROM training_execution.session_execution", String.class)).isEqualTo("PROJECTED");
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM training_execution.execution_projection_receipt", Long.class)).isEqualTo(1);
+        assertThat(executionId).isNotNull();
+    }
+
+    @Test
     void openApiPublishesPlanningAndExecutionContracts() throws Exception {
         mvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
@@ -300,6 +475,75 @@ class TrainingPlanningExecutionIntegrationTest {
                 VALUES (?, 'ACUTE_KNEE_PAIN')
                 """, versionId);
         return versionId;
+    }
+
+    private UUID executionContribution() {
+        UUID structureId = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO anatomy_reference.anatomical_structure
+                    (id, code, type, display_name, side_policy, status, taxonomy_version,
+                     created_by_subject, created_at, published_at, version)
+                VALUES (?, ?, 'JOINT', 'Test knee', 'LEFT_RIGHT', 'PUBLISHED', 1,
+                        'test', now(), now(), 0)
+                """, structureId, "TEST_KNEE_" + structureId);
+        jdbc.update("""
+                INSERT INTO exercise_catalog.exercise_contribution
+                    (id, exercise_version_id, anatomical_structure_id, contribution_role,
+                     load_channel, contribution_band, coefficient_low, coefficient_high,
+                     confidence_class, evidence_grade, calculation_role, side_rule,
+                     created_at, created_by_subject)
+                VALUES (?, ?, ?, 'PRIMARY', 'DYN_EXU', 'HIGH', 0.5, 1.0,
+                        'TEST', 'TEST', 'ALLOCATION', 'AS_PRESCRIBED', now(), 'test')
+                """, UUID.randomUUID(), exerciseVersionId, structureId);
+        jdbc.update("""
+                INSERT INTO exercise_catalog.exercise_contribution
+                    (id, exercise_version_id, anatomical_structure_id, contribution_role,
+                     load_channel, contribution_band, coefficient_low, coefficient_high,
+                     confidence_class, evidence_grade, calculation_role, side_rule,
+                     created_at, created_by_subject)
+                VALUES (?, ?, ?, 'PRIMARY', 'ISO_SEC', 'MODERATE', 0.25, 0.5,
+                        'TEST', 'TEST', 'ALLOCATION', 'RIGHT', now(), 'test')
+                """, UUID.randomUUID(), exerciseVersionId, structureId);
+        jdbc.update("""
+                INSERT INTO exercise_catalog.exercise_contribution
+                    (id, exercise_version_id, anatomical_structure_id, contribution_role,
+                     load_channel, contribution_band, coefficient_low, coefficient_high,
+                     confidence_class, evidence_grade, calculation_role, side_rule,
+                     created_at, created_by_subject)
+                VALUES (?, ?, ?, 'PRIMARY', 'IMPACT_CONTACTS', 'MODERATE', 0.1, 0.2,
+                        'TEST', 'TEST', 'ALLOCATION', 'BILATERAL', now(), 'test')
+                """, UUID.randomUUID(), exerciseVersionId, structureId);
+        return structureId;
+    }
+
+    private OutboxMessage declarationEvent(UUID executionId) {
+        return jdbc.queryForObject("""
+                SELECT id, aggregate_type, aggregate_id, event_type, payload, occurred_at
+                FROM audit.outbox_event
+                WHERE aggregate_id=? AND event_type='SessionExecutionDeclared'
+                """, (rs, row) -> new OutboxMessage(rs.getObject("id", UUID.class),
+                rs.getString("aggregate_type"), rs.getObject("aggregate_id", UUID.class),
+                rs.getString("event_type"), rs.getString("payload"),
+                rs.getObject("occurred_at", java.time.OffsetDateTime.class).toInstant()), executionId);
+    }
+
+    private void declare(UUID sessionId, UUID prescriptionId, String key, int pain, int difficulty)
+            throws Exception {
+        mvc.perform(post("/api/v1/planned-sessions/{id}/executions", sessionId)
+                        .with(role("participant", "PARTICIPANT"))
+                        .header("Idempotency-Key", key).contentType("application/json")
+                        .content(executionRequest(prescriptionId, true, pain, difficulty)))
+                .andExpect(status().isOk());
+    }
+
+    private void transition(UUID executionId, UUID alertId, String subject, String role,
+                            String action, UUID assignedOwner, int expectedStatus) throws Exception {
+        String owner = assignedOwner == null ? "" : ",\"ownerAccountId\":\"" + assignedOwner + "\"";
+        mvc.perform(post("/api/v1/session-executions/{id}/alerts/{alertId}/transitions", executionId, alertId)
+                        .with(role(subject, role)).contentType("application/json")
+                        .content("{\"action\":\"" + action + "\"" + owner
+                                + ",\"commentReference\":\"ticket:test\"}"))
+                .andExpect(status().is(expectedStatus));
     }
 
     private void createPlan() throws Exception {

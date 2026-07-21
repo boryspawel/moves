@@ -27,14 +27,16 @@ class JpaTransactionalOutbox implements TransactionalOutbox {
 
     @Override
     @Transactional
-    public void append(
+    public UUID append(
             String aggregateType,
             UUID aggregateId,
             String eventType,
             String payload,
             Instant occurredAt) {
-        entityManager.persist(OutboxEventJpaEntity.event(
-                aggregateType, aggregateId, eventType, payload, occurredAt));
+        OutboxEventJpaEntity event = OutboxEventJpaEntity.event(
+                aggregateType, aggregateId, eventType, payload, occurredAt);
+        entityManager.persist(event);
+        return event.id;
     }
 
     @Override
