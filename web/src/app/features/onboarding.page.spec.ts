@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { ApiFacade } from '../core/api.facade';
 import { OnboardingPage } from './onboarding.page';
@@ -17,7 +18,7 @@ describe('OnboardingPage', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     api.state.mockResolvedValue({ stage: 'PROFILE_TYPE_REQUIRED', missingSteps: ['PROFILE_TYPE'] });
-    await TestBed.configureTestingModule({ imports: [OnboardingPage], providers: [{ provide: ApiFacade, useValue: { onboarding: api } }] }).compileComponents();
+    await TestBed.configureTestingModule({ imports: [OnboardingPage], providers: [provideRouter([]), { provide: ApiFacade, useValue: { onboarding: api } }] }).compileComponents();
   });
 
   it('shows only loading content until the initial state resolves', () => {
@@ -45,7 +46,7 @@ describe('OnboardingPage', () => {
     const fixture = TestBed.createComponent(OnboardingPage); fixture.detectChanges(); await settle(fixture);
     const instance = fixture.componentInstance as any;
     instance.profileForm.controls.displayName.setValue('Ada');
-    instance.saveProfile(); await settle(fixture);
+    instance.saveProfile(instance.profileForm.getRawValue()); await settle(fixture);
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Nie udało się zapisać tego kroku');
     expect(instance.profileForm.controls.displayName.value).toBe('Ada');
     expect(instance.state().stage).toBe('PROFILE_REQUIRED');
@@ -67,7 +68,7 @@ describe('OnboardingPage', () => {
     const instance = fixture.componentInstance as any;
     instance.profileForm.controls.displayName.setValue('Ada');
     instance.profileForm.controls.timeZoneId.setValue('Europe/Warsaw');
-    instance.saveProfile(); instance.saveProfile();
+    instance.saveProfile(instance.profileForm.getRawValue()); instance.saveProfile(instance.profileForm.getRawValue());
     expect(api.participantProfile).toHaveBeenCalledTimes(1);
     expect(api.participantProfile).toHaveBeenCalledWith({ participantProfileRequest: { displayName: 'Ada', timeZoneId: 'Europe/Warsaw' } });
     resolve({ stage: 'AVAILABILITY_REQUIRED' }); await settle(fixture);
@@ -77,5 +78,20 @@ describe('OnboardingPage', () => {
     api.state.mockResolvedValue({ stage: 'READY', missingSteps: [] });
     const fixture = TestBed.createComponent(OnboardingPage); fixture.detectChanges(); await settle(fixture);
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Onboarding ukończony');
+  });
+
+  it('supports repeatable availability across all seven days and rejects an end before its start', async () => {
+    api.state.mockResolvedValue({ stage: 'AVAILABILITY_REQUIRED', profileType: 'SPECIALIST' });
+    const fixture = TestBed.createComponent(OnboardingPage); fixture.detectChanges(); await settle(fixture);
+    const instance = fixture.componentInstance as any;
+    instance.addSlot();
+    const slots = instance.availabilityForm.controls.slots;
+    expect(slots.length).toBe(2);
+    slots.at(1).controls.dayOfWeek.setValue('SUNDAY');
+    fixture.detectChanges();
+    expect(slots.at(1).controls.dayOfWeek.value).toBe('SUNDAY');
+    slots.at(0).controls.startTime.setValue('12:00');
+    slots.at(0).controls.endTime.setValue('11:00');
+    expect(slots.at(0).invalid).toBe(true);
   });
 });

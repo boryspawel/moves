@@ -46,6 +46,22 @@ class AdherenceMetricsServiceTest {
     }
 
     @Test
+    void assignmentsHandleNegativeHashBuckets() {
+        var assignments = mock(AdherenceExperimentAssignmentRepository.class);
+        var events = mock(AdherenceMetricEventRepository.class);
+        UUID participant = UUID.fromString("996ad860-2a9a-504f-8861-aeafd0b2ae29");
+        when(assignments.findByParticipantAccountIdAndExperimentKeyAndExperimentVersion(any(), any(), any()))
+                .thenReturn(Optional.empty());
+
+        new AdherenceMetricsService(assignments, events, clock).ensureAssignments(participant);
+
+        ArgumentCaptor<AdherenceExperimentAssignment> saved = ArgumentCaptor.forClass(AdherenceExperimentAssignment.class);
+        verify(assignments, times(3)).saveAndFlush(saved.capture());
+        assertThat(saved.getAllValues()).extracting(item -> item.variantCode)
+                .containsExactly("BARRIER_FIRST", "TODAY_ONLY", "MINIMUM_PLAN");
+    }
+
+    @Test
     void eventContainsOnlyNeutralTechnicalFieldsAndHasRetention() {
         var assignments = mock(AdherenceExperimentAssignmentRepository.class);
         var events = mock(AdherenceMetricEventRepository.class);

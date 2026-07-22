@@ -33,7 +33,8 @@ public class AdherenceMetricsService {
         for (Experiment experiment : EXPERIMENTS) {
             if (assignments.findByParticipantAccountIdAndExperimentKeyAndExperimentVersion(
                     participant, experiment.key(), EXPERIMENT_VERSION).isEmpty()) {
-                String variant = experiment.variants().get(bucket(participant, experiment.key()) % experiment.variants().size());
+                String variant = experiment.variants().get(Math.floorMod(
+                        bucket(participant, experiment.key()), experiment.variants().size()));
                 try {
                     assignments.saveAndFlush(new AdherenceExperimentAssignment(participant, experiment.key(),
                             EXPERIMENT_VERSION, variant, now));
