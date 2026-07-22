@@ -6,7 +6,7 @@ import java.util.UUID;
 import com.motionecosystem.gamification.GamificationService.LedgerView;
 import com.motionecosystem.gamification.GamificationService.ProfileCommand;
 import com.motionecosystem.gamification.GamificationService.ProfileView;
-import com.motionecosystem.gamification.GamificationService.ProgressView;
+import com.motionecosystem.gamification.GamificationService.GamificationProgressView;
 import com.motionecosystem.gamification.GamificationService.QualificationView;
 import com.motionecosystem.gamification.GamificationService.RankingRow;
 import com.motionecosystem.gamification.GamificationService.ReversalCommand;
@@ -46,8 +46,8 @@ class GamificationController {
 
     @GetMapping("/gamification/me")
     @PreAuthorize("hasRole('PARTICIPANT')")
-    @Operation(summary = "Return private points and a non-medical ledger view")
-    ProgressView progress(@AuthenticationPrincipal Jwt jwt) {
+    @Operation(operationId = "gamificationProgress", summary = "Return private points and a non-medical ledger view")
+    GamificationProgressView progress(@AuthenticationPrincipal Jwt jwt) {
         return gamification.progress(jwt.getSubject());
     }
 

@@ -105,7 +105,7 @@ public class GamificationService {
     }
 
     @Transactional(readOnly = true)
-    public ProgressView progress(String subject) {
+    public GamificationProgressView progress(String subject) {
         CurrentAccount account = participant(subject);
         ProfileView profile = profile(account.id());
         long points = totalPoints(account.id());
@@ -118,7 +118,7 @@ public class GamificationService {
                 EntryType.valueOf(rs.getString("entry_type")), rs.getInt("points"),
                 Reason.valueOf(rs.getString("reason")), rs.getObject("reverses_entry_id", UUID.class),
                 rs.getTimestamp("occurred_at").toInstant()), account.id());
-        return new ProgressView(profile, points, ledger);
+        return new GamificationProgressView(profile, points, ledger);
     }
 
     @Transactional(readOnly = true)
@@ -368,7 +368,7 @@ public class GamificationService {
                              Reason reason, UUID reversesEntryId, Instant occurredAt) {
     }
 
-    public record ProgressView(ProfileView profile, long points, List<LedgerView> ledger) {
+    public record GamificationProgressView(ProfileView profile, long points, List<LedgerView> ledger) {
     }
 
     public record RankingRow(int position, String pseudonym, long points) {

@@ -4,7 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import type { ProgressView } from '../api/generated/src';
+import type { GamificationProgressView } from '../api/generated/src';
 import { ApiFacade } from '../core/api.facade';
 
 @Component({
@@ -35,7 +35,7 @@ import { ApiFacade } from '../core/api.facade';
 })
 export class GamificationPage {
   private readonly api = inject(ApiFacade).gamification;
-  protected readonly progress = signal<ProgressView | null>(null);
+  protected readonly progress = signal<GamificationProgressView | null>(null);
   protected readonly message = signal('Ładowanie…');
   protected readonly failed = signal(false);
   protected readonly form = new FormGroup({
@@ -66,7 +66,7 @@ export class GamificationPage {
   private async load(): Promise<void> {
     this.failed.set(false);
     try {
-      const progress = await this.api.progress();
+      const progress = await this.api.gamificationProgress();
       this.progress.set(progress);
       this.form.patchValue({
         enabled: progress.profile?.enabled ?? false,
