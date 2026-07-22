@@ -19,66 +19,62 @@ import { mapValues } from '../runtime';
  * @interface ReorderCommand
  */
 export interface ReorderCommand {
-  /**
-   *
-   * @type {number}
-   * @memberof ReorderCommand
-   */
-  expectedVersion?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof ReorderCommand
-   */
-  sessionId?: string;
-  /**
-   *
-   * @type {Array<string>}
-   * @memberof ReorderCommand
-   */
-  prescriptionIds?: Array<string>;
+    /**
+     *
+     * @type {number}
+     * @memberof ReorderCommand
+     */
+    expectedVersion?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof ReorderCommand
+     */
+    sessionId?: string;
+    /**
+     *
+     * @type {Array<string>}
+     * @memberof ReorderCommand
+     */
+    prescriptionIds?: Array<string>;
 }
 
 /**
  * Check if a given object implements the ReorderCommand interface.
  */
 export function instanceOfReorderCommand(value: object): value is ReorderCommand {
-  return true;
+    return true;
 }
 
 export function ReorderCommandFromJSON(json: any): ReorderCommand {
-  return ReorderCommandFromJSONTyped(json, false);
+    return ReorderCommandFromJSONTyped(json, false);
 }
 
-export function ReorderCommandFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): ReorderCommand {
-  if (json == null) {
-    return json;
-  }
-  return {
-    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
-    sessionId: json['sessionId'] == null ? undefined : json['sessionId'],
-    prescriptionIds: json['prescriptionIds'] == null ? undefined : json['prescriptionIds'],
-  };
+export function ReorderCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): ReorderCommand {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'expectedVersion': json['expectedVersion'] == null ? undefined : json['expectedVersion'],
+        'sessionId': json['sessionId'] == null ? undefined : json['sessionId'],
+        'prescriptionIds': json['prescriptionIds'] == null ? undefined : json['prescriptionIds'],
+    };
 }
 
 export function ReorderCommandToJSON(json: any): ReorderCommand {
-  return ReorderCommandToJSONTyped(json, false);
+    return ReorderCommandToJSONTyped(json, false);
 }
 
-export function ReorderCommandToJSONTyped(
-  value?: ReorderCommand | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function ReorderCommandToJSONTyped(value?: ReorderCommand | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    expectedVersion: value['expectedVersion'],
-    sessionId: value['sessionId'],
-    prescriptionIds: value['prescriptionIds'],
-  };
+    return {
+
+        'expectedVersion': value['expectedVersion'],
+        'sessionId': value['sessionId'],
+        'prescriptionIds': value['prescriptionIds'],
+    };
 }

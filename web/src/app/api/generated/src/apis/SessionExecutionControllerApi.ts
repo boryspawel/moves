@@ -13,418 +13,379 @@
  */
 
 import * as runtime from '../runtime';
-import { type AlertData, AlertDataFromJSON, AlertDataToJSON } from '../models/AlertData';
 import {
-  type AlertTransitionCommand,
-  AlertTransitionCommandFromJSON,
-  AlertTransitionCommandToJSON,
+    type AlertData,
+    AlertDataFromJSON,
+    AlertDataToJSON,
+} from '../models/AlertData';
+import {
+    type AlertTransitionCommand,
+    AlertTransitionCommandFromJSON,
+    AlertTransitionCommandToJSON,
 } from '../models/AlertTransitionCommand';
 import {
-  type CorrectionCommand,
-  CorrectionCommandFromJSON,
-  CorrectionCommandToJSON,
+    type CorrectionCommand,
+    CorrectionCommandFromJSON,
+    CorrectionCommandToJSON,
 } from '../models/CorrectionCommand';
 import {
-  type DeclareExecutionCommand,
-  DeclareExecutionCommandFromJSON,
-  DeclareExecutionCommandToJSON,
+    type DeclareExecutionCommand,
+    DeclareExecutionCommandFromJSON,
+    DeclareExecutionCommandToJSON,
 } from '../models/DeclareExecutionCommand';
 import {
-  type ExecutionView,
-  ExecutionViewFromJSON,
-  ExecutionViewToJSON,
+    type ExecutionView,
+    ExecutionViewFromJSON,
+    ExecutionViewToJSON,
 } from '../models/ExecutionView';
 import {
-  type Post24hCommand,
-  Post24hCommandFromJSON,
-  Post24hCommandToJSON,
+    type Post24hCommand,
+    Post24hCommandFromJSON,
+    Post24hCommandToJSON,
 } from '../models/Post24hCommand';
-import { type Post24hData, Post24hDataFromJSON, Post24hDataToJSON } from '../models/Post24hData';
+import {
+    type Post24hData,
+    Post24hDataFromJSON,
+    Post24hDataToJSON,
+} from '../models/Post24hData';
 
 export interface CorrectRequest {
-  executionId: string;
-  idempotencyKey: string;
-  correctionCommand: CorrectionCommand;
+    executionId: string;
+    idempotencyKey: string;
+    correctionCommand: CorrectionCommand;
 }
 
 export interface Declare1Request {
-  sessionId: string;
-  idempotencyKey: string;
-  declareExecutionCommand: DeclareExecutionCommand;
+    sessionId: string;
+    idempotencyKey: string;
+    declareExecutionCommand: DeclareExecutionCommand;
 }
 
 export interface Post24hRequest {
-  executionId: string;
-  idempotencyKey: string;
-  post24hCommand: Post24hCommand;
+    executionId: string;
+    idempotencyKey: string;
+    post24hCommand: Post24hCommand;
 }
 
 export interface SpecialistExecutionsRequest {
-  participantAccountId: string;
+    participantAccountId: string;
 }
 
 export interface TransitionAlertRequest {
-  executionId: string;
-  alertId: string;
-  alertTransitionCommand: AlertTransitionCommand;
+    executionId: string;
+    alertId: string;
+    alertTransitionCommand: AlertTransitionCommand;
 }
 
 /**
  *
  */
 export class SessionExecutionControllerApi extends runtime.BaseAPI {
-  /**
-   * Creates request options for correct without sending the request
-   */
-  async correctRequestOpts(requestParameters: CorrectRequest): Promise<runtime.RequestOpts> {
-    if (requestParameters['executionId'] == null) {
-      throw new runtime.RequiredError(
-        'executionId',
-        'Required parameter "executionId" was null or undefined when calling correct().',
-      );
+
+    /**
+     * Creates request options for correct without sending the request
+     */
+    async correctRequestOpts(requestParameters: CorrectRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['executionId'] == null) {
+            throw new runtime.RequiredError(
+                'executionId',
+                'Required parameter "executionId" was null or undefined when calling correct().'
+            );
+        }
+
+        if (requestParameters['idempotencyKey'] == null) {
+            throw new runtime.RequiredError(
+                'idempotencyKey',
+                'Required parameter "idempotencyKey" was null or undefined when calling correct().'
+            );
+        }
+
+        if (requestParameters['correctionCommand'] == null) {
+            throw new runtime.RequiredError(
+                'correctionCommand',
+                'Required parameter "correctionCommand" was null or undefined when calling correct().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (requestParameters['idempotencyKey'] != null) {
+            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        }
+
+
+        let urlPath = `/api/v1/session-executions/{executionId}/corrections`;
+        urlPath = urlPath.replace('{executionId}', encodeURIComponent(String(requestParameters['executionId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: CorrectionCommandToJSON(requestParameters['correctionCommand']),
+        };
     }
 
-    if (requestParameters['idempotencyKey'] == null) {
-      throw new runtime.RequiredError(
-        'idempotencyKey',
-        'Required parameter "idempotencyKey" was null or undefined when calling correct().',
-      );
+    /**
+     * Append an audited correction without changing execution history
+     */
+    async correctRaw(requestParameters: CorrectRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ExecutionView>> {
+        const requestOptions = await this.correctRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ExecutionViewFromJSON(jsonValue));
     }
 
-    if (requestParameters['correctionCommand'] == null) {
-      throw new runtime.RequiredError(
-        'correctionCommand',
-        'Required parameter "correctionCommand" was null or undefined when calling correct().',
-      );
+    /**
+     * Append an audited correction without changing execution history
+     */
+    async correct(requestParameters: CorrectRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ExecutionView> {
+        const response = await this.correctRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
-    const queryParameters: any = {};
+    /**
+     * Creates request options for declare1 without sending the request
+     */
+    async declare1RequestOpts(requestParameters: Declare1Request): Promise<runtime.RequestOpts> {
+        if (requestParameters['sessionId'] == null) {
+            throw new runtime.RequiredError(
+                'sessionId',
+                'Required parameter "sessionId" was null or undefined when calling declare1().'
+            );
+        }
 
-    const headerParameters: runtime.HTTPHeaders = {};
+        if (requestParameters['idempotencyKey'] == null) {
+            throw new runtime.RequiredError(
+                'idempotencyKey',
+                'Required parameter "idempotencyKey" was null or undefined when calling declare1().'
+            );
+        }
 
-    headerParameters['Content-Type'] = 'application/json';
+        if (requestParameters['declareExecutionCommand'] == null) {
+            throw new runtime.RequiredError(
+                'declareExecutionCommand',
+                'Required parameter "declareExecutionCommand" was null or undefined when calling declare1().'
+            );
+        }
 
-    if (requestParameters['idempotencyKey'] != null) {
-      headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (requestParameters['idempotencyKey'] != null) {
+            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        }
+
+
+        let urlPath = `/api/v1/planned-sessions/{sessionId}/executions`;
+        urlPath = urlPath.replace('{sessionId}', encodeURIComponent(String(requestParameters['sessionId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: DeclareExecutionCommandToJSON(requestParameters['declareExecutionCommand']),
+        };
     }
 
-    let urlPath = `/api/v1/session-executions/{executionId}/corrections`;
-    urlPath = urlPath.replace(
-      '{executionId}',
-      encodeURIComponent(String(requestParameters['executionId'])),
-    );
+    /**
+     * Declare completion of an assigned planned session
+     */
+    async declare1Raw(requestParameters: Declare1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ExecutionView>> {
+        const requestOptions = await this.declare1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
-    return {
-      path: urlPath,
-      method: 'POST',
-      headers: headerParameters,
-      query: queryParameters,
-      body: CorrectionCommandToJSON(requestParameters['correctionCommand']),
-    };
-  }
-
-  /**
-   * Append an audited correction without changing execution history
-   */
-  async correctRaw(
-    requestParameters: CorrectRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<ExecutionView>> {
-    const requestOptions = await this.correctRequestOpts(requestParameters);
-    const response = await this.request(requestOptions, initOverrides);
-
-    return new runtime.JSONApiResponse(response, (jsonValue) => ExecutionViewFromJSON(jsonValue));
-  }
-
-  /**
-   * Append an audited correction without changing execution history
-   */
-  async correct(
-    requestParameters: CorrectRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<ExecutionView> {
-    const response = await this.correctRaw(requestParameters, initOverrides);
-    return await response.value();
-  }
-
-  /**
-   * Creates request options for declare1 without sending the request
-   */
-  async declare1RequestOpts(requestParameters: Declare1Request): Promise<runtime.RequestOpts> {
-    if (requestParameters['sessionId'] == null) {
-      throw new runtime.RequiredError(
-        'sessionId',
-        'Required parameter "sessionId" was null or undefined when calling declare1().',
-      );
+        return new runtime.JSONApiResponse(response, (jsonValue) => ExecutionViewFromJSON(jsonValue));
     }
 
-    if (requestParameters['idempotencyKey'] == null) {
-      throw new runtime.RequiredError(
-        'idempotencyKey',
-        'Required parameter "idempotencyKey" was null or undefined when calling declare1().',
-      );
+    /**
+     * Declare completion of an assigned planned session
+     */
+    async declare1(requestParameters: Declare1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ExecutionView> {
+        const response = await this.declare1Raw(requestParameters, initOverrides);
+        return await response.value();
     }
 
-    if (requestParameters['declareExecutionCommand'] == null) {
-      throw new runtime.RequiredError(
-        'declareExecutionCommand',
-        'Required parameter "declareExecutionCommand" was null or undefined when calling declare1().',
-      );
+    /**
+     * Creates request options for post24h without sending the request
+     */
+    async post24hRequestOpts(requestParameters: Post24hRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['executionId'] == null) {
+            throw new runtime.RequiredError(
+                'executionId',
+                'Required parameter "executionId" was null or undefined when calling post24h().'
+            );
+        }
+
+        if (requestParameters['idempotencyKey'] == null) {
+            throw new runtime.RequiredError(
+                'idempotencyKey',
+                'Required parameter "idempotencyKey" was null or undefined when calling post24h().'
+            );
+        }
+
+        if (requestParameters['post24hCommand'] == null) {
+            throw new runtime.RequiredError(
+                'post24hCommand',
+                'Required parameter "post24hCommand" was null or undefined when calling post24h().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (requestParameters['idempotencyKey'] != null) {
+            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        }
+
+
+        let urlPath = `/api/v1/session-executions/{executionId}/post-24h-responses`;
+        urlPath = urlPath.replace('{executionId}', encodeURIComponent(String(requestParameters['executionId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: Post24hCommandToJSON(requestParameters['post24hCommand']),
+        };
     }
 
-    const queryParameters: any = {};
+    /**
+     * Append an idempotent post-24h session response
+     */
+    async post24hRaw(requestParameters: Post24hRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Post24hData>> {
+        const requestOptions = await this.post24hRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    headerParameters['Content-Type'] = 'application/json';
-
-    if (requestParameters['idempotencyKey'] != null) {
-      headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        return new runtime.JSONApiResponse(response, (jsonValue) => Post24hDataFromJSON(jsonValue));
     }
 
-    let urlPath = `/api/v1/planned-sessions/{sessionId}/executions`;
-    urlPath = urlPath.replace(
-      '{sessionId}',
-      encodeURIComponent(String(requestParameters['sessionId'])),
-    );
-
-    return {
-      path: urlPath,
-      method: 'POST',
-      headers: headerParameters,
-      query: queryParameters,
-      body: DeclareExecutionCommandToJSON(requestParameters['declareExecutionCommand']),
-    };
-  }
-
-  /**
-   * Declare completion of an assigned planned session
-   */
-  async declare1Raw(
-    requestParameters: Declare1Request,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<ExecutionView>> {
-    const requestOptions = await this.declare1RequestOpts(requestParameters);
-    const response = await this.request(requestOptions, initOverrides);
-
-    return new runtime.JSONApiResponse(response, (jsonValue) => ExecutionViewFromJSON(jsonValue));
-  }
-
-  /**
-   * Declare completion of an assigned planned session
-   */
-  async declare1(
-    requestParameters: Declare1Request,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<ExecutionView> {
-    const response = await this.declare1Raw(requestParameters, initOverrides);
-    return await response.value();
-  }
-
-  /**
-   * Creates request options for post24h without sending the request
-   */
-  async post24hRequestOpts(requestParameters: Post24hRequest): Promise<runtime.RequestOpts> {
-    if (requestParameters['executionId'] == null) {
-      throw new runtime.RequiredError(
-        'executionId',
-        'Required parameter "executionId" was null or undefined when calling post24h().',
-      );
+    /**
+     * Append an idempotent post-24h session response
+     */
+    async post24h(requestParameters: Post24hRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Post24hData> {
+        const response = await this.post24hRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
-    if (requestParameters['idempotencyKey'] == null) {
-      throw new runtime.RequiredError(
-        'idempotencyKey',
-        'Required parameter "idempotencyKey" was null or undefined when calling post24h().',
-      );
+    /**
+     * Creates request options for specialistExecutions without sending the request
+     */
+    async specialistExecutionsRequestOpts(requestParameters: SpecialistExecutionsRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['participantAccountId'] == null) {
+            throw new runtime.RequiredError(
+                'participantAccountId',
+                'Required parameter "participantAccountId" was null or undefined when calling specialistExecutions().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+
+        let urlPath = `/api/v1/specialist/participants/{participantAccountId}/executions`;
+        urlPath = urlPath.replace('{participantAccountId}', encodeURIComponent(String(requestParameters['participantAccountId'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
     }
 
-    if (requestParameters['post24hCommand'] == null) {
-      throw new runtime.RequiredError(
-        'post24hCommand',
-        'Required parameter "post24hCommand" was null or undefined when calling post24h().',
-      );
+    /**
+     * List executions and alerts for a participant with an active relationship
+     */
+    async specialistExecutionsRaw(requestParameters: SpecialistExecutionsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<ExecutionView>>> {
+        const requestOptions = await this.specialistExecutionsRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ExecutionViewFromJSON));
     }
 
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    headerParameters['Content-Type'] = 'application/json';
-
-    if (requestParameters['idempotencyKey'] != null) {
-      headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+    /**
+     * List executions and alerts for a participant with an active relationship
+     */
+    async specialistExecutions(requestParameters: SpecialistExecutionsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<ExecutionView>> {
+        const response = await this.specialistExecutionsRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
-    let urlPath = `/api/v1/session-executions/{executionId}/post-24h-responses`;
-    urlPath = urlPath.replace(
-      '{executionId}',
-      encodeURIComponent(String(requestParameters['executionId'])),
-    );
+    /**
+     * Creates request options for transitionAlert without sending the request
+     */
+    async transitionAlertRequestOpts(requestParameters: TransitionAlertRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['executionId'] == null) {
+            throw new runtime.RequiredError(
+                'executionId',
+                'Required parameter "executionId" was null or undefined when calling transitionAlert().'
+            );
+        }
 
-    return {
-      path: urlPath,
-      method: 'POST',
-      headers: headerParameters,
-      query: queryParameters,
-      body: Post24hCommandToJSON(requestParameters['post24hCommand']),
-    };
-  }
+        if (requestParameters['alertId'] == null) {
+            throw new runtime.RequiredError(
+                'alertId',
+                'Required parameter "alertId" was null or undefined when calling transitionAlert().'
+            );
+        }
 
-  /**
-   * Append an idempotent post-24h session response
-   */
-  async post24hRaw(
-    requestParameters: Post24hRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<Post24hData>> {
-    const requestOptions = await this.post24hRequestOpts(requestParameters);
-    const response = await this.request(requestOptions, initOverrides);
+        if (requestParameters['alertTransitionCommand'] == null) {
+            throw new runtime.RequiredError(
+                'alertTransitionCommand',
+                'Required parameter "alertTransitionCommand" was null or undefined when calling transitionAlert().'
+            );
+        }
 
-    return new runtime.JSONApiResponse(response, (jsonValue) => Post24hDataFromJSON(jsonValue));
-  }
+        const queryParameters: any = {};
 
-  /**
-   * Append an idempotent post-24h session response
-   */
-  async post24h(
-    requestParameters: Post24hRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<Post24hData> {
-    const response = await this.post24hRaw(requestParameters, initOverrides);
-    return await response.value();
-  }
+        const headerParameters: runtime.HTTPHeaders = {};
 
-  /**
-   * Creates request options for specialistExecutions without sending the request
-   */
-  async specialistExecutionsRequestOpts(
-    requestParameters: SpecialistExecutionsRequest,
-  ): Promise<runtime.RequestOpts> {
-    if (requestParameters['participantAccountId'] == null) {
-      throw new runtime.RequiredError(
-        'participantAccountId',
-        'Required parameter "participantAccountId" was null or undefined when calling specialistExecutions().',
-      );
+        headerParameters['Content-Type'] = 'application/json';
+
+
+        let urlPath = `/api/v1/session-executions/{executionId}/alerts/{alertId}/transitions`;
+        urlPath = urlPath.replace('{executionId}', encodeURIComponent(String(requestParameters['executionId'])));
+        urlPath = urlPath.replace('{alertId}', encodeURIComponent(String(requestParameters['alertId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: AlertTransitionCommandToJSON(requestParameters['alertTransitionCommand']),
+        };
     }
 
-    const queryParameters: any = {};
+    /**
+     * Acknowledge, resolve or reopen an execution safety alert
+     */
+    async transitionAlertRaw(requestParameters: TransitionAlertRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AlertData>> {
+        const requestOptions = await this.transitionAlertRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    let urlPath = `/api/v1/specialist/participants/{participantAccountId}/executions`;
-    urlPath = urlPath.replace(
-      '{participantAccountId}',
-      encodeURIComponent(String(requestParameters['participantAccountId'])),
-    );
-
-    return {
-      path: urlPath,
-      method: 'GET',
-      headers: headerParameters,
-      query: queryParameters,
-    };
-  }
-
-  /**
-   * List executions and alerts for a participant with an active relationship
-   */
-  async specialistExecutionsRaw(
-    requestParameters: SpecialistExecutionsRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<Array<ExecutionView>>> {
-    const requestOptions = await this.specialistExecutionsRequestOpts(requestParameters);
-    const response = await this.request(requestOptions, initOverrides);
-
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      jsonValue.map(ExecutionViewFromJSON),
-    );
-  }
-
-  /**
-   * List executions and alerts for a participant with an active relationship
-   */
-  async specialistExecutions(
-    requestParameters: SpecialistExecutionsRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<Array<ExecutionView>> {
-    const response = await this.specialistExecutionsRaw(requestParameters, initOverrides);
-    return await response.value();
-  }
-
-  /**
-   * Creates request options for transitionAlert without sending the request
-   */
-  async transitionAlertRequestOpts(
-    requestParameters: TransitionAlertRequest,
-  ): Promise<runtime.RequestOpts> {
-    if (requestParameters['executionId'] == null) {
-      throw new runtime.RequiredError(
-        'executionId',
-        'Required parameter "executionId" was null or undefined when calling transitionAlert().',
-      );
+        return new runtime.JSONApiResponse(response, (jsonValue) => AlertDataFromJSON(jsonValue));
     }
 
-    if (requestParameters['alertId'] == null) {
-      throw new runtime.RequiredError(
-        'alertId',
-        'Required parameter "alertId" was null or undefined when calling transitionAlert().',
-      );
+    /**
+     * Acknowledge, resolve or reopen an execution safety alert
+     */
+    async transitionAlert(requestParameters: TransitionAlertRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AlertData> {
+        const response = await this.transitionAlertRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
-    if (requestParameters['alertTransitionCommand'] == null) {
-      throw new runtime.RequiredError(
-        'alertTransitionCommand',
-        'Required parameter "alertTransitionCommand" was null or undefined when calling transitionAlert().',
-      );
-    }
-
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    headerParameters['Content-Type'] = 'application/json';
-
-    let urlPath = `/api/v1/session-executions/{executionId}/alerts/{alertId}/transitions`;
-    urlPath = urlPath.replace(
-      '{executionId}',
-      encodeURIComponent(String(requestParameters['executionId'])),
-    );
-    urlPath = urlPath.replace(
-      '{alertId}',
-      encodeURIComponent(String(requestParameters['alertId'])),
-    );
-
-    return {
-      path: urlPath,
-      method: 'POST',
-      headers: headerParameters,
-      query: queryParameters,
-      body: AlertTransitionCommandToJSON(requestParameters['alertTransitionCommand']),
-    };
-  }
-
-  /**
-   * Acknowledge, resolve or reopen an execution safety alert
-   */
-  async transitionAlertRaw(
-    requestParameters: TransitionAlertRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AlertData>> {
-    const requestOptions = await this.transitionAlertRequestOpts(requestParameters);
-    const response = await this.request(requestOptions, initOverrides);
-
-    return new runtime.JSONApiResponse(response, (jsonValue) => AlertDataFromJSON(jsonValue));
-  }
-
-  /**
-   * Acknowledge, resolve or reopen an execution safety alert
-   */
-  async transitionAlert(
-    requestParameters: TransitionAlertRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AlertData> {
-    const response = await this.transitionAlertRaw(requestParameters, initOverrides);
-    return await response.value();
-  }
 }

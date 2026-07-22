@@ -19,63 +19,62 @@ import { mapValues } from '../runtime';
  * @interface TemplateView
  */
 export interface TemplateView {
-  /**
-   *
-   * @type {string}
-   * @memberof TemplateView
-   */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof TemplateView
-   */
-  code?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof TemplateView
-   */
-  versionNumber?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof TemplateView
+     */
+    id?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof TemplateView
+     */
+    code?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof TemplateView
+     */
+    versionNumber?: number;
 }
 
 /**
  * Check if a given object implements the TemplateView interface.
  */
 export function instanceOfTemplateView(value: object): value is TemplateView {
-  return true;
+    return true;
 }
 
 export function TemplateViewFromJSON(json: any): TemplateView {
-  return TemplateViewFromJSONTyped(json, false);
+    return TemplateViewFromJSONTyped(json, false);
 }
 
 export function TemplateViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): TemplateView {
-  if (json == null) {
-    return json;
-  }
-  return {
-    id: json['id'] == null ? undefined : json['id'],
-    code: json['code'] == null ? undefined : json['code'],
-    versionNumber: json['versionNumber'] == null ? undefined : json['versionNumber'],
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'id': json['id'] == null ? undefined : json['id'],
+        'code': json['code'] == null ? undefined : json['code'],
+        'versionNumber': json['versionNumber'] == null ? undefined : json['versionNumber'],
+    };
 }
 
 export function TemplateViewToJSON(json: any): TemplateView {
-  return TemplateViewToJSONTyped(json, false);
+    return TemplateViewToJSONTyped(json, false);
 }
 
-export function TemplateViewToJSONTyped(
-  value?: TemplateView | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function TemplateViewToJSONTyped(value?: TemplateView | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    id: value['id'],
-    code: value['code'],
-    versionNumber: value['versionNumber'],
-  };
+    return {
+
+        'id': value['id'],
+        'code': value['code'],
+        'versionNumber': value['versionNumber'],
+    };
 }

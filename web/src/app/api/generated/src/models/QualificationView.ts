@@ -19,82 +19,78 @@ import { mapValues } from '../runtime';
  * @interface QualificationView
  */
 export interface QualificationView {
-  /**
-   *
-   * @type {string}
-   * @memberof QualificationView
-   */
-  ledgerEntryId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof QualificationView
-   */
-  sourceExecutionId?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof QualificationView
-   */
-  points?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof QualificationView
-   */
-  outcome?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof QualificationView
-   */
-  ruleVersion?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof QualificationView
+     */
+    ledgerEntryId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof QualificationView
+     */
+    sourceExecutionId?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof QualificationView
+     */
+    points?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof QualificationView
+     */
+    outcome?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof QualificationView
+     */
+    ruleVersion?: string;
 }
 
 /**
  * Check if a given object implements the QualificationView interface.
  */
 export function instanceOfQualificationView(value: object): value is QualificationView {
-  return true;
+    return true;
 }
 
 export function QualificationViewFromJSON(json: any): QualificationView {
-  return QualificationViewFromJSONTyped(json, false);
+    return QualificationViewFromJSONTyped(json, false);
 }
 
-export function QualificationViewFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): QualificationView {
-  if (json == null) {
-    return json;
-  }
-  return {
-    ledgerEntryId: json['ledgerEntryId'] == null ? undefined : json['ledgerEntryId'],
-    sourceExecutionId: json['sourceExecutionId'] == null ? undefined : json['sourceExecutionId'],
-    points: json['points'] == null ? undefined : json['points'],
-    outcome: json['outcome'] == null ? undefined : json['outcome'],
-    ruleVersion: json['ruleVersion'] == null ? undefined : json['ruleVersion'],
-  };
+export function QualificationViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): QualificationView {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'ledgerEntryId': json['ledgerEntryId'] == null ? undefined : json['ledgerEntryId'],
+        'sourceExecutionId': json['sourceExecutionId'] == null ? undefined : json['sourceExecutionId'],
+        'points': json['points'] == null ? undefined : json['points'],
+        'outcome': json['outcome'] == null ? undefined : json['outcome'],
+        'ruleVersion': json['ruleVersion'] == null ? undefined : json['ruleVersion'],
+    };
 }
 
 export function QualificationViewToJSON(json: any): QualificationView {
-  return QualificationViewToJSONTyped(json, false);
+    return QualificationViewToJSONTyped(json, false);
 }
 
-export function QualificationViewToJSONTyped(
-  value?: QualificationView | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function QualificationViewToJSONTyped(value?: QualificationView | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    ledgerEntryId: value['ledgerEntryId'],
-    sourceExecutionId: value['sourceExecutionId'],
-    points: value['points'],
-    outcome: value['outcome'],
-    ruleVersion: value['ruleVersion'],
-  };
+    return {
+
+        'ledgerEntryId': value['ledgerEntryId'],
+        'sourceExecutionId': value['sourceExecutionId'],
+        'points': value['points'],
+        'outcome': value['outcome'],
+        'ruleVersion': value['ruleVersion'],
+    };
 }

@@ -19,56 +19,54 @@ import { mapValues } from '../runtime';
  * @interface LegacyReport
  */
 export interface LegacyReport {
-  /**
-   *
-   * @type {number}
-   * @memberof LegacyReport
-   */
-  unmappedParticipantTags?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof LegacyReport
-   */
-  notice?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof LegacyReport
+     */
+    unmappedParticipantTags?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof LegacyReport
+     */
+    notice?: string;
 }
 
 /**
  * Check if a given object implements the LegacyReport interface.
  */
 export function instanceOfLegacyReport(value: object): value is LegacyReport {
-  return true;
+    return true;
 }
 
 export function LegacyReportFromJSON(json: any): LegacyReport {
-  return LegacyReportFromJSONTyped(json, false);
+    return LegacyReportFromJSONTyped(json, false);
 }
 
 export function LegacyReportFromJSONTyped(json: any, ignoreDiscriminator: boolean): LegacyReport {
-  if (json == null) {
-    return json;
-  }
-  return {
-    unmappedParticipantTags:
-      json['unmappedParticipantTags'] == null ? undefined : json['unmappedParticipantTags'],
-    notice: json['notice'] == null ? undefined : json['notice'],
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'unmappedParticipantTags': json['unmappedParticipantTags'] == null ? undefined : json['unmappedParticipantTags'],
+        'notice': json['notice'] == null ? undefined : json['notice'],
+    };
 }
 
 export function LegacyReportToJSON(json: any): LegacyReport {
-  return LegacyReportToJSONTyped(json, false);
+    return LegacyReportToJSONTyped(json, false);
 }
 
-export function LegacyReportToJSONTyped(
-  value?: LegacyReport | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function LegacyReportToJSONTyped(value?: LegacyReport | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    unmappedParticipantTags: value['unmappedParticipantTags'],
-    notice: value['notice'],
-  };
+    return {
+
+        'unmappedParticipantTags': value['unmappedParticipantTags'],
+        'notice': value['notice'],
+    };
 }

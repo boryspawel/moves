@@ -15,17 +15,17 @@
 import { mapValues } from '../runtime';
 import type { AssessmentSnapshot } from './AssessmentSnapshot';
 import {
-  AssessmentSnapshotFromJSON,
-  AssessmentSnapshotFromJSONTyped,
-  AssessmentSnapshotToJSON,
-  AssessmentSnapshotToJSONTyped,
+    AssessmentSnapshotFromJSON,
+    AssessmentSnapshotFromJSONTyped,
+    AssessmentSnapshotToJSON,
+    AssessmentSnapshotToJSONTyped,
 } from './AssessmentSnapshot';
 import type { WorkflowState } from './WorkflowState';
 import {
-  WorkflowStateFromJSON,
-  WorkflowStateFromJSONTyped,
-  WorkflowStateToJSON,
-  WorkflowStateToJSONTyped,
+    WorkflowStateFromJSON,
+    WorkflowStateFromJSONTyped,
+    WorkflowStateToJSON,
+    WorkflowStateToJSONTyped,
 } from './WorkflowState';
 
 /**
@@ -34,56 +34,54 @@ import {
  * @interface WorkflowView
  */
 export interface WorkflowView {
-  /**
-   *
-   * @type {WorkflowState}
-   * @memberof WorkflowView
-   */
-  state?: WorkflowState;
-  /**
-   *
-   * @type {AssessmentSnapshot}
-   * @memberof WorkflowView
-   */
-  assessment?: AssessmentSnapshot;
+    /**
+     *
+     * @type {WorkflowState}
+     * @memberof WorkflowView
+     */
+    state?: WorkflowState;
+    /**
+     *
+     * @type {AssessmentSnapshot}
+     * @memberof WorkflowView
+     */
+    assessment?: AssessmentSnapshot;
 }
 
 /**
  * Check if a given object implements the WorkflowView interface.
  */
 export function instanceOfWorkflowView(value: object): value is WorkflowView {
-  return true;
+    return true;
 }
 
 export function WorkflowViewFromJSON(json: any): WorkflowView {
-  return WorkflowViewFromJSONTyped(json, false);
+    return WorkflowViewFromJSONTyped(json, false);
 }
 
 export function WorkflowViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): WorkflowView {
-  if (json == null) {
-    return json;
-  }
-  return {
-    state: json['state'] == null ? undefined : WorkflowStateFromJSON(json['state']),
-    assessment:
-      json['assessment'] == null ? undefined : AssessmentSnapshotFromJSON(json['assessment']),
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'state': json['state'] == null ? undefined : WorkflowStateFromJSON(json['state']),
+        'assessment': json['assessment'] == null ? undefined : AssessmentSnapshotFromJSON(json['assessment']),
+    };
 }
 
 export function WorkflowViewToJSON(json: any): WorkflowView {
-  return WorkflowViewToJSONTyped(json, false);
+    return WorkflowViewToJSONTyped(json, false);
 }
 
-export function WorkflowViewToJSONTyped(
-  value?: WorkflowView | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function WorkflowViewToJSONTyped(value?: WorkflowView | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    state: WorkflowStateToJSON(value['state']),
-    assessment: AssessmentSnapshotToJSON(value['assessment']),
-  };
+    return {
+
+        'state': WorkflowStateToJSON(value['state']),
+        'assessment': AssessmentSnapshotToJSON(value['assessment']),
+    };
 }

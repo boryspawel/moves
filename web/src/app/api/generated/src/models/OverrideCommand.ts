@@ -19,74 +19,70 @@ import { mapValues } from '../runtime';
  * @interface OverrideCommand
  */
 export interface OverrideCommand {
-  /**
-   *
-   * @type {string}
-   * @memberof OverrideCommand
-   */
-  reasonCode?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof OverrideCommand
-   */
-  scope?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof OverrideCommand
-   */
-  validFrom?: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof OverrideCommand
-   */
-  validTo?: Date;
+    /**
+     *
+     * @type {string}
+     * @memberof OverrideCommand
+     */
+    reasonCode?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof OverrideCommand
+     */
+    scope?: string;
+    /**
+     *
+     * @type {Date}
+     * @memberof OverrideCommand
+     */
+    validFrom?: Date;
+    /**
+     *
+     * @type {Date}
+     * @memberof OverrideCommand
+     */
+    validTo?: Date;
 }
 
 /**
  * Check if a given object implements the OverrideCommand interface.
  */
 export function instanceOfOverrideCommand(value: object): value is OverrideCommand {
-  return true;
+    return true;
 }
 
 export function OverrideCommandFromJSON(json: any): OverrideCommand {
-  return OverrideCommandFromJSONTyped(json, false);
+    return OverrideCommandFromJSONTyped(json, false);
 }
 
-export function OverrideCommandFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): OverrideCommand {
-  if (json == null) {
-    return json;
-  }
-  return {
-    reasonCode: json['reasonCode'] == null ? undefined : json['reasonCode'],
-    scope: json['scope'] == null ? undefined : json['scope'],
-    validFrom: json['validFrom'] == null ? undefined : new Date(json['validFrom']),
-    validTo: json['validTo'] == null ? undefined : new Date(json['validTo']),
-  };
+export function OverrideCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): OverrideCommand {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'reasonCode': json['reasonCode'] == null ? undefined : json['reasonCode'],
+        'scope': json['scope'] == null ? undefined : json['scope'],
+        'validFrom': json['validFrom'] == null ? undefined : (new Date(json['validFrom'])),
+        'validTo': json['validTo'] == null ? undefined : (new Date(json['validTo'])),
+    };
 }
 
 export function OverrideCommandToJSON(json: any): OverrideCommand {
-  return OverrideCommandToJSONTyped(json, false);
+    return OverrideCommandToJSONTyped(json, false);
 }
 
-export function OverrideCommandToJSONTyped(
-  value?: OverrideCommand | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function OverrideCommandToJSONTyped(value?: OverrideCommand | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    reasonCode: value['reasonCode'],
-    scope: value['scope'],
-    validFrom: value['validFrom'] == null ? value['validFrom'] : value['validFrom'].toISOString(),
-    validTo: value['validTo'] == null ? value['validTo'] : value['validTo'].toISOString(),
-  };
+    return {
+
+        'reasonCode': value['reasonCode'],
+        'scope': value['scope'],
+        'validFrom': value['validFrom'] == null ? value['validFrom'] : value['validFrom'].toISOString(),
+        'validTo': value['validTo'] == null ? value['validTo'] : value['validTo'].toISOString(),
+    };
 }

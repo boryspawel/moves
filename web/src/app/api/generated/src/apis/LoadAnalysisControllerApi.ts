@@ -13,74 +13,72 @@
  */
 
 import * as runtime from '../runtime';
-import { type LoadProfile, LoadProfileFromJSON, LoadProfileToJSON } from '../models/LoadProfile';
+import {
+    type LoadProfile,
+    LoadProfileFromJSON,
+    LoadProfileToJSON,
+} from '../models/LoadProfile';
 
 export interface PreviewRequest {
-  revisionId: string;
-  algorithmVersion?: string;
-  configurationVersion?: string;
+    revisionId: string;
+    algorithmVersion?: string;
+    configurationVersion?: string;
 }
 
 /**
  *
  */
 export class LoadAnalysisControllerApi extends runtime.BaseAPI {
-  /**
-   * Creates request options for preview without sending the request
-   */
-  async previewRequestOpts(requestParameters: PreviewRequest): Promise<runtime.RequestOpts> {
-    if (requestParameters['revisionId'] == null) {
-      throw new runtime.RequiredError(
-        'revisionId',
-        'Required parameter "revisionId" was null or undefined when calling preview().',
-      );
+
+    /**
+     * Creates request options for preview without sending the request
+     */
+    async previewRequestOpts(requestParameters: PreviewRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['revisionId'] == null) {
+            throw new runtime.RequiredError(
+                'revisionId',
+                'Required parameter "revisionId" was null or undefined when calling preview().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['algorithmVersion'] != null) {
+            queryParameters['algorithmVersion'] = requestParameters['algorithmVersion'];
+        }
+
+        if (requestParameters['configurationVersion'] != null) {
+            queryParameters['configurationVersion'] = requestParameters['configurationVersion'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+
+        let urlPath = `/api/v1/training-plans/revisions/{revisionId}/load-preview`;
+        urlPath = urlPath.replace('{revisionId}', encodeURIComponent(String(requestParameters['revisionId'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
     }
 
-    const queryParameters: any = {};
+    /**
+     */
+    async previewRaw(requestParameters: PreviewRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<LoadProfile>> {
+        const requestOptions = await this.previewRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
-    if (requestParameters['algorithmVersion'] != null) {
-      queryParameters['algorithmVersion'] = requestParameters['algorithmVersion'];
+        return new runtime.JSONApiResponse(response, (jsonValue) => LoadProfileFromJSON(jsonValue));
     }
 
-    if (requestParameters['configurationVersion'] != null) {
-      queryParameters['configurationVersion'] = requestParameters['configurationVersion'];
+    /**
+     */
+    async preview(requestParameters: PreviewRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<LoadProfile> {
+        const response = await this.previewRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    let urlPath = `/api/v1/training-plans/revisions/{revisionId}/load-preview`;
-    urlPath = urlPath.replace(
-      '{revisionId}',
-      encodeURIComponent(String(requestParameters['revisionId'])),
-    );
-
-    return {
-      path: urlPath,
-      method: 'GET',
-      headers: headerParameters,
-      query: queryParameters,
-    };
-  }
-
-  /**
-   */
-  async previewRaw(
-    requestParameters: PreviewRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<LoadProfile>> {
-    const requestOptions = await this.previewRequestOpts(requestParameters);
-    const response = await this.request(requestOptions, initOverrides);
-
-    return new runtime.JSONApiResponse(response, (jsonValue) => LoadProfileFromJSON(jsonValue));
-  }
-
-  /**
-   */
-  async preview(
-    requestParameters: PreviewRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<LoadProfile> {
-    const response = await this.previewRaw(requestParameters, initOverrides);
-    return await response.value();
-  }
 }

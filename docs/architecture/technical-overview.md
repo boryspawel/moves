@@ -30,7 +30,7 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
 - `trainingexecution`: append-only wykonanie i dawka rzeczywista, projekcje, raport bólu/post24h, alerty i korekty;
 - `safety`: wersjonowane ograniczenia, niezmienne assessmenty i jawne override;
 - `adherence`: `TodayAgenda`, wersjonowana bariera, recovery episode/offer/choice oraz neutralne sygnały do specjalisty;
-- `calendar`, `notification`: późniejsze moduły zakresu MVP;
+- `notification.reminders`: preferencje uczestnika, deterministyczne reason codes i neutralny audit/dedupe dostarczeń `IN_APP`;
 - `gamification`: opt-in i append-only ledger bez danych medycznych;
 - `audit`: istotne operacje i dostęp do danych wrażliwych.
 
@@ -71,5 +71,5 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
 
 P6 worklisty jest w `d004a36`. P7 `/sessions` ma niecommitowane testy
 komponentowe, lecz nadal wymaga E2E dla mobile viewport, 200% zoomu, klawiatury
-i reduced motion. P9 notification routing i P10 analytics/metrics nie są
-wdrożone, ponieważ odpowiadających modułów nie ma.
+i reduced motion. P9 ma reguły timezone/quiet-hours, opt-out, suppression i
+neutralny audit; P10 analytics/metrics pozostaje poza zakresem.

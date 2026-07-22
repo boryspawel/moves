@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { FactorSnapshot } from './FactorSnapshot';
 import {
-  FactorSnapshotFromJSON,
-  FactorSnapshotFromJSONTyped,
-  FactorSnapshotToJSON,
-  FactorSnapshotToJSONTyped,
+    FactorSnapshotFromJSON,
+    FactorSnapshotFromJSONTyped,
+    FactorSnapshotToJSON,
+    FactorSnapshotToJSONTyped,
 } from './FactorSnapshot';
 
 /**
@@ -27,163 +27,150 @@ import {
  * @interface AssessmentSnapshot
  */
 export interface AssessmentSnapshot {
-  /**
-   *
-   * @type {string}
-   * @memberof AssessmentSnapshot
-   */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AssessmentSnapshot
-   */
-  participantAccountId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AssessmentSnapshot
-   */
-  revisionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AssessmentSnapshot
-   */
-  loadSnapshotId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AssessmentSnapshot
-   */
-  loadCalculationVersion?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AssessmentSnapshot
-   */
-  rulesetCode?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof AssessmentSnapshot
-   */
-  rulesetVersion?: number;
-  /**
-   *
-   * @type {AssessmentSnapshotRecordedResultEnum}
-   * @memberof AssessmentSnapshot
-   */
-  recordedResult?: AssessmentSnapshotRecordedResultEnum;
-  /**
-   *
-   * @type {AssessmentSnapshotEffectiveResultEnum}
-   * @memberof AssessmentSnapshot
-   */
-  effectiveResult?: AssessmentSnapshotEffectiveResultEnum;
-  /**
-   *
-   * @type {Date}
-   * @memberof AssessmentSnapshot
-   */
-  assessedAt?: Date;
-  /**
-   *
-   * @type {Array<FactorSnapshot>}
-   * @memberof AssessmentSnapshot
-   */
-  factors?: Array<FactorSnapshot>;
+    /**
+     *
+     * @type {string}
+     * @memberof AssessmentSnapshot
+     */
+    id?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof AssessmentSnapshot
+     */
+    participantAccountId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof AssessmentSnapshot
+     */
+    revisionId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof AssessmentSnapshot
+     */
+    loadSnapshotId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof AssessmentSnapshot
+     */
+    loadCalculationVersion?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof AssessmentSnapshot
+     */
+    rulesetCode?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof AssessmentSnapshot
+     */
+    rulesetVersion?: number;
+    /**
+     *
+     * @type {AssessmentSnapshotRecordedResultEnum}
+     * @memberof AssessmentSnapshot
+     */
+    recordedResult?: AssessmentSnapshotRecordedResultEnum;
+    /**
+     *
+     * @type {AssessmentSnapshotEffectiveResultEnum}
+     * @memberof AssessmentSnapshot
+     */
+    effectiveResult?: AssessmentSnapshotEffectiveResultEnum;
+    /**
+     *
+     * @type {Date}
+     * @memberof AssessmentSnapshot
+     */
+    assessedAt?: Date;
+    /**
+     *
+     * @type {Array<FactorSnapshot>}
+     * @memberof AssessmentSnapshot
+     */
+    factors?: Array<FactorSnapshot>;
 }
+
 
 /**
  * @export
  */
 export const AssessmentSnapshotRecordedResultEnum = {
-  Pass: 'PASS',
-  Info: 'INFO',
-  Warning: 'WARNING',
-  HardBlock: 'HARD_BLOCK',
+    Pass: 'PASS',
+    Info: 'INFO',
+    Warning: 'WARNING',
+    HardBlock: 'HARD_BLOCK'
 } as const;
-export type AssessmentSnapshotRecordedResultEnum =
-  (typeof AssessmentSnapshotRecordedResultEnum)[keyof typeof AssessmentSnapshotRecordedResultEnum];
+export type AssessmentSnapshotRecordedResultEnum = typeof AssessmentSnapshotRecordedResultEnum[keyof typeof AssessmentSnapshotRecordedResultEnum];
 
 /**
  * @export
  */
 export const AssessmentSnapshotEffectiveResultEnum = {
-  Pass: 'PASS',
-  Info: 'INFO',
-  Warning: 'WARNING',
-  HardBlock: 'HARD_BLOCK',
+    Pass: 'PASS',
+    Info: 'INFO',
+    Warning: 'WARNING',
+    HardBlock: 'HARD_BLOCK'
 } as const;
-export type AssessmentSnapshotEffectiveResultEnum =
-  (typeof AssessmentSnapshotEffectiveResultEnum)[keyof typeof AssessmentSnapshotEffectiveResultEnum];
+export type AssessmentSnapshotEffectiveResultEnum = typeof AssessmentSnapshotEffectiveResultEnum[keyof typeof AssessmentSnapshotEffectiveResultEnum];
+
 
 /**
  * Check if a given object implements the AssessmentSnapshot interface.
  */
 export function instanceOfAssessmentSnapshot(value: object): value is AssessmentSnapshot {
-  return true;
+    return true;
 }
 
 export function AssessmentSnapshotFromJSON(json: any): AssessmentSnapshot {
-  return AssessmentSnapshotFromJSONTyped(json, false);
+    return AssessmentSnapshotFromJSONTyped(json, false);
 }
 
-export function AssessmentSnapshotFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): AssessmentSnapshot {
-  if (json == null) {
-    return json;
-  }
-  return {
-    id: json['id'] == null ? undefined : json['id'],
-    participantAccountId:
-      json['participantAccountId'] == null ? undefined : json['participantAccountId'],
-    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
-    loadSnapshotId: json['loadSnapshotId'] == null ? undefined : json['loadSnapshotId'],
-    loadCalculationVersion:
-      json['loadCalculationVersion'] == null ? undefined : json['loadCalculationVersion'],
-    rulesetCode: json['rulesetCode'] == null ? undefined : json['rulesetCode'],
-    rulesetVersion: json['rulesetVersion'] == null ? undefined : json['rulesetVersion'],
-    recordedResult: json['recordedResult'] == null ? undefined : json['recordedResult'],
-    effectiveResult: json['effectiveResult'] == null ? undefined : json['effectiveResult'],
-    assessedAt: json['assessedAt'] == null ? undefined : new Date(json['assessedAt']),
-    factors:
-      json['factors'] == null
-        ? undefined
-        : (json['factors'] as Array<any>).map(FactorSnapshotFromJSON),
-  };
+export function AssessmentSnapshotFromJSONTyped(json: any, ignoreDiscriminator: boolean): AssessmentSnapshot {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'id': json['id'] == null ? undefined : json['id'],
+        'participantAccountId': json['participantAccountId'] == null ? undefined : json['participantAccountId'],
+        'revisionId': json['revisionId'] == null ? undefined : json['revisionId'],
+        'loadSnapshotId': json['loadSnapshotId'] == null ? undefined : json['loadSnapshotId'],
+        'loadCalculationVersion': json['loadCalculationVersion'] == null ? undefined : json['loadCalculationVersion'],
+        'rulesetCode': json['rulesetCode'] == null ? undefined : json['rulesetCode'],
+        'rulesetVersion': json['rulesetVersion'] == null ? undefined : json['rulesetVersion'],
+        'recordedResult': json['recordedResult'] == null ? undefined : json['recordedResult'],
+        'effectiveResult': json['effectiveResult'] == null ? undefined : json['effectiveResult'],
+        'assessedAt': json['assessedAt'] == null ? undefined : (new Date(json['assessedAt'])),
+        'factors': json['factors'] == null ? undefined : ((json['factors'] as Array<any>).map(FactorSnapshotFromJSON)),
+    };
 }
 
 export function AssessmentSnapshotToJSON(json: any): AssessmentSnapshot {
-  return AssessmentSnapshotToJSONTyped(json, false);
+    return AssessmentSnapshotToJSONTyped(json, false);
 }
 
-export function AssessmentSnapshotToJSONTyped(
-  value?: AssessmentSnapshot | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function AssessmentSnapshotToJSONTyped(value?: AssessmentSnapshot | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    id: value['id'],
-    participantAccountId: value['participantAccountId'],
-    revisionId: value['revisionId'],
-    loadSnapshotId: value['loadSnapshotId'],
-    loadCalculationVersion: value['loadCalculationVersion'],
-    rulesetCode: value['rulesetCode'],
-    rulesetVersion: value['rulesetVersion'],
-    recordedResult: value['recordedResult'],
-    effectiveResult: value['effectiveResult'],
-    assessedAt:
-      value['assessedAt'] == null ? value['assessedAt'] : value['assessedAt'].toISOString(),
-    factors:
-      value['factors'] == null
-        ? undefined
-        : (value['factors'] as Array<any>).map(FactorSnapshotToJSON),
-  };
+    return {
+
+        'id': value['id'],
+        'participantAccountId': value['participantAccountId'],
+        'revisionId': value['revisionId'],
+        'loadSnapshotId': value['loadSnapshotId'],
+        'loadCalculationVersion': value['loadCalculationVersion'],
+        'rulesetCode': value['rulesetCode'],
+        'rulesetVersion': value['rulesetVersion'],
+        'recordedResult': value['recordedResult'],
+        'effectiveResult': value['effectiveResult'],
+        'assessedAt': value['assessedAt'] == null ? value['assessedAt'] : value['assessedAt'].toISOString(),
+        'factors': value['factors'] == null ? undefined : ((value['factors'] as Array<any>).map(FactorSnapshotToJSON)),
+    };
 }

@@ -9,6 +9,7 @@ export const routes: Routes = [
   { path: 'admin/exercise-import', canActivate: [authGuard, roleGuard('CONTENT_ADMIN')], loadComponent: () => import('./features/exercise-import.page').then(m => m.ExerciseImportPage) },
   { path: 'plan', canActivate: [authGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/plan.page').then(m => m.PlanPage) },
   { path: 'sessions', canActivate: [authGuard, roleGuard('PARTICIPANT')], loadComponent: () => import('./features/sessions.page').then(m => m.SessionsPage) },
+  { path: 'reminders', canActivate: [authGuard, roleGuard('PARTICIPANT')], loadComponent: () => import('./features/reminder-preferences.page').then(m => m.ReminderPreferencesPage) },
   { path: 'specialist-alerts', canActivate: [authGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/specialist-alerts.page').then(m => m.SpecialistAlertsPage) },
   { path: 'gamification', canActivate: [authGuard, roleGuard('PARTICIPANT')], loadComponent: () => import('./features/gamification.page').then(m => m.GamificationPage) },
   { path: '', pathMatch: 'full', redirectTo: 'onboarding' },

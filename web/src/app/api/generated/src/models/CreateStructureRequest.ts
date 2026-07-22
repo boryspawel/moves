@@ -19,125 +19,121 @@ import { mapValues } from '../runtime';
  * @interface CreateStructureRequest
  */
 export interface CreateStructureRequest {
-  /**
-   *
-   * @type {string}
-   * @memberof CreateStructureRequest
-   */
-  code: string;
-  /**
-   *
-   * @type {CreateStructureRequestTypeEnum}
-   * @memberof CreateStructureRequest
-   */
-  type: CreateStructureRequestTypeEnum;
-  /**
-   *
-   * @type {string}
-   * @memberof CreateStructureRequest
-   */
-  displayName: string;
-  /**
-   *
-   * @type {CreateStructureRequestSidePolicyEnum}
-   * @memberof CreateStructureRequest
-   */
-  sidePolicy: CreateStructureRequestSidePolicyEnum;
-  /**
-   *
-   * @type {string}
-   * @memberof CreateStructureRequest
-   */
-  externalOntology?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof CreateStructureRequest
-   */
-  externalOntologyId?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof CreateStructureRequest
-   */
-  taxonomyVersion?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof CreateStructureRequest
+     */
+    code: string;
+    /**
+     *
+     * @type {CreateStructureRequestTypeEnum}
+     * @memberof CreateStructureRequest
+     */
+    type: CreateStructureRequestTypeEnum;
+    /**
+     *
+     * @type {string}
+     * @memberof CreateStructureRequest
+     */
+    displayName: string;
+    /**
+     *
+     * @type {CreateStructureRequestSidePolicyEnum}
+     * @memberof CreateStructureRequest
+     */
+    sidePolicy: CreateStructureRequestSidePolicyEnum;
+    /**
+     *
+     * @type {string}
+     * @memberof CreateStructureRequest
+     */
+    externalOntology?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof CreateStructureRequest
+     */
+    externalOntologyId?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof CreateStructureRequest
+     */
+    taxonomyVersion?: number;
 }
+
 
 /**
  * @export
  */
 export const CreateStructureRequestTypeEnum = {
-  BodyRegion: 'BODY_REGION',
-  MuscleGroup: 'MUSCLE_GROUP',
-  Muscle: 'MUSCLE',
-  TendonGroup: 'TENDON_GROUP',
-  Joint: 'JOINT',
+    BodyRegion: 'BODY_REGION',
+    MuscleGroup: 'MUSCLE_GROUP',
+    Muscle: 'MUSCLE',
+    TendonGroup: 'TENDON_GROUP',
+    Joint: 'JOINT'
 } as const;
-export type CreateStructureRequestTypeEnum =
-  (typeof CreateStructureRequestTypeEnum)[keyof typeof CreateStructureRequestTypeEnum];
+export type CreateStructureRequestTypeEnum = typeof CreateStructureRequestTypeEnum[keyof typeof CreateStructureRequestTypeEnum];
 
 /**
  * @export
  */
 export const CreateStructureRequestSidePolicyEnum = {
-  None: 'NONE',
-  LeftRight: 'LEFT_RIGHT',
+    None: 'NONE',
+    LeftRight: 'LEFT_RIGHT'
 } as const;
-export type CreateStructureRequestSidePolicyEnum =
-  (typeof CreateStructureRequestSidePolicyEnum)[keyof typeof CreateStructureRequestSidePolicyEnum];
+export type CreateStructureRequestSidePolicyEnum = typeof CreateStructureRequestSidePolicyEnum[keyof typeof CreateStructureRequestSidePolicyEnum];
+
 
 /**
  * Check if a given object implements the CreateStructureRequest interface.
  */
 export function instanceOfCreateStructureRequest(value: object): value is CreateStructureRequest {
-  if (!('code' in value) || value['code'] === undefined) return false;
-  if (!('type' in value) || value['type'] === undefined) return false;
-  if (!('displayName' in value) || value['displayName'] === undefined) return false;
-  if (!('sidePolicy' in value) || value['sidePolicy'] === undefined) return false;
-  return true;
+    if (!('code' in value) || value['code'] === undefined) return false;
+    if (!('type' in value) || value['type'] === undefined) return false;
+    if (!('displayName' in value) || value['displayName'] === undefined) return false;
+    if (!('sidePolicy' in value) || value['sidePolicy'] === undefined) return false;
+    return true;
 }
 
 export function CreateStructureRequestFromJSON(json: any): CreateStructureRequest {
-  return CreateStructureRequestFromJSONTyped(json, false);
+    return CreateStructureRequestFromJSONTyped(json, false);
 }
 
-export function CreateStructureRequestFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): CreateStructureRequest {
-  if (json == null) {
-    return json;
-  }
-  return {
-    code: json['code'],
-    type: json['type'],
-    displayName: json['displayName'],
-    sidePolicy: json['sidePolicy'],
-    externalOntology: json['externalOntology'] == null ? undefined : json['externalOntology'],
-    externalOntologyId: json['externalOntologyId'] == null ? undefined : json['externalOntologyId'],
-    taxonomyVersion: json['taxonomyVersion'] == null ? undefined : json['taxonomyVersion'],
-  };
+export function CreateStructureRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): CreateStructureRequest {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'code': json['code'],
+        'type': json['type'],
+        'displayName': json['displayName'],
+        'sidePolicy': json['sidePolicy'],
+        'externalOntology': json['externalOntology'] == null ? undefined : json['externalOntology'],
+        'externalOntologyId': json['externalOntologyId'] == null ? undefined : json['externalOntologyId'],
+        'taxonomyVersion': json['taxonomyVersion'] == null ? undefined : json['taxonomyVersion'],
+    };
 }
 
 export function CreateStructureRequestToJSON(json: any): CreateStructureRequest {
-  return CreateStructureRequestToJSONTyped(json, false);
+    return CreateStructureRequestToJSONTyped(json, false);
 }
 
-export function CreateStructureRequestToJSONTyped(
-  value?: CreateStructureRequest | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function CreateStructureRequestToJSONTyped(value?: CreateStructureRequest | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    code: value['code'],
-    type: value['type'],
-    displayName: value['displayName'],
-    sidePolicy: value['sidePolicy'],
-    externalOntology: value['externalOntology'],
-    externalOntologyId: value['externalOntologyId'],
-    taxonomyVersion: value['taxonomyVersion'],
-  };
+    return {
+
+        'code': value['code'],
+        'type': value['type'],
+        'displayName': value['displayName'],
+        'sidePolicy': value['sidePolicy'],
+        'externalOntology': value['externalOntology'],
+        'externalOntologyId': value['externalOntologyId'],
+        'taxonomyVersion': value['taxonomyVersion'],
+    };
 }

@@ -2,16 +2,20 @@
 
 All URIs are relative to *http://localhost*
 
-| Method                                                                             | HTTP request                                                              | Description |
-| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------- |
-| [**addPlanCollaborator**](PlanCollaborationControllerApi.md#addplancollaborator)   | **POST** /api/v2/training-plans/{planId}/collaborators                    |             |
-| [**decidePlanReview**](PlanCollaborationControllerApi.md#decideplanreview)         | **POST** /api/v2/training-plans/reviews/{reviewId}/decision               |             |
-| [**endPlanCollaboration**](PlanCollaborationControllerApi.md#endplancollaboration) | **DELETE** /api/v2/training-plans/{planId}/collaborators/{collaboratorId} |             |
-| [**requestPlanReview**](PlanCollaborationControllerApi.md#requestplanreview)       | **POST** /api/v2/training-plans/revisions/{revisionId}/reviews            |             |
+| Method | HTTP request | Description |
+|------------- | ------------- | -------------|
+| [**addPlanCollaborator**](PlanCollaborationControllerApi.md#addplancollaborator) | **POST** /api/v2/training-plans/{planId}/collaborators |  |
+| [**decidePlanReview**](PlanCollaborationControllerApi.md#decideplanreview) | **POST** /api/v2/training-plans/reviews/{reviewId}/decision |  |
+| [**endPlanCollaboration**](PlanCollaborationControllerApi.md#endplancollaboration) | **DELETE** /api/v2/training-plans/{planId}/collaborators/{collaboratorId} |  |
+| [**requestPlanReview**](PlanCollaborationControllerApi.md#requestplanreview) | **POST** /api/v2/training-plans/revisions/{revisionId}/reviews |  |
+
+
 
 ## addPlanCollaborator
 
 > CollaboratorView addPlanCollaborator(planId, collaboratorCommand, actingContext)
+
+
 
 ### Example
 
@@ -51,11 +55,12 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                    | Type                                          | Description | Notes                                                                 |
-| ----------------------- | --------------------------------------------- | ----------- | --------------------------------------------------------------------- |
-| **planId**              | `string`                                      |             | [Defaults to `undefined`]                                             |
-| **collaboratorCommand** | [CollaboratorCommand](CollaboratorCommand.md) |             |                                                                       |
-| **actingContext**       | `TRAINER`, `PHYSIOTHERAPIST`                  |             | [Optional] [Defaults to `undefined`] [Enum: TRAINER, PHYSIOTHERAPIST] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **planId** | `string` |  | [Defaults to `undefined`] |
+| **collaboratorCommand** | [CollaboratorCommand](CollaboratorCommand.md) |  | |
+| **actingContext** | `TRAINER`, `PHYSIOTHERAPIST` |  | [Optional] [Defaults to `undefined`] [Enum: TRAINER, PHYSIOTHERAPIST] |
 
 ### Return type
 
@@ -70,17 +75,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## decidePlanReview
 
 > ReviewView decidePlanReview(reviewId, actingContext, reviewDecisionCommand)
+
+
 
 ### Example
 
@@ -120,11 +128,12 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                      | Type                                              | Description | Notes                                                      |
-| ------------------------- | ------------------------------------------------- | ----------- | ---------------------------------------------------------- |
-| **reviewId**              | `string`                                          |             | [Defaults to `undefined`]                                  |
-| **actingContext**         | `TRAINER`, `PHYSIOTHERAPIST`                      |             | [Defaults to `undefined`] [Enum: TRAINER, PHYSIOTHERAPIST] |
-| **reviewDecisionCommand** | [ReviewDecisionCommand](ReviewDecisionCommand.md) |             |                                                            |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **reviewId** | `string` |  | [Defaults to `undefined`] |
+| **actingContext** | `TRAINER`, `PHYSIOTHERAPIST` |  | [Defaults to `undefined`] [Enum: TRAINER, PHYSIOTHERAPIST] |
+| **reviewDecisionCommand** | [ReviewDecisionCommand](ReviewDecisionCommand.md) |  | |
 
 ### Return type
 
@@ -139,17 +148,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## endPlanCollaboration
 
 > CollaboratorView endPlanCollaboration(planId, collaboratorId, actingContext)
+
+
 
 ### Example
 
@@ -189,11 +201,12 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name               | Type                         | Description | Notes                                                                 |
-| ------------------ | ---------------------------- | ----------- | --------------------------------------------------------------------- |
-| **planId**         | `string`                     |             | [Defaults to `undefined`]                                             |
-| **collaboratorId** | `string`                     |             | [Defaults to `undefined`]                                             |
-| **actingContext**  | `TRAINER`, `PHYSIOTHERAPIST` |             | [Optional] [Defaults to `undefined`] [Enum: TRAINER, PHYSIOTHERAPIST] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **planId** | `string` |  | [Defaults to `undefined`] |
+| **collaboratorId** | `string` |  | [Defaults to `undefined`] |
+| **actingContext** | `TRAINER`, `PHYSIOTHERAPIST` |  | [Optional] [Defaults to `undefined`] [Enum: TRAINER, PHYSIOTHERAPIST] |
 
 ### Return type
 
@@ -208,17 +221,20 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## requestPlanReview
 
 > ReviewView requestPlanReview(revisionId, reviewRequestCommand)
+
+
 
 ### Example
 
@@ -256,10 +272,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                     | Type                                            | Description | Notes                     |
-| ------------------------ | ----------------------------------------------- | ----------- | ------------------------- |
-| **revisionId**           | `string`                                        |             | [Defaults to `undefined`] |
-| **reviewRequestCommand** | [ReviewRequestCommand](ReviewRequestCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **revisionId** | `string` |  | [Defaults to `undefined`] |
+| **reviewRequestCommand** | [ReviewRequestCommand](ReviewRequestCommand.md) |  | |
 
 ### Return type
 
@@ -274,10 +291,10 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)

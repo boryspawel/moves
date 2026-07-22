@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { AnatomicalStructureSnapshot } from './AnatomicalStructureSnapshot';
 import {
-  AnatomicalStructureSnapshotFromJSON,
-  AnatomicalStructureSnapshotFromJSONTyped,
-  AnatomicalStructureSnapshotToJSON,
-  AnatomicalStructureSnapshotToJSONTyped,
+    AnatomicalStructureSnapshotFromJSON,
+    AnatomicalStructureSnapshotFromJSONTyped,
+    AnatomicalStructureSnapshotToJSON,
+    AnatomicalStructureSnapshotToJSONTyped,
 } from './AnatomicalStructureSnapshot';
 
 /**
@@ -27,69 +27,66 @@ import {
  * @interface AncestorStep
  */
 export interface AncestorStep {
-  /**
-   *
-   * @type {AnatomicalStructureSnapshot}
-   * @memberof AncestorStep
-   */
-  structure?: AnatomicalStructureSnapshot;
-  /**
-   *
-   * @type {AncestorStepRelationTypeEnum}
-   * @memberof AncestorStep
-   */
-  relationType?: AncestorStepRelationTypeEnum;
+    /**
+     *
+     * @type {AnatomicalStructureSnapshot}
+     * @memberof AncestorStep
+     */
+    structure?: AnatomicalStructureSnapshot;
+    /**
+     *
+     * @type {AncestorStepRelationTypeEnum}
+     * @memberof AncestorStep
+     */
+    relationType?: AncestorStepRelationTypeEnum;
 }
+
 
 /**
  * @export
  */
 export const AncestorStepRelationTypeEnum = {
-  PartOf: 'PART_OF',
-  MemberOf: 'MEMBER_OF',
-  FunctionallyGroupedAs: 'FUNCTIONALLY_GROUPED_AS',
+    PartOf: 'PART_OF',
+    MemberOf: 'MEMBER_OF',
+    FunctionallyGroupedAs: 'FUNCTIONALLY_GROUPED_AS'
 } as const;
-export type AncestorStepRelationTypeEnum =
-  (typeof AncestorStepRelationTypeEnum)[keyof typeof AncestorStepRelationTypeEnum];
+export type AncestorStepRelationTypeEnum = typeof AncestorStepRelationTypeEnum[keyof typeof AncestorStepRelationTypeEnum];
+
 
 /**
  * Check if a given object implements the AncestorStep interface.
  */
 export function instanceOfAncestorStep(value: object): value is AncestorStep {
-  return true;
+    return true;
 }
 
 export function AncestorStepFromJSON(json: any): AncestorStep {
-  return AncestorStepFromJSONTyped(json, false);
+    return AncestorStepFromJSONTyped(json, false);
 }
 
 export function AncestorStepFromJSONTyped(json: any, ignoreDiscriminator: boolean): AncestorStep {
-  if (json == null) {
-    return json;
-  }
-  return {
-    structure:
-      json['structure'] == null
-        ? undefined
-        : AnatomicalStructureSnapshotFromJSON(json['structure']),
-    relationType: json['relationType'] == null ? undefined : json['relationType'],
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'structure': json['structure'] == null ? undefined : AnatomicalStructureSnapshotFromJSON(json['structure']),
+        'relationType': json['relationType'] == null ? undefined : json['relationType'],
+    };
 }
 
 export function AncestorStepToJSON(json: any): AncestorStep {
-  return AncestorStepToJSONTyped(json, false);
+    return AncestorStepToJSONTyped(json, false);
 }
 
-export function AncestorStepToJSONTyped(
-  value?: AncestorStep | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function AncestorStepToJSONTyped(value?: AncestorStep | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    structure: AnatomicalStructureSnapshotToJSON(value['structure']),
-    relationType: value['relationType'],
-  };
+    return {
+
+        'structure': AnatomicalStructureSnapshotToJSON(value['structure']),
+        'relationType': value['relationType'],
+    };
 }

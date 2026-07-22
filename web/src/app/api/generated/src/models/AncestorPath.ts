@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { AncestorStep } from './AncestorStep';
 import {
-  AncestorStepFromJSON,
-  AncestorStepFromJSONTyped,
-  AncestorStepToJSON,
-  AncestorStepToJSONTyped,
+    AncestorStepFromJSON,
+    AncestorStepFromJSONTyped,
+    AncestorStepToJSON,
+    AncestorStepToJSONTyped,
 } from './AncestorStep';
 
 /**
@@ -27,49 +27,46 @@ import {
  * @interface AncestorPath
  */
 export interface AncestorPath {
-  /**
-   *
-   * @type {Array<AncestorStep>}
-   * @memberof AncestorPath
-   */
-  steps?: Array<AncestorStep>;
+    /**
+     *
+     * @type {Array<AncestorStep>}
+     * @memberof AncestorPath
+     */
+    steps?: Array<AncestorStep>;
 }
 
 /**
  * Check if a given object implements the AncestorPath interface.
  */
 export function instanceOfAncestorPath(value: object): value is AncestorPath {
-  return true;
+    return true;
 }
 
 export function AncestorPathFromJSON(json: any): AncestorPath {
-  return AncestorPathFromJSONTyped(json, false);
+    return AncestorPathFromJSONTyped(json, false);
 }
 
 export function AncestorPathFromJSONTyped(json: any, ignoreDiscriminator: boolean): AncestorPath {
-  if (json == null) {
-    return json;
-  }
-  return {
-    steps:
-      json['steps'] == null ? undefined : (json['steps'] as Array<any>).map(AncestorStepFromJSON),
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'steps': json['steps'] == null ? undefined : ((json['steps'] as Array<any>).map(AncestorStepFromJSON)),
+    };
 }
 
 export function AncestorPathToJSON(json: any): AncestorPath {
-  return AncestorPathToJSONTyped(json, false);
+    return AncestorPathToJSONTyped(json, false);
 }
 
-export function AncestorPathToJSONTyped(
-  value?: AncestorPath | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function AncestorPathToJSONTyped(value?: AncestorPath | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    steps:
-      value['steps'] == null ? undefined : (value['steps'] as Array<any>).map(AncestorStepToJSON),
-  };
+    return {
+
+        'steps': value['steps'] == null ? undefined : ((value['steps'] as Array<any>).map(AncestorStepToJSON)),
+    };
 }

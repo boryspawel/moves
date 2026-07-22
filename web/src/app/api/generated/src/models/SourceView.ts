@@ -19,111 +19,110 @@ import { mapValues } from '../runtime';
  * @interface SourceView
  */
 export interface SourceView {
-  /**
-   *
-   * @type {string}
-   * @memberof SourceView
-   */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof SourceView
-   */
-  code?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof SourceView
-   */
-  displayName?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof SourceView
-   */
-  defaultLocale?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof SourceView
-   */
-  licenseCode?: string;
-  /**
-   *
-   * @type {boolean}
-   * @memberof SourceView
-   */
-  licenseVerified?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof SourceView
-   */
-  active?: boolean;
-  /**
-   *
-   * @type {Date}
-   * @memberof SourceView
-   */
-  createdAt?: Date;
-  /**
-   *
-   * @type {number}
-   * @memberof SourceView
-   */
-  version?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof SourceView
+     */
+    id?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof SourceView
+     */
+    code?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof SourceView
+     */
+    displayName?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof SourceView
+     */
+    defaultLocale?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof SourceView
+     */
+    licenseCode?: string;
+    /**
+     *
+     * @type {boolean}
+     * @memberof SourceView
+     */
+    licenseVerified?: boolean;
+    /**
+     *
+     * @type {boolean}
+     * @memberof SourceView
+     */
+    active?: boolean;
+    /**
+     *
+     * @type {Date}
+     * @memberof SourceView
+     */
+    createdAt?: Date;
+    /**
+     *
+     * @type {number}
+     * @memberof SourceView
+     */
+    version?: number;
 }
 
 /**
  * Check if a given object implements the SourceView interface.
  */
 export function instanceOfSourceView(value: object): value is SourceView {
-  return true;
+    return true;
 }
 
 export function SourceViewFromJSON(json: any): SourceView {
-  return SourceViewFromJSONTyped(json, false);
+    return SourceViewFromJSONTyped(json, false);
 }
 
 export function SourceViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): SourceView {
-  if (json == null) {
-    return json;
-  }
-  return {
-    id: json['id'] == null ? undefined : json['id'],
-    code: json['code'] == null ? undefined : json['code'],
-    displayName: json['displayName'] == null ? undefined : json['displayName'],
-    defaultLocale: json['defaultLocale'] == null ? undefined : json['defaultLocale'],
-    licenseCode: json['licenseCode'] == null ? undefined : json['licenseCode'],
-    licenseVerified: json['licenseVerified'] == null ? undefined : json['licenseVerified'],
-    active: json['active'] == null ? undefined : json['active'],
-    createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
-    version: json['version'] == null ? undefined : json['version'],
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'id': json['id'] == null ? undefined : json['id'],
+        'code': json['code'] == null ? undefined : json['code'],
+        'displayName': json['displayName'] == null ? undefined : json['displayName'],
+        'defaultLocale': json['defaultLocale'] == null ? undefined : json['defaultLocale'],
+        'licenseCode': json['licenseCode'] == null ? undefined : json['licenseCode'],
+        'licenseVerified': json['licenseVerified'] == null ? undefined : json['licenseVerified'],
+        'active': json['active'] == null ? undefined : json['active'],
+        'createdAt': json['createdAt'] == null ? undefined : (new Date(json['createdAt'])),
+        'version': json['version'] == null ? undefined : json['version'],
+    };
 }
 
 export function SourceViewToJSON(json: any): SourceView {
-  return SourceViewToJSONTyped(json, false);
+    return SourceViewToJSONTyped(json, false);
 }
 
-export function SourceViewToJSONTyped(
-  value?: SourceView | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function SourceViewToJSONTyped(value?: SourceView | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    id: value['id'],
-    code: value['code'],
-    displayName: value['displayName'],
-    defaultLocale: value['defaultLocale'],
-    licenseCode: value['licenseCode'],
-    licenseVerified: value['licenseVerified'],
-    active: value['active'],
-    createdAt: value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
-    version: value['version'],
-  };
+    return {
+
+        'id': value['id'],
+        'code': value['code'],
+        'displayName': value['displayName'],
+        'defaultLocale': value['defaultLocale'],
+        'licenseCode': value['licenseCode'],
+        'licenseVerified': value['licenseVerified'],
+        'active': value['active'],
+        'createdAt': value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
+        'version': value['version'],
+    };
 }

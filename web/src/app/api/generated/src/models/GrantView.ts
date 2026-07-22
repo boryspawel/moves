@@ -19,124 +19,125 @@ import { mapValues } from '../runtime';
  * @interface GrantView
  */
 export interface GrantView {
-  /**
-   *
-   * @type {string}
-   * @memberof GrantView
-   */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof GrantView
-   */
-  participantId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof GrantView
-   */
-  recipientId?: string;
-  /**
-   *
-   * @type {GrantViewPurposeEnum}
-   * @memberof GrantView
-   */
-  purpose?: GrantViewPurposeEnum;
-  /**
-   *
-   * @type {Set<GrantViewScopesEnum>}
-   * @memberof GrantView
-   */
-  scopes?: Set<GrantViewScopesEnum>;
-  /**
-   *
-   * @type {string}
-   * @memberof GrantView
-   */
-  status?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof GrantView
-   */
-  validFrom?: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof GrantView
-   */
-  validTo?: Date;
+    /**
+     *
+     * @type {string}
+     * @memberof GrantView
+     */
+    id?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof GrantView
+     */
+    participantId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof GrantView
+     */
+    recipientId?: string;
+    /**
+     *
+     * @type {GrantViewPurposeEnum}
+     * @memberof GrantView
+     */
+    purpose?: GrantViewPurposeEnum;
+    /**
+     *
+     * @type {Set<GrantViewScopesEnum>}
+     * @memberof GrantView
+     */
+    scopes?: Set<GrantViewScopesEnum>;
+    /**
+     *
+     * @type {string}
+     * @memberof GrantView
+     */
+    status?: string;
+    /**
+     *
+     * @type {Date}
+     * @memberof GrantView
+     */
+    validFrom?: Date;
+    /**
+     *
+     * @type {Date}
+     * @memberof GrantView
+     */
+    validTo?: Date;
 }
+
 
 /**
  * @export
  */
 export const GrantViewPurposeEnum = {
-  PerformancePlanning: 'PERFORMANCE_PLANNING',
-  FunctionalRecovery: 'FUNCTIONAL_RECOVERY',
-  ClinicalReview: 'CLINICAL_REVIEW',
+    PerformancePlanning: 'PERFORMANCE_PLANNING',
+    FunctionalRecovery: 'FUNCTIONAL_RECOVERY',
+    ClinicalReview: 'CLINICAL_REVIEW'
 } as const;
-export type GrantViewPurposeEnum = (typeof GrantViewPurposeEnum)[keyof typeof GrantViewPurposeEnum];
+export type GrantViewPurposeEnum = typeof GrantViewPurposeEnum[keyof typeof GrantViewPurposeEnum];
 
 /**
  * @export
  */
 export const GrantViewScopesEnum = {
-  Plan: 'PLAN',
-  Execution: 'EXECUTION',
-  EffectiveRestriction: 'EFFECTIVE_RESTRICTION',
-  ClinicalRationale: 'CLINICAL_RATIONALE',
+    Plan: 'PLAN',
+    Execution: 'EXECUTION',
+    EffectiveRestriction: 'EFFECTIVE_RESTRICTION',
+    ClinicalRationale: 'CLINICAL_RATIONALE'
 } as const;
-export type GrantViewScopesEnum = (typeof GrantViewScopesEnum)[keyof typeof GrantViewScopesEnum];
+export type GrantViewScopesEnum = typeof GrantViewScopesEnum[keyof typeof GrantViewScopesEnum];
+
 
 /**
  * Check if a given object implements the GrantView interface.
  */
 export function instanceOfGrantView(value: object): value is GrantView {
-  return true;
+    return true;
 }
 
 export function GrantViewFromJSON(json: any): GrantView {
-  return GrantViewFromJSONTyped(json, false);
+    return GrantViewFromJSONTyped(json, false);
 }
 
 export function GrantViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): GrantView {
-  if (json == null) {
-    return json;
-  }
-  return {
-    id: json['id'] == null ? undefined : json['id'],
-    participantId: json['participantId'] == null ? undefined : json['participantId'],
-    recipientId: json['recipientId'] == null ? undefined : json['recipientId'],
-    purpose: json['purpose'] == null ? undefined : json['purpose'],
-    scopes: json['scopes'] == null ? undefined : new Set(json['scopes']),
-    status: json['status'] == null ? undefined : json['status'],
-    validFrom: json['validFrom'] == null ? undefined : new Date(json['validFrom']),
-    validTo: json['validTo'] == null ? undefined : new Date(json['validTo']),
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'id': json['id'] == null ? undefined : json['id'],
+        'participantId': json['participantId'] == null ? undefined : json['participantId'],
+        'recipientId': json['recipientId'] == null ? undefined : json['recipientId'],
+        'purpose': json['purpose'] == null ? undefined : json['purpose'],
+        'scopes': json['scopes'] == null ? undefined : new Set(json['scopes']),
+        'status': json['status'] == null ? undefined : json['status'],
+        'validFrom': json['validFrom'] == null ? undefined : (new Date(json['validFrom'])),
+        'validTo': json['validTo'] == null ? undefined : (new Date(json['validTo'])),
+    };
 }
 
 export function GrantViewToJSON(json: any): GrantView {
-  return GrantViewToJSONTyped(json, false);
+    return GrantViewToJSONTyped(json, false);
 }
 
-export function GrantViewToJSONTyped(
-  value?: GrantView | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function GrantViewToJSONTyped(value?: GrantView | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    id: value['id'],
-    participantId: value['participantId'],
-    recipientId: value['recipientId'],
-    purpose: value['purpose'],
-    scopes: value['scopes'] == null ? undefined : Array.from(value['scopes'] as Set<any>),
-    status: value['status'],
-    validFrom: value['validFrom'] == null ? value['validFrom'] : value['validFrom'].toISOString(),
-    validTo: value['validTo'] == null ? value['validTo'] : value['validTo'].toISOString(),
-  };
+    return {
+
+        'id': value['id'],
+        'participantId': value['participantId'],
+        'recipientId': value['recipientId'],
+        'purpose': value['purpose'],
+        'scopes': value['scopes'] == null ? undefined : Array.from(value['scopes'] as Set<any>),
+        'status': value['status'],
+        'validFrom': value['validFrom'] == null ? value['validFrom'] : value['validFrom'].toISOString(),
+        'validTo': value['validTo'] == null ? value['validTo'] : value['validTo'].toISOString(),
+    };
 }

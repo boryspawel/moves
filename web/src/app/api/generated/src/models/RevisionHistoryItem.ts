@@ -19,106 +19,102 @@ import { mapValues } from '../runtime';
  * @interface RevisionHistoryItem
  */
 export interface RevisionHistoryItem {
-  /**
-   *
-   * @type {string}
-   * @memberof RevisionHistoryItem
-   */
-  revisionId?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof RevisionHistoryItem
-   */
-  revisionNumber?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof RevisionHistoryItem
-   */
-  basedOnRevisionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RevisionHistoryItem
-   */
-  status?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RevisionHistoryItem
-   */
-  migrationOrigin?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RevisionHistoryItem
-   */
-  assessmentStatus?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof RevisionHistoryItem
-   */
-  version?: number;
-  /**
-   *
-   * @type {Date}
-   * @memberof RevisionHistoryItem
-   */
-  createdAt?: Date;
+    /**
+     *
+     * @type {string}
+     * @memberof RevisionHistoryItem
+     */
+    revisionId?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof RevisionHistoryItem
+     */
+    revisionNumber?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof RevisionHistoryItem
+     */
+    basedOnRevisionId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof RevisionHistoryItem
+     */
+    status?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof RevisionHistoryItem
+     */
+    migrationOrigin?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof RevisionHistoryItem
+     */
+    assessmentStatus?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof RevisionHistoryItem
+     */
+    version?: number;
+    /**
+     *
+     * @type {Date}
+     * @memberof RevisionHistoryItem
+     */
+    createdAt?: Date;
 }
 
 /**
  * Check if a given object implements the RevisionHistoryItem interface.
  */
 export function instanceOfRevisionHistoryItem(value: object): value is RevisionHistoryItem {
-  return true;
+    return true;
 }
 
 export function RevisionHistoryItemFromJSON(json: any): RevisionHistoryItem {
-  return RevisionHistoryItemFromJSONTyped(json, false);
+    return RevisionHistoryItemFromJSONTyped(json, false);
 }
 
-export function RevisionHistoryItemFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): RevisionHistoryItem {
-  if (json == null) {
-    return json;
-  }
-  return {
-    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
-    revisionNumber: json['revisionNumber'] == null ? undefined : json['revisionNumber'],
-    basedOnRevisionId: json['basedOnRevisionId'] == null ? undefined : json['basedOnRevisionId'],
-    status: json['status'] == null ? undefined : json['status'],
-    migrationOrigin: json['migrationOrigin'] == null ? undefined : json['migrationOrigin'],
-    assessmentStatus: json['assessmentStatus'] == null ? undefined : json['assessmentStatus'],
-    version: json['version'] == null ? undefined : json['version'],
-    createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
-  };
+export function RevisionHistoryItemFromJSONTyped(json: any, ignoreDiscriminator: boolean): RevisionHistoryItem {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'revisionId': json['revisionId'] == null ? undefined : json['revisionId'],
+        'revisionNumber': json['revisionNumber'] == null ? undefined : json['revisionNumber'],
+        'basedOnRevisionId': json['basedOnRevisionId'] == null ? undefined : json['basedOnRevisionId'],
+        'status': json['status'] == null ? undefined : json['status'],
+        'migrationOrigin': json['migrationOrigin'] == null ? undefined : json['migrationOrigin'],
+        'assessmentStatus': json['assessmentStatus'] == null ? undefined : json['assessmentStatus'],
+        'version': json['version'] == null ? undefined : json['version'],
+        'createdAt': json['createdAt'] == null ? undefined : (new Date(json['createdAt'])),
+    };
 }
 
 export function RevisionHistoryItemToJSON(json: any): RevisionHistoryItem {
-  return RevisionHistoryItemToJSONTyped(json, false);
+    return RevisionHistoryItemToJSONTyped(json, false);
 }
 
-export function RevisionHistoryItemToJSONTyped(
-  value?: RevisionHistoryItem | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function RevisionHistoryItemToJSONTyped(value?: RevisionHistoryItem | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    revisionId: value['revisionId'],
-    revisionNumber: value['revisionNumber'],
-    basedOnRevisionId: value['basedOnRevisionId'],
-    status: value['status'],
-    migrationOrigin: value['migrationOrigin'],
-    assessmentStatus: value['assessmentStatus'],
-    version: value['version'],
-    createdAt: value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
-  };
+    return {
+
+        'revisionId': value['revisionId'],
+        'revisionNumber': value['revisionNumber'],
+        'basedOnRevisionId': value['basedOnRevisionId'],
+        'status': value['status'],
+        'migrationOrigin': value['migrationOrigin'],
+        'assessmentStatus': value['assessmentStatus'],
+        'version': value['version'],
+        'createdAt': value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
+    };
 }

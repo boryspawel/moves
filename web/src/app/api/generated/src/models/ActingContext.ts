@@ -19,57 +19,57 @@ import { mapValues } from '../runtime';
  * @interface ActingContext
  */
 export interface ActingContext {
-  /**
-   *
-   * @type {ActingContextRoleEnum}
-   * @memberof ActingContext
-   */
-  role?: ActingContextRoleEnum;
+    /**
+     *
+     * @type {ActingContextRoleEnum}
+     * @memberof ActingContext
+     */
+    role?: ActingContextRoleEnum;
 }
+
 
 /**
  * @export
  */
 export const ActingContextRoleEnum = {
-  Trainer: 'TRAINER',
-  Physiotherapist: 'PHYSIOTHERAPIST',
+    Trainer: 'TRAINER',
+    Physiotherapist: 'PHYSIOTHERAPIST'
 } as const;
-export type ActingContextRoleEnum =
-  (typeof ActingContextRoleEnum)[keyof typeof ActingContextRoleEnum];
+export type ActingContextRoleEnum = typeof ActingContextRoleEnum[keyof typeof ActingContextRoleEnum];
+
 
 /**
  * Check if a given object implements the ActingContext interface.
  */
 export function instanceOfActingContext(value: object): value is ActingContext {
-  return true;
+    return true;
 }
 
 export function ActingContextFromJSON(json: any): ActingContext {
-  return ActingContextFromJSONTyped(json, false);
+    return ActingContextFromJSONTyped(json, false);
 }
 
 export function ActingContextFromJSONTyped(json: any, ignoreDiscriminator: boolean): ActingContext {
-  if (json == null) {
-    return json;
-  }
-  return {
-    role: json['role'] == null ? undefined : json['role'],
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'role': json['role'] == null ? undefined : json['role'],
+    };
 }
 
 export function ActingContextToJSON(json: any): ActingContext {
-  return ActingContextToJSONTyped(json, false);
+    return ActingContextToJSONTyped(json, false);
 }
 
-export function ActingContextToJSONTyped(
-  value?: ActingContext | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function ActingContextToJSONTyped(value?: ActingContext | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    role: value['role'],
-  };
+    return {
+
+        'role': value['role'],
+    };
 }

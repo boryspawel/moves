@@ -19,86 +19,86 @@ import { mapValues } from '../runtime';
  * @interface SlotRequest
  */
 export interface SlotRequest {
-  /**
-   *
-   * @type {SlotRequestDayOfWeekEnum}
-   * @memberof SlotRequest
-   */
-  dayOfWeek?: SlotRequestDayOfWeekEnum;
-  /**
-   *
-   * @type {string}
-   * @memberof SlotRequest
-   */
-  startTime?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof SlotRequest
-   */
-  endTime?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof SlotRequest
-   */
-  timeZone?: string;
+    /**
+     *
+     * @type {SlotRequestDayOfWeekEnum}
+     * @memberof SlotRequest
+     */
+    dayOfWeek?: SlotRequestDayOfWeekEnum;
+    /**
+     *
+     * @type {string}
+     * @memberof SlotRequest
+     */
+    startTime?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof SlotRequest
+     */
+    endTime?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof SlotRequest
+     */
+    timeZone?: string;
 }
+
 
 /**
  * @export
  */
 export const SlotRequestDayOfWeekEnum = {
-  Monday: 'MONDAY',
-  Tuesday: 'TUESDAY',
-  Wednesday: 'WEDNESDAY',
-  Thursday: 'THURSDAY',
-  Friday: 'FRIDAY',
-  Saturday: 'SATURDAY',
-  Sunday: 'SUNDAY',
+    Monday: 'MONDAY',
+    Tuesday: 'TUESDAY',
+    Wednesday: 'WEDNESDAY',
+    Thursday: 'THURSDAY',
+    Friday: 'FRIDAY',
+    Saturday: 'SATURDAY',
+    Sunday: 'SUNDAY'
 } as const;
-export type SlotRequestDayOfWeekEnum =
-  (typeof SlotRequestDayOfWeekEnum)[keyof typeof SlotRequestDayOfWeekEnum];
+export type SlotRequestDayOfWeekEnum = typeof SlotRequestDayOfWeekEnum[keyof typeof SlotRequestDayOfWeekEnum];
+
 
 /**
  * Check if a given object implements the SlotRequest interface.
  */
 export function instanceOfSlotRequest(value: object): value is SlotRequest {
-  return true;
+    return true;
 }
 
 export function SlotRequestFromJSON(json: any): SlotRequest {
-  return SlotRequestFromJSONTyped(json, false);
+    return SlotRequestFromJSONTyped(json, false);
 }
 
 export function SlotRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): SlotRequest {
-  if (json == null) {
-    return json;
-  }
-  return {
-    dayOfWeek: json['dayOfWeek'] == null ? undefined : json['dayOfWeek'],
-    startTime: json['startTime'] == null ? undefined : json['startTime'],
-    endTime: json['endTime'] == null ? undefined : json['endTime'],
-    timeZone: json['timeZone'] == null ? undefined : json['timeZone'],
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'dayOfWeek': json['dayOfWeek'] == null ? undefined : json['dayOfWeek'],
+        'startTime': json['startTime'] == null ? undefined : json['startTime'],
+        'endTime': json['endTime'] == null ? undefined : json['endTime'],
+        'timeZone': json['timeZone'] == null ? undefined : json['timeZone'],
+    };
 }
 
 export function SlotRequestToJSON(json: any): SlotRequest {
-  return SlotRequestToJSONTyped(json, false);
+    return SlotRequestToJSONTyped(json, false);
 }
 
-export function SlotRequestToJSONTyped(
-  value?: SlotRequest | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function SlotRequestToJSONTyped(value?: SlotRequest | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    dayOfWeek: value['dayOfWeek'],
-    startTime: value['startTime'],
-    endTime: value['endTime'],
-    timeZone: value['timeZone'],
-  };
+    return {
+
+        'dayOfWeek': value['dayOfWeek'],
+        'startTime': value['startTime'],
+        'endTime': value['endTime'],
+        'timeZone': value['timeZone'],
+    };
 }

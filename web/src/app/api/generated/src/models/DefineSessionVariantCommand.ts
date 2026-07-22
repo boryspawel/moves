@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { VariantItemCommand } from './VariantItemCommand';
 import {
-  VariantItemCommandFromJSON,
-  VariantItemCommandFromJSONTyped,
-  VariantItemCommandToJSON,
-  VariantItemCommandToJSONTyped,
+    VariantItemCommandFromJSON,
+    VariantItemCommandFromJSONTyped,
+    VariantItemCommandToJSON,
+    VariantItemCommandToJSONTyped,
 } from './VariantItemCommand';
 
 /**
@@ -27,102 +27,90 @@ import {
  * @interface DefineSessionVariantCommand
  */
 export interface DefineSessionVariantCommand {
-  /**
-   *
-   * @type {number}
-   * @memberof DefineSessionVariantCommand
-   */
-  expectedVersion?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof DefineSessionVariantCommand
-   */
-  sessionId?: string;
-  /**
-   *
-   * @type {DefineSessionVariantCommandTypeEnum}
-   * @memberof DefineSessionVariantCommand
-   */
-  type?: DefineSessionVariantCommandTypeEnum;
-  /**
-   *
-   * @type {number}
-   * @memberof DefineSessionVariantCommand
-   */
-  expectedDurationMinutes?: number;
-  /**
-   *
-   * @type {Array<VariantItemCommand>}
-   * @memberof DefineSessionVariantCommand
-   */
-  items?: Array<VariantItemCommand>;
+    /**
+     *
+     * @type {number}
+     * @memberof DefineSessionVariantCommand
+     */
+    expectedVersion?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof DefineSessionVariantCommand
+     */
+    sessionId?: string;
+    /**
+     *
+     * @type {DefineSessionVariantCommandTypeEnum}
+     * @memberof DefineSessionVariantCommand
+     */
+    type?: DefineSessionVariantCommandTypeEnum;
+    /**
+     *
+     * @type {number}
+     * @memberof DefineSessionVariantCommand
+     */
+    expectedDurationMinutes?: number;
+    /**
+     *
+     * @type {Array<VariantItemCommand>}
+     * @memberof DefineSessionVariantCommand
+     */
+    items?: Array<VariantItemCommand>;
 }
+
 
 /**
  * @export
  */
 export const DefineSessionVariantCommandTypeEnum = {
-  Standard: 'STANDARD',
-  Short: 'SHORT',
-  Minimum: 'MINIMUM',
+    Standard: 'STANDARD',
+    Short: 'SHORT',
+    Minimum: 'MINIMUM'
 } as const;
-export type DefineSessionVariantCommandTypeEnum =
-  (typeof DefineSessionVariantCommandTypeEnum)[keyof typeof DefineSessionVariantCommandTypeEnum];
+export type DefineSessionVariantCommandTypeEnum = typeof DefineSessionVariantCommandTypeEnum[keyof typeof DefineSessionVariantCommandTypeEnum];
+
 
 /**
  * Check if a given object implements the DefineSessionVariantCommand interface.
  */
-export function instanceOfDefineSessionVariantCommand(
-  value: object,
-): value is DefineSessionVariantCommand {
-  return true;
+export function instanceOfDefineSessionVariantCommand(value: object): value is DefineSessionVariantCommand {
+    return true;
 }
 
 export function DefineSessionVariantCommandFromJSON(json: any): DefineSessionVariantCommand {
-  return DefineSessionVariantCommandFromJSONTyped(json, false);
+    return DefineSessionVariantCommandFromJSONTyped(json, false);
 }
 
-export function DefineSessionVariantCommandFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): DefineSessionVariantCommand {
-  if (json == null) {
-    return json;
-  }
-  return {
-    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
-    sessionId: json['sessionId'] == null ? undefined : json['sessionId'],
-    type: json['type'] == null ? undefined : json['type'],
-    expectedDurationMinutes:
-      json['expectedDurationMinutes'] == null ? undefined : json['expectedDurationMinutes'],
-    items:
-      json['items'] == null
-        ? undefined
-        : (json['items'] as Array<any>).map(VariantItemCommandFromJSON),
-  };
+export function DefineSessionVariantCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): DefineSessionVariantCommand {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'expectedVersion': json['expectedVersion'] == null ? undefined : json['expectedVersion'],
+        'sessionId': json['sessionId'] == null ? undefined : json['sessionId'],
+        'type': json['type'] == null ? undefined : json['type'],
+        'expectedDurationMinutes': json['expectedDurationMinutes'] == null ? undefined : json['expectedDurationMinutes'],
+        'items': json['items'] == null ? undefined : ((json['items'] as Array<any>).map(VariantItemCommandFromJSON)),
+    };
 }
 
 export function DefineSessionVariantCommandToJSON(json: any): DefineSessionVariantCommand {
-  return DefineSessionVariantCommandToJSONTyped(json, false);
+    return DefineSessionVariantCommandToJSONTyped(json, false);
 }
 
-export function DefineSessionVariantCommandToJSONTyped(
-  value?: DefineSessionVariantCommand | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function DefineSessionVariantCommandToJSONTyped(value?: DefineSessionVariantCommand | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    expectedVersion: value['expectedVersion'],
-    sessionId: value['sessionId'],
-    type: value['type'],
-    expectedDurationMinutes: value['expectedDurationMinutes'],
-    items:
-      value['items'] == null
-        ? undefined
-        : (value['items'] as Array<any>).map(VariantItemCommandToJSON),
-  };
+    return {
+
+        'expectedVersion': value['expectedVersion'],
+        'sessionId': value['sessionId'],
+        'type': value['type'],
+        'expectedDurationMinutes': value['expectedDurationMinutes'],
+        'items': value['items'] == null ? undefined : ((value['items'] as Array<any>).map(VariantItemCommandToJSON)),
+    };
 }

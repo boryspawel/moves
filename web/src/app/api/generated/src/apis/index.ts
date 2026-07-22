@@ -15,6 +15,7 @@ export * from './ParticipantSafetyControllerApi';
 export * from './PlanCollaborationControllerApi';
 export * from './PlanRevisionWorkflowControllerApi';
 export * from './RecoveryEpisodeControllerApi';
+export * from './ReminderPreferenceControllerApi';
 export * from './SafetyV2ControllerApi';
 export * from './SessionExecutionAttemptControllerApi';
 export * from './SessionExecutionControllerApi';

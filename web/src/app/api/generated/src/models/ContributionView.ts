@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { EvidenceView } from './EvidenceView';
 import {
-  EvidenceViewFromJSON,
-  EvidenceViewFromJSONTyped,
-  EvidenceViewToJSON,
-  EvidenceViewToJSONTyped,
+    EvidenceViewFromJSON,
+    EvidenceViewFromJSONTyped,
+    EvidenceViewToJSON,
+    EvidenceViewToJSONTyped,
 } from './EvidenceView';
 
 /**
@@ -27,210 +27,196 @@ import {
  * @interface ContributionView
  */
 export interface ContributionView {
-  /**
-   *
-   * @type {string}
-   * @memberof ContributionView
-   */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ContributionView
-   */
-  anatomicalStructureId?: string;
-  /**
-   *
-   * @type {ContributionViewRoleEnum}
-   * @memberof ContributionView
-   */
-  role?: ContributionViewRoleEnum;
-  /**
-   *
-   * @type {ContributionViewLoadChannelEnum}
-   * @memberof ContributionView
-   */
-  loadChannel?: ContributionViewLoadChannelEnum;
-  /**
-   *
-   * @type {ContributionViewContributionBandEnum}
-   * @memberof ContributionView
-   */
-  contributionBand?: ContributionViewContributionBandEnum;
-  /**
-   *
-   * @type {number}
-   * @memberof ContributionView
-   */
-  coefficientLow?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof ContributionView
-   */
-  coefficientHigh?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof ContributionView
-   */
-  confidenceClass?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ContributionView
-   */
-  evidenceGrade?: string;
-  /**
-   *
-   * @type {ContributionViewCalculationRoleEnum}
-   * @memberof ContributionView
-   */
-  calculationRole?: ContributionViewCalculationRoleEnum;
-  /**
-   *
-   * @type {string}
-   * @memberof ContributionView
-   */
-  variantCondition?: string;
-  /**
-   *
-   * @type {ContributionViewSideRuleEnum}
-   * @memberof ContributionView
-   */
-  sideRule?: ContributionViewSideRuleEnum;
-  /**
-   *
-   * @type {Array<EvidenceView>}
-   * @memberof ContributionView
-   */
-  evidence?: Array<EvidenceView>;
+    /**
+     *
+     * @type {string}
+     * @memberof ContributionView
+     */
+    id?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof ContributionView
+     */
+    anatomicalStructureId?: string;
+    /**
+     *
+     * @type {ContributionViewRoleEnum}
+     * @memberof ContributionView
+     */
+    role?: ContributionViewRoleEnum;
+    /**
+     *
+     * @type {ContributionViewLoadChannelEnum}
+     * @memberof ContributionView
+     */
+    loadChannel?: ContributionViewLoadChannelEnum;
+    /**
+     *
+     * @type {ContributionViewContributionBandEnum}
+     * @memberof ContributionView
+     */
+    contributionBand?: ContributionViewContributionBandEnum;
+    /**
+     *
+     * @type {number}
+     * @memberof ContributionView
+     */
+    coefficientLow?: number;
+    /**
+     *
+     * @type {number}
+     * @memberof ContributionView
+     */
+    coefficientHigh?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof ContributionView
+     */
+    confidenceClass?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof ContributionView
+     */
+    evidenceGrade?: string;
+    /**
+     *
+     * @type {ContributionViewCalculationRoleEnum}
+     * @memberof ContributionView
+     */
+    calculationRole?: ContributionViewCalculationRoleEnum;
+    /**
+     *
+     * @type {string}
+     * @memberof ContributionView
+     */
+    variantCondition?: string;
+    /**
+     *
+     * @type {ContributionViewSideRuleEnum}
+     * @memberof ContributionView
+     */
+    sideRule?: ContributionViewSideRuleEnum;
+    /**
+     *
+     * @type {Array<EvidenceView>}
+     * @memberof ContributionView
+     */
+    evidence?: Array<EvidenceView>;
 }
+
 
 /**
  * @export
  */
 export const ContributionViewRoleEnum = {
-  Primary: 'PRIMARY',
-  Secondary: 'SECONDARY',
-  Stabilizer: 'STABILIZER',
+    Primary: 'PRIMARY',
+    Secondary: 'SECONDARY',
+    Stabilizer: 'STABILIZER'
 } as const;
-export type ContributionViewRoleEnum =
-  (typeof ContributionViewRoleEnum)[keyof typeof ContributionViewRoleEnum];
+export type ContributionViewRoleEnum = typeof ContributionViewRoleEnum[keyof typeof ContributionViewRoleEnum];
 
 /**
  * @export
  */
 export const ContributionViewLoadChannelEnum = {
-  DynExu: 'DYN_EXU',
-  IsoSec: 'ISO_SEC',
-  ImpactContacts: 'IMPACT_CONTACTS',
-  EnduranceMinZone: 'ENDURANCE_MIN_ZONE',
+    DynExu: 'DYN_EXU',
+    IsoSec: 'ISO_SEC',
+    ImpactContacts: 'IMPACT_CONTACTS',
+    EnduranceMinZone: 'ENDURANCE_MIN_ZONE'
 } as const;
-export type ContributionViewLoadChannelEnum =
-  (typeof ContributionViewLoadChannelEnum)[keyof typeof ContributionViewLoadChannelEnum];
+export type ContributionViewLoadChannelEnum = typeof ContributionViewLoadChannelEnum[keyof typeof ContributionViewLoadChannelEnum];
 
 /**
  * @export
  */
 export const ContributionViewContributionBandEnum = {
-  Low: 'LOW',
-  Moderate: 'MODERATE',
-  High: 'HIGH',
+    Low: 'LOW',
+    Moderate: 'MODERATE',
+    High: 'HIGH'
 } as const;
-export type ContributionViewContributionBandEnum =
-  (typeof ContributionViewContributionBandEnum)[keyof typeof ContributionViewContributionBandEnum];
+export type ContributionViewContributionBandEnum = typeof ContributionViewContributionBandEnum[keyof typeof ContributionViewContributionBandEnum];
 
 /**
  * @export
  */
 export const ContributionViewCalculationRoleEnum = {
-  Allocation: 'ALLOCATION',
-  DescriptiveOnly: 'DESCRIPTIVE_ONLY',
+    Allocation: 'ALLOCATION',
+    DescriptiveOnly: 'DESCRIPTIVE_ONLY'
 } as const;
-export type ContributionViewCalculationRoleEnum =
-  (typeof ContributionViewCalculationRoleEnum)[keyof typeof ContributionViewCalculationRoleEnum];
+export type ContributionViewCalculationRoleEnum = typeof ContributionViewCalculationRoleEnum[keyof typeof ContributionViewCalculationRoleEnum];
 
 /**
  * @export
  */
 export const ContributionViewSideRuleEnum = {
-  AsPrescribed: 'AS_PRESCRIBED',
-  Bilateral: 'BILATERAL',
-  Left: 'LEFT',
-  Right: 'RIGHT',
-  NotApplicable: 'NOT_APPLICABLE',
+    AsPrescribed: 'AS_PRESCRIBED',
+    Bilateral: 'BILATERAL',
+    Left: 'LEFT',
+    Right: 'RIGHT',
+    NotApplicable: 'NOT_APPLICABLE'
 } as const;
-export type ContributionViewSideRuleEnum =
-  (typeof ContributionViewSideRuleEnum)[keyof typeof ContributionViewSideRuleEnum];
+export type ContributionViewSideRuleEnum = typeof ContributionViewSideRuleEnum[keyof typeof ContributionViewSideRuleEnum];
+
 
 /**
  * Check if a given object implements the ContributionView interface.
  */
 export function instanceOfContributionView(value: object): value is ContributionView {
-  return true;
+    return true;
 }
 
 export function ContributionViewFromJSON(json: any): ContributionView {
-  return ContributionViewFromJSONTyped(json, false);
+    return ContributionViewFromJSONTyped(json, false);
 }
 
-export function ContributionViewFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): ContributionView {
-  if (json == null) {
-    return json;
-  }
-  return {
-    id: json['id'] == null ? undefined : json['id'],
-    anatomicalStructureId:
-      json['anatomicalStructureId'] == null ? undefined : json['anatomicalStructureId'],
-    role: json['role'] == null ? undefined : json['role'],
-    loadChannel: json['loadChannel'] == null ? undefined : json['loadChannel'],
-    contributionBand: json['contributionBand'] == null ? undefined : json['contributionBand'],
-    coefficientLow: json['coefficientLow'] == null ? undefined : json['coefficientLow'],
-    coefficientHigh: json['coefficientHigh'] == null ? undefined : json['coefficientHigh'],
-    confidenceClass: json['confidenceClass'] == null ? undefined : json['confidenceClass'],
-    evidenceGrade: json['evidenceGrade'] == null ? undefined : json['evidenceGrade'],
-    calculationRole: json['calculationRole'] == null ? undefined : json['calculationRole'],
-    variantCondition: json['variantCondition'] == null ? undefined : json['variantCondition'],
-    sideRule: json['sideRule'] == null ? undefined : json['sideRule'],
-    evidence:
-      json['evidence'] == null
-        ? undefined
-        : (json['evidence'] as Array<any>).map(EvidenceViewFromJSON),
-  };
+export function ContributionViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): ContributionView {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'id': json['id'] == null ? undefined : json['id'],
+        'anatomicalStructureId': json['anatomicalStructureId'] == null ? undefined : json['anatomicalStructureId'],
+        'role': json['role'] == null ? undefined : json['role'],
+        'loadChannel': json['loadChannel'] == null ? undefined : json['loadChannel'],
+        'contributionBand': json['contributionBand'] == null ? undefined : json['contributionBand'],
+        'coefficientLow': json['coefficientLow'] == null ? undefined : json['coefficientLow'],
+        'coefficientHigh': json['coefficientHigh'] == null ? undefined : json['coefficientHigh'],
+        'confidenceClass': json['confidenceClass'] == null ? undefined : json['confidenceClass'],
+        'evidenceGrade': json['evidenceGrade'] == null ? undefined : json['evidenceGrade'],
+        'calculationRole': json['calculationRole'] == null ? undefined : json['calculationRole'],
+        'variantCondition': json['variantCondition'] == null ? undefined : json['variantCondition'],
+        'sideRule': json['sideRule'] == null ? undefined : json['sideRule'],
+        'evidence': json['evidence'] == null ? undefined : ((json['evidence'] as Array<any>).map(EvidenceViewFromJSON)),
+    };
 }
 
 export function ContributionViewToJSON(json: any): ContributionView {
-  return ContributionViewToJSONTyped(json, false);
+    return ContributionViewToJSONTyped(json, false);
 }
 
-export function ContributionViewToJSONTyped(
-  value?: ContributionView | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function ContributionViewToJSONTyped(value?: ContributionView | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    id: value['id'],
-    anatomicalStructureId: value['anatomicalStructureId'],
-    role: value['role'],
-    loadChannel: value['loadChannel'],
-    contributionBand: value['contributionBand'],
-    coefficientLow: value['coefficientLow'],
-    coefficientHigh: value['coefficientHigh'],
-    confidenceClass: value['confidenceClass'],
-    evidenceGrade: value['evidenceGrade'],
-    calculationRole: value['calculationRole'],
-    variantCondition: value['variantCondition'],
-    sideRule: value['sideRule'],
-    evidence:
-      value['evidence'] == null
-        ? undefined
-        : (value['evidence'] as Array<any>).map(EvidenceViewToJSON),
-  };
+    return {
+
+        'id': value['id'],
+        'anatomicalStructureId': value['anatomicalStructureId'],
+        'role': value['role'],
+        'loadChannel': value['loadChannel'],
+        'contributionBand': value['contributionBand'],
+        'coefficientLow': value['coefficientLow'],
+        'coefficientHigh': value['coefficientHigh'],
+        'confidenceClass': value['confidenceClass'],
+        'evidenceGrade': value['evidenceGrade'],
+        'calculationRole': value['calculationRole'],
+        'variantCondition': value['variantCondition'],
+        'sideRule': value['sideRule'],
+        'evidence': value['evidence'] == null ? undefined : ((value['evidence'] as Array<any>).map(EvidenceViewToJSON)),
+    };
 }

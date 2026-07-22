@@ -2,25 +2,29 @@
 
 All URIs are relative to *http://localhost*
 
-| Method                                                                              | HTTP request                                                                 | Description                            |
-| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------- |
-| [**addCycle**](TrainingPlanningV2ControllerApi.md#addcycle)                         | **POST** /api/v2/training-plans/revisions/{revisionId}/cycles                |                                        |
-| [**addGoal**](TrainingPlanningV2ControllerApi.md#addgoal)                           | **POST** /api/v2/training-plans/revisions/{revisionId}/goals                 |                                        |
-| [**addLoadBudget**](TrainingPlanningV2ControllerApi.md#addloadbudget)               | **POST** /api/v2/training-plans/revisions/{revisionId}/load-budgets          |                                        |
-| [**addMicrocycle**](TrainingPlanningV2ControllerApi.md#addmicrocycle)               | **POST** /api/v2/training-plans/revisions/{revisionId}/microcycles           |                                        |
-| [**addPrescription**](TrainingPlanningV2ControllerApi.md#addprescription)           | **POST** /api/v2/training-plans/revisions/{revisionId}/prescriptions         |                                        |
-| [**addSession**](TrainingPlanningV2ControllerApi.md#addsession)                     | **POST** /api/v2/training-plans/revisions/{revisionId}/sessions              |                                        |
-| [**createDraft**](TrainingPlanningV2ControllerApi.md#createdraft)                   | **POST** /api/v2/training-plans                                              | Create an inactive training plan draft |
-| [**createRevision**](TrainingPlanningV2ControllerApi.md#createrevision)             | **POST** /api/v2/training-plans/{planId}/revisions                           |                                        |
-| [**defineSessionVariant**](TrainingPlanningV2ControllerApi.md#definesessionvariant) | **POST** /api/v2/training-plans/revisions/{revisionId}/session-variants      |                                        |
-| [**editor**](TrainingPlanningV2ControllerApi.md#editor)                             | **GET** /api/v2/training-plans/revisions/{revisionId}                        |                                        |
-| [**history**](TrainingPlanningV2ControllerApi.md#history)                           | **GET** /api/v2/training-plans/{planId}/revisions                            |                                        |
-| [**reorder**](TrainingPlanningV2ControllerApi.md#reorder)                           | **PUT** /api/v2/training-plans/revisions/{revisionId}/prescriptions/order    |                                        |
-| [**validateStructurally**](TrainingPlanningV2ControllerApi.md#validatestructurally) | **POST** /api/v2/training-plans/revisions/{revisionId}/structural-validation |                                        |
+| Method | HTTP request | Description |
+|------------- | ------------- | -------------|
+| [**addCycle**](TrainingPlanningV2ControllerApi.md#addcycle) | **POST** /api/v2/training-plans/revisions/{revisionId}/cycles |  |
+| [**addGoal**](TrainingPlanningV2ControllerApi.md#addgoal) | **POST** /api/v2/training-plans/revisions/{revisionId}/goals |  |
+| [**addLoadBudget**](TrainingPlanningV2ControllerApi.md#addloadbudget) | **POST** /api/v2/training-plans/revisions/{revisionId}/load-budgets |  |
+| [**addMicrocycle**](TrainingPlanningV2ControllerApi.md#addmicrocycle) | **POST** /api/v2/training-plans/revisions/{revisionId}/microcycles |  |
+| [**addPrescription**](TrainingPlanningV2ControllerApi.md#addprescription) | **POST** /api/v2/training-plans/revisions/{revisionId}/prescriptions |  |
+| [**addSession**](TrainingPlanningV2ControllerApi.md#addsession) | **POST** /api/v2/training-plans/revisions/{revisionId}/sessions |  |
+| [**createDraft**](TrainingPlanningV2ControllerApi.md#createdraft) | **POST** /api/v2/training-plans | Create an inactive training plan draft |
+| [**createRevision**](TrainingPlanningV2ControllerApi.md#createrevision) | **POST** /api/v2/training-plans/{planId}/revisions |  |
+| [**defineSessionVariant**](TrainingPlanningV2ControllerApi.md#definesessionvariant) | **POST** /api/v2/training-plans/revisions/{revisionId}/session-variants |  |
+| [**editor**](TrainingPlanningV2ControllerApi.md#editor) | **GET** /api/v2/training-plans/revisions/{revisionId} |  |
+| [**history**](TrainingPlanningV2ControllerApi.md#history) | **GET** /api/v2/training-plans/{planId}/revisions |  |
+| [**reorder**](TrainingPlanningV2ControllerApi.md#reorder) | **PUT** /api/v2/training-plans/revisions/{revisionId}/prescriptions/order |  |
+| [**validateStructurally**](TrainingPlanningV2ControllerApi.md#validatestructurally) | **POST** /api/v2/training-plans/revisions/{revisionId}/structural-validation |  |
+
+
 
 ## addCycle
 
 > EditorView addCycle(revisionId, addCycleCommand)
+
+
 
 ### Example
 
@@ -58,10 +62,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                | Type                                  | Description | Notes                     |
-| ------------------- | ------------------------------------- | ----------- | ------------------------- |
-| **revisionId**      | `string`                              |             | [Defaults to `undefined`] |
-| **addCycleCommand** | [AddCycleCommand](AddCycleCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **revisionId** | `string` |  | [Defaults to `undefined`] |
+| **addCycleCommand** | [AddCycleCommand](AddCycleCommand.md) |  | |
 
 ### Return type
 
@@ -76,17 +81,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## addGoal
 
 > EditorView addGoal(revisionId, addGoalCommand)
+
+
 
 ### Example
 
@@ -124,10 +132,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name               | Type                                | Description | Notes                     |
-| ------------------ | ----------------------------------- | ----------- | ------------------------- |
-| **revisionId**     | `string`                            |             | [Defaults to `undefined`] |
-| **addGoalCommand** | [AddGoalCommand](AddGoalCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **revisionId** | `string` |  | [Defaults to `undefined`] |
+| **addGoalCommand** | [AddGoalCommand](AddGoalCommand.md) |  | |
 
 ### Return type
 
@@ -142,17 +151,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## addLoadBudget
 
 > EditorView addLoadBudget(revisionId, addLoadBudgetCommand)
+
+
 
 ### Example
 
@@ -190,10 +202,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                     | Type                                            | Description | Notes                     |
-| ------------------------ | ----------------------------------------------- | ----------- | ------------------------- |
-| **revisionId**           | `string`                                        |             | [Defaults to `undefined`] |
-| **addLoadBudgetCommand** | [AddLoadBudgetCommand](AddLoadBudgetCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **revisionId** | `string` |  | [Defaults to `undefined`] |
+| **addLoadBudgetCommand** | [AddLoadBudgetCommand](AddLoadBudgetCommand.md) |  | |
 
 ### Return type
 
@@ -208,17 +221,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## addMicrocycle
 
 > EditorView addMicrocycle(revisionId, addMicrocycleCommand)
+
+
 
 ### Example
 
@@ -256,10 +272,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                     | Type                                            | Description | Notes                     |
-| ------------------------ | ----------------------------------------------- | ----------- | ------------------------- |
-| **revisionId**           | `string`                                        |             | [Defaults to `undefined`] |
-| **addMicrocycleCommand** | [AddMicrocycleCommand](AddMicrocycleCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **revisionId** | `string` |  | [Defaults to `undefined`] |
+| **addMicrocycleCommand** | [AddMicrocycleCommand](AddMicrocycleCommand.md) |  | |
 
 ### Return type
 
@@ -274,17 +291,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## addPrescription
 
 > EditorView addPrescription(revisionId, addPrescriptionCommand)
+
+
 
 ### Example
 
@@ -322,10 +342,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                       | Type                                                | Description | Notes                     |
-| -------------------------- | --------------------------------------------------- | ----------- | ------------------------- |
-| **revisionId**             | `string`                                            |             | [Defaults to `undefined`] |
-| **addPrescriptionCommand** | [AddPrescriptionCommand](AddPrescriptionCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **revisionId** | `string` |  | [Defaults to `undefined`] |
+| **addPrescriptionCommand** | [AddPrescriptionCommand](AddPrescriptionCommand.md) |  | |
 
 ### Return type
 
@@ -340,17 +361,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## addSession
 
 > EditorView addSession(revisionId, addSessionCommand)
+
+
 
 ### Example
 
@@ -388,10 +412,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                  | Type                                      | Description | Notes                     |
-| --------------------- | ----------------------------------------- | ----------- | ------------------------- |
-| **revisionId**        | `string`                                  |             | [Defaults to `undefined`] |
-| **addSessionCommand** | [AddSessionCommand](AddSessionCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **revisionId** | `string` |  | [Defaults to `undefined`] |
+| **addSessionCommand** | [AddSessionCommand](AddSessionCommand.md) |  | |
 
 ### Return type
 
@@ -406,13 +431,14 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## createDraft
 
@@ -454,9 +480,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                   | Type                                        | Description | Notes |
-| ---------------------- | ------------------------------------------- | ----------- | ----- |
-| **createDraftCommand** | [CreateDraftCommand](CreateDraftCommand.md) |             |       |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **createDraftCommand** | [CreateDraftCommand](CreateDraftCommand.md) |  | |
 
 ### Return type
 
@@ -471,17 +498,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## createRevision
 
 > EditorView createRevision(planId, createRevisionCommand)
+
+
 
 ### Example
 
@@ -519,10 +549,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                      | Type                                              | Description | Notes                     |
-| ------------------------- | ------------------------------------------------- | ----------- | ------------------------- |
-| **planId**                | `string`                                          |             | [Defaults to `undefined`] |
-| **createRevisionCommand** | [CreateRevisionCommand](CreateRevisionCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **planId** | `string` |  | [Defaults to `undefined`] |
+| **createRevisionCommand** | [CreateRevisionCommand](CreateRevisionCommand.md) |  | |
 
 ### Return type
 
@@ -537,17 +568,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## defineSessionVariant
 
 > EditorView defineSessionVariant(revisionId, defineSessionVariantCommand)
+
+
 
 ### Example
 
@@ -585,10 +619,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                            | Type                                                          | Description | Notes                     |
-| ------------------------------- | ------------------------------------------------------------- | ----------- | ------------------------- |
-| **revisionId**                  | `string`                                                      |             | [Defaults to `undefined`] |
-| **defineSessionVariantCommand** | [DefineSessionVariantCommand](DefineSessionVariantCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **revisionId** | `string` |  | [Defaults to `undefined`] |
+| **defineSessionVariantCommand** | [DefineSessionVariantCommand](DefineSessionVariantCommand.md) |  | |
 
 ### Return type
 
@@ -603,17 +638,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## editor
 
 > EditorView editor(revisionId)
+
+
 
 ### Example
 
@@ -649,9 +687,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name           | Type     | Description | Notes                     |
-| -------------- | -------- | ----------- | ------------------------- |
-| **revisionId** | `string` |             | [Defaults to `undefined`] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **revisionId** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -666,17 +705,20 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## history
 
 > Array&lt;RevisionHistoryItem&gt; history(planId)
+
+
 
 ### Example
 
@@ -712,9 +754,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name       | Type     | Description | Notes                     |
-| ---------- | -------- | ----------- | ------------------------- |
-| **planId** | `string` |             | [Defaults to `undefined`] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **planId** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -729,17 +772,20 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## reorder
 
 > EditorView reorder(revisionId, reorderCommand)
+
+
 
 ### Example
 
@@ -777,10 +823,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name               | Type                                | Description | Notes                     |
-| ------------------ | ----------------------------------- | ----------- | ------------------------- |
-| **revisionId**     | `string`                            |             | [Defaults to `undefined`] |
-| **reorderCommand** | [ReorderCommand](ReorderCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **revisionId** | `string` |  | [Defaults to `undefined`] |
+| **reorderCommand** | [ReorderCommand](ReorderCommand.md) |  | |
 
 ### Return type
 
@@ -795,17 +842,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## validateStructurally
 
 > StructuralValidationView validateStructurally(revisionId, validateCommand)
+
+
 
 ### Example
 
@@ -843,10 +893,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                | Type                                  | Description | Notes                     |
-| ------------------- | ------------------------------------- | ----------- | ------------------------- |
-| **revisionId**      | `string`                              |             | [Defaults to `undefined`] |
-| **validateCommand** | [ValidateCommand](ValidateCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **revisionId** | `string` |  | [Defaults to `undefined`] |
+| **validateCommand** | [ValidateCommand](ValidateCommand.md) |  | |
 
 ### Return type
 
@@ -861,10 +912,10 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)

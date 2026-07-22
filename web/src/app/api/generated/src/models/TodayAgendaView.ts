@@ -15,24 +15,24 @@
 import { mapValues } from '../runtime';
 import type { RecoveryView } from './RecoveryView';
 import {
-  RecoveryViewFromJSON,
-  RecoveryViewFromJSONTyped,
-  RecoveryViewToJSON,
-  RecoveryViewToJSONTyped,
+    RecoveryViewFromJSON,
+    RecoveryViewFromJSONTyped,
+    RecoveryViewToJSON,
+    RecoveryViewToJSONTyped,
 } from './RecoveryView';
 import type { ActivePlanView } from './ActivePlanView';
 import {
-  ActivePlanViewFromJSON,
-  ActivePlanViewFromJSONTyped,
-  ActivePlanViewToJSON,
-  ActivePlanViewToJSONTyped,
+    ActivePlanViewFromJSON,
+    ActivePlanViewFromJSONTyped,
+    ActivePlanViewToJSON,
+    ActivePlanViewToJSONTyped,
 } from './ActivePlanView';
 import type { AgendaSessionView } from './AgendaSessionView';
 import {
-  AgendaSessionViewFromJSON,
-  AgendaSessionViewFromJSONTyped,
-  AgendaSessionViewToJSON,
-  AgendaSessionViewToJSONTyped,
+    AgendaSessionViewFromJSON,
+    AgendaSessionViewFromJSONTyped,
+    AgendaSessionViewToJSON,
+    AgendaSessionViewToJSONTyped,
 } from './AgendaSessionView';
 
 /**
@@ -41,99 +41,86 @@ import {
  * @interface TodayAgendaView
  */
 export interface TodayAgendaView {
-  /**
-   *
-   * @type {string}
-   * @memberof TodayAgendaView
-   */
-  timeZone?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof TodayAgendaView
-   */
-  localDate?: Date;
-  /**
-   *
-   * @type {ActivePlanView}
-   * @memberof TodayAgendaView
-   */
-  activePlan?: ActivePlanView;
-  /**
-   *
-   * @type {Array<AgendaSessionView>}
-   * @memberof TodayAgendaView
-   */
-  sessions?: Array<AgendaSessionView>;
-  /**
-   *
-   * @type {string}
-   * @memberof TodayAgendaView
-   */
-  state?: string;
-  /**
-   *
-   * @type {RecoveryView}
-   * @memberof TodayAgendaView
-   */
-  recovery?: RecoveryView;
+    /**
+     *
+     * @type {string}
+     * @memberof TodayAgendaView
+     */
+    timeZone?: string;
+    /**
+     *
+     * @type {Date}
+     * @memberof TodayAgendaView
+     */
+    localDate?: Date;
+    /**
+     *
+     * @type {ActivePlanView}
+     * @memberof TodayAgendaView
+     */
+    activePlan?: ActivePlanView;
+    /**
+     *
+     * @type {Array<AgendaSessionView>}
+     * @memberof TodayAgendaView
+     */
+    sessions?: Array<AgendaSessionView>;
+    /**
+     *
+     * @type {string}
+     * @memberof TodayAgendaView
+     */
+    state?: string;
+    /**
+     *
+     * @type {RecoveryView}
+     * @memberof TodayAgendaView
+     */
+    recovery?: RecoveryView;
 }
 
 /**
  * Check if a given object implements the TodayAgendaView interface.
  */
 export function instanceOfTodayAgendaView(value: object): value is TodayAgendaView {
-  return true;
+    return true;
 }
 
 export function TodayAgendaViewFromJSON(json: any): TodayAgendaView {
-  return TodayAgendaViewFromJSONTyped(json, false);
+    return TodayAgendaViewFromJSONTyped(json, false);
 }
 
-export function TodayAgendaViewFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): TodayAgendaView {
-  if (json == null) {
-    return json;
-  }
-  return {
-    timeZone: json['timeZone'] == null ? undefined : json['timeZone'],
-    localDate: json['localDate'] == null ? undefined : new Date(json['localDate']),
-    activePlan: json['activePlan'] == null ? undefined : ActivePlanViewFromJSON(json['activePlan']),
-    sessions:
-      json['sessions'] == null
-        ? undefined
-        : (json['sessions'] as Array<any>).map(AgendaSessionViewFromJSON),
-    state: json['state'] == null ? undefined : json['state'],
-    recovery: json['recovery'] == null ? undefined : RecoveryViewFromJSON(json['recovery']),
-  };
+export function TodayAgendaViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): TodayAgendaView {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'timeZone': json['timeZone'] == null ? undefined : json['timeZone'],
+        'localDate': json['localDate'] == null ? undefined : (new Date(json['localDate'])),
+        'activePlan': json['activePlan'] == null ? undefined : ActivePlanViewFromJSON(json['activePlan']),
+        'sessions': json['sessions'] == null ? undefined : ((json['sessions'] as Array<any>).map(AgendaSessionViewFromJSON)),
+        'state': json['state'] == null ? undefined : json['state'],
+        'recovery': json['recovery'] == null ? undefined : RecoveryViewFromJSON(json['recovery']),
+    };
 }
 
 export function TodayAgendaViewToJSON(json: any): TodayAgendaView {
-  return TodayAgendaViewToJSONTyped(json, false);
+    return TodayAgendaViewToJSONTyped(json, false);
 }
 
-export function TodayAgendaViewToJSONTyped(
-  value?: TodayAgendaView | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function TodayAgendaViewToJSONTyped(value?: TodayAgendaView | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    timeZone: value['timeZone'],
-    localDate:
-      value['localDate'] == null
-        ? value['localDate']
-        : value['localDate'].toISOString().substring(0, 10),
-    activePlan: ActivePlanViewToJSON(value['activePlan']),
-    sessions:
-      value['sessions'] == null
-        ? undefined
-        : (value['sessions'] as Array<any>).map(AgendaSessionViewToJSON),
-    state: value['state'],
-    recovery: RecoveryViewToJSON(value['recovery']),
-  };
+    return {
+
+        'timeZone': value['timeZone'],
+        'localDate': value['localDate'] == null ? value['localDate'] : value['localDate'].toISOString().substring(0,10),
+        'activePlan': ActivePlanViewToJSON(value['activePlan']),
+        'sessions': value['sessions'] == null ? undefined : ((value['sessions'] as Array<any>).map(AgendaSessionViewToJSON)),
+        'state': value['state'],
+        'recovery': RecoveryViewToJSON(value['recovery']),
+    };
 }

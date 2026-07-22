@@ -14,186 +14,174 @@
 
 import * as runtime from '../runtime';
 import {
-  type GrantCommand,
-  GrantCommandFromJSON,
-  GrantCommandToJSON,
+    type GrantCommand,
+    GrantCommandFromJSON,
+    GrantCommandToJSON,
 } from '../models/GrantCommand';
-import { type GrantView, GrantViewFromJSON, GrantViewToJSON } from '../models/GrantView';
 import {
-  type TemplateCommand,
-  TemplateCommandFromJSON,
-  TemplateCommandToJSON,
+    type GrantView,
+    GrantViewFromJSON,
+    GrantViewToJSON,
+} from '../models/GrantView';
+import {
+    type TemplateCommand,
+    TemplateCommandFromJSON,
+    TemplateCommandToJSON,
 } from '../models/TemplateCommand';
 import {
-  type TemplateView,
-  TemplateViewFromJSON,
-  TemplateViewToJSON,
+    type TemplateView,
+    TemplateViewFromJSON,
+    TemplateViewToJSON,
 } from '../models/TemplateView';
 
 export interface GrantRequest {
-  grantCommand: GrantCommand;
+    grantCommand: GrantCommand;
 }
 
 export interface RevokeRequest {
-  grantId: string;
+    grantId: string;
 }
 
 export interface TemplateRequest {
-  templateCommand: TemplateCommand;
+    templateCommand: TemplateCommand;
 }
 
 /**
  *
  */
 export class ConsentControllerApi extends runtime.BaseAPI {
-  /**
-   * Creates request options for grant without sending the request
-   */
-  async grantRequestOpts(requestParameters: GrantRequest): Promise<runtime.RequestOpts> {
-    if (requestParameters['grantCommand'] == null) {
-      throw new runtime.RequiredError(
-        'grantCommand',
-        'Required parameter "grantCommand" was null or undefined when calling grant().',
-      );
+
+    /**
+     * Creates request options for grant without sending the request
+     */
+    async grantRequestOpts(requestParameters: GrantRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['grantCommand'] == null) {
+            throw new runtime.RequiredError(
+                'grantCommand',
+                'Required parameter "grantCommand" was null or undefined when calling grant().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+
+        let urlPath = `/api/v1/consent/grants`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: GrantCommandToJSON(requestParameters['grantCommand']),
+        };
     }
 
-    const queryParameters: any = {};
+    /**
+     */
+    async grantRaw(requestParameters: GrantRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GrantView>> {
+        const requestOptions = await this.grantRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    headerParameters['Content-Type'] = 'application/json';
-
-    let urlPath = `/api/v1/consent/grants`;
-
-    return {
-      path: urlPath,
-      method: 'POST',
-      headers: headerParameters,
-      query: queryParameters,
-      body: GrantCommandToJSON(requestParameters['grantCommand']),
-    };
-  }
-
-  /**
-   */
-  async grantRaw(
-    requestParameters: GrantRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<GrantView>> {
-    const requestOptions = await this.grantRequestOpts(requestParameters);
-    const response = await this.request(requestOptions, initOverrides);
-
-    return new runtime.JSONApiResponse(response, (jsonValue) => GrantViewFromJSON(jsonValue));
-  }
-
-  /**
-   */
-  async grant(
-    requestParameters: GrantRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<GrantView> {
-    const response = await this.grantRaw(requestParameters, initOverrides);
-    return await response.value();
-  }
-
-  /**
-   * Creates request options for revoke without sending the request
-   */
-  async revokeRequestOpts(requestParameters: RevokeRequest): Promise<runtime.RequestOpts> {
-    if (requestParameters['grantId'] == null) {
-      throw new runtime.RequiredError(
-        'grantId',
-        'Required parameter "grantId" was null or undefined when calling revoke().',
-      );
+        return new runtime.JSONApiResponse(response, (jsonValue) => GrantViewFromJSON(jsonValue));
     }
 
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    let urlPath = `/api/v1/consent/grants/{grantId}/revoke`;
-    urlPath = urlPath.replace(
-      '{grantId}',
-      encodeURIComponent(String(requestParameters['grantId'])),
-    );
-
-    return {
-      path: urlPath,
-      method: 'POST',
-      headers: headerParameters,
-      query: queryParameters,
-    };
-  }
-
-  /**
-   */
-  async revokeRaw(
-    requestParameters: RevokeRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<GrantView>> {
-    const requestOptions = await this.revokeRequestOpts(requestParameters);
-    const response = await this.request(requestOptions, initOverrides);
-
-    return new runtime.JSONApiResponse(response, (jsonValue) => GrantViewFromJSON(jsonValue));
-  }
-
-  /**
-   */
-  async revoke(
-    requestParameters: RevokeRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<GrantView> {
-    const response = await this.revokeRaw(requestParameters, initOverrides);
-    return await response.value();
-  }
-
-  /**
-   * Creates request options for template without sending the request
-   */
-  async templateRequestOpts(requestParameters: TemplateRequest): Promise<runtime.RequestOpts> {
-    if (requestParameters['templateCommand'] == null) {
-      throw new runtime.RequiredError(
-        'templateCommand',
-        'Required parameter "templateCommand" was null or undefined when calling template().',
-      );
+    /**
+     */
+    async grant(requestParameters: GrantRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GrantView> {
+        const response = await this.grantRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
-    const queryParameters: any = {};
+    /**
+     * Creates request options for revoke without sending the request
+     */
+    async revokeRequestOpts(requestParameters: RevokeRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['grantId'] == null) {
+            throw new runtime.RequiredError(
+                'grantId',
+                'Required parameter "grantId" was null or undefined when calling revoke().'
+            );
+        }
 
-    const headerParameters: runtime.HTTPHeaders = {};
+        const queryParameters: any = {};
 
-    headerParameters['Content-Type'] = 'application/json';
+        const headerParameters: runtime.HTTPHeaders = {};
 
-    let urlPath = `/api/v1/consent/templates`;
 
-    return {
-      path: urlPath,
-      method: 'POST',
-      headers: headerParameters,
-      query: queryParameters,
-      body: TemplateCommandToJSON(requestParameters['templateCommand']),
-    };
-  }
+        let urlPath = `/api/v1/consent/grants/{grantId}/revoke`;
+        urlPath = urlPath.replace('{grantId}', encodeURIComponent(String(requestParameters['grantId'])));
 
-  /**
-   */
-  async templateRaw(
-    requestParameters: TemplateRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<TemplateView>> {
-    const requestOptions = await this.templateRequestOpts(requestParameters);
-    const response = await this.request(requestOptions, initOverrides);
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
 
-    return new runtime.JSONApiResponse(response, (jsonValue) => TemplateViewFromJSON(jsonValue));
-  }
+    /**
+     */
+    async revokeRaw(requestParameters: RevokeRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GrantView>> {
+        const requestOptions = await this.revokeRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
-  /**
-   */
-  async template(
-    requestParameters: TemplateRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<TemplateView> {
-    const response = await this.templateRaw(requestParameters, initOverrides);
-    return await response.value();
-  }
+        return new runtime.JSONApiResponse(response, (jsonValue) => GrantViewFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async revoke(requestParameters: RevokeRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GrantView> {
+        const response = await this.revokeRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for template without sending the request
+     */
+    async templateRequestOpts(requestParameters: TemplateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['templateCommand'] == null) {
+            throw new runtime.RequiredError(
+                'templateCommand',
+                'Required parameter "templateCommand" was null or undefined when calling template().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+
+        let urlPath = `/api/v1/consent/templates`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: TemplateCommandToJSON(requestParameters['templateCommand']),
+        };
+    }
+
+    /**
+     */
+    async templateRaw(requestParameters: TemplateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TemplateView>> {
+        const requestOptions = await this.templateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => TemplateViewFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async template(requestParameters: TemplateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TemplateView> {
+        const response = await this.templateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
 }

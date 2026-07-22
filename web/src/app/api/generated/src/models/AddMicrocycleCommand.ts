@@ -19,110 +19,102 @@ import { mapValues } from '../runtime';
  * @interface AddMicrocycleCommand
  */
 export interface AddMicrocycleCommand {
-  /**
-   *
-   * @type {number}
-   * @memberof AddMicrocycleCommand
-   */
-  expectedVersion?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof AddMicrocycleCommand
-   */
-  cycleId?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof AddMicrocycleCommand
-   */
-  sequenceNumber?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof AddMicrocycleCommand
-   */
-  name?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof AddMicrocycleCommand
-   */
-  startDate?: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof AddMicrocycleCommand
-   */
-  endDate?: Date;
-  /**
-   *
-   * @type {string}
-   * @memberof AddMicrocycleCommand
-   */
-  phaseIntent?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AddMicrocycleCommand
-   */
-  phaseGoal?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof AddMicrocycleCommand
+     */
+    expectedVersion?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof AddMicrocycleCommand
+     */
+    cycleId?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof AddMicrocycleCommand
+     */
+    sequenceNumber?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof AddMicrocycleCommand
+     */
+    name?: string;
+    /**
+     *
+     * @type {Date}
+     * @memberof AddMicrocycleCommand
+     */
+    startDate?: Date;
+    /**
+     *
+     * @type {Date}
+     * @memberof AddMicrocycleCommand
+     */
+    endDate?: Date;
+    /**
+     *
+     * @type {string}
+     * @memberof AddMicrocycleCommand
+     */
+    phaseIntent?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof AddMicrocycleCommand
+     */
+    phaseGoal?: string;
 }
 
 /**
  * Check if a given object implements the AddMicrocycleCommand interface.
  */
 export function instanceOfAddMicrocycleCommand(value: object): value is AddMicrocycleCommand {
-  return true;
+    return true;
 }
 
 export function AddMicrocycleCommandFromJSON(json: any): AddMicrocycleCommand {
-  return AddMicrocycleCommandFromJSONTyped(json, false);
+    return AddMicrocycleCommandFromJSONTyped(json, false);
 }
 
-export function AddMicrocycleCommandFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): AddMicrocycleCommand {
-  if (json == null) {
-    return json;
-  }
-  return {
-    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
-    cycleId: json['cycleId'] == null ? undefined : json['cycleId'],
-    sequenceNumber: json['sequenceNumber'] == null ? undefined : json['sequenceNumber'],
-    name: json['name'] == null ? undefined : json['name'],
-    startDate: json['startDate'] == null ? undefined : new Date(json['startDate']),
-    endDate: json['endDate'] == null ? undefined : new Date(json['endDate']),
-    phaseIntent: json['phaseIntent'] == null ? undefined : json['phaseIntent'],
-    phaseGoal: json['phaseGoal'] == null ? undefined : json['phaseGoal'],
-  };
+export function AddMicrocycleCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): AddMicrocycleCommand {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'expectedVersion': json['expectedVersion'] == null ? undefined : json['expectedVersion'],
+        'cycleId': json['cycleId'] == null ? undefined : json['cycleId'],
+        'sequenceNumber': json['sequenceNumber'] == null ? undefined : json['sequenceNumber'],
+        'name': json['name'] == null ? undefined : json['name'],
+        'startDate': json['startDate'] == null ? undefined : (new Date(json['startDate'])),
+        'endDate': json['endDate'] == null ? undefined : (new Date(json['endDate'])),
+        'phaseIntent': json['phaseIntent'] == null ? undefined : json['phaseIntent'],
+        'phaseGoal': json['phaseGoal'] == null ? undefined : json['phaseGoal'],
+    };
 }
 
 export function AddMicrocycleCommandToJSON(json: any): AddMicrocycleCommand {
-  return AddMicrocycleCommandToJSONTyped(json, false);
+    return AddMicrocycleCommandToJSONTyped(json, false);
 }
 
-export function AddMicrocycleCommandToJSONTyped(
-  value?: AddMicrocycleCommand | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function AddMicrocycleCommandToJSONTyped(value?: AddMicrocycleCommand | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    expectedVersion: value['expectedVersion'],
-    cycleId: value['cycleId'],
-    sequenceNumber: value['sequenceNumber'],
-    name: value['name'],
-    startDate:
-      value['startDate'] == null
-        ? value['startDate']
-        : value['startDate'].toISOString().substring(0, 10),
-    endDate:
-      value['endDate'] == null ? value['endDate'] : value['endDate'].toISOString().substring(0, 10),
-    phaseIntent: value['phaseIntent'],
-    phaseGoal: value['phaseGoal'],
-  };
+    return {
+
+        'expectedVersion': value['expectedVersion'],
+        'cycleId': value['cycleId'],
+        'sequenceNumber': value['sequenceNumber'],
+        'name': value['name'],
+        'startDate': value['startDate'] == null ? value['startDate'] : value['startDate'].toISOString().substring(0,10),
+        'endDate': value['endDate'] == null ? value['endDate'] : value['endDate'].toISOString().substring(0,10),
+        'phaseIntent': value['phaseIntent'],
+        'phaseGoal': value['phaseGoal'],
+    };
 }

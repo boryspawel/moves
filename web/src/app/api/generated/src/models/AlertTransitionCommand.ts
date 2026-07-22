@@ -19,66 +19,62 @@ import { mapValues } from '../runtime';
  * @interface AlertTransitionCommand
  */
 export interface AlertTransitionCommand {
-  /**
-   *
-   * @type {string}
-   * @memberof AlertTransitionCommand
-   */
-  action?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AlertTransitionCommand
-   */
-  ownerAccountId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AlertTransitionCommand
-   */
-  commentReference?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof AlertTransitionCommand
+     */
+    action?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof AlertTransitionCommand
+     */
+    ownerAccountId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof AlertTransitionCommand
+     */
+    commentReference?: string;
 }
 
 /**
  * Check if a given object implements the AlertTransitionCommand interface.
  */
 export function instanceOfAlertTransitionCommand(value: object): value is AlertTransitionCommand {
-  return true;
+    return true;
 }
 
 export function AlertTransitionCommandFromJSON(json: any): AlertTransitionCommand {
-  return AlertTransitionCommandFromJSONTyped(json, false);
+    return AlertTransitionCommandFromJSONTyped(json, false);
 }
 
-export function AlertTransitionCommandFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): AlertTransitionCommand {
-  if (json == null) {
-    return json;
-  }
-  return {
-    action: json['action'] == null ? undefined : json['action'],
-    ownerAccountId: json['ownerAccountId'] == null ? undefined : json['ownerAccountId'],
-    commentReference: json['commentReference'] == null ? undefined : json['commentReference'],
-  };
+export function AlertTransitionCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): AlertTransitionCommand {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'action': json['action'] == null ? undefined : json['action'],
+        'ownerAccountId': json['ownerAccountId'] == null ? undefined : json['ownerAccountId'],
+        'commentReference': json['commentReference'] == null ? undefined : json['commentReference'],
+    };
 }
 
 export function AlertTransitionCommandToJSON(json: any): AlertTransitionCommand {
-  return AlertTransitionCommandToJSONTyped(json, false);
+    return AlertTransitionCommandToJSONTyped(json, false);
 }
 
-export function AlertTransitionCommandToJSONTyped(
-  value?: AlertTransitionCommand | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function AlertTransitionCommandToJSONTyped(value?: AlertTransitionCommand | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    action: value['action'],
-    ownerAccountId: value['ownerAccountId'],
-    commentReference: value['commentReference'],
-  };
+    return {
+
+        'action': value['action'],
+        'ownerAccountId': value['ownerAccountId'],
+        'commentReference': value['commentReference'],
+    };
 }

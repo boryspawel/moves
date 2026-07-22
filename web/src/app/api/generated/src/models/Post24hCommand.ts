@@ -19,74 +19,70 @@ import { mapValues } from '../runtime';
  * @interface Post24hCommand
  */
 export interface Post24hCommand {
-  /**
-   *
-   * @type {number}
-   * @memberof Post24hCommand
-   */
-  painLevel?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof Post24hCommand
-   */
-  difficultyLevel?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof Post24hCommand
-   */
-  note?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof Post24hCommand
-   */
-  observationMode?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof Post24hCommand
+     */
+    painLevel?: number;
+    /**
+     *
+     * @type {number}
+     * @memberof Post24hCommand
+     */
+    difficultyLevel?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof Post24hCommand
+     */
+    note?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof Post24hCommand
+     */
+    observationMode?: string;
 }
 
 /**
  * Check if a given object implements the Post24hCommand interface.
  */
 export function instanceOfPost24hCommand(value: object): value is Post24hCommand {
-  return true;
+    return true;
 }
 
 export function Post24hCommandFromJSON(json: any): Post24hCommand {
-  return Post24hCommandFromJSONTyped(json, false);
+    return Post24hCommandFromJSONTyped(json, false);
 }
 
-export function Post24hCommandFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): Post24hCommand {
-  if (json == null) {
-    return json;
-  }
-  return {
-    painLevel: json['painLevel'] == null ? undefined : json['painLevel'],
-    difficultyLevel: json['difficultyLevel'] == null ? undefined : json['difficultyLevel'],
-    note: json['note'] == null ? undefined : json['note'],
-    observationMode: json['observationMode'] == null ? undefined : json['observationMode'],
-  };
+export function Post24hCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): Post24hCommand {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'painLevel': json['painLevel'] == null ? undefined : json['painLevel'],
+        'difficultyLevel': json['difficultyLevel'] == null ? undefined : json['difficultyLevel'],
+        'note': json['note'] == null ? undefined : json['note'],
+        'observationMode': json['observationMode'] == null ? undefined : json['observationMode'],
+    };
 }
 
 export function Post24hCommandToJSON(json: any): Post24hCommand {
-  return Post24hCommandToJSONTyped(json, false);
+    return Post24hCommandToJSONTyped(json, false);
 }
 
-export function Post24hCommandToJSONTyped(
-  value?: Post24hCommand | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function Post24hCommandToJSONTyped(value?: Post24hCommand | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    painLevel: value['painLevel'],
-    difficultyLevel: value['difficultyLevel'],
-    note: value['note'],
-    observationMode: value['observationMode'],
-  };
+    return {
+
+        'painLevel': value['painLevel'],
+        'difficultyLevel': value['difficultyLevel'],
+        'note': value['note'],
+        'observationMode': value['observationMode'],
+    };
 }

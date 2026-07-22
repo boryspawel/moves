@@ -2,10 +2,12 @@
 
 All URIs are relative to *http://localhost*
 
-| Method                                                 | HTTP request                                   | Description                                                         |
-| ------------------------------------------------------ | ---------------------------------------------- | ------------------------------------------------------------------- |
-| [**list**](ExerciseCatalogControllerApi.md#list)       | **GET** /api/v1/exercises                      | Search published exercise versions using explicitly allowed filters |
-| [**version**](ExerciseCatalogControllerApi.md#version) | **GET** /api/v1/exercises/versions/{versionId} | Read a public detail projection of one published exercise version   |
+| Method | HTTP request | Description |
+|------------- | ------------- | -------------|
+| [**list**](ExerciseCatalogControllerApi.md#list) | **GET** /api/v1/exercises | Search published exercise versions using explicitly allowed filters |
+| [**version**](ExerciseCatalogControllerApi.md#version) | **GET** /api/v1/exercises/versions/{versionId} | Read a public detail projection of one published exercise version |
+
+
 
 ## list
 
@@ -16,12 +18,16 @@ Search published exercise versions using explicitly allowed filters
 ### Example
 
 ```ts
-import { Configuration, ExerciseCatalogControllerApi } from '@moves/api-client';
+import {
+  Configuration,
+  ExerciseCatalogControllerApi,
+} from '@moves/api-client';
 import type { ListRequest } from '@moves/api-client';
 
 async function example() {
-  console.log('🚀 Testing @moves/api-client SDK...');
-  const config = new Configuration({});
+  console.log("🚀 Testing @moves/api-client SDK...");
+  const config = new Configuration({
+  });
   const api = new ExerciseCatalogControllerApi(config);
 
   const body = {
@@ -53,14 +59,15 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                | Type                                                                                                           | Description | Notes                                                                                                                                 |
-| ------------------- | -------------------------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| **query**           | `string`                                                                                                       |             | [Optional] [Defaults to `undefined`]                                                                                                  |
-| **movementPattern** | `SQUAT`, `HINGE`, `PUSH`, `PULL`, `LUNGE`, `CARRY`, `ROTATION`, `LOCOMOTION`, `BREATHING`, `MOBILITY`, `OTHER` |             | [Optional] [Defaults to `undefined`] [Enum: SQUAT, HINGE, PUSH, PULL, LUNGE, CARRY, ROTATION, LOCOMOTION, BREATHING, MOBILITY, OTHER] |
-| **technicalLevel**  | `FOUNDATIONAL`, `INTERMEDIATE`, `ADVANCED`                                                                     |             | [Optional] [Defaults to `undefined`] [Enum: FOUNDATIONAL, INTERMEDIATE, ADVANCED]                                                     |
-| **equipment**       | `string`                                                                                                       |             | [Optional] [Defaults to `undefined`]                                                                                                  |
-| **page**            | `number`                                                                                                       |             | [Optional] [Defaults to `0`]                                                                                                          |
-| **size**            | `number`                                                                                                       |             | [Optional] [Defaults to `20`]                                                                                                         |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **query** | `string` |  | [Optional] [Defaults to `undefined`] |
+| **movementPattern** | `SQUAT`, `HINGE`, `PUSH`, `PULL`, `LUNGE`, `CARRY`, `ROTATION`, `LOCOMOTION`, `BREATHING`, `MOBILITY`, `OTHER` |  | [Optional] [Defaults to `undefined`] [Enum: SQUAT, HINGE, PUSH, PULL, LUNGE, CARRY, ROTATION, LOCOMOTION, BREATHING, MOBILITY, OTHER] |
+| **technicalLevel** | `FOUNDATIONAL`, `INTERMEDIATE`, `ADVANCED` |  | [Optional] [Defaults to `undefined`] [Enum: FOUNDATIONAL, INTERMEDIATE, ADVANCED] |
+| **equipment** | `string` |  | [Optional] [Defaults to `undefined`] |
+| **page** | `number` |  | [Optional] [Defaults to `0`] |
+| **size** | `number` |  | [Optional] [Defaults to `20`] |
 
 ### Return type
 
@@ -75,13 +82,14 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## version
 
@@ -123,9 +131,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name          | Type     | Description | Notes                     |
-| ------------- | -------- | ----------- | ------------------------- |
-| **versionId** | `string` |             | [Defaults to `undefined`] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **versionId** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -140,10 +149,10 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)

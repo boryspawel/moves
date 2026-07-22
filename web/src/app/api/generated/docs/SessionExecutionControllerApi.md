@@ -2,13 +2,15 @@
 
 All URIs are relative to *http://localhost*
 
-| Method                                                                            | HTTP request                                                                   | Description                                                              |
-| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| [**correct**](SessionExecutionControllerApi.md#correct)                           | **POST** /api/v1/session-executions/{executionId}/corrections                  | Append an audited correction without changing execution history          |
-| [**declare1**](SessionExecutionControllerApi.md#declare1)                         | **POST** /api/v1/planned-sessions/{sessionId}/executions                       | Declare completion of an assigned planned session                        |
-| [**post24h**](SessionExecutionControllerApi.md#post24h)                           | **POST** /api/v1/session-executions/{executionId}/post-24h-responses           | Append an idempotent post-24h session response                           |
-| [**specialistExecutions**](SessionExecutionControllerApi.md#specialistexecutions) | **GET** /api/v1/specialist/participants/{participantAccountId}/executions      | List executions and alerts for a participant with an active relationship |
-| [**transitionAlert**](SessionExecutionControllerApi.md#transitionalert)           | **POST** /api/v1/session-executions/{executionId}/alerts/{alertId}/transitions | Acknowledge, resolve or reopen an execution safety alert                 |
+| Method | HTTP request | Description |
+|------------- | ------------- | -------------|
+| [**correct**](SessionExecutionControllerApi.md#correct) | **POST** /api/v1/session-executions/{executionId}/corrections | Append an audited correction without changing execution history |
+| [**declare1**](SessionExecutionControllerApi.md#declare1) | **POST** /api/v1/planned-sessions/{sessionId}/executions | Declare completion of an assigned planned session |
+| [**post24h**](SessionExecutionControllerApi.md#post24h) | **POST** /api/v1/session-executions/{executionId}/post-24h-responses | Append an idempotent post-24h session response |
+| [**specialistExecutions**](SessionExecutionControllerApi.md#specialistexecutions) | **GET** /api/v1/specialist/participants/{participantAccountId}/executions | List executions and alerts for a participant with an active relationship |
+| [**transitionAlert**](SessionExecutionControllerApi.md#transitionalert) | **POST** /api/v1/session-executions/{executionId}/alerts/{alertId}/transitions | Acknowledge, resolve or reopen an execution safety alert |
+
+
 
 ## correct
 
@@ -54,11 +56,12 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                  | Type                                      | Description | Notes                     |
-| --------------------- | ----------------------------------------- | ----------- | ------------------------- |
-| **executionId**       | `string`                                  |             | [Defaults to `undefined`] |
-| **idempotencyKey**    | `string`                                  |             | [Defaults to `undefined`] |
-| **correctionCommand** | [CorrectionCommand](CorrectionCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **executionId** | `string` |  | [Defaults to `undefined`] |
+| **idempotencyKey** | `string` |  | [Defaults to `undefined`] |
+| **correctionCommand** | [CorrectionCommand](CorrectionCommand.md) |  | |
 
 ### Return type
 
@@ -73,13 +76,14 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## declare1
 
@@ -125,11 +129,12 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                        | Type                                                  | Description | Notes                     |
-| --------------------------- | ----------------------------------------------------- | ----------- | ------------------------- |
-| **sessionId**               | `string`                                              |             | [Defaults to `undefined`] |
-| **idempotencyKey**          | `string`                                              |             | [Defaults to `undefined`] |
-| **declareExecutionCommand** | [DeclareExecutionCommand](DeclareExecutionCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **sessionId** | `string` |  | [Defaults to `undefined`] |
+| **idempotencyKey** | `string` |  | [Defaults to `undefined`] |
+| **declareExecutionCommand** | [DeclareExecutionCommand](DeclareExecutionCommand.md) |  | |
 
 ### Return type
 
@@ -144,13 +149,14 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## post24h
 
@@ -196,11 +202,12 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name               | Type                                | Description | Notes                     |
-| ------------------ | ----------------------------------- | ----------- | ------------------------- |
-| **executionId**    | `string`                            |             | [Defaults to `undefined`] |
-| **idempotencyKey** | `string`                            |             | [Defaults to `undefined`] |
-| **post24hCommand** | [Post24hCommand](Post24hCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **executionId** | `string` |  | [Defaults to `undefined`] |
+| **idempotencyKey** | `string` |  | [Defaults to `undefined`] |
+| **post24hCommand** | [Post24hCommand](Post24hCommand.md) |  | |
 
 ### Return type
 
@@ -215,13 +222,14 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## specialistExecutions
 
@@ -263,9 +271,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                     | Type     | Description | Notes                     |
-| ------------------------ | -------- | ----------- | ------------------------- |
-| **participantAccountId** | `string` |             | [Defaults to `undefined`] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **participantAccountId** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -280,13 +289,14 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## transitionAlert
 
@@ -332,11 +342,12 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                       | Type                                                | Description | Notes                     |
-| -------------------------- | --------------------------------------------------- | ----------- | ------------------------- |
-| **executionId**            | `string`                                            |             | [Defaults to `undefined`] |
-| **alertId**                | `string`                                            |             | [Defaults to `undefined`] |
-| **alertTransitionCommand** | [AlertTransitionCommand](AlertTransitionCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **executionId** | `string` |  | [Defaults to `undefined`] |
+| **alertId** | `string` |  | [Defaults to `undefined`] |
+| **alertTransitionCommand** | [AlertTransitionCommand](AlertTransitionCommand.md) |  | |
 
 ### Return type
 
@@ -351,10 +362,10 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)

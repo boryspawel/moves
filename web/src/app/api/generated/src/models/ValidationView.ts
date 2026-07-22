@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { AssessmentSnapshot } from './AssessmentSnapshot';
 import {
-  AssessmentSnapshotFromJSON,
-  AssessmentSnapshotFromJSONTyped,
-  AssessmentSnapshotToJSON,
-  AssessmentSnapshotToJSONTyped,
+    AssessmentSnapshotFromJSON,
+    AssessmentSnapshotFromJSONTyped,
+    AssessmentSnapshotToJSON,
+    AssessmentSnapshotToJSONTyped,
 } from './AssessmentSnapshot';
 
 /**
@@ -27,83 +27,78 @@ import {
  * @interface ValidationView
  */
 export interface ValidationView {
-  /**
-   *
-   * @type {string}
-   * @memberof ValidationView
-   */
-  revisionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ValidationView
-   */
-  status?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ValidationView
-   */
-  checksum?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ValidationView
-   */
-  loadSnapshotId?: string;
-  /**
-   *
-   * @type {AssessmentSnapshot}
-   * @memberof ValidationView
-   */
-  assessment?: AssessmentSnapshot;
+    /**
+     *
+     * @type {string}
+     * @memberof ValidationView
+     */
+    revisionId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof ValidationView
+     */
+    status?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof ValidationView
+     */
+    checksum?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof ValidationView
+     */
+    loadSnapshotId?: string;
+    /**
+     *
+     * @type {AssessmentSnapshot}
+     * @memberof ValidationView
+     */
+    assessment?: AssessmentSnapshot;
 }
 
 /**
  * Check if a given object implements the ValidationView interface.
  */
 export function instanceOfValidationView(value: object): value is ValidationView {
-  return true;
+    return true;
 }
 
 export function ValidationViewFromJSON(json: any): ValidationView {
-  return ValidationViewFromJSONTyped(json, false);
+    return ValidationViewFromJSONTyped(json, false);
 }
 
-export function ValidationViewFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): ValidationView {
-  if (json == null) {
-    return json;
-  }
-  return {
-    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
-    status: json['status'] == null ? undefined : json['status'],
-    checksum: json['checksum'] == null ? undefined : json['checksum'],
-    loadSnapshotId: json['loadSnapshotId'] == null ? undefined : json['loadSnapshotId'],
-    assessment:
-      json['assessment'] == null ? undefined : AssessmentSnapshotFromJSON(json['assessment']),
-  };
+export function ValidationViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): ValidationView {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'revisionId': json['revisionId'] == null ? undefined : json['revisionId'],
+        'status': json['status'] == null ? undefined : json['status'],
+        'checksum': json['checksum'] == null ? undefined : json['checksum'],
+        'loadSnapshotId': json['loadSnapshotId'] == null ? undefined : json['loadSnapshotId'],
+        'assessment': json['assessment'] == null ? undefined : AssessmentSnapshotFromJSON(json['assessment']),
+    };
 }
 
 export function ValidationViewToJSON(json: any): ValidationView {
-  return ValidationViewToJSONTyped(json, false);
+    return ValidationViewToJSONTyped(json, false);
 }
 
-export function ValidationViewToJSONTyped(
-  value?: ValidationView | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function ValidationViewToJSONTyped(value?: ValidationView | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    revisionId: value['revisionId'],
-    status: value['status'],
-    checksum: value['checksum'],
-    loadSnapshotId: value['loadSnapshotId'],
-    assessment: AssessmentSnapshotToJSON(value['assessment']),
-  };
+    return {
+
+        'revisionId': value['revisionId'],
+        'status': value['status'],
+        'checksum': value['checksum'],
+        'loadSnapshotId': value['loadSnapshotId'],
+        'assessment': AssessmentSnapshotToJSON(value['assessment']),
+    };
 }

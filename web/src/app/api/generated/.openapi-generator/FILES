@@ -107,6 +107,8 @@ docs/PlanRevisionWorkflowControllerApi.md
 docs/PlannedSession.md
 docs/Post24hCommand.md
 docs/Post24hData.md
+docs/PreferenceCommand.md
+docs/PreferenceView.md
 docs/PrescriptionCommand.md
 docs/PrescriptionSnapshot.md
 docs/PrescriptionView.md
@@ -129,6 +131,7 @@ docs/RecoveryChoiceCommand.md
 docs/RecoveryEpisodeControllerApi.md
 docs/RecoveryView.md
 docs/RelationSnapshot.md
+docs/ReminderPreferenceControllerApi.md
 docs/ReorderCommand.md
 docs/ReplyCommand.md
 docs/ReplyView.md
@@ -202,6 +205,7 @@ src/apis/ParticipantSafetyControllerApi.ts
 src/apis/PlanCollaborationControllerApi.ts
 src/apis/PlanRevisionWorkflowControllerApi.ts
 src/apis/RecoveryEpisodeControllerApi.ts
+src/apis/ReminderPreferenceControllerApi.ts
 src/apis/SafetyV2ControllerApi.ts
 src/apis/SessionExecutionAttemptControllerApi.ts
 src/apis/SessionExecutionControllerApi.ts
@@ -304,6 +308,8 @@ src/models/PlanRevisionSnapshot.ts
 src/models/PlannedSession.ts
 src/models/Post24hCommand.ts
 src/models/Post24hData.ts
+src/models/PreferenceCommand.ts
+src/models/PreferenceView.ts
 src/models/PrescriptionCommand.ts
 src/models/PrescriptionSnapshot.ts
 src/models/PrescriptionView.ts

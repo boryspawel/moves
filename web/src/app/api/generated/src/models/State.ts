@@ -14,15 +14,25 @@
 
 import { mapValues } from '../runtime';
 import type { Slot } from './Slot';
-import { SlotFromJSON, SlotFromJSONTyped, SlotToJSON, SlotToJSONTyped } from './Slot';
+import {
+    SlotFromJSON,
+    SlotFromJSONTyped,
+    SlotToJSON,
+    SlotToJSONTyped,
+} from './Slot';
 import type { View } from './View';
-import { ViewFromJSON, ViewFromJSONTyped, ViewToJSON, ViewToJSONTyped } from './View';
+import {
+    ViewFromJSON,
+    ViewFromJSONTyped,
+    ViewToJSON,
+    ViewToJSONTyped,
+} from './View';
 import type { ProfileSummary } from './ProfileSummary';
 import {
-  ProfileSummaryFromJSON,
-  ProfileSummaryFromJSONTyped,
-  ProfileSummaryToJSON,
-  ProfileSummaryToJSONTyped,
+    ProfileSummaryFromJSON,
+    ProfileSummaryFromJSONTyped,
+    ProfileSummaryToJSON,
+    ProfileSummaryToJSONTyped,
 } from './ProfileSummary';
 
 /**
@@ -31,129 +41,120 @@ import {
  * @interface State
  */
 export interface State {
-  /**
-   *
-   * @type {StateStageEnum}
-   * @memberof State
-   */
-  stage?: StateStageEnum;
-  /**
-   *
-   * @type {Array<StateMissingStepsEnum>}
-   * @memberof State
-   */
-  missingSteps?: Array<StateMissingStepsEnum>;
-  /**
-   *
-   * @type {StateProfileTypeEnum}
-   * @memberof State
-   */
-  profileType?: StateProfileTypeEnum;
-  /**
-   *
-   * @type {ProfileSummary}
-   * @memberof State
-   */
-  profile?: ProfileSummary;
-  /**
-   *
-   * @type {Array<View>}
-   * @memberof State
-   */
-  currentLegalAcknowledgements?: Array<View>;
-  /**
-   *
-   * @type {Array<Slot>}
-   * @memberof State
-   */
-  availability?: Array<Slot>;
+    /**
+     *
+     * @type {StateStageEnum}
+     * @memberof State
+     */
+    stage?: StateStageEnum;
+    /**
+     *
+     * @type {Array<StateMissingStepsEnum>}
+     * @memberof State
+     */
+    missingSteps?: Array<StateMissingStepsEnum>;
+    /**
+     *
+     * @type {StateProfileTypeEnum}
+     * @memberof State
+     */
+    profileType?: StateProfileTypeEnum;
+    /**
+     *
+     * @type {ProfileSummary}
+     * @memberof State
+     */
+    profile?: ProfileSummary;
+    /**
+     *
+     * @type {Array<View>}
+     * @memberof State
+     */
+    currentLegalAcknowledgements?: Array<View>;
+    /**
+     *
+     * @type {Array<Slot>}
+     * @memberof State
+     */
+    availability?: Array<Slot>;
 }
+
 
 /**
  * @export
  */
 export const StateStageEnum = {
-  ProfileTypeRequired: 'PROFILE_TYPE_REQUIRED',
-  LegalRequired: 'LEGAL_REQUIRED',
-  ProfileRequired: 'PROFILE_REQUIRED',
-  AvailabilityRequired: 'AVAILABILITY_REQUIRED',
-  Ready: 'READY',
+    ProfileTypeRequired: 'PROFILE_TYPE_REQUIRED',
+    LegalRequired: 'LEGAL_REQUIRED',
+    ProfileRequired: 'PROFILE_REQUIRED',
+    AvailabilityRequired: 'AVAILABILITY_REQUIRED',
+    Ready: 'READY'
 } as const;
-export type StateStageEnum = (typeof StateStageEnum)[keyof typeof StateStageEnum];
+export type StateStageEnum = typeof StateStageEnum[keyof typeof StateStageEnum];
 
 /**
  * @export
  */
 export const StateMissingStepsEnum = {
-  ProfileType: 'PROFILE_TYPE',
-  LegalDocuments: 'LEGAL_DOCUMENTS',
-  BasicProfile: 'BASIC_PROFILE',
-  RecurringAvailability: 'RECURRING_AVAILABILITY',
+    ProfileType: 'PROFILE_TYPE',
+    LegalDocuments: 'LEGAL_DOCUMENTS',
+    BasicProfile: 'BASIC_PROFILE',
+    RecurringAvailability: 'RECURRING_AVAILABILITY'
 } as const;
-export type StateMissingStepsEnum =
-  (typeof StateMissingStepsEnum)[keyof typeof StateMissingStepsEnum];
+export type StateMissingStepsEnum = typeof StateMissingStepsEnum[keyof typeof StateMissingStepsEnum];
 
 /**
  * @export
  */
 export const StateProfileTypeEnum = {
-  Participant: 'PARTICIPANT',
-  Specialist: 'SPECIALIST',
+    Participant: 'PARTICIPANT',
+    Specialist: 'SPECIALIST'
 } as const;
-export type StateProfileTypeEnum = (typeof StateProfileTypeEnum)[keyof typeof StateProfileTypeEnum];
+export type StateProfileTypeEnum = typeof StateProfileTypeEnum[keyof typeof StateProfileTypeEnum];
+
 
 /**
  * Check if a given object implements the State interface.
  */
 export function instanceOfState(value: object): value is State {
-  return true;
+    return true;
 }
 
 export function StateFromJSON(json: any): State {
-  return StateFromJSONTyped(json, false);
+    return StateFromJSONTyped(json, false);
 }
 
 export function StateFromJSONTyped(json: any, ignoreDiscriminator: boolean): State {
-  if (json == null) {
-    return json;
-  }
-  return {
-    stage: json['stage'] == null ? undefined : json['stage'],
-    missingSteps: json['missingSteps'] == null ? undefined : json['missingSteps'],
-    profileType: json['profileType'] == null ? undefined : json['profileType'],
-    profile: json['profile'] == null ? undefined : ProfileSummaryFromJSON(json['profile']),
-    currentLegalAcknowledgements:
-      json['currentLegalAcknowledgements'] == null
-        ? undefined
-        : (json['currentLegalAcknowledgements'] as Array<any>).map(ViewFromJSON),
-    availability:
-      json['availability'] == null
-        ? undefined
-        : (json['availability'] as Array<any>).map(SlotFromJSON),
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'stage': json['stage'] == null ? undefined : json['stage'],
+        'missingSteps': json['missingSteps'] == null ? undefined : json['missingSteps'],
+        'profileType': json['profileType'] == null ? undefined : json['profileType'],
+        'profile': json['profile'] == null ? undefined : ProfileSummaryFromJSON(json['profile']),
+        'currentLegalAcknowledgements': json['currentLegalAcknowledgements'] == null ? undefined : ((json['currentLegalAcknowledgements'] as Array<any>).map(ViewFromJSON)),
+        'availability': json['availability'] == null ? undefined : ((json['availability'] as Array<any>).map(SlotFromJSON)),
+    };
 }
 
 export function StateToJSON(json: any): State {
-  return StateToJSONTyped(json, false);
+    return StateToJSONTyped(json, false);
 }
 
 export function StateToJSONTyped(value?: State | null, ignoreDiscriminator: boolean = false): any {
-  if (value == null) {
-    return value;
-  }
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    stage: value['stage'],
-    missingSteps: value['missingSteps'],
-    profileType: value['profileType'],
-    profile: ProfileSummaryToJSON(value['profile']),
-    currentLegalAcknowledgements:
-      value['currentLegalAcknowledgements'] == null
-        ? undefined
-        : (value['currentLegalAcknowledgements'] as Array<any>).map(ViewToJSON),
-    availability:
-      value['availability'] == null
-        ? undefined
-        : (value['availability'] as Array<any>).map(SlotToJSON),
-  };
+    return {
+
+        'stage': value['stage'],
+        'missingSteps': value['missingSteps'],
+        'profileType': value['profileType'],
+        'profile': ProfileSummaryToJSON(value['profile']),
+        'currentLegalAcknowledgements': value['currentLegalAcknowledgements'] == null ? undefined : ((value['currentLegalAcknowledgements'] as Array<any>).map(ViewToJSON)),
+        'availability': value['availability'] == null ? undefined : ((value['availability'] as Array<any>).map(SlotToJSON)),
+    };
 }

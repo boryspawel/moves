@@ -2,9 +2,11 @@
 
 All URIs are relative to *http://localhost*
 
-| Method                                             | HTTP request                                 | Description                                                      |
-| -------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------------------- |
+| Method | HTTP request | Description |
+|------------- | ------------- | -------------|
 | [**report**](BarrierReportControllerApi.md#report) | **POST** /api/v1/participant/barrier-reports | Report a session barrier and receive deterministic, safe options |
+
+
 
 ## report
 
@@ -48,10 +50,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                     | Type                                            | Description | Notes                     |
-| ------------------------ | ----------------------------------------------- | ----------- | ------------------------- |
-| **idempotencyKey**       | `string`                                        |             | [Defaults to `undefined`] |
-| **barrierReportCommand** | [BarrierReportCommand](BarrierReportCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **idempotencyKey** | `string` |  | [Defaults to `undefined`] |
+| **barrierReportCommand** | [BarrierReportCommand](BarrierReportCommand.md) |  | |
 
 ### Return type
 
@@ -66,10 +69,10 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)

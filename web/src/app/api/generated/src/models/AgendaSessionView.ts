@@ -19,138 +19,126 @@ import { mapValues } from '../runtime';
  * @interface AgendaSessionView
  */
 export interface AgendaSessionView {
-  /**
-   *
-   * @type {string}
-   * @memberof AgendaSessionView
-   */
-  sessionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AgendaSessionView
-   */
-  title?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof AgendaSessionView
-   */
-  expectedDurationMinutes?: number;
-  /**
-   *
-   * @type {Date}
-   * @memberof AgendaSessionView
-   */
-  scheduledDate?: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof AgendaSessionView
-   */
-  availableFrom?: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof AgendaSessionView
-   */
-  availableTo?: Date;
-  /**
-   *
-   * @type {string}
-   * @memberof AgendaSessionView
-   */
-  executionState?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AgendaSessionView
-   */
-  doseSummary?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AgendaSessionView
-   */
-  safetyState?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AgendaSessionView
-   */
-  nextAction?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof AgendaSessionView
-   */
-  sortAt?: Date;
+    /**
+     *
+     * @type {string}
+     * @memberof AgendaSessionView
+     */
+    sessionId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof AgendaSessionView
+     */
+    title?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof AgendaSessionView
+     */
+    expectedDurationMinutes?: number;
+    /**
+     *
+     * @type {Date}
+     * @memberof AgendaSessionView
+     */
+    scheduledDate?: Date;
+    /**
+     *
+     * @type {Date}
+     * @memberof AgendaSessionView
+     */
+    availableFrom?: Date;
+    /**
+     *
+     * @type {Date}
+     * @memberof AgendaSessionView
+     */
+    availableTo?: Date;
+    /**
+     *
+     * @type {string}
+     * @memberof AgendaSessionView
+     */
+    executionState?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof AgendaSessionView
+     */
+    doseSummary?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof AgendaSessionView
+     */
+    safetyState?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof AgendaSessionView
+     */
+    nextAction?: string;
+    /**
+     *
+     * @type {Date}
+     * @memberof AgendaSessionView
+     */
+    sortAt?: Date;
 }
 
 /**
  * Check if a given object implements the AgendaSessionView interface.
  */
 export function instanceOfAgendaSessionView(value: object): value is AgendaSessionView {
-  return true;
+    return true;
 }
 
 export function AgendaSessionViewFromJSON(json: any): AgendaSessionView {
-  return AgendaSessionViewFromJSONTyped(json, false);
+    return AgendaSessionViewFromJSONTyped(json, false);
 }
 
-export function AgendaSessionViewFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): AgendaSessionView {
-  if (json == null) {
-    return json;
-  }
-  return {
-    sessionId: json['sessionId'] == null ? undefined : json['sessionId'],
-    title: json['title'] == null ? undefined : json['title'],
-    expectedDurationMinutes:
-      json['expectedDurationMinutes'] == null ? undefined : json['expectedDurationMinutes'],
-    scheduledDate: json['scheduledDate'] == null ? undefined : new Date(json['scheduledDate']),
-    availableFrom: json['availableFrom'] == null ? undefined : new Date(json['availableFrom']),
-    availableTo: json['availableTo'] == null ? undefined : new Date(json['availableTo']),
-    executionState: json['executionState'] == null ? undefined : json['executionState'],
-    doseSummary: json['doseSummary'] == null ? undefined : json['doseSummary'],
-    safetyState: json['safetyState'] == null ? undefined : json['safetyState'],
-    nextAction: json['nextAction'] == null ? undefined : json['nextAction'],
-    sortAt: json['sortAt'] == null ? undefined : new Date(json['sortAt']),
-  };
+export function AgendaSessionViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): AgendaSessionView {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'sessionId': json['sessionId'] == null ? undefined : json['sessionId'],
+        'title': json['title'] == null ? undefined : json['title'],
+        'expectedDurationMinutes': json['expectedDurationMinutes'] == null ? undefined : json['expectedDurationMinutes'],
+        'scheduledDate': json['scheduledDate'] == null ? undefined : (new Date(json['scheduledDate'])),
+        'availableFrom': json['availableFrom'] == null ? undefined : (new Date(json['availableFrom'])),
+        'availableTo': json['availableTo'] == null ? undefined : (new Date(json['availableTo'])),
+        'executionState': json['executionState'] == null ? undefined : json['executionState'],
+        'doseSummary': json['doseSummary'] == null ? undefined : json['doseSummary'],
+        'safetyState': json['safetyState'] == null ? undefined : json['safetyState'],
+        'nextAction': json['nextAction'] == null ? undefined : json['nextAction'],
+        'sortAt': json['sortAt'] == null ? undefined : (new Date(json['sortAt'])),
+    };
 }
 
 export function AgendaSessionViewToJSON(json: any): AgendaSessionView {
-  return AgendaSessionViewToJSONTyped(json, false);
+    return AgendaSessionViewToJSONTyped(json, false);
 }
 
-export function AgendaSessionViewToJSONTyped(
-  value?: AgendaSessionView | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function AgendaSessionViewToJSONTyped(value?: AgendaSessionView | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    sessionId: value['sessionId'],
-    title: value['title'],
-    expectedDurationMinutes: value['expectedDurationMinutes'],
-    scheduledDate:
-      value['scheduledDate'] == null
-        ? value['scheduledDate']
-        : value['scheduledDate'].toISOString().substring(0, 10),
-    availableFrom:
-      value['availableFrom'] == null
-        ? value['availableFrom']
-        : value['availableFrom'].toISOString(),
-    availableTo:
-      value['availableTo'] == null ? value['availableTo'] : value['availableTo'].toISOString(),
-    executionState: value['executionState'],
-    doseSummary: value['doseSummary'],
-    safetyState: value['safetyState'],
-    nextAction: value['nextAction'],
-    sortAt: value['sortAt'] == null ? value['sortAt'] : value['sortAt'].toISOString(),
-  };
+    return {
+
+        'sessionId': value['sessionId'],
+        'title': value['title'],
+        'expectedDurationMinutes': value['expectedDurationMinutes'],
+        'scheduledDate': value['scheduledDate'] == null ? value['scheduledDate'] : value['scheduledDate'].toISOString().substring(0,10),
+        'availableFrom': value['availableFrom'] == null ? value['availableFrom'] : value['availableFrom'].toISOString(),
+        'availableTo': value['availableTo'] == null ? value['availableTo'] : value['availableTo'].toISOString(),
+        'executionState': value['executionState'],
+        'doseSummary': value['doseSummary'],
+        'safetyState': value['safetyState'],
+        'nextAction': value['nextAction'],
+        'sortAt': value['sortAt'] == null ? value['sortAt'] : value['sortAt'].toISOString(),
+    };
 }

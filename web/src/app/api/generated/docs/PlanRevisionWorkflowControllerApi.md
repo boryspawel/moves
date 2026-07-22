@@ -2,12 +2,14 @@
 
 All URIs are relative to *http://localhost*
 
-| Method                                                              | HTTP request                                                                             | Description                                               |
-| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| [**acknowledge**](PlanRevisionWorkflowControllerApi.md#acknowledge) | **POST** /api/v2/training-plans/revisions/{revisionId}/workflow/warning-acknowledgements | Acknowledge warning factors from the current assessment   |
-| [**activate**](PlanRevisionWorkflowControllerApi.md#activate)       | **POST** /api/v2/training-plans/revisions/{revisionId}/workflow/activation               | Activate a validated plan revision                        |
-| [**status**](PlanRevisionWorkflowControllerApi.md#status)           | **POST** /api/v2/training-plans/revisions/{revisionId}/workflow/status                   | Read plan revision workflow status and current assessment |
-| [**validate**](PlanRevisionWorkflowControllerApi.md#validate)       | **POST** /api/v2/training-plans/revisions/{revisionId}/workflow/validation               | Validate load and safety for a plan revision              |
+| Method | HTTP request | Description |
+|------------- | ------------- | -------------|
+| [**acknowledge**](PlanRevisionWorkflowControllerApi.md#acknowledge) | **POST** /api/v2/training-plans/revisions/{revisionId}/workflow/warning-acknowledgements | Acknowledge warning factors from the current assessment |
+| [**activate**](PlanRevisionWorkflowControllerApi.md#activate) | **POST** /api/v2/training-plans/revisions/{revisionId}/workflow/activation | Activate a validated plan revision |
+| [**status**](PlanRevisionWorkflowControllerApi.md#status) | **POST** /api/v2/training-plans/revisions/{revisionId}/workflow/status | Read plan revision workflow status and current assessment |
+| [**validate**](PlanRevisionWorkflowControllerApi.md#validate) | **POST** /api/v2/training-plans/revisions/{revisionId}/workflow/validation | Validate load and safety for a plan revision |
+
+
 
 ## acknowledge
 
@@ -51,10 +53,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                          | Type                                                      | Description | Notes                     |
-| ----------------------------- | --------------------------------------------------------- | ----------- | ------------------------- |
-| **revisionId**                | `string`                                                  |             | [Defaults to `undefined`] |
-| **acknowledgeWarningCommand** | [AcknowledgeWarningCommand](AcknowledgeWarningCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **revisionId** | `string` |  | [Defaults to `undefined`] |
+| **acknowledgeWarningCommand** | [AcknowledgeWarningCommand](AcknowledgeWarningCommand.md) |  | |
 
 ### Return type
 
@@ -69,13 +72,14 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## activate
 
@@ -121,11 +125,12 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                        | Type                                                  | Description | Notes                     |
-| --------------------------- | ----------------------------------------------------- | ----------- | ------------------------- |
-| **revisionId**              | `string`                                              |             | [Defaults to `undefined`] |
-| **idempotencyKey**          | `string`                                              |             | [Defaults to `undefined`] |
-| **activateWorkflowCommand** | [ActivateWorkflowCommand](ActivateWorkflowCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **revisionId** | `string` |  | [Defaults to `undefined`] |
+| **idempotencyKey** | `string` |  | [Defaults to `undefined`] |
+| **activateWorkflowCommand** | [ActivateWorkflowCommand](ActivateWorkflowCommand.md) |  | |
 
 ### Return type
 
@@ -140,13 +145,14 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## status
 
@@ -190,10 +196,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                        | Type                                                  | Description | Notes                     |
-| --------------------------- | ----------------------------------------------------- | ----------- | ------------------------- |
-| **revisionId**              | `string`                                              |             | [Defaults to `undefined`] |
-| **activateWorkflowCommand** | [ActivateWorkflowCommand](ActivateWorkflowCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **revisionId** | `string` |  | [Defaults to `undefined`] |
+| **activateWorkflowCommand** | [ActivateWorkflowCommand](ActivateWorkflowCommand.md) |  | |
 
 ### Return type
 
@@ -208,13 +215,14 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## validate
 
@@ -258,10 +266,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                        | Type                                                  | Description | Notes                     |
-| --------------------------- | ----------------------------------------------------- | ----------- | ------------------------- |
-| **revisionId**              | `string`                                              |             | [Defaults to `undefined`] |
-| **validateWorkflowCommand** | [ValidateWorkflowCommand](ValidateWorkflowCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **revisionId** | `string` |  | [Defaults to `undefined`] |
+| **validateWorkflowCommand** | [ValidateWorkflowCommand](ValidateWorkflowCommand.md) |  | |
 
 ### Return type
 
@@ -276,10 +285,10 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)

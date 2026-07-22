@@ -2,13 +2,17 @@
 
 All URIs are relative to *http://localhost*
 
-| Method                                              | HTTP request                                                       | Description |
-| --------------------------------------------------- | ------------------------------------------------------------------ | ----------- |
-| [**preview**](LoadAnalysisControllerApi.md#preview) | **GET** /api/v1/training-plans/revisions/{revisionId}/load-preview |             |
+| Method | HTTP request | Description |
+|------------- | ------------- | -------------|
+| [**preview**](LoadAnalysisControllerApi.md#preview) | **GET** /api/v1/training-plans/revisions/{revisionId}/load-preview |  |
+
+
 
 ## preview
 
 > LoadProfile preview(revisionId, algorithmVersion, configurationVersion)
+
+
 
 ### Example
 
@@ -46,11 +50,12 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                     | Type     | Description | Notes                                           |
-| ------------------------ | -------- | ----------- | ----------------------------------------------- |
-| **revisionId**           | `string` |             | [Defaults to `undefined`]                       |
-| **algorithmVersion**     | `string` |             | [Optional] [Defaults to `&#39;LOAD_V1&#39;`]    |
-| **configurationVersion** | `string` |             | [Optional] [Defaults to `&#39;DEFAULT_V1&#39;`] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **revisionId** | `string` |  | [Defaults to `undefined`] |
+| **algorithmVersion** | `string` |  | [Optional] [Defaults to `&#39;LOAD_V1&#39;`] |
+| **configurationVersion** | `string` |  | [Optional] [Defaults to `&#39;DEFAULT_V1&#39;`] |
 
 ### Return type
 
@@ -65,10 +70,10 @@ No authorization required
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)

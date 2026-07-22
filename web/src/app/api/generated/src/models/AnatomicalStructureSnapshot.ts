@@ -19,176 +19,167 @@ import { mapValues } from '../runtime';
  * @interface AnatomicalStructureSnapshot
  */
 export interface AnatomicalStructureSnapshot {
-  /**
-   *
-   * @type {string}
-   * @memberof AnatomicalStructureSnapshot
-   */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AnatomicalStructureSnapshot
-   */
-  code?: string;
-  /**
-   *
-   * @type {AnatomicalStructureSnapshotTypeEnum}
-   * @memberof AnatomicalStructureSnapshot
-   */
-  type?: AnatomicalStructureSnapshotTypeEnum;
-  /**
-   *
-   * @type {string}
-   * @memberof AnatomicalStructureSnapshot
-   */
-  displayName?: string;
-  /**
-   *
-   * @type {AnatomicalStructureSnapshotSidePolicyEnum}
-   * @memberof AnatomicalStructureSnapshot
-   */
-  sidePolicy?: AnatomicalStructureSnapshotSidePolicyEnum;
-  /**
-   *
-   * @type {AnatomicalStructureSnapshotStatusEnum}
-   * @memberof AnatomicalStructureSnapshot
-   */
-  status?: AnatomicalStructureSnapshotStatusEnum;
-  /**
-   *
-   * @type {string}
-   * @memberof AnatomicalStructureSnapshot
-   */
-  externalOntology?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AnatomicalStructureSnapshot
-   */
-  externalOntologyId?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof AnatomicalStructureSnapshot
-   */
-  taxonomyVersion?: number;
-  /**
-   *
-   * @type {Date}
-   * @memberof AnatomicalStructureSnapshot
-   */
-  createdAt?: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof AnatomicalStructureSnapshot
-   */
-  publishedAt?: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof AnatomicalStructureSnapshot
-   */
-  withdrawnAt?: Date;
+    /**
+     *
+     * @type {string}
+     * @memberof AnatomicalStructureSnapshot
+     */
+    id?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof AnatomicalStructureSnapshot
+     */
+    code?: string;
+    /**
+     *
+     * @type {AnatomicalStructureSnapshotTypeEnum}
+     * @memberof AnatomicalStructureSnapshot
+     */
+    type?: AnatomicalStructureSnapshotTypeEnum;
+    /**
+     *
+     * @type {string}
+     * @memberof AnatomicalStructureSnapshot
+     */
+    displayName?: string;
+    /**
+     *
+     * @type {AnatomicalStructureSnapshotSidePolicyEnum}
+     * @memberof AnatomicalStructureSnapshot
+     */
+    sidePolicy?: AnatomicalStructureSnapshotSidePolicyEnum;
+    /**
+     *
+     * @type {AnatomicalStructureSnapshotStatusEnum}
+     * @memberof AnatomicalStructureSnapshot
+     */
+    status?: AnatomicalStructureSnapshotStatusEnum;
+    /**
+     *
+     * @type {string}
+     * @memberof AnatomicalStructureSnapshot
+     */
+    externalOntology?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof AnatomicalStructureSnapshot
+     */
+    externalOntologyId?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof AnatomicalStructureSnapshot
+     */
+    taxonomyVersion?: number;
+    /**
+     *
+     * @type {Date}
+     * @memberof AnatomicalStructureSnapshot
+     */
+    createdAt?: Date;
+    /**
+     *
+     * @type {Date}
+     * @memberof AnatomicalStructureSnapshot
+     */
+    publishedAt?: Date;
+    /**
+     *
+     * @type {Date}
+     * @memberof AnatomicalStructureSnapshot
+     */
+    withdrawnAt?: Date;
 }
+
 
 /**
  * @export
  */
 export const AnatomicalStructureSnapshotTypeEnum = {
-  BodyRegion: 'BODY_REGION',
-  MuscleGroup: 'MUSCLE_GROUP',
-  Muscle: 'MUSCLE',
-  TendonGroup: 'TENDON_GROUP',
-  Joint: 'JOINT',
+    BodyRegion: 'BODY_REGION',
+    MuscleGroup: 'MUSCLE_GROUP',
+    Muscle: 'MUSCLE',
+    TendonGroup: 'TENDON_GROUP',
+    Joint: 'JOINT'
 } as const;
-export type AnatomicalStructureSnapshotTypeEnum =
-  (typeof AnatomicalStructureSnapshotTypeEnum)[keyof typeof AnatomicalStructureSnapshotTypeEnum];
+export type AnatomicalStructureSnapshotTypeEnum = typeof AnatomicalStructureSnapshotTypeEnum[keyof typeof AnatomicalStructureSnapshotTypeEnum];
 
 /**
  * @export
  */
 export const AnatomicalStructureSnapshotSidePolicyEnum = {
-  None: 'NONE',
-  LeftRight: 'LEFT_RIGHT',
+    None: 'NONE',
+    LeftRight: 'LEFT_RIGHT'
 } as const;
-export type AnatomicalStructureSnapshotSidePolicyEnum =
-  (typeof AnatomicalStructureSnapshotSidePolicyEnum)[keyof typeof AnatomicalStructureSnapshotSidePolicyEnum];
+export type AnatomicalStructureSnapshotSidePolicyEnum = typeof AnatomicalStructureSnapshotSidePolicyEnum[keyof typeof AnatomicalStructureSnapshotSidePolicyEnum];
 
 /**
  * @export
  */
 export const AnatomicalStructureSnapshotStatusEnum = {
-  Draft: 'DRAFT',
-  Published: 'PUBLISHED',
-  Withdrawn: 'WITHDRAWN',
+    Draft: 'DRAFT',
+    Published: 'PUBLISHED',
+    Withdrawn: 'WITHDRAWN'
 } as const;
-export type AnatomicalStructureSnapshotStatusEnum =
-  (typeof AnatomicalStructureSnapshotStatusEnum)[keyof typeof AnatomicalStructureSnapshotStatusEnum];
+export type AnatomicalStructureSnapshotStatusEnum = typeof AnatomicalStructureSnapshotStatusEnum[keyof typeof AnatomicalStructureSnapshotStatusEnum];
+
 
 /**
  * Check if a given object implements the AnatomicalStructureSnapshot interface.
  */
-export function instanceOfAnatomicalStructureSnapshot(
-  value: object,
-): value is AnatomicalStructureSnapshot {
-  return true;
+export function instanceOfAnatomicalStructureSnapshot(value: object): value is AnatomicalStructureSnapshot {
+    return true;
 }
 
 export function AnatomicalStructureSnapshotFromJSON(json: any): AnatomicalStructureSnapshot {
-  return AnatomicalStructureSnapshotFromJSONTyped(json, false);
+    return AnatomicalStructureSnapshotFromJSONTyped(json, false);
 }
 
-export function AnatomicalStructureSnapshotFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): AnatomicalStructureSnapshot {
-  if (json == null) {
-    return json;
-  }
-  return {
-    id: json['id'] == null ? undefined : json['id'],
-    code: json['code'] == null ? undefined : json['code'],
-    type: json['type'] == null ? undefined : json['type'],
-    displayName: json['displayName'] == null ? undefined : json['displayName'],
-    sidePolicy: json['sidePolicy'] == null ? undefined : json['sidePolicy'],
-    status: json['status'] == null ? undefined : json['status'],
-    externalOntology: json['externalOntology'] == null ? undefined : json['externalOntology'],
-    externalOntologyId: json['externalOntologyId'] == null ? undefined : json['externalOntologyId'],
-    taxonomyVersion: json['taxonomyVersion'] == null ? undefined : json['taxonomyVersion'],
-    createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
-    publishedAt: json['publishedAt'] == null ? undefined : new Date(json['publishedAt']),
-    withdrawnAt: json['withdrawnAt'] == null ? undefined : new Date(json['withdrawnAt']),
-  };
+export function AnatomicalStructureSnapshotFromJSONTyped(json: any, ignoreDiscriminator: boolean): AnatomicalStructureSnapshot {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'id': json['id'] == null ? undefined : json['id'],
+        'code': json['code'] == null ? undefined : json['code'],
+        'type': json['type'] == null ? undefined : json['type'],
+        'displayName': json['displayName'] == null ? undefined : json['displayName'],
+        'sidePolicy': json['sidePolicy'] == null ? undefined : json['sidePolicy'],
+        'status': json['status'] == null ? undefined : json['status'],
+        'externalOntology': json['externalOntology'] == null ? undefined : json['externalOntology'],
+        'externalOntologyId': json['externalOntologyId'] == null ? undefined : json['externalOntologyId'],
+        'taxonomyVersion': json['taxonomyVersion'] == null ? undefined : json['taxonomyVersion'],
+        'createdAt': json['createdAt'] == null ? undefined : (new Date(json['createdAt'])),
+        'publishedAt': json['publishedAt'] == null ? undefined : (new Date(json['publishedAt'])),
+        'withdrawnAt': json['withdrawnAt'] == null ? undefined : (new Date(json['withdrawnAt'])),
+    };
 }
 
 export function AnatomicalStructureSnapshotToJSON(json: any): AnatomicalStructureSnapshot {
-  return AnatomicalStructureSnapshotToJSONTyped(json, false);
+    return AnatomicalStructureSnapshotToJSONTyped(json, false);
 }
 
-export function AnatomicalStructureSnapshotToJSONTyped(
-  value?: AnatomicalStructureSnapshot | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function AnatomicalStructureSnapshotToJSONTyped(value?: AnatomicalStructureSnapshot | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    id: value['id'],
-    code: value['code'],
-    type: value['type'],
-    displayName: value['displayName'],
-    sidePolicy: value['sidePolicy'],
-    status: value['status'],
-    externalOntology: value['externalOntology'],
-    externalOntologyId: value['externalOntologyId'],
-    taxonomyVersion: value['taxonomyVersion'],
-    createdAt: value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
-    publishedAt:
-      value['publishedAt'] == null ? value['publishedAt'] : value['publishedAt'].toISOString(),
-    withdrawnAt:
-      value['withdrawnAt'] == null ? value['withdrawnAt'] : value['withdrawnAt'].toISOString(),
-  };
+    return {
+
+        'id': value['id'],
+        'code': value['code'],
+        'type': value['type'],
+        'displayName': value['displayName'],
+        'sidePolicy': value['sidePolicy'],
+        'status': value['status'],
+        'externalOntology': value['externalOntology'],
+        'externalOntologyId': value['externalOntologyId'],
+        'taxonomyVersion': value['taxonomyVersion'],
+        'createdAt': value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
+        'publishedAt': value['publishedAt'] == null ? value['publishedAt'] : value['publishedAt'].toISOString(),
+        'withdrawnAt': value['withdrawnAt'] == null ? value['withdrawnAt'] : value['withdrawnAt'].toISOString(),
+    };
 }

@@ -14,52 +14,51 @@
 
 import * as runtime from '../runtime';
 import {
-  type TodayAgendaView,
-  TodayAgendaViewFromJSON,
-  TodayAgendaViewToJSON,
+    type TodayAgendaView,
+    TodayAgendaViewFromJSON,
+    TodayAgendaViewToJSON,
 } from '../models/TodayAgendaView';
 
 /**
  *
  */
 export class TodayAgendaControllerApi extends runtime.BaseAPI {
-  /**
-   * Creates request options for today without sending the request
-   */
-  async todayRequestOpts(): Promise<runtime.RequestOpts> {
-    const queryParameters: any = {};
 
-    const headerParameters: runtime.HTTPHeaders = {};
+    /**
+     * Creates request options for today without sending the request
+     */
+    async todayRequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
 
-    let urlPath = `/api/v1/participant/today`;
+        const headerParameters: runtime.HTTPHeaders = {};
 
-    return {
-      path: urlPath,
-      method: 'GET',
-      headers: headerParameters,
-      query: queryParameters,
-    };
-  }
 
-  /**
-   * Get the signed-in participant\'s daily training agenda
-   */
-  async todayRaw(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<TodayAgendaView>> {
-    const requestOptions = await this.todayRequestOpts();
-    const response = await this.request(requestOptions, initOverrides);
+        let urlPath = `/api/v1/participant/today`;
 
-    return new runtime.JSONApiResponse(response, (jsonValue) => TodayAgendaViewFromJSON(jsonValue));
-  }
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
 
-  /**
-   * Get the signed-in participant\'s daily training agenda
-   */
-  async today(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<TodayAgendaView> {
-    const response = await this.todayRaw(initOverrides);
-    return await response.value();
-  }
+    /**
+     * Get the signed-in participant\'s daily training agenda
+     */
+    async todayRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TodayAgendaView>> {
+        const requestOptions = await this.todayRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => TodayAgendaViewFromJSON(jsonValue));
+    }
+
+    /**
+     * Get the signed-in participant\'s daily training agenda
+     */
+    async today(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TodayAgendaView> {
+        const response = await this.todayRaw(initOverrides);
+        return await response.value();
+    }
+
 }

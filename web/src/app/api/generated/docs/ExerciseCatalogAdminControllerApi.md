@@ -2,26 +2,30 @@
 
 All URIs are relative to *http://localhost*
 
-| Method                                                                                            | HTTP request                                                              | Description |
-| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------- |
-| [**addContribution**](ExerciseCatalogAdminControllerApi.md#addcontribution)                       | **POST** /api/v1/admin/exercises/versions/{versionId}/contributions       |             |
-| [**addEvidence**](ExerciseCatalogAdminControllerApi.md#addevidence)                               | **POST** /api/v1/admin/exercises/versions/{versionId}/evidence            |             |
-| [**approve**](ExerciseCatalogAdminControllerApi.md#approve)                                       | **POST** /api/v1/admin/exercises/versions/{versionId}/approve             |             |
-| [**create**](ExerciseCatalogAdminControllerApi.md#createoperation)                                | **POST** /api/v1/admin/exercises                                          |             |
-| [**createVersion**](ExerciseCatalogAdminControllerApi.md#createversion)                           | **POST** /api/v1/admin/exercises/{exerciseId}/versions                    |             |
-| [**editor1**](ExerciseCatalogAdminControllerApi.md#editor1)                                       | **GET** /api/v1/admin/exercises/versions/{versionId}/editor               |             |
-| [**legacyContraindications**](ExerciseCatalogAdminControllerApi.md#legacycontraindications)       | **GET** /api/v1/admin/exercises/legacy/contraindications                  |             |
-| [**publish**](ExerciseCatalogAdminControllerApi.md#publish)                                       | **POST** /api/v1/admin/exercises/versions/{versionId}/publish             |             |
-| [**replaceLoadCharacteristics**](ExerciseCatalogAdminControllerApi.md#replaceloadcharacteristics) | **PUT** /api/v1/admin/exercises/versions/{versionId}/load-characteristics |             |
-| [**requestChanges**](ExerciseCatalogAdminControllerApi.md#requestchanges)                         | **POST** /api/v1/admin/exercises/versions/{versionId}/request-changes     |             |
-| [**submitReview**](ExerciseCatalogAdminControllerApi.md#submitreview)                             | **POST** /api/v1/admin/exercises/versions/{versionId}/submit-review       |             |
-| [**update**](ExerciseCatalogAdminControllerApi.md#update)                                         | **PUT** /api/v1/admin/exercises/versions/{versionId}                      |             |
-| [**versions**](ExerciseCatalogAdminControllerApi.md#versions)                                     | **GET** /api/v1/admin/exercises/{exerciseId}/versions                     |             |
-| [**withdraw**](ExerciseCatalogAdminControllerApi.md#withdraw)                                     | **POST** /api/v1/admin/exercises/versions/{versionId}/withdraw            |             |
+| Method | HTTP request | Description |
+|------------- | ------------- | -------------|
+| [**addContribution**](ExerciseCatalogAdminControllerApi.md#addcontribution) | **POST** /api/v1/admin/exercises/versions/{versionId}/contributions |  |
+| [**addEvidence**](ExerciseCatalogAdminControllerApi.md#addevidence) | **POST** /api/v1/admin/exercises/versions/{versionId}/evidence |  |
+| [**approve**](ExerciseCatalogAdminControllerApi.md#approve) | **POST** /api/v1/admin/exercises/versions/{versionId}/approve |  |
+| [**create**](ExerciseCatalogAdminControllerApi.md#createoperation) | **POST** /api/v1/admin/exercises |  |
+| [**createVersion**](ExerciseCatalogAdminControllerApi.md#createversion) | **POST** /api/v1/admin/exercises/{exerciseId}/versions |  |
+| [**editor1**](ExerciseCatalogAdminControllerApi.md#editor1) | **GET** /api/v1/admin/exercises/versions/{versionId}/editor |  |
+| [**legacyContraindications**](ExerciseCatalogAdminControllerApi.md#legacycontraindications) | **GET** /api/v1/admin/exercises/legacy/contraindications |  |
+| [**publish**](ExerciseCatalogAdminControllerApi.md#publish) | **POST** /api/v1/admin/exercises/versions/{versionId}/publish |  |
+| [**replaceLoadCharacteristics**](ExerciseCatalogAdminControllerApi.md#replaceloadcharacteristics) | **PUT** /api/v1/admin/exercises/versions/{versionId}/load-characteristics |  |
+| [**requestChanges**](ExerciseCatalogAdminControllerApi.md#requestchanges) | **POST** /api/v1/admin/exercises/versions/{versionId}/request-changes |  |
+| [**submitReview**](ExerciseCatalogAdminControllerApi.md#submitreview) | **POST** /api/v1/admin/exercises/versions/{versionId}/submit-review |  |
+| [**update**](ExerciseCatalogAdminControllerApi.md#update) | **PUT** /api/v1/admin/exercises/versions/{versionId} |  |
+| [**versions**](ExerciseCatalogAdminControllerApi.md#versions) | **GET** /api/v1/admin/exercises/{exerciseId}/versions |  |
+| [**withdraw**](ExerciseCatalogAdminControllerApi.md#withdraw) | **POST** /api/v1/admin/exercises/versions/{versionId}/withdraw |  |
+
+
 
 ## addContribution
 
 > ContributionView addContribution(versionId, contributionCommand)
+
+
 
 ### Example
 
@@ -59,10 +63,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                    | Type                                          | Description | Notes                     |
-| ----------------------- | --------------------------------------------- | ----------- | ------------------------- |
-| **versionId**           | `string`                                      |             | [Defaults to `undefined`] |
-| **contributionCommand** | [ContributionCommand](ContributionCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **versionId** | `string` |  | [Defaults to `undefined`] |
+| **contributionCommand** | [ContributionCommand](ContributionCommand.md) |  | |
 
 ### Return type
 
@@ -77,17 +82,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## addEvidence
 
 > EvidenceView addEvidence(versionId, evidenceCommand)
+
+
 
 ### Example
 
@@ -125,10 +133,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                | Type                                  | Description | Notes                     |
-| ------------------- | ------------------------------------- | ----------- | ------------------------- |
-| **versionId**       | `string`                              |             | [Defaults to `undefined`] |
-| **evidenceCommand** | [EvidenceCommand](EvidenceCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **versionId** | `string` |  | [Defaults to `undefined`] |
+| **evidenceCommand** | [EvidenceCommand](EvidenceCommand.md) |  | |
 
 ### Return type
 
@@ -143,17 +152,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## approve
 
 > ReviewResult approve(versionId)
+
+
 
 ### Example
 
@@ -189,9 +201,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name          | Type     | Description | Notes                     |
-| ------------- | -------- | ----------- | ------------------------- |
-| **versionId** | `string` |             | [Defaults to `undefined`] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **versionId** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -206,17 +219,20 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## create
 
 > VersionView create(createRequest)
+
+
 
 ### Example
 
@@ -252,9 +268,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name              | Type                              | Description | Notes |
-| ----------------- | --------------------------------- | ----------- | ----- |
-| **createRequest** | [CreateRequest](CreateRequest.md) |             |       |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **createRequest** | [CreateRequest](CreateRequest.md) |  | |
 
 ### Return type
 
@@ -269,17 +286,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## createVersion
 
 > VersionView createVersion(exerciseId, versionCommand)
+
+
 
 ### Example
 
@@ -317,10 +337,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name               | Type                                | Description | Notes                     |
-| ------------------ | ----------------------------------- | ----------- | ------------------------- |
-| **exerciseId**     | `string`                            |             | [Defaults to `undefined`] |
-| **versionCommand** | [VersionCommand](VersionCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **exerciseId** | `string` |  | [Defaults to `undefined`] |
+| **versionCommand** | [VersionCommand](VersionCommand.md) |  | |
 
 ### Return type
 
@@ -335,17 +356,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## editor1
 
 > EditorView editor1(versionId)
+
+
 
 ### Example
 
@@ -381,9 +405,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name          | Type     | Description | Notes                     |
-| ------------- | -------- | ----------- | ------------------------- |
-| **versionId** | `string` |             | [Defaults to `undefined`] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **versionId** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -398,27 +423,34 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## legacyContraindications
 
 > Array&lt;LegacyContraindicationReportItem&gt; legacyContraindications()
 
+
+
 ### Example
 
 ```ts
-import { Configuration, ExerciseCatalogAdminControllerApi } from '@moves/api-client';
+import {
+  Configuration,
+  ExerciseCatalogAdminControllerApi,
+} from '@moves/api-client';
 import type { LegacyContraindicationsRequest } from '@moves/api-client';
 
 async function example() {
-  console.log('🚀 Testing @moves/api-client SDK...');
-  const config = new Configuration({});
+  console.log("🚀 Testing @moves/api-client SDK...");
+  const config = new Configuration({
+  });
   const api = new ExerciseCatalogAdminControllerApi(config);
 
   try {
@@ -450,17 +482,20 @@ This endpoint does not need any parameter.
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## publish
 
 > PublicationResult publish(versionId)
+
+
 
 ### Example
 
@@ -496,9 +531,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name          | Type     | Description | Notes                     |
-| ------------- | -------- | ----------- | ------------------------- |
-| **versionId** | `string` |             | [Defaults to `undefined`] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **versionId** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -513,17 +549,20 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## replaceLoadCharacteristics
 
 > EditorView replaceLoadCharacteristics(versionId, loadCharacteristicCommand)
+
+
 
 ### Example
 
@@ -561,10 +600,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                          | Type                               | Description | Notes                     |
-| ----------------------------- | ---------------------------------- | ----------- | ------------------------- |
-| **versionId**                 | `string`                           |             | [Defaults to `undefined`] |
-| **loadCharacteristicCommand** | `Array<LoadCharacteristicCommand>` |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **versionId** | `string` |  | [Defaults to `undefined`] |
+| **loadCharacteristicCommand** | `Array<LoadCharacteristicCommand>` |  | |
 
 ### Return type
 
@@ -579,17 +619,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## requestChanges
 
 > VersionView requestChanges(versionId)
+
+
 
 ### Example
 
@@ -625,9 +668,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name          | Type     | Description | Notes                     |
-| ------------- | -------- | ----------- | ------------------------- |
-| **versionId** | `string` |             | [Defaults to `undefined`] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **versionId** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -642,17 +686,20 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## submitReview
 
 > VersionView submitReview(versionId)
+
+
 
 ### Example
 
@@ -688,9 +735,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name          | Type     | Description | Notes                     |
-| ------------- | -------- | ----------- | ------------------------- |
-| **versionId** | `string` |             | [Defaults to `undefined`] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **versionId** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -705,17 +753,20 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## update
 
 > VersionView update(versionId, versionCommand)
+
+
 
 ### Example
 
@@ -753,10 +804,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name               | Type                                | Description | Notes                     |
-| ------------------ | ----------------------------------- | ----------- | ------------------------- |
-| **versionId**      | `string`                            |             | [Defaults to `undefined`] |
-| **versionCommand** | [VersionCommand](VersionCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **versionId** | `string` |  | [Defaults to `undefined`] |
+| **versionCommand** | [VersionCommand](VersionCommand.md) |  | |
 
 ### Return type
 
@@ -771,17 +823,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## versions
 
 > Array&lt;VersionView&gt; versions(exerciseId)
+
+
 
 ### Example
 
@@ -817,9 +872,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name           | Type     | Description | Notes                     |
-| -------------- | -------- | ----------- | ------------------------- |
-| **exerciseId** | `string` |             | [Defaults to `undefined`] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **exerciseId** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -834,17 +890,20 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## withdraw
 
 > VersionView withdraw(versionId)
+
+
 
 ### Example
 
@@ -880,9 +939,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name          | Type     | Description | Notes                     |
-| ------------- | -------- | ----------- | ------------------------- |
-| **versionId** | `string` |             | [Defaults to `undefined`] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **versionId** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -897,10 +957,10 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)

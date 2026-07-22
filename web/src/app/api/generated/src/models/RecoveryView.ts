@@ -19,135 +19,134 @@ import { mapValues } from '../runtime';
  * @interface RecoveryView
  */
 export interface RecoveryView {
-  /**
-   *
-   * @type {string}
-   * @memberof RecoveryView
-   */
-  episodeId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RecoveryView
-   */
-  state?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RecoveryView
-   */
-  messageCode?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RecoveryView
-   */
-  policyVersion?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof RecoveryView
-   */
-  openedAt?: Date;
-  /**
-   *
-   * @type {number}
-   * @memberof RecoveryView
-   */
-  gapDays?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof RecoveryView
-   */
-  targetSessionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RecoveryView
-   */
-  offerId?: string;
-  /**
-   *
-   * @type {Array<string>}
-   * @memberof RecoveryView
-   */
-  options?: Array<string>;
-  /**
-   *
-   * @type {string}
-   * @memberof RecoveryView
-   */
-  selectedPath?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RecoveryView
-   */
-  returnState?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof RecoveryView
-   */
-  version?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof RecoveryView
+     */
+    episodeId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof RecoveryView
+     */
+    state?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof RecoveryView
+     */
+    messageCode?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof RecoveryView
+     */
+    policyVersion?: string;
+    /**
+     *
+     * @type {Date}
+     * @memberof RecoveryView
+     */
+    openedAt?: Date;
+    /**
+     *
+     * @type {number}
+     * @memberof RecoveryView
+     */
+    gapDays?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof RecoveryView
+     */
+    targetSessionId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof RecoveryView
+     */
+    offerId?: string;
+    /**
+     *
+     * @type {Array<string>}
+     * @memberof RecoveryView
+     */
+    options?: Array<string>;
+    /**
+     *
+     * @type {string}
+     * @memberof RecoveryView
+     */
+    selectedPath?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof RecoveryView
+     */
+    returnState?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof RecoveryView
+     */
+    version?: number;
 }
 
 /**
  * Check if a given object implements the RecoveryView interface.
  */
 export function instanceOfRecoveryView(value: object): value is RecoveryView {
-  return true;
+    return true;
 }
 
 export function RecoveryViewFromJSON(json: any): RecoveryView {
-  return RecoveryViewFromJSONTyped(json, false);
+    return RecoveryViewFromJSONTyped(json, false);
 }
 
 export function RecoveryViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): RecoveryView {
-  if (json == null) {
-    return json;
-  }
-  return {
-    episodeId: json['episodeId'] == null ? undefined : json['episodeId'],
-    state: json['state'] == null ? undefined : json['state'],
-    messageCode: json['messageCode'] == null ? undefined : json['messageCode'],
-    policyVersion: json['policyVersion'] == null ? undefined : json['policyVersion'],
-    openedAt: json['openedAt'] == null ? undefined : new Date(json['openedAt']),
-    gapDays: json['gapDays'] == null ? undefined : json['gapDays'],
-    targetSessionId: json['targetSessionId'] == null ? undefined : json['targetSessionId'],
-    offerId: json['offerId'] == null ? undefined : json['offerId'],
-    options: json['options'] == null ? undefined : json['options'],
-    selectedPath: json['selectedPath'] == null ? undefined : json['selectedPath'],
-    returnState: json['returnState'] == null ? undefined : json['returnState'],
-    version: json['version'] == null ? undefined : json['version'],
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'episodeId': json['episodeId'] == null ? undefined : json['episodeId'],
+        'state': json['state'] == null ? undefined : json['state'],
+        'messageCode': json['messageCode'] == null ? undefined : json['messageCode'],
+        'policyVersion': json['policyVersion'] == null ? undefined : json['policyVersion'],
+        'openedAt': json['openedAt'] == null ? undefined : (new Date(json['openedAt'])),
+        'gapDays': json['gapDays'] == null ? undefined : json['gapDays'],
+        'targetSessionId': json['targetSessionId'] == null ? undefined : json['targetSessionId'],
+        'offerId': json['offerId'] == null ? undefined : json['offerId'],
+        'options': json['options'] == null ? undefined : json['options'],
+        'selectedPath': json['selectedPath'] == null ? undefined : json['selectedPath'],
+        'returnState': json['returnState'] == null ? undefined : json['returnState'],
+        'version': json['version'] == null ? undefined : json['version'],
+    };
 }
 
 export function RecoveryViewToJSON(json: any): RecoveryView {
-  return RecoveryViewToJSONTyped(json, false);
+    return RecoveryViewToJSONTyped(json, false);
 }
 
-export function RecoveryViewToJSONTyped(
-  value?: RecoveryView | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function RecoveryViewToJSONTyped(value?: RecoveryView | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    episodeId: value['episodeId'],
-    state: value['state'],
-    messageCode: value['messageCode'],
-    policyVersion: value['policyVersion'],
-    openedAt: value['openedAt'] == null ? value['openedAt'] : value['openedAt'].toISOString(),
-    gapDays: value['gapDays'],
-    targetSessionId: value['targetSessionId'],
-    offerId: value['offerId'],
-    options: value['options'],
-    selectedPath: value['selectedPath'],
-    returnState: value['returnState'],
-    version: value['version'],
-  };
+    return {
+
+        'episodeId': value['episodeId'],
+        'state': value['state'],
+        'messageCode': value['messageCode'],
+        'policyVersion': value['policyVersion'],
+        'openedAt': value['openedAt'] == null ? value['openedAt'] : value['openedAt'].toISOString(),
+        'gapDays': value['gapDays'],
+        'targetSessionId': value['targetSessionId'],
+        'offerId': value['offerId'],
+        'options': value['options'],
+        'selectedPath': value['selectedPath'],
+        'returnState': value['returnState'],
+        'version': value['version'],
+    };
 }

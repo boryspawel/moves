@@ -19,166 +19,163 @@ import { mapValues } from '../runtime';
  * @interface FactorSnapshot
  */
 export interface FactorSnapshot {
-  /**
-   *
-   * @type {string}
-   * @memberof FactorSnapshot
-   */
-  id?: string;
-  /**
-   *
-   * @type {FactorSnapshotResultEnum}
-   * @memberof FactorSnapshot
-   */
-  result?: FactorSnapshotResultEnum;
-  /**
-   *
-   * @type {string}
-   * @memberof FactorSnapshot
-   */
-  ruleCode?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof FactorSnapshot
-   */
-  targetRef?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof FactorSnapshot
-   */
-  channel?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof FactorSnapshot
-   */
-  observedLow?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof FactorSnapshot
-   */
-  observedHigh?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof FactorSnapshot
-   */
-  thresholdLow?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof FactorSnapshot
-   */
-  thresholdHigh?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof FactorSnapshot
-   */
-  unit?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof FactorSnapshot
-   */
-  explanationCode?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof FactorSnapshot
-   */
-  evidenceGrade?: string;
-  /**
-   *
-   * @type {boolean}
-   * @memberof FactorSnapshot
-   */
-  overridable?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof FactorSnapshot
-   */
-  activelyOverridden?: boolean;
+    /**
+     *
+     * @type {string}
+     * @memberof FactorSnapshot
+     */
+    id?: string;
+    /**
+     *
+     * @type {FactorSnapshotResultEnum}
+     * @memberof FactorSnapshot
+     */
+    result?: FactorSnapshotResultEnum;
+    /**
+     *
+     * @type {string}
+     * @memberof FactorSnapshot
+     */
+    ruleCode?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof FactorSnapshot
+     */
+    targetRef?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof FactorSnapshot
+     */
+    channel?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof FactorSnapshot
+     */
+    observedLow?: number;
+    /**
+     *
+     * @type {number}
+     * @memberof FactorSnapshot
+     */
+    observedHigh?: number;
+    /**
+     *
+     * @type {number}
+     * @memberof FactorSnapshot
+     */
+    thresholdLow?: number;
+    /**
+     *
+     * @type {number}
+     * @memberof FactorSnapshot
+     */
+    thresholdHigh?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof FactorSnapshot
+     */
+    unit?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof FactorSnapshot
+     */
+    explanationCode?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof FactorSnapshot
+     */
+    evidenceGrade?: string;
+    /**
+     *
+     * @type {boolean}
+     * @memberof FactorSnapshot
+     */
+    overridable?: boolean;
+    /**
+     *
+     * @type {boolean}
+     * @memberof FactorSnapshot
+     */
+    activelyOverridden?: boolean;
 }
+
 
 /**
  * @export
  */
 export const FactorSnapshotResultEnum = {
-  Pass: 'PASS',
-  Info: 'INFO',
-  Warning: 'WARNING',
-  HardBlock: 'HARD_BLOCK',
+    Pass: 'PASS',
+    Info: 'INFO',
+    Warning: 'WARNING',
+    HardBlock: 'HARD_BLOCK'
 } as const;
-export type FactorSnapshotResultEnum =
-  (typeof FactorSnapshotResultEnum)[keyof typeof FactorSnapshotResultEnum];
+export type FactorSnapshotResultEnum = typeof FactorSnapshotResultEnum[keyof typeof FactorSnapshotResultEnum];
+
 
 /**
  * Check if a given object implements the FactorSnapshot interface.
  */
 export function instanceOfFactorSnapshot(value: object): value is FactorSnapshot {
-  return true;
+    return true;
 }
 
 export function FactorSnapshotFromJSON(json: any): FactorSnapshot {
-  return FactorSnapshotFromJSONTyped(json, false);
+    return FactorSnapshotFromJSONTyped(json, false);
 }
 
-export function FactorSnapshotFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): FactorSnapshot {
-  if (json == null) {
-    return json;
-  }
-  return {
-    id: json['id'] == null ? undefined : json['id'],
-    result: json['result'] == null ? undefined : json['result'],
-    ruleCode: json['ruleCode'] == null ? undefined : json['ruleCode'],
-    targetRef: json['targetRef'] == null ? undefined : json['targetRef'],
-    channel: json['channel'] == null ? undefined : json['channel'],
-    observedLow: json['observedLow'] == null ? undefined : json['observedLow'],
-    observedHigh: json['observedHigh'] == null ? undefined : json['observedHigh'],
-    thresholdLow: json['thresholdLow'] == null ? undefined : json['thresholdLow'],
-    thresholdHigh: json['thresholdHigh'] == null ? undefined : json['thresholdHigh'],
-    unit: json['unit'] == null ? undefined : json['unit'],
-    explanationCode: json['explanationCode'] == null ? undefined : json['explanationCode'],
-    evidenceGrade: json['evidenceGrade'] == null ? undefined : json['evidenceGrade'],
-    overridable: json['overridable'] == null ? undefined : json['overridable'],
-    activelyOverridden: json['activelyOverridden'] == null ? undefined : json['activelyOverridden'],
-  };
+export function FactorSnapshotFromJSONTyped(json: any, ignoreDiscriminator: boolean): FactorSnapshot {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'id': json['id'] == null ? undefined : json['id'],
+        'result': json['result'] == null ? undefined : json['result'],
+        'ruleCode': json['ruleCode'] == null ? undefined : json['ruleCode'],
+        'targetRef': json['targetRef'] == null ? undefined : json['targetRef'],
+        'channel': json['channel'] == null ? undefined : json['channel'],
+        'observedLow': json['observedLow'] == null ? undefined : json['observedLow'],
+        'observedHigh': json['observedHigh'] == null ? undefined : json['observedHigh'],
+        'thresholdLow': json['thresholdLow'] == null ? undefined : json['thresholdLow'],
+        'thresholdHigh': json['thresholdHigh'] == null ? undefined : json['thresholdHigh'],
+        'unit': json['unit'] == null ? undefined : json['unit'],
+        'explanationCode': json['explanationCode'] == null ? undefined : json['explanationCode'],
+        'evidenceGrade': json['evidenceGrade'] == null ? undefined : json['evidenceGrade'],
+        'overridable': json['overridable'] == null ? undefined : json['overridable'],
+        'activelyOverridden': json['activelyOverridden'] == null ? undefined : json['activelyOverridden'],
+    };
 }
 
 export function FactorSnapshotToJSON(json: any): FactorSnapshot {
-  return FactorSnapshotToJSONTyped(json, false);
+    return FactorSnapshotToJSONTyped(json, false);
 }
 
-export function FactorSnapshotToJSONTyped(
-  value?: FactorSnapshot | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function FactorSnapshotToJSONTyped(value?: FactorSnapshot | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    id: value['id'],
-    result: value['result'],
-    ruleCode: value['ruleCode'],
-    targetRef: value['targetRef'],
-    channel: value['channel'],
-    observedLow: value['observedLow'],
-    observedHigh: value['observedHigh'],
-    thresholdLow: value['thresholdLow'],
-    thresholdHigh: value['thresholdHigh'],
-    unit: value['unit'],
-    explanationCode: value['explanationCode'],
-    evidenceGrade: value['evidenceGrade'],
-    overridable: value['overridable'],
-    activelyOverridden: value['activelyOverridden'],
-  };
+    return {
+
+        'id': value['id'],
+        'result': value['result'],
+        'ruleCode': value['ruleCode'],
+        'targetRef': value['targetRef'],
+        'channel': value['channel'],
+        'observedLow': value['observedLow'],
+        'observedHigh': value['observedHigh'],
+        'thresholdLow': value['thresholdLow'],
+        'thresholdHigh': value['thresholdHigh'],
+        'unit': value['unit'],
+        'explanationCode': value['explanationCode'],
+        'evidenceGrade': value['evidenceGrade'],
+        'overridable': value['overridable'],
+        'activelyOverridden': value['activelyOverridden'],
+    };
 }

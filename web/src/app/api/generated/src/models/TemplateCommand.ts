@@ -19,74 +19,70 @@ import { mapValues } from '../runtime';
  * @interface TemplateCommand
  */
 export interface TemplateCommand {
-  /**
-   *
-   * @type {string}
-   * @memberof TemplateCommand
-   */
-  code?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof TemplateCommand
-   */
-  versionNumber?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof TemplateCommand
-   */
-  contentReference?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof TemplateCommand
-   */
-  legalBasis?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof TemplateCommand
+     */
+    code?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof TemplateCommand
+     */
+    versionNumber?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof TemplateCommand
+     */
+    contentReference?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof TemplateCommand
+     */
+    legalBasis?: string;
 }
 
 /**
  * Check if a given object implements the TemplateCommand interface.
  */
 export function instanceOfTemplateCommand(value: object): value is TemplateCommand {
-  return true;
+    return true;
 }
 
 export function TemplateCommandFromJSON(json: any): TemplateCommand {
-  return TemplateCommandFromJSONTyped(json, false);
+    return TemplateCommandFromJSONTyped(json, false);
 }
 
-export function TemplateCommandFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): TemplateCommand {
-  if (json == null) {
-    return json;
-  }
-  return {
-    code: json['code'] == null ? undefined : json['code'],
-    versionNumber: json['versionNumber'] == null ? undefined : json['versionNumber'],
-    contentReference: json['contentReference'] == null ? undefined : json['contentReference'],
-    legalBasis: json['legalBasis'] == null ? undefined : json['legalBasis'],
-  };
+export function TemplateCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): TemplateCommand {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'code': json['code'] == null ? undefined : json['code'],
+        'versionNumber': json['versionNumber'] == null ? undefined : json['versionNumber'],
+        'contentReference': json['contentReference'] == null ? undefined : json['contentReference'],
+        'legalBasis': json['legalBasis'] == null ? undefined : json['legalBasis'],
+    };
 }
 
 export function TemplateCommandToJSON(json: any): TemplateCommand {
-  return TemplateCommandToJSONTyped(json, false);
+    return TemplateCommandToJSONTyped(json, false);
 }
 
-export function TemplateCommandToJSONTyped(
-  value?: TemplateCommand | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function TemplateCommandToJSONTyped(value?: TemplateCommand | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    code: value['code'],
-    versionNumber: value['versionNumber'],
-    contentReference: value['contentReference'],
-    legalBasis: value['legalBasis'],
-  };
+    return {
+
+        'code': value['code'],
+        'versionNumber': value['versionNumber'],
+        'contentReference': value['contentReference'],
+        'legalBasis': value['legalBasis'],
+    };
 }

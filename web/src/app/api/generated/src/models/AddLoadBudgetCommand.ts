@@ -19,100 +19,97 @@ import { mapValues } from '../runtime';
  * @interface AddLoadBudgetCommand
  */
 export interface AddLoadBudgetCommand {
-  /**
-   *
-   * @type {number}
-   * @memberof AddLoadBudgetCommand
-   */
-  expectedVersion?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof AddLoadBudgetCommand
-   */
-  channel?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof AddLoadBudgetCommand
-   */
-  low?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof AddLoadBudgetCommand
-   */
-  high?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof AddLoadBudgetCommand
-   */
-  unit?: string;
-  /**
-   *
-   * @type {AddLoadBudgetCommandActionEnum}
-   * @memberof AddLoadBudgetCommand
-   */
-  action?: AddLoadBudgetCommandActionEnum;
+    /**
+     *
+     * @type {number}
+     * @memberof AddLoadBudgetCommand
+     */
+    expectedVersion?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof AddLoadBudgetCommand
+     */
+    channel?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof AddLoadBudgetCommand
+     */
+    low?: number;
+    /**
+     *
+     * @type {number}
+     * @memberof AddLoadBudgetCommand
+     */
+    high?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof AddLoadBudgetCommand
+     */
+    unit?: string;
+    /**
+     *
+     * @type {AddLoadBudgetCommandActionEnum}
+     * @memberof AddLoadBudgetCommand
+     */
+    action?: AddLoadBudgetCommandActionEnum;
 }
+
 
 /**
  * @export
  */
 export const AddLoadBudgetCommandActionEnum = {
-  Info: 'INFO',
-  Warning: 'WARNING',
+    Info: 'INFO',
+    Warning: 'WARNING'
 } as const;
-export type AddLoadBudgetCommandActionEnum =
-  (typeof AddLoadBudgetCommandActionEnum)[keyof typeof AddLoadBudgetCommandActionEnum];
+export type AddLoadBudgetCommandActionEnum = typeof AddLoadBudgetCommandActionEnum[keyof typeof AddLoadBudgetCommandActionEnum];
+
 
 /**
  * Check if a given object implements the AddLoadBudgetCommand interface.
  */
 export function instanceOfAddLoadBudgetCommand(value: object): value is AddLoadBudgetCommand {
-  return true;
+    return true;
 }
 
 export function AddLoadBudgetCommandFromJSON(json: any): AddLoadBudgetCommand {
-  return AddLoadBudgetCommandFromJSONTyped(json, false);
+    return AddLoadBudgetCommandFromJSONTyped(json, false);
 }
 
-export function AddLoadBudgetCommandFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): AddLoadBudgetCommand {
-  if (json == null) {
-    return json;
-  }
-  return {
-    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
-    channel: json['channel'] == null ? undefined : json['channel'],
-    low: json['low'] == null ? undefined : json['low'],
-    high: json['high'] == null ? undefined : json['high'],
-    unit: json['unit'] == null ? undefined : json['unit'],
-    action: json['action'] == null ? undefined : json['action'],
-  };
+export function AddLoadBudgetCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): AddLoadBudgetCommand {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'expectedVersion': json['expectedVersion'] == null ? undefined : json['expectedVersion'],
+        'channel': json['channel'] == null ? undefined : json['channel'],
+        'low': json['low'] == null ? undefined : json['low'],
+        'high': json['high'] == null ? undefined : json['high'],
+        'unit': json['unit'] == null ? undefined : json['unit'],
+        'action': json['action'] == null ? undefined : json['action'],
+    };
 }
 
 export function AddLoadBudgetCommandToJSON(json: any): AddLoadBudgetCommand {
-  return AddLoadBudgetCommandToJSONTyped(json, false);
+    return AddLoadBudgetCommandToJSONTyped(json, false);
 }
 
-export function AddLoadBudgetCommandToJSONTyped(
-  value?: AddLoadBudgetCommand | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function AddLoadBudgetCommandToJSONTyped(value?: AddLoadBudgetCommand | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    expectedVersion: value['expectedVersion'],
-    channel: value['channel'],
-    low: value['low'],
-    high: value['high'],
-    unit: value['unit'],
-    action: value['action'],
-  };
+    return {
+
+        'expectedVersion': value['expectedVersion'],
+        'channel': value['channel'],
+        'low': value['low'],
+        'high': value['high'],
+        'unit': value['unit'],
+        'action': value['action'],
+    };
 }

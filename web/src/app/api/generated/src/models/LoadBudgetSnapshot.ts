@@ -19,90 +19,86 @@ import { mapValues } from '../runtime';
  * @interface LoadBudgetSnapshot
  */
 export interface LoadBudgetSnapshot {
-  /**
-   *
-   * @type {string}
-   * @memberof LoadBudgetSnapshot
-   */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof LoadBudgetSnapshot
-   */
-  channel?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof LoadBudgetSnapshot
-   */
-  low?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof LoadBudgetSnapshot
-   */
-  high?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof LoadBudgetSnapshot
-   */
-  unit?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof LoadBudgetSnapshot
-   */
-  action?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof LoadBudgetSnapshot
+     */
+    id?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof LoadBudgetSnapshot
+     */
+    channel?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof LoadBudgetSnapshot
+     */
+    low?: number;
+    /**
+     *
+     * @type {number}
+     * @memberof LoadBudgetSnapshot
+     */
+    high?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof LoadBudgetSnapshot
+     */
+    unit?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof LoadBudgetSnapshot
+     */
+    action?: string;
 }
 
 /**
  * Check if a given object implements the LoadBudgetSnapshot interface.
  */
 export function instanceOfLoadBudgetSnapshot(value: object): value is LoadBudgetSnapshot {
-  return true;
+    return true;
 }
 
 export function LoadBudgetSnapshotFromJSON(json: any): LoadBudgetSnapshot {
-  return LoadBudgetSnapshotFromJSONTyped(json, false);
+    return LoadBudgetSnapshotFromJSONTyped(json, false);
 }
 
-export function LoadBudgetSnapshotFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): LoadBudgetSnapshot {
-  if (json == null) {
-    return json;
-  }
-  return {
-    id: json['id'] == null ? undefined : json['id'],
-    channel: json['channel'] == null ? undefined : json['channel'],
-    low: json['low'] == null ? undefined : json['low'],
-    high: json['high'] == null ? undefined : json['high'],
-    unit: json['unit'] == null ? undefined : json['unit'],
-    action: json['action'] == null ? undefined : json['action'],
-  };
+export function LoadBudgetSnapshotFromJSONTyped(json: any, ignoreDiscriminator: boolean): LoadBudgetSnapshot {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'id': json['id'] == null ? undefined : json['id'],
+        'channel': json['channel'] == null ? undefined : json['channel'],
+        'low': json['low'] == null ? undefined : json['low'],
+        'high': json['high'] == null ? undefined : json['high'],
+        'unit': json['unit'] == null ? undefined : json['unit'],
+        'action': json['action'] == null ? undefined : json['action'],
+    };
 }
 
 export function LoadBudgetSnapshotToJSON(json: any): LoadBudgetSnapshot {
-  return LoadBudgetSnapshotToJSONTyped(json, false);
+    return LoadBudgetSnapshotToJSONTyped(json, false);
 }
 
-export function LoadBudgetSnapshotToJSONTyped(
-  value?: LoadBudgetSnapshot | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function LoadBudgetSnapshotToJSONTyped(value?: LoadBudgetSnapshot | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    id: value['id'],
-    channel: value['channel'],
-    low: value['low'],
-    high: value['high'],
-    unit: value['unit'],
-    action: value['action'],
-  };
+    return {
+
+        'id': value['id'],
+        'channel': value['channel'],
+        'low': value['low'],
+        'high': value['high'],
+        'unit': value['unit'],
+        'action': value['action'],
+    };
 }

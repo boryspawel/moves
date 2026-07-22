@@ -19,58 +19,54 @@ import { mapValues } from '../runtime';
  * @interface IdentityResponse
  */
 export interface IdentityResponse {
-  /**
-   *
-   * @type {string}
-   * @memberof IdentityResponse
-   */
-  subject?: string;
-  /**
-   *
-   * @type {Array<string>}
-   * @memberof IdentityResponse
-   */
-  audiences?: Array<string>;
+    /**
+     *
+     * @type {string}
+     * @memberof IdentityResponse
+     */
+    subject?: string;
+    /**
+     *
+     * @type {Array<string>}
+     * @memberof IdentityResponse
+     */
+    audiences?: Array<string>;
 }
 
 /**
  * Check if a given object implements the IdentityResponse interface.
  */
 export function instanceOfIdentityResponse(value: object): value is IdentityResponse {
-  return true;
+    return true;
 }
 
 export function IdentityResponseFromJSON(json: any): IdentityResponse {
-  return IdentityResponseFromJSONTyped(json, false);
+    return IdentityResponseFromJSONTyped(json, false);
 }
 
-export function IdentityResponseFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): IdentityResponse {
-  if (json == null) {
-    return json;
-  }
-  return {
-    subject: json['subject'] == null ? undefined : json['subject'],
-    audiences: json['audiences'] == null ? undefined : json['audiences'],
-  };
+export function IdentityResponseFromJSONTyped(json: any, ignoreDiscriminator: boolean): IdentityResponse {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'subject': json['subject'] == null ? undefined : json['subject'],
+        'audiences': json['audiences'] == null ? undefined : json['audiences'],
+    };
 }
 
 export function IdentityResponseToJSON(json: any): IdentityResponse {
-  return IdentityResponseToJSONTyped(json, false);
+    return IdentityResponseToJSONTyped(json, false);
 }
 
-export function IdentityResponseToJSONTyped(
-  value?: IdentityResponse | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function IdentityResponseToJSONTyped(value?: IdentityResponse | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    subject: value['subject'],
-    audiences: value['audiences'],
-  };
+    return {
+
+        'subject': value['subject'],
+        'audiences': value['audiences'],
+    };
 }

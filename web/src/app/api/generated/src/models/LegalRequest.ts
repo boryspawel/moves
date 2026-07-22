@@ -19,56 +19,54 @@ import { mapValues } from '../runtime';
  * @interface LegalRequest
  */
 export interface LegalRequest {
-  /**
-   *
-   * @type {boolean}
-   * @memberof LegalRequest
-   */
-  termsAccepted?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof LegalRequest
-   */
-  privacyNoticeAcknowledged?: boolean;
+    /**
+     *
+     * @type {boolean}
+     * @memberof LegalRequest
+     */
+    termsAccepted?: boolean;
+    /**
+     *
+     * @type {boolean}
+     * @memberof LegalRequest
+     */
+    privacyNoticeAcknowledged?: boolean;
 }
 
 /**
  * Check if a given object implements the LegalRequest interface.
  */
 export function instanceOfLegalRequest(value: object): value is LegalRequest {
-  return true;
+    return true;
 }
 
 export function LegalRequestFromJSON(json: any): LegalRequest {
-  return LegalRequestFromJSONTyped(json, false);
+    return LegalRequestFromJSONTyped(json, false);
 }
 
 export function LegalRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): LegalRequest {
-  if (json == null) {
-    return json;
-  }
-  return {
-    termsAccepted: json['termsAccepted'] == null ? undefined : json['termsAccepted'],
-    privacyNoticeAcknowledged:
-      json['privacyNoticeAcknowledged'] == null ? undefined : json['privacyNoticeAcknowledged'],
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'termsAccepted': json['termsAccepted'] == null ? undefined : json['termsAccepted'],
+        'privacyNoticeAcknowledged': json['privacyNoticeAcknowledged'] == null ? undefined : json['privacyNoticeAcknowledged'],
+    };
 }
 
 export function LegalRequestToJSON(json: any): LegalRequest {
-  return LegalRequestToJSONTyped(json, false);
+    return LegalRequestToJSONTyped(json, false);
 }
 
-export function LegalRequestToJSONTyped(
-  value?: LegalRequest | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function LegalRequestToJSONTyped(value?: LegalRequest | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    termsAccepted: value['termsAccepted'],
-    privacyNoticeAcknowledged: value['privacyNoticeAcknowledged'],
-  };
+    return {
+
+        'termsAccepted': value['termsAccepted'],
+        'privacyNoticeAcknowledged': value['privacyNoticeAcknowledged'],
+    };
 }

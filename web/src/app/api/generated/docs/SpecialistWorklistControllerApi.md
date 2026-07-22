@@ -2,16 +2,20 @@
 
 All URIs are relative to *http://localhost*
 
-| Method                                                                                  | HTTP request                                          | Description |
-| --------------------------------------------------------------------------------------- | ----------------------------------------------------- | ----------- |
-| [**actOnWorklist**](SpecialistWorklistControllerApi.md#actonworklist)                   | **POST** /api/v1/specialist/worklist/{itemId}/actions |             |
-| [**listWorklist**](SpecialistWorklistControllerApi.md#listworklist)                     | **GET** /api/v1/specialist/worklist                   |             |
-| [**replyToIssue**](SpecialistWorklistControllerApi.md#replytoissue)                     | **POST** /api/v1/specialist/worklist/{itemId}/reply   |             |
-| [**reportParticipantIssue**](SpecialistWorklistControllerApi.md#reportparticipantissue) | **POST** /api/v1/participant/issues                   |             |
+| Method | HTTP request | Description |
+|------------- | ------------- | -------------|
+| [**actOnWorklist**](SpecialistWorklistControllerApi.md#actonworklist) | **POST** /api/v1/specialist/worklist/{itemId}/actions |  |
+| [**listWorklist**](SpecialistWorklistControllerApi.md#listworklist) | **GET** /api/v1/specialist/worklist |  |
+| [**replyToIssue**](SpecialistWorklistControllerApi.md#replytoissue) | **POST** /api/v1/specialist/worklist/{itemId}/reply |  |
+| [**reportParticipantIssue**](SpecialistWorklistControllerApi.md#reportparticipantissue) | **POST** /api/v1/participant/issues |  |
+
+
 
 ## actOnWorklist
 
 > WorklistItemView actOnWorklist(itemId, actingContext, purpose, actionCommand)
+
+
 
 ### Example
 
@@ -53,12 +57,13 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name              | Type                                                             | Description | Notes                                                                                        |
-| ----------------- | ---------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------- |
-| **itemId**        | `string`                                                         |             | [Defaults to `undefined`]                                                                    |
-| **actingContext** | `TRAINER`, `PHYSIOTHERAPIST`                                     |             | [Defaults to `undefined`] [Enum: TRAINER, PHYSIOTHERAPIST]                                   |
-| **purpose**       | `PERFORMANCE_PLANNING`, `FUNCTIONAL_RECOVERY`, `CLINICAL_REVIEW` |             | [Defaults to `undefined`] [Enum: PERFORMANCE_PLANNING, FUNCTIONAL_RECOVERY, CLINICAL_REVIEW] |
-| **actionCommand** | [ActionCommand](ActionCommand.md)                                |             |                                                                                              |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **itemId** | `string` |  | [Defaults to `undefined`] |
+| **actingContext** | `TRAINER`, `PHYSIOTHERAPIST` |  | [Defaults to `undefined`] [Enum: TRAINER, PHYSIOTHERAPIST] |
+| **purpose** | `PERFORMANCE_PLANNING`, `FUNCTIONAL_RECOVERY`, `CLINICAL_REVIEW` |  | [Defaults to `undefined`] [Enum: PERFORMANCE_PLANNING, FUNCTIONAL_RECOVERY, CLINICAL_REVIEW] |
+| **actionCommand** | [ActionCommand](ActionCommand.md) |  | |
 
 ### Return type
 
@@ -73,27 +78,34 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## listWorklist
 
 > Array&lt;WorklistItemView&gt; listWorklist(actingContext, purpose)
 
+
+
 ### Example
 
 ```ts
-import { Configuration, SpecialistWorklistControllerApi } from '@moves/api-client';
+import {
+  Configuration,
+  SpecialistWorklistControllerApi,
+} from '@moves/api-client';
 import type { ListWorklistRequest } from '@moves/api-client';
 
 async function example() {
-  console.log('🚀 Testing @moves/api-client SDK...');
-  const config = new Configuration({});
+  console.log("🚀 Testing @moves/api-client SDK...");
+  const config = new Configuration({
+  });
   const api = new SpecialistWorklistControllerApi(config);
 
   const body = {
@@ -117,10 +129,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name              | Type                                                             | Description | Notes                                                                                        |
-| ----------------- | ---------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------- |
-| **actingContext** | `TRAINER`, `PHYSIOTHERAPIST`                                     |             | [Defaults to `undefined`] [Enum: TRAINER, PHYSIOTHERAPIST]                                   |
-| **purpose**       | `PERFORMANCE_PLANNING`, `FUNCTIONAL_RECOVERY`, `CLINICAL_REVIEW` |             | [Defaults to `undefined`] [Enum: PERFORMANCE_PLANNING, FUNCTIONAL_RECOVERY, CLINICAL_REVIEW] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **actingContext** | `TRAINER`, `PHYSIOTHERAPIST` |  | [Defaults to `undefined`] [Enum: TRAINER, PHYSIOTHERAPIST] |
+| **purpose** | `PERFORMANCE_PLANNING`, `FUNCTIONAL_RECOVERY`, `CLINICAL_REVIEW` |  | [Defaults to `undefined`] [Enum: PERFORMANCE_PLANNING, FUNCTIONAL_RECOVERY, CLINICAL_REVIEW] |
 
 ### Return type
 
@@ -135,17 +148,20 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## replyToIssue
 
 > ReplyView replyToIssue(itemId, actingContext, purpose, replyCommand)
+
+
 
 ### Example
 
@@ -187,12 +203,13 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name              | Type                                                             | Description | Notes                                                                                        |
-| ----------------- | ---------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------- |
-| **itemId**        | `string`                                                         |             | [Defaults to `undefined`]                                                                    |
-| **actingContext** | `TRAINER`, `PHYSIOTHERAPIST`                                     |             | [Defaults to `undefined`] [Enum: TRAINER, PHYSIOTHERAPIST]                                   |
-| **purpose**       | `PERFORMANCE_PLANNING`, `FUNCTIONAL_RECOVERY`, `CLINICAL_REVIEW` |             | [Defaults to `undefined`] [Enum: PERFORMANCE_PLANNING, FUNCTIONAL_RECOVERY, CLINICAL_REVIEW] |
-| **replyCommand**  | [ReplyCommand](ReplyCommand.md)                                  |             |                                                                                              |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **itemId** | `string` |  | [Defaults to `undefined`] |
+| **actingContext** | `TRAINER`, `PHYSIOTHERAPIST` |  | [Defaults to `undefined`] [Enum: TRAINER, PHYSIOTHERAPIST] |
+| **purpose** | `PERFORMANCE_PLANNING`, `FUNCTIONAL_RECOVERY`, `CLINICAL_REVIEW` |  | [Defaults to `undefined`] [Enum: PERFORMANCE_PLANNING, FUNCTIONAL_RECOVERY, CLINICAL_REVIEW] |
+| **replyCommand** | [ReplyCommand](ReplyCommand.md) |  | |
 
 ### Return type
 
@@ -207,17 +224,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## reportParticipantIssue
 
 > WorklistItemView reportParticipantIssue(participantIssueCommand)
+
+
 
 ### Example
 
@@ -253,9 +273,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                        | Type                                                  | Description | Notes |
-| --------------------------- | ----------------------------------------------------- | ----------- | ----- |
-| **participantIssueCommand** | [ParticipantIssueCommand](ParticipantIssueCommand.md) |             |       |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **participantIssueCommand** | [ParticipantIssueCommand](ParticipantIssueCommand.md) |  | |
 
 ### Return type
 
@@ -270,10 +291,10 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)

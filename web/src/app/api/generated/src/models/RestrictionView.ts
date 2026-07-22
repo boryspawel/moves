@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { TargetView } from './TargetView';
 import {
-  TargetViewFromJSON,
-  TargetViewFromJSONTyped,
-  TargetViewToJSON,
-  TargetViewToJSONTyped,
+    TargetViewFromJSON,
+    TargetViewFromJSONTyped,
+    TargetViewToJSON,
+    TargetViewToJSONTyped,
 } from './TargetView';
 
 /**
@@ -27,171 +27,165 @@ import {
  * @interface RestrictionView
  */
 export interface RestrictionView {
-  /**
-   *
-   * @type {string}
-   * @memberof RestrictionView
-   */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RestrictionView
-   */
-  rootId?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof RestrictionView
-   */
-  revisionNumber?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof RestrictionView
-   */
-  supersedesRestrictionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RestrictionView
-   */
-  participantId?: string;
-  /**
-   *
-   * @type {RestrictionViewSourceTypeEnum}
-   * @memberof RestrictionView
-   */
-  sourceType?: RestrictionViewSourceTypeEnum;
-  /**
-   *
-   * @type {RestrictionViewSemanticTypeEnum}
-   * @memberof RestrictionView
-   */
-  semanticType?: RestrictionViewSemanticTypeEnum;
-  /**
-   *
-   * @type {string}
-   * @memberof RestrictionView
-   */
-  status?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof RestrictionView
-   */
-  validFrom?: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof RestrictionView
-   */
-  validTo?: Date;
-  /**
-   *
-   * @type {string}
-   * @memberof RestrictionView
-   */
-  authorCapability?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RestrictionView
-   */
-  participantExplanation?: string;
-  /**
-   *
-   * @type {TargetView}
-   * @memberof RestrictionView
-   */
-  target?: TargetView;
+    /**
+     *
+     * @type {string}
+     * @memberof RestrictionView
+     */
+    id?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof RestrictionView
+     */
+    rootId?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof RestrictionView
+     */
+    revisionNumber?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof RestrictionView
+     */
+    supersedesRestrictionId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof RestrictionView
+     */
+    participantId?: string;
+    /**
+     *
+     * @type {RestrictionViewSourceTypeEnum}
+     * @memberof RestrictionView
+     */
+    sourceType?: RestrictionViewSourceTypeEnum;
+    /**
+     *
+     * @type {RestrictionViewSemanticTypeEnum}
+     * @memberof RestrictionView
+     */
+    semanticType?: RestrictionViewSemanticTypeEnum;
+    /**
+     *
+     * @type {string}
+     * @memberof RestrictionView
+     */
+    status?: string;
+    /**
+     *
+     * @type {Date}
+     * @memberof RestrictionView
+     */
+    validFrom?: Date;
+    /**
+     *
+     * @type {Date}
+     * @memberof RestrictionView
+     */
+    validTo?: Date;
+    /**
+     *
+     * @type {string}
+     * @memberof RestrictionView
+     */
+    authorCapability?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof RestrictionView
+     */
+    participantExplanation?: string;
+    /**
+     *
+     * @type {TargetView}
+     * @memberof RestrictionView
+     */
+    target?: TargetView;
 }
+
 
 /**
  * @export
  */
 export const RestrictionViewSourceTypeEnum = {
-  ParticipantDeclared: 'PARTICIPANT_DECLARED',
-  Physiotherapist: 'PHYSIOTHERAPIST',
-  SystemOperational: 'SYSTEM_OPERATIONAL',
+    ParticipantDeclared: 'PARTICIPANT_DECLARED',
+    Physiotherapist: 'PHYSIOTHERAPIST',
+    SystemOperational: 'SYSTEM_OPERATIONAL'
 } as const;
-export type RestrictionViewSourceTypeEnum =
-  (typeof RestrictionViewSourceTypeEnum)[keyof typeof RestrictionViewSourceTypeEnum];
+export type RestrictionViewSourceTypeEnum = typeof RestrictionViewSourceTypeEnum[keyof typeof RestrictionViewSourceTypeEnum];
 
 /**
  * @export
  */
 export const RestrictionViewSemanticTypeEnum = {
-  Contraindication: 'CONTRAINDICATION',
-  Caution: 'CAUTION',
-  Limit: 'LIMIT',
-  Monitor: 'MONITOR',
+    Contraindication: 'CONTRAINDICATION',
+    Caution: 'CAUTION',
+    Limit: 'LIMIT',
+    Monitor: 'MONITOR'
 } as const;
-export type RestrictionViewSemanticTypeEnum =
-  (typeof RestrictionViewSemanticTypeEnum)[keyof typeof RestrictionViewSemanticTypeEnum];
+export type RestrictionViewSemanticTypeEnum = typeof RestrictionViewSemanticTypeEnum[keyof typeof RestrictionViewSemanticTypeEnum];
+
 
 /**
  * Check if a given object implements the RestrictionView interface.
  */
 export function instanceOfRestrictionView(value: object): value is RestrictionView {
-  return true;
+    return true;
 }
 
 export function RestrictionViewFromJSON(json: any): RestrictionView {
-  return RestrictionViewFromJSONTyped(json, false);
+    return RestrictionViewFromJSONTyped(json, false);
 }
 
-export function RestrictionViewFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): RestrictionView {
-  if (json == null) {
-    return json;
-  }
-  return {
-    id: json['id'] == null ? undefined : json['id'],
-    rootId: json['rootId'] == null ? undefined : json['rootId'],
-    revisionNumber: json['revisionNumber'] == null ? undefined : json['revisionNumber'],
-    supersedesRestrictionId:
-      json['supersedesRestrictionId'] == null ? undefined : json['supersedesRestrictionId'],
-    participantId: json['participantId'] == null ? undefined : json['participantId'],
-    sourceType: json['sourceType'] == null ? undefined : json['sourceType'],
-    semanticType: json['semanticType'] == null ? undefined : json['semanticType'],
-    status: json['status'] == null ? undefined : json['status'],
-    validFrom: json['validFrom'] == null ? undefined : new Date(json['validFrom']),
-    validTo: json['validTo'] == null ? undefined : new Date(json['validTo']),
-    authorCapability: json['authorCapability'] == null ? undefined : json['authorCapability'],
-    participantExplanation:
-      json['participantExplanation'] == null ? undefined : json['participantExplanation'],
-    target: json['target'] == null ? undefined : TargetViewFromJSON(json['target']),
-  };
+export function RestrictionViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): RestrictionView {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'id': json['id'] == null ? undefined : json['id'],
+        'rootId': json['rootId'] == null ? undefined : json['rootId'],
+        'revisionNumber': json['revisionNumber'] == null ? undefined : json['revisionNumber'],
+        'supersedesRestrictionId': json['supersedesRestrictionId'] == null ? undefined : json['supersedesRestrictionId'],
+        'participantId': json['participantId'] == null ? undefined : json['participantId'],
+        'sourceType': json['sourceType'] == null ? undefined : json['sourceType'],
+        'semanticType': json['semanticType'] == null ? undefined : json['semanticType'],
+        'status': json['status'] == null ? undefined : json['status'],
+        'validFrom': json['validFrom'] == null ? undefined : (new Date(json['validFrom'])),
+        'validTo': json['validTo'] == null ? undefined : (new Date(json['validTo'])),
+        'authorCapability': json['authorCapability'] == null ? undefined : json['authorCapability'],
+        'participantExplanation': json['participantExplanation'] == null ? undefined : json['participantExplanation'],
+        'target': json['target'] == null ? undefined : TargetViewFromJSON(json['target']),
+    };
 }
 
 export function RestrictionViewToJSON(json: any): RestrictionView {
-  return RestrictionViewToJSONTyped(json, false);
+    return RestrictionViewToJSONTyped(json, false);
 }
 
-export function RestrictionViewToJSONTyped(
-  value?: RestrictionView | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function RestrictionViewToJSONTyped(value?: RestrictionView | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    id: value['id'],
-    rootId: value['rootId'],
-    revisionNumber: value['revisionNumber'],
-    supersedesRestrictionId: value['supersedesRestrictionId'],
-    participantId: value['participantId'],
-    sourceType: value['sourceType'],
-    semanticType: value['semanticType'],
-    status: value['status'],
-    validFrom: value['validFrom'] == null ? value['validFrom'] : value['validFrom'].toISOString(),
-    validTo: value['validTo'] == null ? value['validTo'] : value['validTo'].toISOString(),
-    authorCapability: value['authorCapability'],
-    participantExplanation: value['participantExplanation'],
-    target: TargetViewToJSON(value['target']),
-  };
+    return {
+
+        'id': value['id'],
+        'rootId': value['rootId'],
+        'revisionNumber': value['revisionNumber'],
+        'supersedesRestrictionId': value['supersedesRestrictionId'],
+        'participantId': value['participantId'],
+        'sourceType': value['sourceType'],
+        'semanticType': value['semanticType'],
+        'status': value['status'],
+        'validFrom': value['validFrom'] == null ? value['validFrom'] : value['validFrom'].toISOString(),
+        'validTo': value['validTo'] == null ? value['validTo'] : value['validTo'].toISOString(),
+        'authorCapability': value['authorCapability'],
+        'participantExplanation': value['participantExplanation'],
+        'target': TargetViewToJSON(value['target']),
+    };
 }

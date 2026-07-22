@@ -15,17 +15,17 @@
 import { mapValues } from '../runtime';
 import type { Observation } from './Observation';
 import {
-  ObservationFromJSON,
-  ObservationFromJSONTyped,
-  ObservationToJSON,
-  ObservationToJSONTyped,
+    ObservationFromJSON,
+    ObservationFromJSONTyped,
+    ObservationToJSON,
+    ObservationToJSONTyped,
 } from './Observation';
 import type { Aggregate } from './Aggregate';
 import {
-  AggregateFromJSON,
-  AggregateFromJSONTyped,
-  AggregateToJSON,
-  AggregateToJSONTyped,
+    AggregateFromJSON,
+    AggregateFromJSONTyped,
+    AggregateToJSON,
+    AggregateToJSONTyped,
 } from './Aggregate';
 
 /**
@@ -34,126 +34,110 @@ import {
  * @interface LoadProfile
  */
 export interface LoadProfile {
-  /**
-   *
-   * @type {string}
-   * @memberof LoadProfile
-   */
-  snapshotId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof LoadProfile
-   */
-  revisionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof LoadProfile
-   */
-  inputChecksum?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof LoadProfile
-   */
-  algorithmVersion?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof LoadProfile
-   */
-  configurationVersion?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof LoadProfile
-   */
-  catalogProfileVersion?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof LoadProfile
-   */
-  calculatedAt?: Date;
-  /**
-   *
-   * @type {Array<Observation>}
-   * @memberof LoadProfile
-   */
-  observations?: Array<Observation>;
-  /**
-   *
-   * @type {Array<Aggregate>}
-   * @memberof LoadProfile
-   */
-  aggregates?: Array<Aggregate>;
+    /**
+     *
+     * @type {string}
+     * @memberof LoadProfile
+     */
+    snapshotId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof LoadProfile
+     */
+    revisionId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof LoadProfile
+     */
+    inputChecksum?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof LoadProfile
+     */
+    algorithmVersion?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof LoadProfile
+     */
+    configurationVersion?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof LoadProfile
+     */
+    catalogProfileVersion?: string;
+    /**
+     *
+     * @type {Date}
+     * @memberof LoadProfile
+     */
+    calculatedAt?: Date;
+    /**
+     *
+     * @type {Array<Observation>}
+     * @memberof LoadProfile
+     */
+    observations?: Array<Observation>;
+    /**
+     *
+     * @type {Array<Aggregate>}
+     * @memberof LoadProfile
+     */
+    aggregates?: Array<Aggregate>;
 }
 
 /**
  * Check if a given object implements the LoadProfile interface.
  */
 export function instanceOfLoadProfile(value: object): value is LoadProfile {
-  return true;
+    return true;
 }
 
 export function LoadProfileFromJSON(json: any): LoadProfile {
-  return LoadProfileFromJSONTyped(json, false);
+    return LoadProfileFromJSONTyped(json, false);
 }
 
 export function LoadProfileFromJSONTyped(json: any, ignoreDiscriminator: boolean): LoadProfile {
-  if (json == null) {
-    return json;
-  }
-  return {
-    snapshotId: json['snapshotId'] == null ? undefined : json['snapshotId'],
-    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
-    inputChecksum: json['inputChecksum'] == null ? undefined : json['inputChecksum'],
-    algorithmVersion: json['algorithmVersion'] == null ? undefined : json['algorithmVersion'],
-    configurationVersion:
-      json['configurationVersion'] == null ? undefined : json['configurationVersion'],
-    catalogProfileVersion:
-      json['catalogProfileVersion'] == null ? undefined : json['catalogProfileVersion'],
-    calculatedAt: json['calculatedAt'] == null ? undefined : new Date(json['calculatedAt']),
-    observations:
-      json['observations'] == null
-        ? undefined
-        : (json['observations'] as Array<any>).map(ObservationFromJSON),
-    aggregates:
-      json['aggregates'] == null
-        ? undefined
-        : (json['aggregates'] as Array<any>).map(AggregateFromJSON),
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'snapshotId': json['snapshotId'] == null ? undefined : json['snapshotId'],
+        'revisionId': json['revisionId'] == null ? undefined : json['revisionId'],
+        'inputChecksum': json['inputChecksum'] == null ? undefined : json['inputChecksum'],
+        'algorithmVersion': json['algorithmVersion'] == null ? undefined : json['algorithmVersion'],
+        'configurationVersion': json['configurationVersion'] == null ? undefined : json['configurationVersion'],
+        'catalogProfileVersion': json['catalogProfileVersion'] == null ? undefined : json['catalogProfileVersion'],
+        'calculatedAt': json['calculatedAt'] == null ? undefined : (new Date(json['calculatedAt'])),
+        'observations': json['observations'] == null ? undefined : ((json['observations'] as Array<any>).map(ObservationFromJSON)),
+        'aggregates': json['aggregates'] == null ? undefined : ((json['aggregates'] as Array<any>).map(AggregateFromJSON)),
+    };
 }
 
 export function LoadProfileToJSON(json: any): LoadProfile {
-  return LoadProfileToJSONTyped(json, false);
+    return LoadProfileToJSONTyped(json, false);
 }
 
-export function LoadProfileToJSONTyped(
-  value?: LoadProfile | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function LoadProfileToJSONTyped(value?: LoadProfile | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    snapshotId: value['snapshotId'],
-    revisionId: value['revisionId'],
-    inputChecksum: value['inputChecksum'],
-    algorithmVersion: value['algorithmVersion'],
-    configurationVersion: value['configurationVersion'],
-    catalogProfileVersion: value['catalogProfileVersion'],
-    calculatedAt:
-      value['calculatedAt'] == null ? value['calculatedAt'] : value['calculatedAt'].toISOString(),
-    observations:
-      value['observations'] == null
-        ? undefined
-        : (value['observations'] as Array<any>).map(ObservationToJSON),
-    aggregates:
-      value['aggregates'] == null
-        ? undefined
-        : (value['aggregates'] as Array<any>).map(AggregateToJSON),
-  };
+    return {
+
+        'snapshotId': value['snapshotId'],
+        'revisionId': value['revisionId'],
+        'inputChecksum': value['inputChecksum'],
+        'algorithmVersion': value['algorithmVersion'],
+        'configurationVersion': value['configurationVersion'],
+        'catalogProfileVersion': value['catalogProfileVersion'],
+        'calculatedAt': value['calculatedAt'] == null ? value['calculatedAt'] : value['calculatedAt'].toISOString(),
+        'observations': value['observations'] == null ? undefined : ((value['observations'] as Array<any>).map(ObservationToJSON)),
+        'aggregates': value['aggregates'] == null ? undefined : ((value['aggregates'] as Array<any>).map(AggregateToJSON)),
+    };
 }

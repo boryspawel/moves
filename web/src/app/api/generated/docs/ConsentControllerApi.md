@@ -2,15 +2,19 @@
 
 All URIs are relative to *http://localhost*
 
-| Method                                           | HTTP request                                     | Description |
-| ------------------------------------------------ | ------------------------------------------------ | ----------- |
-| [**grant**](ConsentControllerApi.md#grant)       | **POST** /api/v1/consent/grants                  |             |
-| [**revoke**](ConsentControllerApi.md#revoke)     | **POST** /api/v1/consent/grants/{grantId}/revoke |             |
-| [**template**](ConsentControllerApi.md#template) | **POST** /api/v1/consent/templates               |             |
+| Method | HTTP request | Description |
+|------------- | ------------- | -------------|
+| [**grant**](ConsentControllerApi.md#grant) | **POST** /api/v1/consent/grants |  |
+| [**revoke**](ConsentControllerApi.md#revoke) | **POST** /api/v1/consent/grants/{grantId}/revoke |  |
+| [**template**](ConsentControllerApi.md#template) | **POST** /api/v1/consent/templates |  |
+
+
 
 ## grant
 
 > GrantView grant(grantCommand)
+
+
 
 ### Example
 
@@ -44,9 +48,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name             | Type                            | Description | Notes |
-| ---------------- | ------------------------------- | ----------- | ----- |
-| **grantCommand** | [GrantCommand](GrantCommand.md) |             |       |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **grantCommand** | [GrantCommand](GrantCommand.md) |  | |
 
 ### Return type
 
@@ -61,17 +66,20 @@ No authorization required
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## revoke
 
 > GrantView revoke(grantId)
+
+
 
 ### Example
 
@@ -105,9 +113,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name        | Type     | Description | Notes                     |
-| ----------- | -------- | ----------- | ------------------------- |
-| **grantId** | `string` |             | [Defaults to `undefined`] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **grantId** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -122,17 +131,20 @@ No authorization required
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## template
 
 > TemplateView template(templateCommand)
+
+
 
 ### Example
 
@@ -166,9 +178,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                | Type                                  | Description | Notes |
-| ------------------- | ------------------------------------- | ----------- | ----- |
-| **templateCommand** | [TemplateCommand](TemplateCommand.md) |             |       |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **templateCommand** | [TemplateCommand](TemplateCommand.md) |  | |
 
 ### Return type
 
@@ -183,10 +196,10 @@ No authorization required
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)

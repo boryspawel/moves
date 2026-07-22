@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { TargetView } from './TargetView';
 import {
-  TargetViewFromJSON,
-  TargetViewFromJSONTyped,
-  TargetViewToJSON,
-  TargetViewToJSONTyped,
+    TargetViewFromJSON,
+    TargetViewFromJSONTyped,
+    TargetViewToJSON,
+    TargetViewToJSONTyped,
 } from './TargetView';
 
 /**
@@ -27,84 +27,78 @@ import {
  * @interface EffectiveRestrictionView
  */
 export interface EffectiveRestrictionView {
-  /**
-   *
-   * @type {string}
-   * @memberof EffectiveRestrictionView
-   */
-  restrictionId?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof EffectiveRestrictionView
-   */
-  validFrom?: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof EffectiveRestrictionView
-   */
-  validTo?: Date;
-  /**
-   *
-   * @type {string}
-   * @memberof EffectiveRestrictionView
-   */
-  explanationCode?: string;
-  /**
-   *
-   * @type {TargetView}
-   * @memberof EffectiveRestrictionView
-   */
-  target?: TargetView;
+    /**
+     *
+     * @type {string}
+     * @memberof EffectiveRestrictionView
+     */
+    restrictionId?: string;
+    /**
+     *
+     * @type {Date}
+     * @memberof EffectiveRestrictionView
+     */
+    validFrom?: Date;
+    /**
+     *
+     * @type {Date}
+     * @memberof EffectiveRestrictionView
+     */
+    validTo?: Date;
+    /**
+     *
+     * @type {string}
+     * @memberof EffectiveRestrictionView
+     */
+    explanationCode?: string;
+    /**
+     *
+     * @type {TargetView}
+     * @memberof EffectiveRestrictionView
+     */
+    target?: TargetView;
 }
 
 /**
  * Check if a given object implements the EffectiveRestrictionView interface.
  */
-export function instanceOfEffectiveRestrictionView(
-  value: object,
-): value is EffectiveRestrictionView {
-  return true;
+export function instanceOfEffectiveRestrictionView(value: object): value is EffectiveRestrictionView {
+    return true;
 }
 
 export function EffectiveRestrictionViewFromJSON(json: any): EffectiveRestrictionView {
-  return EffectiveRestrictionViewFromJSONTyped(json, false);
+    return EffectiveRestrictionViewFromJSONTyped(json, false);
 }
 
-export function EffectiveRestrictionViewFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): EffectiveRestrictionView {
-  if (json == null) {
-    return json;
-  }
-  return {
-    restrictionId: json['restrictionId'] == null ? undefined : json['restrictionId'],
-    validFrom: json['validFrom'] == null ? undefined : new Date(json['validFrom']),
-    validTo: json['validTo'] == null ? undefined : new Date(json['validTo']),
-    explanationCode: json['explanationCode'] == null ? undefined : json['explanationCode'],
-    target: json['target'] == null ? undefined : TargetViewFromJSON(json['target']),
-  };
+export function EffectiveRestrictionViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): EffectiveRestrictionView {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'restrictionId': json['restrictionId'] == null ? undefined : json['restrictionId'],
+        'validFrom': json['validFrom'] == null ? undefined : (new Date(json['validFrom'])),
+        'validTo': json['validTo'] == null ? undefined : (new Date(json['validTo'])),
+        'explanationCode': json['explanationCode'] == null ? undefined : json['explanationCode'],
+        'target': json['target'] == null ? undefined : TargetViewFromJSON(json['target']),
+    };
 }
 
 export function EffectiveRestrictionViewToJSON(json: any): EffectiveRestrictionView {
-  return EffectiveRestrictionViewToJSONTyped(json, false);
+    return EffectiveRestrictionViewToJSONTyped(json, false);
 }
 
-export function EffectiveRestrictionViewToJSONTyped(
-  value?: EffectiveRestrictionView | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function EffectiveRestrictionViewToJSONTyped(value?: EffectiveRestrictionView | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    restrictionId: value['restrictionId'],
-    validFrom: value['validFrom'] == null ? value['validFrom'] : value['validFrom'].toISOString(),
-    validTo: value['validTo'] == null ? value['validTo'] : value['validTo'].toISOString(),
-    explanationCode: value['explanationCode'],
-    target: TargetViewToJSON(value['target']),
-  };
+    return {
+
+        'restrictionId': value['restrictionId'],
+        'validFrom': value['validFrom'] == null ? value['validFrom'] : value['validFrom'].toISOString(),
+        'validTo': value['validTo'] == null ? value['validTo'] : value['validTo'].toISOString(),
+        'explanationCode': value['explanationCode'],
+        'target': TargetViewToJSON(value['target']),
+    };
 }

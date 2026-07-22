@@ -14,107 +14,105 @@
 
 import * as runtime from '../runtime';
 import {
-  type CheckInRequest,
-  CheckInRequestFromJSON,
-  CheckInRequestToJSON,
+    type CheckInRequest,
+    CheckInRequestFromJSON,
+    CheckInRequestToJSON,
 } from '../models/CheckInRequest';
-import { type SafetyView, SafetyViewFromJSON, SafetyViewToJSON } from '../models/SafetyView';
+import {
+    type SafetyView,
+    SafetyViewFromJSON,
+    SafetyViewToJSON,
+} from '../models/SafetyView';
 
 export interface CheckInOperationRequest {
-  checkInRequest: CheckInRequest;
+    checkInRequest: CheckInRequest;
 }
 
 /**
  *
  */
 export class ParticipantSafetyControllerApi extends runtime.BaseAPI {
-  /**
-   * Creates request options for checkIn without sending the request
-   */
-  async checkInRequestOpts(
-    requestParameters: CheckInOperationRequest,
-  ): Promise<runtime.RequestOpts> {
-    if (requestParameters['checkInRequest'] == null) {
-      throw new runtime.RequiredError(
-        'checkInRequest',
-        'Required parameter "checkInRequest" was null or undefined when calling checkIn().',
-      );
+
+    /**
+     * Creates request options for checkIn without sending the request
+     */
+    async checkInRequestOpts(requestParameters: CheckInOperationRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['checkInRequest'] == null) {
+            throw new runtime.RequiredError(
+                'checkInRequest',
+                'Required parameter "checkInRequest" was null or undefined when calling checkIn().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+
+        let urlPath = `/api/v1/safety/me/check-ins`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: CheckInRequestToJSON(requestParameters['checkInRequest']),
+        };
     }
 
-    const queryParameters: any = {};
+    /**
+     */
+    async checkInRaw(requestParameters: CheckInOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SafetyView>> {
+        const requestOptions = await this.checkInRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
-    const headerParameters: runtime.HTTPHeaders = {};
+        return new runtime.JSONApiResponse(response, (jsonValue) => SafetyViewFromJSON(jsonValue));
+    }
 
-    headerParameters['Content-Type'] = 'application/json';
+    /**
+     */
+    async checkIn(requestParameters: CheckInOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SafetyView> {
+        const response = await this.checkInRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
-    let urlPath = `/api/v1/safety/me/check-ins`;
+    /**
+     * Creates request options for current without sending the request
+     */
+    async currentRequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
 
-    return {
-      path: urlPath,
-      method: 'POST',
-      headers: headerParameters,
-      query: queryParameters,
-      body: CheckInRequestToJSON(requestParameters['checkInRequest']),
-    };
-  }
+        const headerParameters: runtime.HTTPHeaders = {};
 
-  /**
-   */
-  async checkInRaw(
-    requestParameters: CheckInOperationRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<SafetyView>> {
-    const requestOptions = await this.checkInRequestOpts(requestParameters);
-    const response = await this.request(requestOptions, initOverrides);
 
-    return new runtime.JSONApiResponse(response, (jsonValue) => SafetyViewFromJSON(jsonValue));
-  }
+        let urlPath = `/api/v1/safety/me`;
 
-  /**
-   */
-  async checkIn(
-    requestParameters: CheckInOperationRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<SafetyView> {
-    const response = await this.checkInRaw(requestParameters, initOverrides);
-    return await response.value();
-  }
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
 
-  /**
-   * Creates request options for current without sending the request
-   */
-  async currentRequestOpts(): Promise<runtime.RequestOpts> {
-    const queryParameters: any = {};
+    /**
+     * Return only the authenticated participant\'s non-diagnostic safety inputs
+     */
+    async currentRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SafetyView>> {
+        const requestOptions = await this.currentRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
-    const headerParameters: runtime.HTTPHeaders = {};
+        return new runtime.JSONApiResponse(response, (jsonValue) => SafetyViewFromJSON(jsonValue));
+    }
 
-    let urlPath = `/api/v1/safety/me`;
+    /**
+     * Return only the authenticated participant\'s non-diagnostic safety inputs
+     */
+    async current(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SafetyView> {
+        const response = await this.currentRaw(initOverrides);
+        return await response.value();
+    }
 
-    return {
-      path: urlPath,
-      method: 'GET',
-      headers: headerParameters,
-      query: queryParameters,
-    };
-  }
-
-  /**
-   * Return only the authenticated participant\'s non-diagnostic safety inputs
-   */
-  async currentRaw(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<SafetyView>> {
-    const requestOptions = await this.currentRequestOpts();
-    const response = await this.request(requestOptions, initOverrides);
-
-    return new runtime.JSONApiResponse(response, (jsonValue) => SafetyViewFromJSON(jsonValue));
-  }
-
-  /**
-   * Return only the authenticated participant\'s non-diagnostic safety inputs
-   */
-  async current(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SafetyView> {
-    const response = await this.currentRaw(initOverrides);
-    return await response.value();
-  }
 }

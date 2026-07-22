@@ -19,102 +19,94 @@ import { mapValues } from '../runtime';
  * @interface SessionVariantItemSnapshot
  */
 export interface SessionVariantItemSnapshot {
-  /**
-   *
-   * @type {string}
-   * @memberof SessionVariantItemSnapshot
-   */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof SessionVariantItemSnapshot
-   */
-  basePrescriptionId?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof SessionVariantItemSnapshot
-   */
-  position?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof SessionVariantItemSnapshot
-   */
-  overrideSets?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof SessionVariantItemSnapshot
-   */
-  overrideRepetitions?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof SessionVariantItemSnapshot
-   */
-  overrideDurationSeconds?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof SessionVariantItemSnapshot
-   */
-  overrideContacts?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof SessionVariantItemSnapshot
+     */
+    id?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof SessionVariantItemSnapshot
+     */
+    basePrescriptionId?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof SessionVariantItemSnapshot
+     */
+    position?: number;
+    /**
+     *
+     * @type {number}
+     * @memberof SessionVariantItemSnapshot
+     */
+    overrideSets?: number;
+    /**
+     *
+     * @type {number}
+     * @memberof SessionVariantItemSnapshot
+     */
+    overrideRepetitions?: number;
+    /**
+     *
+     * @type {number}
+     * @memberof SessionVariantItemSnapshot
+     */
+    overrideDurationSeconds?: number;
+    /**
+     *
+     * @type {number}
+     * @memberof SessionVariantItemSnapshot
+     */
+    overrideContacts?: number;
 }
 
 /**
  * Check if a given object implements the SessionVariantItemSnapshot interface.
  */
-export function instanceOfSessionVariantItemSnapshot(
-  value: object,
-): value is SessionVariantItemSnapshot {
-  return true;
+export function instanceOfSessionVariantItemSnapshot(value: object): value is SessionVariantItemSnapshot {
+    return true;
 }
 
 export function SessionVariantItemSnapshotFromJSON(json: any): SessionVariantItemSnapshot {
-  return SessionVariantItemSnapshotFromJSONTyped(json, false);
+    return SessionVariantItemSnapshotFromJSONTyped(json, false);
 }
 
-export function SessionVariantItemSnapshotFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): SessionVariantItemSnapshot {
-  if (json == null) {
-    return json;
-  }
-  return {
-    id: json['id'] == null ? undefined : json['id'],
-    basePrescriptionId: json['basePrescriptionId'] == null ? undefined : json['basePrescriptionId'],
-    position: json['position'] == null ? undefined : json['position'],
-    overrideSets: json['overrideSets'] == null ? undefined : json['overrideSets'],
-    overrideRepetitions:
-      json['overrideRepetitions'] == null ? undefined : json['overrideRepetitions'],
-    overrideDurationSeconds:
-      json['overrideDurationSeconds'] == null ? undefined : json['overrideDurationSeconds'],
-    overrideContacts: json['overrideContacts'] == null ? undefined : json['overrideContacts'],
-  };
+export function SessionVariantItemSnapshotFromJSONTyped(json: any, ignoreDiscriminator: boolean): SessionVariantItemSnapshot {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'id': json['id'] == null ? undefined : json['id'],
+        'basePrescriptionId': json['basePrescriptionId'] == null ? undefined : json['basePrescriptionId'],
+        'position': json['position'] == null ? undefined : json['position'],
+        'overrideSets': json['overrideSets'] == null ? undefined : json['overrideSets'],
+        'overrideRepetitions': json['overrideRepetitions'] == null ? undefined : json['overrideRepetitions'],
+        'overrideDurationSeconds': json['overrideDurationSeconds'] == null ? undefined : json['overrideDurationSeconds'],
+        'overrideContacts': json['overrideContacts'] == null ? undefined : json['overrideContacts'],
+    };
 }
 
 export function SessionVariantItemSnapshotToJSON(json: any): SessionVariantItemSnapshot {
-  return SessionVariantItemSnapshotToJSONTyped(json, false);
+    return SessionVariantItemSnapshotToJSONTyped(json, false);
 }
 
-export function SessionVariantItemSnapshotToJSONTyped(
-  value?: SessionVariantItemSnapshot | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function SessionVariantItemSnapshotToJSONTyped(value?: SessionVariantItemSnapshot | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    id: value['id'],
-    basePrescriptionId: value['basePrescriptionId'],
-    position: value['position'],
-    overrideSets: value['overrideSets'],
-    overrideRepetitions: value['overrideRepetitions'],
-    overrideDurationSeconds: value['overrideDurationSeconds'],
-    overrideContacts: value['overrideContacts'],
-  };
+    return {
+
+        'id': value['id'],
+        'basePrescriptionId': value['basePrescriptionId'],
+        'position': value['position'],
+        'overrideSets': value['overrideSets'],
+        'overrideRepetitions': value['overrideRepetitions'],
+        'overrideDurationSeconds': value['overrideDurationSeconds'],
+        'overrideContacts': value['overrideContacts'],
+    };
 }

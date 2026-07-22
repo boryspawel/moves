@@ -2,19 +2,23 @@
 
 All URIs are relative to *http://localhost*
 
-| Method                                                           | HTTP request                                                       | Description                                                   |
-| ---------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------- |
-| [**abandon**](SessionExecutionAttemptControllerApi.md#abandon)   | **POST** /api/v1/participant/session-attempts/{attemptId}/abandon  |                                                               |
-| [**complete**](SessionExecutionAttemptControllerApi.md#complete) | **POST** /api/v1/participant/session-attempts/{attemptId}/complete |                                                               |
-| [**get**](SessionExecutionAttemptControllerApi.md#get)           | **GET** /api/v1/participant/session-attempts/{attemptId}           |                                                               |
-| [**pause**](SessionExecutionAttemptControllerApi.md#pause)       | **POST** /api/v1/participant/session-attempts/{attemptId}/pause    |                                                               |
-| [**progress**](SessionExecutionAttemptControllerApi.md#progress) | **PUT** /api/v1/participant/session-attempts/{attemptId}/progress  |                                                               |
-| [**resume**](SessionExecutionAttemptControllerApi.md#resume)     | **POST** /api/v1/participant/session-attempts/{attemptId}/resume   |                                                               |
-| [**start**](SessionExecutionAttemptControllerApi.md#start)       | **POST** /api/v1/participant/session-attempts                      | Start or return the participant\&#39;s active session attempt |
+| Method | HTTP request | Description |
+|------------- | ------------- | -------------|
+| [**abandon**](SessionExecutionAttemptControllerApi.md#abandon) | **POST** /api/v1/participant/session-attempts/{attemptId}/abandon |  |
+| [**complete**](SessionExecutionAttemptControllerApi.md#complete) | **POST** /api/v1/participant/session-attempts/{attemptId}/complete |  |
+| [**get1**](SessionExecutionAttemptControllerApi.md#get1) | **GET** /api/v1/participant/session-attempts/{attemptId} |  |
+| [**pause**](SessionExecutionAttemptControllerApi.md#pause) | **POST** /api/v1/participant/session-attempts/{attemptId}/pause |  |
+| [**progress**](SessionExecutionAttemptControllerApi.md#progress) | **PUT** /api/v1/participant/session-attempts/{attemptId}/progress |  |
+| [**resume**](SessionExecutionAttemptControllerApi.md#resume) | **POST** /api/v1/participant/session-attempts/{attemptId}/resume |  |
+| [**start**](SessionExecutionAttemptControllerApi.md#start) | **POST** /api/v1/participant/session-attempts | Start or return the participant\&#39;s active session attempt |
+
+
 
 ## abandon
 
 > AttemptView abandon(attemptId, abandonAttemptCommand)
+
+
 
 ### Example
 
@@ -52,10 +56,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                      | Type                                              | Description | Notes                     |
-| ------------------------- | ------------------------------------------------- | ----------- | ------------------------- |
-| **attemptId**             | `string`                                          |             | [Defaults to `undefined`] |
-| **abandonAttemptCommand** | [AbandonAttemptCommand](AbandonAttemptCommand.md) |             | [Optional]                |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **attemptId** | `string` |  | [Defaults to `undefined`] |
+| **abandonAttemptCommand** | [AbandonAttemptCommand](AbandonAttemptCommand.md) |  | [Optional] |
 
 ### Return type
 
@@ -70,17 +75,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## complete
 
 > ExecutionView complete(attemptId, idempotencyKey, declareExecutionCommand)
+
+
 
 ### Example
 
@@ -120,11 +128,12 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                        | Type                                                  | Description | Notes                     |
-| --------------------------- | ----------------------------------------------------- | ----------- | ------------------------- |
-| **attemptId**               | `string`                                              |             | [Defaults to `undefined`] |
-| **idempotencyKey**          | `string`                                              |             | [Defaults to `undefined`] |
-| **declareExecutionCommand** | [DeclareExecutionCommand](DeclareExecutionCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **attemptId** | `string` |  | [Defaults to `undefined`] |
+| **idempotencyKey** | `string` |  | [Defaults to `undefined`] |
+| **declareExecutionCommand** | [DeclareExecutionCommand](DeclareExecutionCommand.md) |  | |
 
 ### Return type
 
@@ -139,17 +148,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
-## get
 
-> AttemptDetailView get(attemptId)
+## get1
+
+> AttemptDetailView get1(attemptId)
+
+
 
 ### Example
 
@@ -158,7 +170,7 @@ import {
   Configuration,
   SessionExecutionAttemptControllerApi,
 } from '@moves/api-client';
-import type { GetRequest } from '@moves/api-client';
+import type { Get1Request } from '@moves/api-client';
 
 async function example() {
   console.log("🚀 Testing @moves/api-client SDK...");
@@ -169,10 +181,10 @@ async function example() {
   const body = {
     // string
     attemptId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
-  } satisfies GetRequest;
+  } satisfies Get1Request;
 
   try {
-    const data = await api.get(body);
+    const data = await api.get1(body);
     console.log(data);
   } catch (error) {
     console.error(error);
@@ -185,9 +197,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name          | Type     | Description | Notes                     |
-| ------------- | -------- | ----------- | ------------------------- |
-| **attemptId** | `string` |             | [Defaults to `undefined`] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **attemptId** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -202,17 +215,20 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## pause
 
 > AttemptView pause(attemptId)
+
+
 
 ### Example
 
@@ -248,9 +264,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name          | Type     | Description | Notes                     |
-| ------------- | -------- | ----------- | ------------------------- |
-| **attemptId** | `string` |             | [Defaults to `undefined`] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **attemptId** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -265,17 +282,20 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## progress
 
 > AttemptView progress(attemptId, progressCommand)
+
+
 
 ### Example
 
@@ -313,10 +333,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                | Type                                  | Description | Notes                     |
-| ------------------- | ------------------------------------- | ----------- | ------------------------- |
-| **attemptId**       | `string`                              |             | [Defaults to `undefined`] |
-| **progressCommand** | [ProgressCommand](ProgressCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **attemptId** | `string` |  | [Defaults to `undefined`] |
+| **progressCommand** | [ProgressCommand](ProgressCommand.md) |  | |
 
 ### Return type
 
@@ -331,17 +352,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## resume
 
 > AttemptView resume(attemptId)
+
+
 
 ### Example
 
@@ -377,9 +401,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name          | Type     | Description | Notes                     |
-| ------------- | -------- | ----------- | ------------------------- |
-| **attemptId** | `string` |             | [Defaults to `undefined`] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **attemptId** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -394,13 +419,14 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## start
 
@@ -444,10 +470,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                    | Type                                          | Description | Notes                     |
-| ----------------------- | --------------------------------------------- | ----------- | ------------------------- |
-| **idempotencyKey**      | `string`                                      |             | [Defaults to `undefined`] |
-| **startAttemptCommand** | [StartAttemptCommand](StartAttemptCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **idempotencyKey** | `string` |  | [Defaults to `undefined`] |
+| **startAttemptCommand** | [StartAttemptCommand](StartAttemptCommand.md) |  | |
 
 ### Return type
 
@@ -462,10 +489,10 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)

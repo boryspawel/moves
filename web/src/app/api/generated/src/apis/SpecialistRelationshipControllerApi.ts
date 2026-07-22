@@ -14,54 +14,51 @@
 
 import * as runtime from '../runtime';
 import {
-  type ActiveParticipantView,
-  ActiveParticipantViewFromJSON,
-  ActiveParticipantViewToJSON,
+    type ActiveParticipantView,
+    ActiveParticipantViewFromJSON,
+    ActiveParticipantViewToJSON,
 } from '../models/ActiveParticipantView';
 
 /**
  *
  */
 export class SpecialistRelationshipControllerApi extends runtime.BaseAPI {
-  /**
-   * Creates request options for activeParticipants without sending the request
-   */
-  async activeParticipantsRequestOpts(): Promise<runtime.RequestOpts> {
-    const queryParameters: any = {};
 
-    const headerParameters: runtime.HTTPHeaders = {};
+    /**
+     * Creates request options for activeParticipants without sending the request
+     */
+    async activeParticipantsRequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
 
-    let urlPath = `/api/v1/specialist/participants`;
+        const headerParameters: runtime.HTTPHeaders = {};
 
-    return {
-      path: urlPath,
-      method: 'GET',
-      headers: headerParameters,
-      query: queryParameters,
-    };
-  }
 
-  /**
-   * List participants with an active specialist relationship for UI selection
-   */
-  async activeParticipantsRaw(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<Array<ActiveParticipantView>>> {
-    const requestOptions = await this.activeParticipantsRequestOpts();
-    const response = await this.request(requestOptions, initOverrides);
+        let urlPath = `/api/v1/specialist/participants`;
 
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      jsonValue.map(ActiveParticipantViewFromJSON),
-    );
-  }
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
 
-  /**
-   * List participants with an active specialist relationship for UI selection
-   */
-  async activeParticipants(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<Array<ActiveParticipantView>> {
-    const response = await this.activeParticipantsRaw(initOverrides);
-    return await response.value();
-  }
+    /**
+     * List participants with an active specialist relationship for UI selection
+     */
+    async activeParticipantsRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<ActiveParticipantView>>> {
+        const requestOptions = await this.activeParticipantsRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ActiveParticipantViewFromJSON));
+    }
+
+    /**
+     * List participants with an active specialist relationship for UI selection
+     */
+    async activeParticipants(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<ActiveParticipantView>> {
+        const response = await this.activeParticipantsRaw(initOverrides);
+        return await response.value();
+    }
+
 }

@@ -19,111 +19,110 @@ import { mapValues } from '../runtime';
  * @interface RecordSummary
  */
 export interface RecordSummary {
-  /**
-   *
-   * @type {string}
-   * @memberof RecordSummary
-   */
-  id?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof RecordSummary
-   */
-  rowNumber?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof RecordSummary
-   */
-  sourceRecordKey?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RecordSummary
-   */
-  status?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RecordSummary
-   */
-  rawSha256?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RecordSummary
-   */
-  normalizedSha256?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RecordSummary
-   */
-  matchedExerciseId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RecordSummary
-   */
-  draftVersionId?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof RecordSummary
-   */
-  version?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof RecordSummary
+     */
+    id?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof RecordSummary
+     */
+    rowNumber?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof RecordSummary
+     */
+    sourceRecordKey?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof RecordSummary
+     */
+    status?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof RecordSummary
+     */
+    rawSha256?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof RecordSummary
+     */
+    normalizedSha256?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof RecordSummary
+     */
+    matchedExerciseId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof RecordSummary
+     */
+    draftVersionId?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof RecordSummary
+     */
+    version?: number;
 }
 
 /**
  * Check if a given object implements the RecordSummary interface.
  */
 export function instanceOfRecordSummary(value: object): value is RecordSummary {
-  return true;
+    return true;
 }
 
 export function RecordSummaryFromJSON(json: any): RecordSummary {
-  return RecordSummaryFromJSONTyped(json, false);
+    return RecordSummaryFromJSONTyped(json, false);
 }
 
 export function RecordSummaryFromJSONTyped(json: any, ignoreDiscriminator: boolean): RecordSummary {
-  if (json == null) {
-    return json;
-  }
-  return {
-    id: json['id'] == null ? undefined : json['id'],
-    rowNumber: json['rowNumber'] == null ? undefined : json['rowNumber'],
-    sourceRecordKey: json['sourceRecordKey'] == null ? undefined : json['sourceRecordKey'],
-    status: json['status'] == null ? undefined : json['status'],
-    rawSha256: json['rawSha256'] == null ? undefined : json['rawSha256'],
-    normalizedSha256: json['normalizedSha256'] == null ? undefined : json['normalizedSha256'],
-    matchedExerciseId: json['matchedExerciseId'] == null ? undefined : json['matchedExerciseId'],
-    draftVersionId: json['draftVersionId'] == null ? undefined : json['draftVersionId'],
-    version: json['version'] == null ? undefined : json['version'],
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'id': json['id'] == null ? undefined : json['id'],
+        'rowNumber': json['rowNumber'] == null ? undefined : json['rowNumber'],
+        'sourceRecordKey': json['sourceRecordKey'] == null ? undefined : json['sourceRecordKey'],
+        'status': json['status'] == null ? undefined : json['status'],
+        'rawSha256': json['rawSha256'] == null ? undefined : json['rawSha256'],
+        'normalizedSha256': json['normalizedSha256'] == null ? undefined : json['normalizedSha256'],
+        'matchedExerciseId': json['matchedExerciseId'] == null ? undefined : json['matchedExerciseId'],
+        'draftVersionId': json['draftVersionId'] == null ? undefined : json['draftVersionId'],
+        'version': json['version'] == null ? undefined : json['version'],
+    };
 }
 
 export function RecordSummaryToJSON(json: any): RecordSummary {
-  return RecordSummaryToJSONTyped(json, false);
+    return RecordSummaryToJSONTyped(json, false);
 }
 
-export function RecordSummaryToJSONTyped(
-  value?: RecordSummary | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function RecordSummaryToJSONTyped(value?: RecordSummary | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    id: value['id'],
-    rowNumber: value['rowNumber'],
-    sourceRecordKey: value['sourceRecordKey'],
-    status: value['status'],
-    rawSha256: value['rawSha256'],
-    normalizedSha256: value['normalizedSha256'],
-    matchedExerciseId: value['matchedExerciseId'],
-    draftVersionId: value['draftVersionId'],
-    version: value['version'],
-  };
+    return {
+
+        'id': value['id'],
+        'rowNumber': value['rowNumber'],
+        'sourceRecordKey': value['sourceRecordKey'],
+        'status': value['status'],
+        'rawSha256': value['rawSha256'],
+        'normalizedSha256': value['normalizedSha256'],
+        'matchedExerciseId': value['matchedExerciseId'],
+        'draftVersionId': value['draftVersionId'],
+        'version': value['version'],
+    };
 }

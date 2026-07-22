@@ -19,128 +19,126 @@ import { mapValues } from '../runtime';
  * @interface IssueView
  */
 export interface IssueView {
-  /**
-   *
-   * @type {string}
-   * @memberof IssueView
-   */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof IssueView
-   */
-  recordId?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof IssueView
-   */
-  rowNumber?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof IssueView
-   */
-  sourceRecordKey?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof IssueView
-   */
-  code?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof IssueView
-   */
-  stage?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof IssueView
-   */
-  severity?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof IssueView
-   */
-  jsonPointer?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof IssueView
-   */
-  message?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof IssueView
-   */
-  createdAt?: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof IssueView
-   */
-  resolvedAt?: Date;
+    /**
+     *
+     * @type {string}
+     * @memberof IssueView
+     */
+    id?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof IssueView
+     */
+    recordId?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof IssueView
+     */
+    rowNumber?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof IssueView
+     */
+    sourceRecordKey?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof IssueView
+     */
+    code?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof IssueView
+     */
+    stage?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof IssueView
+     */
+    severity?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof IssueView
+     */
+    jsonPointer?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof IssueView
+     */
+    message?: string;
+    /**
+     *
+     * @type {Date}
+     * @memberof IssueView
+     */
+    createdAt?: Date;
+    /**
+     *
+     * @type {Date}
+     * @memberof IssueView
+     */
+    resolvedAt?: Date;
 }
 
 /**
  * Check if a given object implements the IssueView interface.
  */
 export function instanceOfIssueView(value: object): value is IssueView {
-  return true;
+    return true;
 }
 
 export function IssueViewFromJSON(json: any): IssueView {
-  return IssueViewFromJSONTyped(json, false);
+    return IssueViewFromJSONTyped(json, false);
 }
 
 export function IssueViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): IssueView {
-  if (json == null) {
-    return json;
-  }
-  return {
-    id: json['id'] == null ? undefined : json['id'],
-    recordId: json['recordId'] == null ? undefined : json['recordId'],
-    rowNumber: json['rowNumber'] == null ? undefined : json['rowNumber'],
-    sourceRecordKey: json['sourceRecordKey'] == null ? undefined : json['sourceRecordKey'],
-    code: json['code'] == null ? undefined : json['code'],
-    stage: json['stage'] == null ? undefined : json['stage'],
-    severity: json['severity'] == null ? undefined : json['severity'],
-    jsonPointer: json['jsonPointer'] == null ? undefined : json['jsonPointer'],
-    message: json['message'] == null ? undefined : json['message'],
-    createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
-    resolvedAt: json['resolvedAt'] == null ? undefined : new Date(json['resolvedAt']),
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'id': json['id'] == null ? undefined : json['id'],
+        'recordId': json['recordId'] == null ? undefined : json['recordId'],
+        'rowNumber': json['rowNumber'] == null ? undefined : json['rowNumber'],
+        'sourceRecordKey': json['sourceRecordKey'] == null ? undefined : json['sourceRecordKey'],
+        'code': json['code'] == null ? undefined : json['code'],
+        'stage': json['stage'] == null ? undefined : json['stage'],
+        'severity': json['severity'] == null ? undefined : json['severity'],
+        'jsonPointer': json['jsonPointer'] == null ? undefined : json['jsonPointer'],
+        'message': json['message'] == null ? undefined : json['message'],
+        'createdAt': json['createdAt'] == null ? undefined : (new Date(json['createdAt'])),
+        'resolvedAt': json['resolvedAt'] == null ? undefined : (new Date(json['resolvedAt'])),
+    };
 }
 
 export function IssueViewToJSON(json: any): IssueView {
-  return IssueViewToJSONTyped(json, false);
+    return IssueViewToJSONTyped(json, false);
 }
 
-export function IssueViewToJSONTyped(
-  value?: IssueView | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function IssueViewToJSONTyped(value?: IssueView | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    id: value['id'],
-    recordId: value['recordId'],
-    rowNumber: value['rowNumber'],
-    sourceRecordKey: value['sourceRecordKey'],
-    code: value['code'],
-    stage: value['stage'],
-    severity: value['severity'],
-    jsonPointer: value['jsonPointer'],
-    message: value['message'],
-    createdAt: value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
-    resolvedAt:
-      value['resolvedAt'] == null ? value['resolvedAt'] : value['resolvedAt'].toISOString(),
-  };
+    return {
+
+        'id': value['id'],
+        'recordId': value['recordId'],
+        'rowNumber': value['rowNumber'],
+        'sourceRecordKey': value['sourceRecordKey'],
+        'code': value['code'],
+        'stage': value['stage'],
+        'severity': value['severity'],
+        'jsonPointer': value['jsonPointer'],
+        'message': value['message'],
+        'createdAt': value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
+        'resolvedAt': value['resolvedAt'] == null ? value['resolvedAt'] : value['resolvedAt'].toISOString(),
+    };
 }

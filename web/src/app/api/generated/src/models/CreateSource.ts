@@ -19,79 +19,78 @@ import { mapValues } from '../runtime';
  * @interface CreateSource
  */
 export interface CreateSource {
-  /**
-   *
-   * @type {string}
-   * @memberof CreateSource
-   */
-  code?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof CreateSource
-   */
-  displayName?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof CreateSource
-   */
-  defaultLocale?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof CreateSource
-   */
-  licenseCode?: string;
-  /**
-   *
-   * @type {boolean}
-   * @memberof CreateSource
-   */
-  licenseVerified?: boolean;
+    /**
+     *
+     * @type {string}
+     * @memberof CreateSource
+     */
+    code?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof CreateSource
+     */
+    displayName?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof CreateSource
+     */
+    defaultLocale?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof CreateSource
+     */
+    licenseCode?: string;
+    /**
+     *
+     * @type {boolean}
+     * @memberof CreateSource
+     */
+    licenseVerified?: boolean;
 }
 
 /**
  * Check if a given object implements the CreateSource interface.
  */
 export function instanceOfCreateSource(value: object): value is CreateSource {
-  return true;
+    return true;
 }
 
 export function CreateSourceFromJSON(json: any): CreateSource {
-  return CreateSourceFromJSONTyped(json, false);
+    return CreateSourceFromJSONTyped(json, false);
 }
 
 export function CreateSourceFromJSONTyped(json: any, ignoreDiscriminator: boolean): CreateSource {
-  if (json == null) {
-    return json;
-  }
-  return {
-    code: json['code'] == null ? undefined : json['code'],
-    displayName: json['displayName'] == null ? undefined : json['displayName'],
-    defaultLocale: json['defaultLocale'] == null ? undefined : json['defaultLocale'],
-    licenseCode: json['licenseCode'] == null ? undefined : json['licenseCode'],
-    licenseVerified: json['licenseVerified'] == null ? undefined : json['licenseVerified'],
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'code': json['code'] == null ? undefined : json['code'],
+        'displayName': json['displayName'] == null ? undefined : json['displayName'],
+        'defaultLocale': json['defaultLocale'] == null ? undefined : json['defaultLocale'],
+        'licenseCode': json['licenseCode'] == null ? undefined : json['licenseCode'],
+        'licenseVerified': json['licenseVerified'] == null ? undefined : json['licenseVerified'],
+    };
 }
 
 export function CreateSourceToJSON(json: any): CreateSource {
-  return CreateSourceToJSONTyped(json, false);
+    return CreateSourceToJSONTyped(json, false);
 }
 
-export function CreateSourceToJSONTyped(
-  value?: CreateSource | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function CreateSourceToJSONTyped(value?: CreateSource | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    code: value['code'],
-    displayName: value['displayName'],
-    defaultLocale: value['defaultLocale'],
-    licenseCode: value['licenseCode'],
-    licenseVerified: value['licenseVerified'],
-  };
+    return {
+
+        'code': value['code'],
+        'displayName': value['displayName'],
+        'defaultLocale': value['defaultLocale'],
+        'licenseCode': value['licenseCode'],
+        'licenseVerified': value['licenseVerified'],
+    };
 }

@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { ProgressView } from './ProgressView';
 import {
-  ProgressViewFromJSON,
-  ProgressViewFromJSONTyped,
-  ProgressViewToJSON,
-  ProgressViewToJSONTyped,
+    ProgressViewFromJSON,
+    ProgressViewFromJSONTyped,
+    ProgressViewToJSON,
+    ProgressViewToJSONTyped,
 } from './ProgressView';
 
 /**
@@ -27,124 +27,110 @@ import {
  * @interface AttemptDetailView
  */
 export interface AttemptDetailView {
-  /**
-   *
-   * @type {string}
-   * @memberof AttemptDetailView
-   */
-  attemptId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AttemptDetailView
-   */
-  plannedSessionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AttemptDetailView
-   */
-  planRevisionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AttemptDetailView
-   */
-  selectedVariantType?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AttemptDetailView
-   */
-  state?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof AttemptDetailView
-   */
-  startedAt?: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof AttemptDetailView
-   */
-  lastActivityAt?: Date;
-  /**
-   *
-   * @type {string}
-   * @memberof AttemptDetailView
-   */
-  abandonmentReason?: string;
-  /**
-   *
-   * @type {Array<ProgressView>}
-   * @memberof AttemptDetailView
-   */
-  progress?: Array<ProgressView>;
+    /**
+     *
+     * @type {string}
+     * @memberof AttemptDetailView
+     */
+    attemptId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof AttemptDetailView
+     */
+    plannedSessionId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof AttemptDetailView
+     */
+    planRevisionId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof AttemptDetailView
+     */
+    selectedVariantType?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof AttemptDetailView
+     */
+    state?: string;
+    /**
+     *
+     * @type {Date}
+     * @memberof AttemptDetailView
+     */
+    startedAt?: Date;
+    /**
+     *
+     * @type {Date}
+     * @memberof AttemptDetailView
+     */
+    lastActivityAt?: Date;
+    /**
+     *
+     * @type {string}
+     * @memberof AttemptDetailView
+     */
+    abandonmentReason?: string;
+    /**
+     *
+     * @type {Array<ProgressView>}
+     * @memberof AttemptDetailView
+     */
+    progress?: Array<ProgressView>;
 }
 
 /**
  * Check if a given object implements the AttemptDetailView interface.
  */
 export function instanceOfAttemptDetailView(value: object): value is AttemptDetailView {
-  return true;
+    return true;
 }
 
 export function AttemptDetailViewFromJSON(json: any): AttemptDetailView {
-  return AttemptDetailViewFromJSONTyped(json, false);
+    return AttemptDetailViewFromJSONTyped(json, false);
 }
 
-export function AttemptDetailViewFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): AttemptDetailView {
-  if (json == null) {
-    return json;
-  }
-  return {
-    attemptId: json['attemptId'] == null ? undefined : json['attemptId'],
-    plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
-    planRevisionId: json['planRevisionId'] == null ? undefined : json['planRevisionId'],
-    selectedVariantType:
-      json['selectedVariantType'] == null ? undefined : json['selectedVariantType'],
-    state: json['state'] == null ? undefined : json['state'],
-    startedAt: json['startedAt'] == null ? undefined : new Date(json['startedAt']),
-    lastActivityAt: json['lastActivityAt'] == null ? undefined : new Date(json['lastActivityAt']),
-    abandonmentReason: json['abandonmentReason'] == null ? undefined : json['abandonmentReason'],
-    progress:
-      json['progress'] == null
-        ? undefined
-        : (json['progress'] as Array<any>).map(ProgressViewFromJSON),
-  };
+export function AttemptDetailViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): AttemptDetailView {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'attemptId': json['attemptId'] == null ? undefined : json['attemptId'],
+        'plannedSessionId': json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
+        'planRevisionId': json['planRevisionId'] == null ? undefined : json['planRevisionId'],
+        'selectedVariantType': json['selectedVariantType'] == null ? undefined : json['selectedVariantType'],
+        'state': json['state'] == null ? undefined : json['state'],
+        'startedAt': json['startedAt'] == null ? undefined : (new Date(json['startedAt'])),
+        'lastActivityAt': json['lastActivityAt'] == null ? undefined : (new Date(json['lastActivityAt'])),
+        'abandonmentReason': json['abandonmentReason'] == null ? undefined : json['abandonmentReason'],
+        'progress': json['progress'] == null ? undefined : ((json['progress'] as Array<any>).map(ProgressViewFromJSON)),
+    };
 }
 
 export function AttemptDetailViewToJSON(json: any): AttemptDetailView {
-  return AttemptDetailViewToJSONTyped(json, false);
+    return AttemptDetailViewToJSONTyped(json, false);
 }
 
-export function AttemptDetailViewToJSONTyped(
-  value?: AttemptDetailView | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function AttemptDetailViewToJSONTyped(value?: AttemptDetailView | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    attemptId: value['attemptId'],
-    plannedSessionId: value['plannedSessionId'],
-    planRevisionId: value['planRevisionId'],
-    selectedVariantType: value['selectedVariantType'],
-    state: value['state'],
-    startedAt: value['startedAt'] == null ? value['startedAt'] : value['startedAt'].toISOString(),
-    lastActivityAt:
-      value['lastActivityAt'] == null
-        ? value['lastActivityAt']
-        : value['lastActivityAt'].toISOString(),
-    abandonmentReason: value['abandonmentReason'],
-    progress:
-      value['progress'] == null
-        ? undefined
-        : (value['progress'] as Array<any>).map(ProgressViewToJSON),
-  };
+    return {
+
+        'attemptId': value['attemptId'],
+        'plannedSessionId': value['plannedSessionId'],
+        'planRevisionId': value['planRevisionId'],
+        'selectedVariantType': value['selectedVariantType'],
+        'state': value['state'],
+        'startedAt': value['startedAt'] == null ? value['startedAt'] : value['startedAt'].toISOString(),
+        'lastActivityAt': value['lastActivityAt'] == null ? value['lastActivityAt'] : value['lastActivityAt'].toISOString(),
+        'abandonmentReason': value['abandonmentReason'],
+        'progress': value['progress'] == null ? undefined : ((value['progress'] as Array<any>).map(ProgressViewToJSON)),
+    };
 }

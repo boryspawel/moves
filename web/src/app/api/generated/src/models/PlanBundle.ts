@@ -15,45 +15,45 @@
 import { mapValues } from '../runtime';
 import type { TrainingCycle } from './TrainingCycle';
 import {
-  TrainingCycleFromJSON,
-  TrainingCycleFromJSONTyped,
-  TrainingCycleToJSON,
-  TrainingCycleToJSONTyped,
+    TrainingCycleFromJSON,
+    TrainingCycleFromJSONTyped,
+    TrainingCycleToJSON,
+    TrainingCycleToJSONTyped,
 } from './TrainingCycle';
 import type { TrainingGoal } from './TrainingGoal';
 import {
-  TrainingGoalFromJSON,
-  TrainingGoalFromJSONTyped,
-  TrainingGoalToJSON,
-  TrainingGoalToJSONTyped,
+    TrainingGoalFromJSON,
+    TrainingGoalFromJSONTyped,
+    TrainingGoalToJSON,
+    TrainingGoalToJSONTyped,
 } from './TrainingGoal';
 import type { PlannedSession } from './PlannedSession';
 import {
-  PlannedSessionFromJSON,
-  PlannedSessionFromJSONTyped,
-  PlannedSessionToJSON,
-  PlannedSessionToJSONTyped,
+    PlannedSessionFromJSON,
+    PlannedSessionFromJSONTyped,
+    PlannedSessionToJSON,
+    PlannedSessionToJSONTyped,
 } from './PlannedSession';
 import type { ExercisePrescription } from './ExercisePrescription';
 import {
-  ExercisePrescriptionFromJSON,
-  ExercisePrescriptionFromJSONTyped,
-  ExercisePrescriptionToJSON,
-  ExercisePrescriptionToJSONTyped,
+    ExercisePrescriptionFromJSON,
+    ExercisePrescriptionFromJSONTyped,
+    ExercisePrescriptionToJSON,
+    ExercisePrescriptionToJSONTyped,
 } from './ExercisePrescription';
 import type { Microcycle } from './Microcycle';
 import {
-  MicrocycleFromJSON,
-  MicrocycleFromJSONTyped,
-  MicrocycleToJSON,
-  MicrocycleToJSONTyped,
+    MicrocycleFromJSON,
+    MicrocycleFromJSONTyped,
+    MicrocycleToJSON,
+    MicrocycleToJSONTyped,
 } from './Microcycle';
 import type { TrainingPlan } from './TrainingPlan';
 import {
-  TrainingPlanFromJSON,
-  TrainingPlanFromJSONTyped,
-  TrainingPlanToJSON,
-  TrainingPlanToJSONTyped,
+    TrainingPlanFromJSON,
+    TrainingPlanFromJSONTyped,
+    TrainingPlanToJSON,
+    TrainingPlanToJSONTyped,
 } from './TrainingPlan';
 
 /**
@@ -62,93 +62,86 @@ import {
  * @interface PlanBundle
  */
 export interface PlanBundle {
-  /**
-   *
-   * @type {TrainingGoal}
-   * @memberof PlanBundle
-   */
-  goal?: TrainingGoal;
-  /**
-   *
-   * @type {TrainingPlan}
-   * @memberof PlanBundle
-   */
-  plan?: TrainingPlan;
-  /**
-   *
-   * @type {TrainingCycle}
-   * @memberof PlanBundle
-   */
-  cycle?: TrainingCycle;
-  /**
-   *
-   * @type {Microcycle}
-   * @memberof PlanBundle
-   */
-  microcycle?: Microcycle;
-  /**
-   *
-   * @type {PlannedSession}
-   * @memberof PlanBundle
-   */
-  session?: PlannedSession;
-  /**
-   *
-   * @type {Array<ExercisePrescription>}
-   * @memberof PlanBundle
-   */
-  prescriptions?: Array<ExercisePrescription>;
+    /**
+     *
+     * @type {TrainingGoal}
+     * @memberof PlanBundle
+     */
+    goal?: TrainingGoal;
+    /**
+     *
+     * @type {TrainingPlan}
+     * @memberof PlanBundle
+     */
+    plan?: TrainingPlan;
+    /**
+     *
+     * @type {TrainingCycle}
+     * @memberof PlanBundle
+     */
+    cycle?: TrainingCycle;
+    /**
+     *
+     * @type {Microcycle}
+     * @memberof PlanBundle
+     */
+    microcycle?: Microcycle;
+    /**
+     *
+     * @type {PlannedSession}
+     * @memberof PlanBundle
+     */
+    session?: PlannedSession;
+    /**
+     *
+     * @type {Array<ExercisePrescription>}
+     * @memberof PlanBundle
+     */
+    prescriptions?: Array<ExercisePrescription>;
 }
 
 /**
  * Check if a given object implements the PlanBundle interface.
  */
 export function instanceOfPlanBundle(value: object): value is PlanBundle {
-  return true;
+    return true;
 }
 
 export function PlanBundleFromJSON(json: any): PlanBundle {
-  return PlanBundleFromJSONTyped(json, false);
+    return PlanBundleFromJSONTyped(json, false);
 }
 
 export function PlanBundleFromJSONTyped(json: any, ignoreDiscriminator: boolean): PlanBundle {
-  if (json == null) {
-    return json;
-  }
-  return {
-    goal: json['goal'] == null ? undefined : TrainingGoalFromJSON(json['goal']),
-    plan: json['plan'] == null ? undefined : TrainingPlanFromJSON(json['plan']),
-    cycle: json['cycle'] == null ? undefined : TrainingCycleFromJSON(json['cycle']),
-    microcycle: json['microcycle'] == null ? undefined : MicrocycleFromJSON(json['microcycle']),
-    session: json['session'] == null ? undefined : PlannedSessionFromJSON(json['session']),
-    prescriptions:
-      json['prescriptions'] == null
-        ? undefined
-        : (json['prescriptions'] as Array<any>).map(ExercisePrescriptionFromJSON),
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'goal': json['goal'] == null ? undefined : TrainingGoalFromJSON(json['goal']),
+        'plan': json['plan'] == null ? undefined : TrainingPlanFromJSON(json['plan']),
+        'cycle': json['cycle'] == null ? undefined : TrainingCycleFromJSON(json['cycle']),
+        'microcycle': json['microcycle'] == null ? undefined : MicrocycleFromJSON(json['microcycle']),
+        'session': json['session'] == null ? undefined : PlannedSessionFromJSON(json['session']),
+        'prescriptions': json['prescriptions'] == null ? undefined : ((json['prescriptions'] as Array<any>).map(ExercisePrescriptionFromJSON)),
+    };
 }
 
 export function PlanBundleToJSON(json: any): PlanBundle {
-  return PlanBundleToJSONTyped(json, false);
+    return PlanBundleToJSONTyped(json, false);
 }
 
-export function PlanBundleToJSONTyped(
-  value?: PlanBundle | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function PlanBundleToJSONTyped(value?: PlanBundle | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    goal: TrainingGoalToJSON(value['goal']),
-    plan: TrainingPlanToJSON(value['plan']),
-    cycle: TrainingCycleToJSON(value['cycle']),
-    microcycle: MicrocycleToJSON(value['microcycle']),
-    session: PlannedSessionToJSON(value['session']),
-    prescriptions:
-      value['prescriptions'] == null
-        ? undefined
-        : (value['prescriptions'] as Array<any>).map(ExercisePrescriptionToJSON),
-  };
+    return {
+
+        'goal': TrainingGoalToJSON(value['goal']),
+        'plan': TrainingPlanToJSON(value['plan']),
+        'cycle': TrainingCycleToJSON(value['cycle']),
+        'microcycle': MicrocycleToJSON(value['microcycle']),
+        'session': PlannedSessionToJSON(value['session']),
+        'prescriptions': value['prescriptions'] == null ? undefined : ((value['prescriptions'] as Array<any>).map(ExercisePrescriptionToJSON)),
+    };
 }

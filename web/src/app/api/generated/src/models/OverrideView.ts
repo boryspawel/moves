@@ -19,95 +19,94 @@ import { mapValues } from '../runtime';
  * @interface OverrideView
  */
 export interface OverrideView {
-  /**
-   *
-   * @type {string}
-   * @memberof OverrideView
-   */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof OverrideView
-   */
-  assessmentId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof OverrideView
-   */
-  factorId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof OverrideView
-   */
-  reasonCode?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof OverrideView
-   */
-  scope?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof OverrideView
-   */
-  validFrom?: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof OverrideView
-   */
-  validTo?: Date;
+    /**
+     *
+     * @type {string}
+     * @memberof OverrideView
+     */
+    id?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof OverrideView
+     */
+    assessmentId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof OverrideView
+     */
+    factorId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof OverrideView
+     */
+    reasonCode?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof OverrideView
+     */
+    scope?: string;
+    /**
+     *
+     * @type {Date}
+     * @memberof OverrideView
+     */
+    validFrom?: Date;
+    /**
+     *
+     * @type {Date}
+     * @memberof OverrideView
+     */
+    validTo?: Date;
 }
 
 /**
  * Check if a given object implements the OverrideView interface.
  */
 export function instanceOfOverrideView(value: object): value is OverrideView {
-  return true;
+    return true;
 }
 
 export function OverrideViewFromJSON(json: any): OverrideView {
-  return OverrideViewFromJSONTyped(json, false);
+    return OverrideViewFromJSONTyped(json, false);
 }
 
 export function OverrideViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): OverrideView {
-  if (json == null) {
-    return json;
-  }
-  return {
-    id: json['id'] == null ? undefined : json['id'],
-    assessmentId: json['assessmentId'] == null ? undefined : json['assessmentId'],
-    factorId: json['factorId'] == null ? undefined : json['factorId'],
-    reasonCode: json['reasonCode'] == null ? undefined : json['reasonCode'],
-    scope: json['scope'] == null ? undefined : json['scope'],
-    validFrom: json['validFrom'] == null ? undefined : new Date(json['validFrom']),
-    validTo: json['validTo'] == null ? undefined : new Date(json['validTo']),
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'id': json['id'] == null ? undefined : json['id'],
+        'assessmentId': json['assessmentId'] == null ? undefined : json['assessmentId'],
+        'factorId': json['factorId'] == null ? undefined : json['factorId'],
+        'reasonCode': json['reasonCode'] == null ? undefined : json['reasonCode'],
+        'scope': json['scope'] == null ? undefined : json['scope'],
+        'validFrom': json['validFrom'] == null ? undefined : (new Date(json['validFrom'])),
+        'validTo': json['validTo'] == null ? undefined : (new Date(json['validTo'])),
+    };
 }
 
 export function OverrideViewToJSON(json: any): OverrideView {
-  return OverrideViewToJSONTyped(json, false);
+    return OverrideViewToJSONTyped(json, false);
 }
 
-export function OverrideViewToJSONTyped(
-  value?: OverrideView | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function OverrideViewToJSONTyped(value?: OverrideView | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    id: value['id'],
-    assessmentId: value['assessmentId'],
-    factorId: value['factorId'],
-    reasonCode: value['reasonCode'],
-    scope: value['scope'],
-    validFrom: value['validFrom'] == null ? value['validFrom'] : value['validFrom'].toISOString(),
-    validTo: value['validTo'] == null ? value['validTo'] : value['validTo'].toISOString(),
-  };
+    return {
+
+        'id': value['id'],
+        'assessmentId': value['assessmentId'],
+        'factorId': value['factorId'],
+        'reasonCode': value['reasonCode'],
+        'scope': value['scope'],
+        'validFrom': value['validFrom'] == null ? value['validFrom'] : value['validFrom'].toISOString(),
+        'validTo': value['validTo'] == null ? value['validTo'] : value['validTo'].toISOString(),
+    };
 }

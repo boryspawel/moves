@@ -19,80 +19,78 @@ import { mapValues } from '../runtime';
  * @interface TrainingGoal
  */
 export interface TrainingGoal {
-  /**
-   *
-   * @type {string}
-   * @memberof TrainingGoal
-   */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof TrainingGoal
-   */
-  participantAccountId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof TrainingGoal
-   */
-  name?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof TrainingGoal
-   */
-  createdByAccountId?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof TrainingGoal
-   */
-  createdAt?: Date;
+    /**
+     *
+     * @type {string}
+     * @memberof TrainingGoal
+     */
+    id?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof TrainingGoal
+     */
+    participantAccountId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof TrainingGoal
+     */
+    name?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof TrainingGoal
+     */
+    createdByAccountId?: string;
+    /**
+     *
+     * @type {Date}
+     * @memberof TrainingGoal
+     */
+    createdAt?: Date;
 }
 
 /**
  * Check if a given object implements the TrainingGoal interface.
  */
 export function instanceOfTrainingGoal(value: object): value is TrainingGoal {
-  return true;
+    return true;
 }
 
 export function TrainingGoalFromJSON(json: any): TrainingGoal {
-  return TrainingGoalFromJSONTyped(json, false);
+    return TrainingGoalFromJSONTyped(json, false);
 }
 
 export function TrainingGoalFromJSONTyped(json: any, ignoreDiscriminator: boolean): TrainingGoal {
-  if (json == null) {
-    return json;
-  }
-  return {
-    id: json['id'] == null ? undefined : json['id'],
-    participantAccountId:
-      json['participantAccountId'] == null ? undefined : json['participantAccountId'],
-    name: json['name'] == null ? undefined : json['name'],
-    createdByAccountId: json['createdByAccountId'] == null ? undefined : json['createdByAccountId'],
-    createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'id': json['id'] == null ? undefined : json['id'],
+        'participantAccountId': json['participantAccountId'] == null ? undefined : json['participantAccountId'],
+        'name': json['name'] == null ? undefined : json['name'],
+        'createdByAccountId': json['createdByAccountId'] == null ? undefined : json['createdByAccountId'],
+        'createdAt': json['createdAt'] == null ? undefined : (new Date(json['createdAt'])),
+    };
 }
 
 export function TrainingGoalToJSON(json: any): TrainingGoal {
-  return TrainingGoalToJSONTyped(json, false);
+    return TrainingGoalToJSONTyped(json, false);
 }
 
-export function TrainingGoalToJSONTyped(
-  value?: TrainingGoal | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function TrainingGoalToJSONTyped(value?: TrainingGoal | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    id: value['id'],
-    participantAccountId: value['participantAccountId'],
-    name: value['name'],
-    createdByAccountId: value['createdByAccountId'],
-    createdAt: value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
-  };
+    return {
+
+        'id': value['id'],
+        'participantAccountId': value['participantAccountId'],
+        'name': value['name'],
+        'createdByAccountId': value['createdByAccountId'],
+        'createdAt': value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
+    };
 }

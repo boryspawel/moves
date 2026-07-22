@@ -19,71 +19,70 @@ import { mapValues } from '../runtime';
  * @interface Microcycle
  */
 export interface Microcycle {
-  /**
-   *
-   * @type {string}
-   * @memberof Microcycle
-   */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof Microcycle
-   */
-  cycleId?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof Microcycle
-   */
-  sequenceNumber?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof Microcycle
-   */
-  name?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof Microcycle
+     */
+    id?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof Microcycle
+     */
+    cycleId?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof Microcycle
+     */
+    sequenceNumber?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof Microcycle
+     */
+    name?: string;
 }
 
 /**
  * Check if a given object implements the Microcycle interface.
  */
 export function instanceOfMicrocycle(value: object): value is Microcycle {
-  return true;
+    return true;
 }
 
 export function MicrocycleFromJSON(json: any): Microcycle {
-  return MicrocycleFromJSONTyped(json, false);
+    return MicrocycleFromJSONTyped(json, false);
 }
 
 export function MicrocycleFromJSONTyped(json: any, ignoreDiscriminator: boolean): Microcycle {
-  if (json == null) {
-    return json;
-  }
-  return {
-    id: json['id'] == null ? undefined : json['id'],
-    cycleId: json['cycleId'] == null ? undefined : json['cycleId'],
-    sequenceNumber: json['sequenceNumber'] == null ? undefined : json['sequenceNumber'],
-    name: json['name'] == null ? undefined : json['name'],
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'id': json['id'] == null ? undefined : json['id'],
+        'cycleId': json['cycleId'] == null ? undefined : json['cycleId'],
+        'sequenceNumber': json['sequenceNumber'] == null ? undefined : json['sequenceNumber'],
+        'name': json['name'] == null ? undefined : json['name'],
+    };
 }
 
 export function MicrocycleToJSON(json: any): Microcycle {
-  return MicrocycleToJSONTyped(json, false);
+    return MicrocycleToJSONTyped(json, false);
 }
 
-export function MicrocycleToJSONTyped(
-  value?: Microcycle | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function MicrocycleToJSONTyped(value?: Microcycle | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    id: value['id'],
-    cycleId: value['cycleId'],
-    sequenceNumber: value['sequenceNumber'],
-    name: value['name'],
-  };
+    return {
+
+        'id': value['id'],
+        'cycleId': value['cycleId'],
+        'sequenceNumber': value['sequenceNumber'],
+        'name': value['name'],
+    };
 }

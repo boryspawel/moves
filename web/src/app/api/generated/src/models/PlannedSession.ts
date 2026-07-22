@@ -19,122 +19,116 @@ import { mapValues } from '../runtime';
  * @interface PlannedSession
  */
 export interface PlannedSession {
-  /**
-   *
-   * @type {string}
-   * @memberof PlannedSession
-   */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof PlannedSession
-   */
-  microcycleId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof PlannedSession
-   */
-  participantAccountId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof PlannedSession
-   */
-  title?: string;
-  /**
-   *
-   * @type {PlannedSessionKindEnum}
-   * @memberof PlannedSession
-   */
-  kind?: PlannedSessionKindEnum;
-  /**
-   *
-   * @type {PlannedSessionStatusEnum}
-   * @memberof PlannedSession
-   */
-  status?: PlannedSessionStatusEnum;
-  /**
-   *
-   * @type {Date}
-   * @memberof PlannedSession
-   */
-  assignedAt?: Date;
+    /**
+     *
+     * @type {string}
+     * @memberof PlannedSession
+     */
+    id?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof PlannedSession
+     */
+    microcycleId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof PlannedSession
+     */
+    participantAccountId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof PlannedSession
+     */
+    title?: string;
+    /**
+     *
+     * @type {PlannedSessionKindEnum}
+     * @memberof PlannedSession
+     */
+    kind?: PlannedSessionKindEnum;
+    /**
+     *
+     * @type {PlannedSessionStatusEnum}
+     * @memberof PlannedSession
+     */
+    status?: PlannedSessionStatusEnum;
+    /**
+     *
+     * @type {Date}
+     * @memberof PlannedSession
+     */
+    assignedAt?: Date;
 }
+
 
 /**
  * @export
  */
 export const PlannedSessionKindEnum = {
-  SelfGuided: 'SELF_GUIDED',
-  OfflineAppointment: 'OFFLINE_APPOINTMENT',
+    SelfGuided: 'SELF_GUIDED',
+    OfflineAppointment: 'OFFLINE_APPOINTMENT'
 } as const;
-export type PlannedSessionKindEnum =
-  (typeof PlannedSessionKindEnum)[keyof typeof PlannedSessionKindEnum];
+export type PlannedSessionKindEnum = typeof PlannedSessionKindEnum[keyof typeof PlannedSessionKindEnum];
 
 /**
  * @export
  */
 export const PlannedSessionStatusEnum = {
-  Draft: 'DRAFT',
-  Assigned: 'ASSIGNED',
-  Completed: 'COMPLETED',
-  Cancelled: 'CANCELLED',
+    Draft: 'DRAFT',
+    Assigned: 'ASSIGNED',
+    Completed: 'COMPLETED',
+    Cancelled: 'CANCELLED'
 } as const;
-export type PlannedSessionStatusEnum =
-  (typeof PlannedSessionStatusEnum)[keyof typeof PlannedSessionStatusEnum];
+export type PlannedSessionStatusEnum = typeof PlannedSessionStatusEnum[keyof typeof PlannedSessionStatusEnum];
+
 
 /**
  * Check if a given object implements the PlannedSession interface.
  */
 export function instanceOfPlannedSession(value: object): value is PlannedSession {
-  return true;
+    return true;
 }
 
 export function PlannedSessionFromJSON(json: any): PlannedSession {
-  return PlannedSessionFromJSONTyped(json, false);
+    return PlannedSessionFromJSONTyped(json, false);
 }
 
-export function PlannedSessionFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): PlannedSession {
-  if (json == null) {
-    return json;
-  }
-  return {
-    id: json['id'] == null ? undefined : json['id'],
-    microcycleId: json['microcycleId'] == null ? undefined : json['microcycleId'],
-    participantAccountId:
-      json['participantAccountId'] == null ? undefined : json['participantAccountId'],
-    title: json['title'] == null ? undefined : json['title'],
-    kind: json['kind'] == null ? undefined : json['kind'],
-    status: json['status'] == null ? undefined : json['status'],
-    assignedAt: json['assignedAt'] == null ? undefined : new Date(json['assignedAt']),
-  };
+export function PlannedSessionFromJSONTyped(json: any, ignoreDiscriminator: boolean): PlannedSession {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'id': json['id'] == null ? undefined : json['id'],
+        'microcycleId': json['microcycleId'] == null ? undefined : json['microcycleId'],
+        'participantAccountId': json['participantAccountId'] == null ? undefined : json['participantAccountId'],
+        'title': json['title'] == null ? undefined : json['title'],
+        'kind': json['kind'] == null ? undefined : json['kind'],
+        'status': json['status'] == null ? undefined : json['status'],
+        'assignedAt': json['assignedAt'] == null ? undefined : (new Date(json['assignedAt'])),
+    };
 }
 
 export function PlannedSessionToJSON(json: any): PlannedSession {
-  return PlannedSessionToJSONTyped(json, false);
+    return PlannedSessionToJSONTyped(json, false);
 }
 
-export function PlannedSessionToJSONTyped(
-  value?: PlannedSession | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function PlannedSessionToJSONTyped(value?: PlannedSession | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    id: value['id'],
-    microcycleId: value['microcycleId'],
-    participantAccountId: value['participantAccountId'],
-    title: value['title'],
-    kind: value['kind'],
-    status: value['status'],
-    assignedAt:
-      value['assignedAt'] == null ? value['assignedAt'] : value['assignedAt'].toISOString(),
-  };
+    return {
+
+        'id': value['id'],
+        'microcycleId': value['microcycleId'],
+        'participantAccountId': value['participantAccountId'],
+        'title': value['title'],
+        'kind': value['kind'],
+        'status': value['status'],
+        'assignedAt': value['assignedAt'] == null ? value['assignedAt'] : value['assignedAt'].toISOString(),
+    };
 }

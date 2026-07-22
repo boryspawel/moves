@@ -10,6 +10,7 @@
       }
       @if (auth.hasRole('PARTICIPANT')) {
         <a mat-button routerLink="/sessions" routerLinkActive="active">Sesje</a>
+        <a mat-button routerLink="/reminders" routerLinkActive="active">Przypomnienia</a>
         <a mat-button routerLink="/gamification" routerLinkActive="active">Punkty</a>
       }
       @if (auth.hasRole('SPECIALIST')) {

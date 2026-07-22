@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { VersionCommand } from './VersionCommand';
 import {
-  VersionCommandFromJSON,
-  VersionCommandFromJSONTyped,
-  VersionCommandToJSON,
-  VersionCommandToJSONTyped,
+    VersionCommandFromJSON,
+    VersionCommandFromJSONTyped,
+    VersionCommandToJSON,
+    VersionCommandToJSONTyped,
 } from './VersionCommand';
 
 /**
@@ -27,55 +27,54 @@ import {
  * @interface CreateRequest
  */
 export interface CreateRequest {
-  /**
-   *
-   * @type {string}
-   * @memberof CreateRequest
-   */
-  canonicalName?: string;
-  /**
-   *
-   * @type {VersionCommand}
-   * @memberof CreateRequest
-   */
-  version?: VersionCommand;
+    /**
+     *
+     * @type {string}
+     * @memberof CreateRequest
+     */
+    canonicalName?: string;
+    /**
+     *
+     * @type {VersionCommand}
+     * @memberof CreateRequest
+     */
+    version?: VersionCommand;
 }
 
 /**
  * Check if a given object implements the CreateRequest interface.
  */
 export function instanceOfCreateRequest(value: object): value is CreateRequest {
-  return true;
+    return true;
 }
 
 export function CreateRequestFromJSON(json: any): CreateRequest {
-  return CreateRequestFromJSONTyped(json, false);
+    return CreateRequestFromJSONTyped(json, false);
 }
 
 export function CreateRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): CreateRequest {
-  if (json == null) {
-    return json;
-  }
-  return {
-    canonicalName: json['canonicalName'] == null ? undefined : json['canonicalName'],
-    version: json['version'] == null ? undefined : VersionCommandFromJSON(json['version']),
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'canonicalName': json['canonicalName'] == null ? undefined : json['canonicalName'],
+        'version': json['version'] == null ? undefined : VersionCommandFromJSON(json['version']),
+    };
 }
 
 export function CreateRequestToJSON(json: any): CreateRequest {
-  return CreateRequestToJSONTyped(json, false);
+    return CreateRequestToJSONTyped(json, false);
 }
 
-export function CreateRequestToJSONTyped(
-  value?: CreateRequest | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function CreateRequestToJSONTyped(value?: CreateRequest | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    canonicalName: value['canonicalName'],
-    version: VersionCommandToJSON(value['version']),
-  };
+    return {
+
+        'canonicalName': value['canonicalName'],
+        'version': VersionCommandToJSON(value['version']),
+    };
 }

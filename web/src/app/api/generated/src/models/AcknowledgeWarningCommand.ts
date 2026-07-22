@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { ActingContext } from './ActingContext';
 import {
-  ActingContextFromJSON,
-  ActingContextFromJSONTyped,
-  ActingContextToJSON,
-  ActingContextToJSONTyped,
+    ActingContextFromJSON,
+    ActingContextFromJSONTyped,
+    ActingContextToJSON,
+    ActingContextToJSONTyped,
 } from './ActingContext';
 
 /**
@@ -27,69 +27,62 @@ import {
  * @interface AcknowledgeWarningCommand
  */
 export interface AcknowledgeWarningCommand {
-  /**
-   *
-   * @type {Set<string>}
-   * @memberof AcknowledgeWarningCommand
-   */
-  factorIds?: Set<string>;
-  /**
-   *
-   * @type {string}
-   * @memberof AcknowledgeWarningCommand
-   */
-  rationale?: string;
-  /**
-   *
-   * @type {ActingContext}
-   * @memberof AcknowledgeWarningCommand
-   */
-  actingContext?: ActingContext;
+    /**
+     *
+     * @type {Set<string>}
+     * @memberof AcknowledgeWarningCommand
+     */
+    factorIds?: Set<string>;
+    /**
+     *
+     * @type {string}
+     * @memberof AcknowledgeWarningCommand
+     */
+    rationale?: string;
+    /**
+     *
+     * @type {ActingContext}
+     * @memberof AcknowledgeWarningCommand
+     */
+    actingContext?: ActingContext;
 }
 
 /**
  * Check if a given object implements the AcknowledgeWarningCommand interface.
  */
-export function instanceOfAcknowledgeWarningCommand(
-  value: object,
-): value is AcknowledgeWarningCommand {
-  return true;
+export function instanceOfAcknowledgeWarningCommand(value: object): value is AcknowledgeWarningCommand {
+    return true;
 }
 
 export function AcknowledgeWarningCommandFromJSON(json: any): AcknowledgeWarningCommand {
-  return AcknowledgeWarningCommandFromJSONTyped(json, false);
+    return AcknowledgeWarningCommandFromJSONTyped(json, false);
 }
 
-export function AcknowledgeWarningCommandFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): AcknowledgeWarningCommand {
-  if (json == null) {
-    return json;
-  }
-  return {
-    factorIds: json['factorIds'] == null ? undefined : new Set(json['factorIds']),
-    rationale: json['rationale'] == null ? undefined : json['rationale'],
-    actingContext:
-      json['actingContext'] == null ? undefined : ActingContextFromJSON(json['actingContext']),
-  };
+export function AcknowledgeWarningCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): AcknowledgeWarningCommand {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'factorIds': json['factorIds'] == null ? undefined : new Set(json['factorIds']),
+        'rationale': json['rationale'] == null ? undefined : json['rationale'],
+        'actingContext': json['actingContext'] == null ? undefined : ActingContextFromJSON(json['actingContext']),
+    };
 }
 
 export function AcknowledgeWarningCommandToJSON(json: any): AcknowledgeWarningCommand {
-  return AcknowledgeWarningCommandToJSONTyped(json, false);
+    return AcknowledgeWarningCommandToJSONTyped(json, false);
 }
 
-export function AcknowledgeWarningCommandToJSONTyped(
-  value?: AcknowledgeWarningCommand | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function AcknowledgeWarningCommandToJSONTyped(value?: AcknowledgeWarningCommand | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    factorIds: value['factorIds'] == null ? undefined : Array.from(value['factorIds'] as Set<any>),
-    rationale: value['rationale'],
-    actingContext: ActingContextToJSON(value['actingContext']),
-  };
+    return {
+
+        'factorIds': value['factorIds'] == null ? undefined : Array.from(value['factorIds'] as Set<any>),
+        'rationale': value['rationale'],
+        'actingContext': ActingContextToJSON(value['actingContext']),
+    };
 }

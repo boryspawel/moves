@@ -19,90 +19,86 @@ import { mapValues } from '../runtime';
  * @interface OutcomeCommand
  */
 export interface OutcomeCommand {
-  /**
-   *
-   * @type {string}
-   * @memberof OutcomeCommand
-   */
-  metricCode?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof OutcomeCommand
-   */
-  baseline?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof OutcomeCommand
-   */
-  target?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof OutcomeCommand
-   */
-  unit?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof OutcomeCommand
-   */
-  measurementMethod?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof OutcomeCommand
-   */
-  evidenceSource?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof OutcomeCommand
+     */
+    metricCode?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof OutcomeCommand
+     */
+    baseline?: number;
+    /**
+     *
+     * @type {number}
+     * @memberof OutcomeCommand
+     */
+    target?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof OutcomeCommand
+     */
+    unit?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof OutcomeCommand
+     */
+    measurementMethod?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof OutcomeCommand
+     */
+    evidenceSource?: string;
 }
 
 /**
  * Check if a given object implements the OutcomeCommand interface.
  */
 export function instanceOfOutcomeCommand(value: object): value is OutcomeCommand {
-  return true;
+    return true;
 }
 
 export function OutcomeCommandFromJSON(json: any): OutcomeCommand {
-  return OutcomeCommandFromJSONTyped(json, false);
+    return OutcomeCommandFromJSONTyped(json, false);
 }
 
-export function OutcomeCommandFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): OutcomeCommand {
-  if (json == null) {
-    return json;
-  }
-  return {
-    metricCode: json['metricCode'] == null ? undefined : json['metricCode'],
-    baseline: json['baseline'] == null ? undefined : json['baseline'],
-    target: json['target'] == null ? undefined : json['target'],
-    unit: json['unit'] == null ? undefined : json['unit'],
-    measurementMethod: json['measurementMethod'] == null ? undefined : json['measurementMethod'],
-    evidenceSource: json['evidenceSource'] == null ? undefined : json['evidenceSource'],
-  };
+export function OutcomeCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): OutcomeCommand {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'metricCode': json['metricCode'] == null ? undefined : json['metricCode'],
+        'baseline': json['baseline'] == null ? undefined : json['baseline'],
+        'target': json['target'] == null ? undefined : json['target'],
+        'unit': json['unit'] == null ? undefined : json['unit'],
+        'measurementMethod': json['measurementMethod'] == null ? undefined : json['measurementMethod'],
+        'evidenceSource': json['evidenceSource'] == null ? undefined : json['evidenceSource'],
+    };
 }
 
 export function OutcomeCommandToJSON(json: any): OutcomeCommand {
-  return OutcomeCommandToJSONTyped(json, false);
+    return OutcomeCommandToJSONTyped(json, false);
 }
 
-export function OutcomeCommandToJSONTyped(
-  value?: OutcomeCommand | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function OutcomeCommandToJSONTyped(value?: OutcomeCommand | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    metricCode: value['metricCode'],
-    baseline: value['baseline'],
-    target: value['target'],
-    unit: value['unit'],
-    measurementMethod: value['measurementMethod'],
-    evidenceSource: value['evidenceSource'],
-  };
+    return {
+
+        'metricCode': value['metricCode'],
+        'baseline': value['baseline'],
+        'target': value['target'],
+        'unit': value['unit'],
+        'measurementMethod': value['measurementMethod'],
+        'evidenceSource': value['evidenceSource'],
+    };
 }

@@ -14,253 +14,237 @@
 
 import * as runtime from '../runtime';
 import {
-  type ExerciseVersionPublishRequest,
-  ExerciseVersionPublishRequestFromJSON,
-  ExerciseVersionPublishRequestToJSON,
+    type ExerciseVersionPublishRequest,
+    ExerciseVersionPublishRequestFromJSON,
+    ExerciseVersionPublishRequestToJSON,
 } from '../models/ExerciseVersionPublishRequest';
 import {
-  type PublicationResult,
-  PublicationResultFromJSON,
-  PublicationResultToJSON,
+    type PublicationResult,
+    PublicationResultFromJSON,
+    PublicationResultToJSON,
 } from '../models/PublicationResult';
 import {
-  type ReviewCommand,
-  ReviewCommandFromJSON,
-  ReviewCommandToJSON,
+    type ReviewCommand,
+    ReviewCommandFromJSON,
+    ReviewCommandToJSON,
 } from '../models/ReviewCommand';
 import {
-  type ReviewResult,
-  ReviewResultFromJSON,
-  ReviewResultToJSON,
+    type ReviewResult,
+    ReviewResultFromJSON,
+    ReviewResultToJSON,
 } from '../models/ReviewResult';
-import { type VersionDiff, VersionDiffFromJSON, VersionDiffToJSON } from '../models/VersionDiff';
+import {
+    type VersionDiff,
+    VersionDiffFromJSON,
+    VersionDiffToJSON,
+} from '../models/VersionDiff';
 
 export interface DiffRequest {
-  id: string;
+    id: string;
 }
 
 export interface Publish1Request {
-  id: string;
-  exerciseVersionPublishRequest?: ExerciseVersionPublishRequest;
+    id: string;
+    exerciseVersionPublishRequest?: ExerciseVersionPublishRequest;
 }
 
 export interface ReviewRequest {
-  id: string;
-  reviewCommand: ReviewCommand;
+    id: string;
+    reviewCommand: ReviewCommand;
 }
 
 export interface ReviewsRequest {
-  id: string;
+    id: string;
 }
 
 /**
  *
  */
 export class ExerciseVersionReviewControllerApi extends runtime.BaseAPI {
-  /**
-   * Creates request options for diff without sending the request
-   */
-  async diffRequestOpts(requestParameters: DiffRequest): Promise<runtime.RequestOpts> {
-    if (requestParameters['id'] == null) {
-      throw new runtime.RequiredError(
-        'id',
-        'Required parameter "id" was null or undefined when calling diff().',
-      );
+
+    /**
+     * Creates request options for diff without sending the request
+     */
+    async diffRequestOpts(requestParameters: DiffRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling diff().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+
+        let urlPath = `/api/v1/admin/exercise-versions/{id}/diff`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
     }
 
-    const queryParameters: any = {};
+    /**
+     */
+    async diffRaw(requestParameters: DiffRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<VersionDiff>> {
+        const requestOptions = await this.diffRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    let urlPath = `/api/v1/admin/exercise-versions/{id}/diff`;
-    urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
-
-    return {
-      path: urlPath,
-      method: 'GET',
-      headers: headerParameters,
-      query: queryParameters,
-    };
-  }
-
-  /**
-   */
-  async diffRaw(
-    requestParameters: DiffRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<VersionDiff>> {
-    const requestOptions = await this.diffRequestOpts(requestParameters);
-    const response = await this.request(requestOptions, initOverrides);
-
-    return new runtime.JSONApiResponse(response, (jsonValue) => VersionDiffFromJSON(jsonValue));
-  }
-
-  /**
-   */
-  async diff(
-    requestParameters: DiffRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<VersionDiff> {
-    const response = await this.diffRaw(requestParameters, initOverrides);
-    return await response.value();
-  }
-
-  /**
-   * Creates request options for publish1 without sending the request
-   */
-  async publish1RequestOpts(requestParameters: Publish1Request): Promise<runtime.RequestOpts> {
-    if (requestParameters['id'] == null) {
-      throw new runtime.RequiredError(
-        'id',
-        'Required parameter "id" was null or undefined when calling publish1().',
-      );
+        return new runtime.JSONApiResponse(response, (jsonValue) => VersionDiffFromJSON(jsonValue));
     }
 
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    headerParameters['Content-Type'] = 'application/json';
-
-    let urlPath = `/api/v1/admin/exercise-versions/{id}/publish`;
-    urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
-
-    return {
-      path: urlPath,
-      method: 'POST',
-      headers: headerParameters,
-      query: queryParameters,
-      body: ExerciseVersionPublishRequestToJSON(requestParameters['exerciseVersionPublishRequest']),
-    };
-  }
-
-  /**
-   */
-  async publish1Raw(
-    requestParameters: Publish1Request,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<PublicationResult>> {
-    const requestOptions = await this.publish1RequestOpts(requestParameters);
-    const response = await this.request(requestOptions, initOverrides);
-
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      PublicationResultFromJSON(jsonValue),
-    );
-  }
-
-  /**
-   */
-  async publish1(
-    requestParameters: Publish1Request,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<PublicationResult> {
-    const response = await this.publish1Raw(requestParameters, initOverrides);
-    return await response.value();
-  }
-
-  /**
-   * Creates request options for review without sending the request
-   */
-  async reviewRequestOpts(requestParameters: ReviewRequest): Promise<runtime.RequestOpts> {
-    if (requestParameters['id'] == null) {
-      throw new runtime.RequiredError(
-        'id',
-        'Required parameter "id" was null or undefined when calling review().',
-      );
+    /**
+     */
+    async diff(requestParameters: DiffRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<VersionDiff> {
+        const response = await this.diffRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
-    if (requestParameters['reviewCommand'] == null) {
-      throw new runtime.RequiredError(
-        'reviewCommand',
-        'Required parameter "reviewCommand" was null or undefined when calling review().',
-      );
+    /**
+     * Creates request options for publish1 without sending the request
+     */
+    async publish1RequestOpts(requestParameters: Publish1Request): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling publish1().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+
+        let urlPath = `/api/v1/admin/exercise-versions/{id}/publish`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ExerciseVersionPublishRequestToJSON(requestParameters['exerciseVersionPublishRequest']),
+        };
     }
 
-    const queryParameters: any = {};
+    /**
+     */
+    async publish1Raw(requestParameters: Publish1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PublicationResult>> {
+        const requestOptions = await this.publish1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    headerParameters['Content-Type'] = 'application/json';
-
-    let urlPath = `/api/v1/admin/exercise-versions/{id}/reviews`;
-    urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
-
-    return {
-      path: urlPath,
-      method: 'POST',
-      headers: headerParameters,
-      query: queryParameters,
-      body: ReviewCommandToJSON(requestParameters['reviewCommand']),
-    };
-  }
-
-  /**
-   */
-  async reviewRaw(
-    requestParameters: ReviewRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<ReviewResult>> {
-    const requestOptions = await this.reviewRequestOpts(requestParameters);
-    const response = await this.request(requestOptions, initOverrides);
-
-    return new runtime.JSONApiResponse(response, (jsonValue) => ReviewResultFromJSON(jsonValue));
-  }
-
-  /**
-   */
-  async review(
-    requestParameters: ReviewRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<ReviewResult> {
-    const response = await this.reviewRaw(requestParameters, initOverrides);
-    return await response.value();
-  }
-
-  /**
-   * Creates request options for reviews without sending the request
-   */
-  async reviewsRequestOpts(requestParameters: ReviewsRequest): Promise<runtime.RequestOpts> {
-    if (requestParameters['id'] == null) {
-      throw new runtime.RequiredError(
-        'id',
-        'Required parameter "id" was null or undefined when calling reviews().',
-      );
+        return new runtime.JSONApiResponse(response, (jsonValue) => PublicationResultFromJSON(jsonValue));
     }
 
-    const queryParameters: any = {};
+    /**
+     */
+    async publish1(requestParameters: Publish1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PublicationResult> {
+        const response = await this.publish1Raw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
-    const headerParameters: runtime.HTTPHeaders = {};
+    /**
+     * Creates request options for review without sending the request
+     */
+    async reviewRequestOpts(requestParameters: ReviewRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling review().'
+            );
+        }
 
-    let urlPath = `/api/v1/admin/exercise-versions/{id}/reviews`;
-    urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+        if (requestParameters['reviewCommand'] == null) {
+            throw new runtime.RequiredError(
+                'reviewCommand',
+                'Required parameter "reviewCommand" was null or undefined when calling review().'
+            );
+        }
 
-    return {
-      path: urlPath,
-      method: 'GET',
-      headers: headerParameters,
-      query: queryParameters,
-    };
-  }
+        const queryParameters: any = {};
 
-  /**
-   */
-  async reviewsRaw(
-    requestParameters: ReviewsRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<ReviewResult>> {
-    const requestOptions = await this.reviewsRequestOpts(requestParameters);
-    const response = await this.request(requestOptions, initOverrides);
+        const headerParameters: runtime.HTTPHeaders = {};
 
-    return new runtime.JSONApiResponse(response, (jsonValue) => ReviewResultFromJSON(jsonValue));
-  }
+        headerParameters['Content-Type'] = 'application/json';
 
-  /**
-   */
-  async reviews(
-    requestParameters: ReviewsRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<ReviewResult> {
-    const response = await this.reviewsRaw(requestParameters, initOverrides);
-    return await response.value();
-  }
+
+        let urlPath = `/api/v1/admin/exercise-versions/{id}/reviews`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ReviewCommandToJSON(requestParameters['reviewCommand']),
+        };
+    }
+
+    /**
+     */
+    async reviewRaw(requestParameters: ReviewRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ReviewResult>> {
+        const requestOptions = await this.reviewRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ReviewResultFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async review(requestParameters: ReviewRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ReviewResult> {
+        const response = await this.reviewRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for reviews without sending the request
+     */
+    async reviewsRequestOpts(requestParameters: ReviewsRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling reviews().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+
+        let urlPath = `/api/v1/admin/exercise-versions/{id}/reviews`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     */
+    async reviewsRaw(requestParameters: ReviewsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ReviewResult>> {
+        const requestOptions = await this.reviewsRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ReviewResultFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async reviews(requestParameters: ReviewsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ReviewResult> {
+        const response = await this.reviewsRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
 }

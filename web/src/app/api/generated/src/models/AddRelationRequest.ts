@@ -19,80 +19,77 @@ import { mapValues } from '../runtime';
  * @interface AddRelationRequest
  */
 export interface AddRelationRequest {
-  /**
-   *
-   * @type {string}
-   * @memberof AddRelationRequest
-   */
-  parentId: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AddRelationRequest
-   */
-  childId: string;
-  /**
-   *
-   * @type {AddRelationRequestRelationTypeEnum}
-   * @memberof AddRelationRequest
-   */
-  relationType: AddRelationRequestRelationTypeEnum;
+    /**
+     *
+     * @type {string}
+     * @memberof AddRelationRequest
+     */
+    parentId: string;
+    /**
+     *
+     * @type {string}
+     * @memberof AddRelationRequest
+     */
+    childId: string;
+    /**
+     *
+     * @type {AddRelationRequestRelationTypeEnum}
+     * @memberof AddRelationRequest
+     */
+    relationType: AddRelationRequestRelationTypeEnum;
 }
+
 
 /**
  * @export
  */
 export const AddRelationRequestRelationTypeEnum = {
-  PartOf: 'PART_OF',
-  MemberOf: 'MEMBER_OF',
-  FunctionallyGroupedAs: 'FUNCTIONALLY_GROUPED_AS',
+    PartOf: 'PART_OF',
+    MemberOf: 'MEMBER_OF',
+    FunctionallyGroupedAs: 'FUNCTIONALLY_GROUPED_AS'
 } as const;
-export type AddRelationRequestRelationTypeEnum =
-  (typeof AddRelationRequestRelationTypeEnum)[keyof typeof AddRelationRequestRelationTypeEnum];
+export type AddRelationRequestRelationTypeEnum = typeof AddRelationRequestRelationTypeEnum[keyof typeof AddRelationRequestRelationTypeEnum];
+
 
 /**
  * Check if a given object implements the AddRelationRequest interface.
  */
 export function instanceOfAddRelationRequest(value: object): value is AddRelationRequest {
-  if (!('parentId' in value) || value['parentId'] === undefined) return false;
-  if (!('childId' in value) || value['childId'] === undefined) return false;
-  if (!('relationType' in value) || value['relationType'] === undefined) return false;
-  return true;
+    if (!('parentId' in value) || value['parentId'] === undefined) return false;
+    if (!('childId' in value) || value['childId'] === undefined) return false;
+    if (!('relationType' in value) || value['relationType'] === undefined) return false;
+    return true;
 }
 
 export function AddRelationRequestFromJSON(json: any): AddRelationRequest {
-  return AddRelationRequestFromJSONTyped(json, false);
+    return AddRelationRequestFromJSONTyped(json, false);
 }
 
-export function AddRelationRequestFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): AddRelationRequest {
-  if (json == null) {
-    return json;
-  }
-  return {
-    parentId: json['parentId'],
-    childId: json['childId'],
-    relationType: json['relationType'],
-  };
+export function AddRelationRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): AddRelationRequest {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'parentId': json['parentId'],
+        'childId': json['childId'],
+        'relationType': json['relationType'],
+    };
 }
 
 export function AddRelationRequestToJSON(json: any): AddRelationRequest {
-  return AddRelationRequestToJSONTyped(json, false);
+    return AddRelationRequestToJSONTyped(json, false);
 }
 
-export function AddRelationRequestToJSONTyped(
-  value?: AddRelationRequest | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function AddRelationRequestToJSONTyped(value?: AddRelationRequest | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    parentId: value['parentId'],
-    childId: value['childId'],
-    relationType: value['relationType'],
-  };
+    return {
+
+        'parentId': value['parentId'],
+        'childId': value['childId'],
+        'relationType': value['relationType'],
+    };
 }

@@ -14,54 +14,51 @@
 
 import * as runtime from '../runtime';
 import {
-  type IdentityResponse,
-  IdentityResponseFromJSON,
-  IdentityResponseToJSON,
+    type IdentityResponse,
+    IdentityResponseFromJSON,
+    IdentityResponseToJSON,
 } from '../models/IdentityResponse';
 
 /**
  *
  */
 export class CurrentIdentityControllerApi extends runtime.BaseAPI {
-  /**
-   * Creates request options for current2 without sending the request
-   */
-  async current2RequestOpts(): Promise<runtime.RequestOpts> {
-    const queryParameters: any = {};
 
-    const headerParameters: runtime.HTTPHeaders = {};
+    /**
+     * Creates request options for current2 without sending the request
+     */
+    async current2RequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
 
-    let urlPath = `/api/v1/identity/me`;
+        const headerParameters: runtime.HTTPHeaders = {};
 
-    return {
-      path: urlPath,
-      method: 'GET',
-      headers: headerParameters,
-      query: queryParameters,
-    };
-  }
 
-  /**
-   * Return the authenticated external identity
-   */
-  async current2Raw(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<IdentityResponse>> {
-    const requestOptions = await this.current2RequestOpts();
-    const response = await this.request(requestOptions, initOverrides);
+        let urlPath = `/api/v1/identity/me`;
 
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      IdentityResponseFromJSON(jsonValue),
-    );
-  }
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
 
-  /**
-   * Return the authenticated external identity
-   */
-  async current2(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<IdentityResponse> {
-    const response = await this.current2Raw(initOverrides);
-    return await response.value();
-  }
+    /**
+     * Return the authenticated external identity
+     */
+    async current2Raw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<IdentityResponse>> {
+        const requestOptions = await this.current2RequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => IdentityResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Return the authenticated external identity
+     */
+    async current2(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<IdentityResponse> {
+        const response = await this.current2Raw(initOverrides);
+        return await response.value();
+    }
+
 }

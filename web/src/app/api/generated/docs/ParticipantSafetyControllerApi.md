@@ -2,14 +2,18 @@
 
 All URIs are relative to *http://localhost*
 
-| Method                                                            | HTTP request                         | Description                                                                   |
-| ----------------------------------------------------------------- | ------------------------------------ | ----------------------------------------------------------------------------- |
-| [**checkIn**](ParticipantSafetyControllerApi.md#checkinoperation) | **POST** /api/v1/safety/me/check-ins |                                                                               |
-| [**current**](ParticipantSafetyControllerApi.md#current)          | **GET** /api/v1/safety/me            | Return only the authenticated participant\&#39;s non-diagnostic safety inputs |
+| Method | HTTP request | Description |
+|------------- | ------------- | -------------|
+| [**checkIn**](ParticipantSafetyControllerApi.md#checkinoperation) | **POST** /api/v1/safety/me/check-ins |  |
+| [**current**](ParticipantSafetyControllerApi.md#current) | **GET** /api/v1/safety/me | Return only the authenticated participant\&#39;s non-diagnostic safety inputs |
+
+
 
 ## checkIn
 
 > SafetyView checkIn(checkInRequest)
+
+
 
 ### Example
 
@@ -45,9 +49,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name               | Type                                | Description | Notes |
-| ------------------ | ----------------------------------- | ----------- | ----- |
-| **checkInRequest** | [CheckInRequest](CheckInRequest.md) |             |       |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **checkInRequest** | [CheckInRequest](CheckInRequest.md) |  | |
 
 ### Return type
 
@@ -62,13 +67,14 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## current
 
@@ -79,12 +85,16 @@ Return only the authenticated participant\&#39;s non-diagnostic safety inputs
 ### Example
 
 ```ts
-import { Configuration, ParticipantSafetyControllerApi } from '@moves/api-client';
+import {
+  Configuration,
+  ParticipantSafetyControllerApi,
+} from '@moves/api-client';
 import type { CurrentRequest } from '@moves/api-client';
 
 async function example() {
-  console.log('🚀 Testing @moves/api-client SDK...');
-  const config = new Configuration({});
+  console.log("🚀 Testing @moves/api-client SDK...");
+  const config = new Configuration({
+  });
   const api = new ParticipantSafetyControllerApi(config);
 
   try {
@@ -116,10 +126,10 @@ This endpoint does not need any parameter.
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)

@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { SessionSnapshot } from './SessionSnapshot';
 import {
-  SessionSnapshotFromJSON,
-  SessionSnapshotFromJSONTyped,
-  SessionSnapshotToJSON,
-  SessionSnapshotToJSONTyped,
+    SessionSnapshotFromJSON,
+    SessionSnapshotFromJSONTyped,
+    SessionSnapshotToJSON,
+    SessionSnapshotToJSONTyped,
 } from './SessionSnapshot';
 
 /**
@@ -27,116 +27,102 @@ import {
  * @interface MicrocycleSnapshot
  */
 export interface MicrocycleSnapshot {
-  /**
-   *
-   * @type {string}
-   * @memberof MicrocycleSnapshot
-   */
-  id?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof MicrocycleSnapshot
-   */
-  sequenceNumber?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof MicrocycleSnapshot
-   */
-  name?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof MicrocycleSnapshot
-   */
-  startDate?: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof MicrocycleSnapshot
-   */
-  endDate?: Date;
-  /**
-   *
-   * @type {string}
-   * @memberof MicrocycleSnapshot
-   */
-  phaseIntent?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof MicrocycleSnapshot
-   */
-  phaseGoal?: string;
-  /**
-   *
-   * @type {Array<SessionSnapshot>}
-   * @memberof MicrocycleSnapshot
-   */
-  sessions?: Array<SessionSnapshot>;
+    /**
+     *
+     * @type {string}
+     * @memberof MicrocycleSnapshot
+     */
+    id?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof MicrocycleSnapshot
+     */
+    sequenceNumber?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof MicrocycleSnapshot
+     */
+    name?: string;
+    /**
+     *
+     * @type {Date}
+     * @memberof MicrocycleSnapshot
+     */
+    startDate?: Date;
+    /**
+     *
+     * @type {Date}
+     * @memberof MicrocycleSnapshot
+     */
+    endDate?: Date;
+    /**
+     *
+     * @type {string}
+     * @memberof MicrocycleSnapshot
+     */
+    phaseIntent?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof MicrocycleSnapshot
+     */
+    phaseGoal?: string;
+    /**
+     *
+     * @type {Array<SessionSnapshot>}
+     * @memberof MicrocycleSnapshot
+     */
+    sessions?: Array<SessionSnapshot>;
 }
 
 /**
  * Check if a given object implements the MicrocycleSnapshot interface.
  */
 export function instanceOfMicrocycleSnapshot(value: object): value is MicrocycleSnapshot {
-  return true;
+    return true;
 }
 
 export function MicrocycleSnapshotFromJSON(json: any): MicrocycleSnapshot {
-  return MicrocycleSnapshotFromJSONTyped(json, false);
+    return MicrocycleSnapshotFromJSONTyped(json, false);
 }
 
-export function MicrocycleSnapshotFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): MicrocycleSnapshot {
-  if (json == null) {
-    return json;
-  }
-  return {
-    id: json['id'] == null ? undefined : json['id'],
-    sequenceNumber: json['sequenceNumber'] == null ? undefined : json['sequenceNumber'],
-    name: json['name'] == null ? undefined : json['name'],
-    startDate: json['startDate'] == null ? undefined : new Date(json['startDate']),
-    endDate: json['endDate'] == null ? undefined : new Date(json['endDate']),
-    phaseIntent: json['phaseIntent'] == null ? undefined : json['phaseIntent'],
-    phaseGoal: json['phaseGoal'] == null ? undefined : json['phaseGoal'],
-    sessions:
-      json['sessions'] == null
-        ? undefined
-        : (json['sessions'] as Array<any>).map(SessionSnapshotFromJSON),
-  };
+export function MicrocycleSnapshotFromJSONTyped(json: any, ignoreDiscriminator: boolean): MicrocycleSnapshot {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'id': json['id'] == null ? undefined : json['id'],
+        'sequenceNumber': json['sequenceNumber'] == null ? undefined : json['sequenceNumber'],
+        'name': json['name'] == null ? undefined : json['name'],
+        'startDate': json['startDate'] == null ? undefined : (new Date(json['startDate'])),
+        'endDate': json['endDate'] == null ? undefined : (new Date(json['endDate'])),
+        'phaseIntent': json['phaseIntent'] == null ? undefined : json['phaseIntent'],
+        'phaseGoal': json['phaseGoal'] == null ? undefined : json['phaseGoal'],
+        'sessions': json['sessions'] == null ? undefined : ((json['sessions'] as Array<any>).map(SessionSnapshotFromJSON)),
+    };
 }
 
 export function MicrocycleSnapshotToJSON(json: any): MicrocycleSnapshot {
-  return MicrocycleSnapshotToJSONTyped(json, false);
+    return MicrocycleSnapshotToJSONTyped(json, false);
 }
 
-export function MicrocycleSnapshotToJSONTyped(
-  value?: MicrocycleSnapshot | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function MicrocycleSnapshotToJSONTyped(value?: MicrocycleSnapshot | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    id: value['id'],
-    sequenceNumber: value['sequenceNumber'],
-    name: value['name'],
-    startDate:
-      value['startDate'] == null
-        ? value['startDate']
-        : value['startDate'].toISOString().substring(0, 10),
-    endDate:
-      value['endDate'] == null ? value['endDate'] : value['endDate'].toISOString().substring(0, 10),
-    phaseIntent: value['phaseIntent'],
-    phaseGoal: value['phaseGoal'],
-    sessions:
-      value['sessions'] == null
-        ? undefined
-        : (value['sessions'] as Array<any>).map(SessionSnapshotToJSON),
-  };
+    return {
+
+        'id': value['id'],
+        'sequenceNumber': value['sequenceNumber'],
+        'name': value['name'],
+        'startDate': value['startDate'] == null ? value['startDate'] : value['startDate'].toISOString().substring(0,10),
+        'endDate': value['endDate'] == null ? value['endDate'] : value['endDate'].toISOString().substring(0,10),
+        'phaseIntent': value['phaseIntent'],
+        'phaseGoal': value['phaseGoal'],
+        'sessions': value['sessions'] == null ? undefined : ((value['sessions'] as Array<any>).map(SessionSnapshotToJSON)),
+    };
 }

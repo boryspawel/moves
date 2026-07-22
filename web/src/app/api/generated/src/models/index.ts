@@ -92,6 +92,8 @@ export * from './PlanRevisionSnapshot';
 export * from './PlannedSession';
 export * from './Post24hCommand';
 export * from './Post24hData';
+export * from './PreferenceCommand';
+export * from './PreferenceView';
 export * from './PrescriptionCommand';
 export * from './PrescriptionSnapshot';
 export * from './PrescriptionView';

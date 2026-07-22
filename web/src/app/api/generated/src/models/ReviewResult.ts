@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { ReviewItem } from './ReviewItem';
 import {
-  ReviewItemFromJSON,
-  ReviewItemFromJSONTyped,
-  ReviewItemToJSON,
-  ReviewItemToJSONTyped,
+    ReviewItemFromJSON,
+    ReviewItemFromJSONTyped,
+    ReviewItemToJSON,
+    ReviewItemToJSONTyped,
 } from './ReviewItem';
 
 /**
@@ -27,81 +27,78 @@ import {
  * @interface ReviewResult
  */
 export interface ReviewResult {
-  /**
-   *
-   * @type {string}
-   * @memberof ReviewResult
-   */
-  exerciseVersionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ReviewResult
-   */
-  status?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof ReviewResult
-   */
-  version?: number;
-  /**
-   *
-   * @type {Array<ReviewItem>}
-   * @memberof ReviewResult
-   */
-  reviews?: Array<ReviewItem>;
-  /**
-   *
-   * @type {Array<string>}
-   * @memberof ReviewResult
-   */
-  unmetRequirements?: Array<string>;
+    /**
+     *
+     * @type {string}
+     * @memberof ReviewResult
+     */
+    exerciseVersionId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof ReviewResult
+     */
+    status?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof ReviewResult
+     */
+    version?: number;
+    /**
+     *
+     * @type {Array<ReviewItem>}
+     * @memberof ReviewResult
+     */
+    reviews?: Array<ReviewItem>;
+    /**
+     *
+     * @type {Array<string>}
+     * @memberof ReviewResult
+     */
+    unmetRequirements?: Array<string>;
 }
 
 /**
  * Check if a given object implements the ReviewResult interface.
  */
 export function instanceOfReviewResult(value: object): value is ReviewResult {
-  return true;
+    return true;
 }
 
 export function ReviewResultFromJSON(json: any): ReviewResult {
-  return ReviewResultFromJSONTyped(json, false);
+    return ReviewResultFromJSONTyped(json, false);
 }
 
 export function ReviewResultFromJSONTyped(json: any, ignoreDiscriminator: boolean): ReviewResult {
-  if (json == null) {
-    return json;
-  }
-  return {
-    exerciseVersionId: json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
-    status: json['status'] == null ? undefined : json['status'],
-    version: json['version'] == null ? undefined : json['version'],
-    reviews:
-      json['reviews'] == null ? undefined : (json['reviews'] as Array<any>).map(ReviewItemFromJSON),
-    unmetRequirements: json['unmetRequirements'] == null ? undefined : json['unmetRequirements'],
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'exerciseVersionId': json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
+        'status': json['status'] == null ? undefined : json['status'],
+        'version': json['version'] == null ? undefined : json['version'],
+        'reviews': json['reviews'] == null ? undefined : ((json['reviews'] as Array<any>).map(ReviewItemFromJSON)),
+        'unmetRequirements': json['unmetRequirements'] == null ? undefined : json['unmetRequirements'],
+    };
 }
 
 export function ReviewResultToJSON(json: any): ReviewResult {
-  return ReviewResultToJSONTyped(json, false);
+    return ReviewResultToJSONTyped(json, false);
 }
 
-export function ReviewResultToJSONTyped(
-  value?: ReviewResult | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function ReviewResultToJSONTyped(value?: ReviewResult | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    exerciseVersionId: value['exerciseVersionId'],
-    status: value['status'],
-    version: value['version'],
-    reviews:
-      value['reviews'] == null ? undefined : (value['reviews'] as Array<any>).map(ReviewItemToJSON),
-    unmetRequirements: value['unmetRequirements'],
-  };
+    return {
+
+        'exerciseVersionId': value['exerciseVersionId'],
+        'status': value['status'],
+        'version': value['version'],
+        'reviews': value['reviews'] == null ? undefined : ((value['reviews'] as Array<any>).map(ReviewItemToJSON)),
+        'unmetRequirements': value['unmetRequirements'],
+    };
 }

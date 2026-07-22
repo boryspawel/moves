@@ -19,72 +19,62 @@ import { mapValues } from '../runtime';
  * @interface LegacyContraindicationReportItem
  */
 export interface LegacyContraindicationReportItem {
-  /**
-   *
-   * @type {string}
-   * @memberof LegacyContraindicationReportItem
-   */
-  tag?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof LegacyContraindicationReportItem
-   */
-  versionCount?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof LegacyContraindicationReportItem
-   */
-  disposition?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof LegacyContraindicationReportItem
+     */
+    tag?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof LegacyContraindicationReportItem
+     */
+    versionCount?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof LegacyContraindicationReportItem
+     */
+    disposition?: string;
 }
 
 /**
  * Check if a given object implements the LegacyContraindicationReportItem interface.
  */
-export function instanceOfLegacyContraindicationReportItem(
-  value: object,
-): value is LegacyContraindicationReportItem {
-  return true;
+export function instanceOfLegacyContraindicationReportItem(value: object): value is LegacyContraindicationReportItem {
+    return true;
 }
 
-export function LegacyContraindicationReportItemFromJSON(
-  json: any,
-): LegacyContraindicationReportItem {
-  return LegacyContraindicationReportItemFromJSONTyped(json, false);
+export function LegacyContraindicationReportItemFromJSON(json: any): LegacyContraindicationReportItem {
+    return LegacyContraindicationReportItemFromJSONTyped(json, false);
 }
 
-export function LegacyContraindicationReportItemFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): LegacyContraindicationReportItem {
-  if (json == null) {
-    return json;
-  }
-  return {
-    tag: json['tag'] == null ? undefined : json['tag'],
-    versionCount: json['versionCount'] == null ? undefined : json['versionCount'],
-    disposition: json['disposition'] == null ? undefined : json['disposition'],
-  };
+export function LegacyContraindicationReportItemFromJSONTyped(json: any, ignoreDiscriminator: boolean): LegacyContraindicationReportItem {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'tag': json['tag'] == null ? undefined : json['tag'],
+        'versionCount': json['versionCount'] == null ? undefined : json['versionCount'],
+        'disposition': json['disposition'] == null ? undefined : json['disposition'],
+    };
 }
 
-export function LegacyContraindicationReportItemToJSON(
-  json: any,
-): LegacyContraindicationReportItem {
-  return LegacyContraindicationReportItemToJSONTyped(json, false);
+export function LegacyContraindicationReportItemToJSON(json: any): LegacyContraindicationReportItem {
+    return LegacyContraindicationReportItemToJSONTyped(json, false);
 }
 
-export function LegacyContraindicationReportItemToJSONTyped(
-  value?: LegacyContraindicationReportItem | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function LegacyContraindicationReportItemToJSONTyped(value?: LegacyContraindicationReportItem | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    tag: value['tag'],
-    versionCount: value['versionCount'],
-    disposition: value['disposition'],
-  };
+    return {
+
+        'tag': value['tag'],
+        'versionCount': value['versionCount'],
+        'disposition': value['disposition'],
+    };
 }

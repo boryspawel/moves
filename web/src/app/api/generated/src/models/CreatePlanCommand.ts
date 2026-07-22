@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { PrescriptionCommand } from './PrescriptionCommand';
 import {
-  PrescriptionCommandFromJSON,
-  PrescriptionCommandFromJSONTyped,
-  PrescriptionCommandToJSON,
-  PrescriptionCommandToJSONTyped,
+    PrescriptionCommandFromJSON,
+    PrescriptionCommandFromJSONTyped,
+    PrescriptionCommandToJSON,
+    PrescriptionCommandToJSONTyped,
 } from './PrescriptionCommand';
 
 /**
@@ -27,123 +27,113 @@ import {
  * @interface CreatePlanCommand
  */
 export interface CreatePlanCommand {
-  /**
-   *
-   * @type {string}
-   * @memberof CreatePlanCommand
-   */
-  participantAccountId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof CreatePlanCommand
-   */
-  goalName?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof CreatePlanCommand
-   */
-  planName?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof CreatePlanCommand
-   */
-  cycleName?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof CreatePlanCommand
-   */
-  microcycleName?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof CreatePlanCommand
-   */
-  sessionTitle?: string;
-  /**
-   *
-   * @type {CreatePlanCommandSessionKindEnum}
-   * @memberof CreatePlanCommand
-   */
-  sessionKind?: CreatePlanCommandSessionKindEnum;
-  /**
-   *
-   * @type {Array<PrescriptionCommand>}
-   * @memberof CreatePlanCommand
-   */
-  prescriptions?: Array<PrescriptionCommand>;
+    /**
+     *
+     * @type {string}
+     * @memberof CreatePlanCommand
+     */
+    participantAccountId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof CreatePlanCommand
+     */
+    goalName?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof CreatePlanCommand
+     */
+    planName?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof CreatePlanCommand
+     */
+    cycleName?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof CreatePlanCommand
+     */
+    microcycleName?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof CreatePlanCommand
+     */
+    sessionTitle?: string;
+    /**
+     *
+     * @type {CreatePlanCommandSessionKindEnum}
+     * @memberof CreatePlanCommand
+     */
+    sessionKind?: CreatePlanCommandSessionKindEnum;
+    /**
+     *
+     * @type {Array<PrescriptionCommand>}
+     * @memberof CreatePlanCommand
+     */
+    prescriptions?: Array<PrescriptionCommand>;
 }
+
 
 /**
  * @export
  */
 export const CreatePlanCommandSessionKindEnum = {
-  SelfGuided: 'SELF_GUIDED',
-  OfflineAppointment: 'OFFLINE_APPOINTMENT',
+    SelfGuided: 'SELF_GUIDED',
+    OfflineAppointment: 'OFFLINE_APPOINTMENT'
 } as const;
-export type CreatePlanCommandSessionKindEnum =
-  (typeof CreatePlanCommandSessionKindEnum)[keyof typeof CreatePlanCommandSessionKindEnum];
+export type CreatePlanCommandSessionKindEnum = typeof CreatePlanCommandSessionKindEnum[keyof typeof CreatePlanCommandSessionKindEnum];
+
 
 /**
  * Check if a given object implements the CreatePlanCommand interface.
  */
 export function instanceOfCreatePlanCommand(value: object): value is CreatePlanCommand {
-  return true;
+    return true;
 }
 
 export function CreatePlanCommandFromJSON(json: any): CreatePlanCommand {
-  return CreatePlanCommandFromJSONTyped(json, false);
+    return CreatePlanCommandFromJSONTyped(json, false);
 }
 
-export function CreatePlanCommandFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): CreatePlanCommand {
-  if (json == null) {
-    return json;
-  }
-  return {
-    participantAccountId:
-      json['participantAccountId'] == null ? undefined : json['participantAccountId'],
-    goalName: json['goalName'] == null ? undefined : json['goalName'],
-    planName: json['planName'] == null ? undefined : json['planName'],
-    cycleName: json['cycleName'] == null ? undefined : json['cycleName'],
-    microcycleName: json['microcycleName'] == null ? undefined : json['microcycleName'],
-    sessionTitle: json['sessionTitle'] == null ? undefined : json['sessionTitle'],
-    sessionKind: json['sessionKind'] == null ? undefined : json['sessionKind'],
-    prescriptions:
-      json['prescriptions'] == null
-        ? undefined
-        : (json['prescriptions'] as Array<any>).map(PrescriptionCommandFromJSON),
-  };
+export function CreatePlanCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): CreatePlanCommand {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'participantAccountId': json['participantAccountId'] == null ? undefined : json['participantAccountId'],
+        'goalName': json['goalName'] == null ? undefined : json['goalName'],
+        'planName': json['planName'] == null ? undefined : json['planName'],
+        'cycleName': json['cycleName'] == null ? undefined : json['cycleName'],
+        'microcycleName': json['microcycleName'] == null ? undefined : json['microcycleName'],
+        'sessionTitle': json['sessionTitle'] == null ? undefined : json['sessionTitle'],
+        'sessionKind': json['sessionKind'] == null ? undefined : json['sessionKind'],
+        'prescriptions': json['prescriptions'] == null ? undefined : ((json['prescriptions'] as Array<any>).map(PrescriptionCommandFromJSON)),
+    };
 }
 
 export function CreatePlanCommandToJSON(json: any): CreatePlanCommand {
-  return CreatePlanCommandToJSONTyped(json, false);
+    return CreatePlanCommandToJSONTyped(json, false);
 }
 
-export function CreatePlanCommandToJSONTyped(
-  value?: CreatePlanCommand | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function CreatePlanCommandToJSONTyped(value?: CreatePlanCommand | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    participantAccountId: value['participantAccountId'],
-    goalName: value['goalName'],
-    planName: value['planName'],
-    cycleName: value['cycleName'],
-    microcycleName: value['microcycleName'],
-    sessionTitle: value['sessionTitle'],
-    sessionKind: value['sessionKind'],
-    prescriptions:
-      value['prescriptions'] == null
-        ? undefined
-        : (value['prescriptions'] as Array<any>).map(PrescriptionCommandToJSON),
-  };
+    return {
+
+        'participantAccountId': value['participantAccountId'],
+        'goalName': value['goalName'],
+        'planName': value['planName'],
+        'cycleName': value['cycleName'],
+        'microcycleName': value['microcycleName'],
+        'sessionTitle': value['sessionTitle'],
+        'sessionKind': value['sessionKind'],
+        'prescriptions': value['prescriptions'] == null ? undefined : ((value['prescriptions'] as Array<any>).map(PrescriptionCommandToJSON)),
+    };
 }

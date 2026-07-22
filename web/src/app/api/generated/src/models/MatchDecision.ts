@@ -19,55 +19,54 @@ import { mapValues } from '../runtime';
  * @interface MatchDecision
  */
 export interface MatchDecision {
-  /**
-   *
-   * @type {string}
-   * @memberof MatchDecision
-   */
-  candidateId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof MatchDecision
-   */
-  decision?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof MatchDecision
+     */
+    candidateId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof MatchDecision
+     */
+    decision?: string;
 }
 
 /**
  * Check if a given object implements the MatchDecision interface.
  */
 export function instanceOfMatchDecision(value: object): value is MatchDecision {
-  return true;
+    return true;
 }
 
 export function MatchDecisionFromJSON(json: any): MatchDecision {
-  return MatchDecisionFromJSONTyped(json, false);
+    return MatchDecisionFromJSONTyped(json, false);
 }
 
 export function MatchDecisionFromJSONTyped(json: any, ignoreDiscriminator: boolean): MatchDecision {
-  if (json == null) {
-    return json;
-  }
-  return {
-    candidateId: json['candidateId'] == null ? undefined : json['candidateId'],
-    decision: json['decision'] == null ? undefined : json['decision'],
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'candidateId': json['candidateId'] == null ? undefined : json['candidateId'],
+        'decision': json['decision'] == null ? undefined : json['decision'],
+    };
 }
 
 export function MatchDecisionToJSON(json: any): MatchDecision {
-  return MatchDecisionToJSONTyped(json, false);
+    return MatchDecisionToJSONTyped(json, false);
 }
 
-export function MatchDecisionToJSONTyped(
-  value?: MatchDecision | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function MatchDecisionToJSONTyped(value?: MatchDecision | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    candidateId: value['candidateId'],
-    decision: value['decision'],
-  };
+    return {
+
+        'candidateId': value['candidateId'],
+        'decision': value['decision'],
+    };
 }

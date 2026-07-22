@@ -19,96 +19,94 @@ import { mapValues } from '../runtime';
  * @interface ReviewItem
  */
 export interface ReviewItem {
-  /**
-   *
-   * @type {string}
-   * @memberof ReviewItem
-   */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ReviewItem
-   */
-  area?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ReviewItem
-   */
-  decision?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ReviewItem
-   */
-  comment?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ReviewItem
-   */
-  reviewerSubject?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof ReviewItem
-   */
-  reviewedAt?: Date;
-  /**
-   *
-   * @type {number}
-   * @memberof ReviewItem
-   */
-  version?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof ReviewItem
+     */
+    id?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof ReviewItem
+     */
+    area?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof ReviewItem
+     */
+    decision?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof ReviewItem
+     */
+    comment?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof ReviewItem
+     */
+    reviewerSubject?: string;
+    /**
+     *
+     * @type {Date}
+     * @memberof ReviewItem
+     */
+    reviewedAt?: Date;
+    /**
+     *
+     * @type {number}
+     * @memberof ReviewItem
+     */
+    version?: number;
 }
 
 /**
  * Check if a given object implements the ReviewItem interface.
  */
 export function instanceOfReviewItem(value: object): value is ReviewItem {
-  return true;
+    return true;
 }
 
 export function ReviewItemFromJSON(json: any): ReviewItem {
-  return ReviewItemFromJSONTyped(json, false);
+    return ReviewItemFromJSONTyped(json, false);
 }
 
 export function ReviewItemFromJSONTyped(json: any, ignoreDiscriminator: boolean): ReviewItem {
-  if (json == null) {
-    return json;
-  }
-  return {
-    id: json['id'] == null ? undefined : json['id'],
-    area: json['area'] == null ? undefined : json['area'],
-    decision: json['decision'] == null ? undefined : json['decision'],
-    comment: json['comment'] == null ? undefined : json['comment'],
-    reviewerSubject: json['reviewerSubject'] == null ? undefined : json['reviewerSubject'],
-    reviewedAt: json['reviewedAt'] == null ? undefined : new Date(json['reviewedAt']),
-    version: json['version'] == null ? undefined : json['version'],
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'id': json['id'] == null ? undefined : json['id'],
+        'area': json['area'] == null ? undefined : json['area'],
+        'decision': json['decision'] == null ? undefined : json['decision'],
+        'comment': json['comment'] == null ? undefined : json['comment'],
+        'reviewerSubject': json['reviewerSubject'] == null ? undefined : json['reviewerSubject'],
+        'reviewedAt': json['reviewedAt'] == null ? undefined : (new Date(json['reviewedAt'])),
+        'version': json['version'] == null ? undefined : json['version'],
+    };
 }
 
 export function ReviewItemToJSON(json: any): ReviewItem {
-  return ReviewItemToJSONTyped(json, false);
+    return ReviewItemToJSONTyped(json, false);
 }
 
-export function ReviewItemToJSONTyped(
-  value?: ReviewItem | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function ReviewItemToJSONTyped(value?: ReviewItem | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    id: value['id'],
-    area: value['area'],
-    decision: value['decision'],
-    comment: value['comment'],
-    reviewerSubject: value['reviewerSubject'],
-    reviewedAt:
-      value['reviewedAt'] == null ? value['reviewedAt'] : value['reviewedAt'].toISOString(),
-    version: value['version'],
-  };
+    return {
+
+        'id': value['id'],
+        'area': value['area'],
+        'decision': value['decision'],
+        'comment': value['comment'],
+        'reviewerSubject': value['reviewerSubject'],
+        'reviewedAt': value['reviewedAt'] == null ? value['reviewedAt'] : value['reviewedAt'].toISOString(),
+        'version': value['version'],
+    };
 }

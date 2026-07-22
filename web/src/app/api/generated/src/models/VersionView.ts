@@ -19,278 +19,261 @@ import { mapValues } from '../runtime';
  * @interface VersionView
  */
 export interface VersionView {
-  /**
-   *
-   * @type {string}
-   * @memberof VersionView
-   */
-  exerciseId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof VersionView
-   */
-  canonicalName?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof VersionView
-   */
-  versionId?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof VersionView
-   */
-  versionNumber?: number;
-  /**
-   *
-   * @type {VersionViewStatusEnum}
-   * @memberof VersionView
-   */
-  status?: VersionViewStatusEnum;
-  /**
-   *
-   * @type {Set<VersionViewMovementPatternsEnum>}
-   * @memberof VersionView
-   */
-  movementPatterns?: Set<VersionViewMovementPatternsEnum>;
-  /**
-   *
-   * @type {string}
-   * @memberof VersionView
-   */
-  instruction?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof VersionView
-   */
-  mediaReference?: string;
-  /**
-   *
-   * @type {VersionViewStimulusTypeEnum}
-   * @memberof VersionView
-   */
-  stimulusType?: VersionViewStimulusTypeEnum;
-  /**
-   *
-   * @type {VersionViewFatigueProfileEnum}
-   * @memberof VersionView
-   */
-  fatigueProfile?: VersionViewFatigueProfileEnum;
-  /**
-   *
-   * @type {VersionViewTechnicalLevelEnum}
-   * @memberof VersionView
-   */
-  technicalLevel?: VersionViewTechnicalLevelEnum;
-  /**
-   *
-   * @type {VersionViewEnvironmentEnum}
-   * @memberof VersionView
-   */
-  environment?: VersionViewEnvironmentEnum;
-  /**
-   *
-   * @type {Set<string>}
-   * @memberof VersionView
-   */
-  requiredEquipment?: Set<string>;
-  /**
-   *
-   * @type {number}
-   * @memberof VersionView
-   */
-  profileSchemaVersion?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof VersionView
-   */
-  reviewedBySubject?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof VersionView
-   */
-  reviewedAt?: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof VersionView
-   */
-  publishedAt?: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof VersionView
-   */
-  withdrawnAt?: Date;
+    /**
+     *
+     * @type {string}
+     * @memberof VersionView
+     */
+    exerciseId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof VersionView
+     */
+    canonicalName?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof VersionView
+     */
+    versionId?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof VersionView
+     */
+    versionNumber?: number;
+    /**
+     *
+     * @type {VersionViewStatusEnum}
+     * @memberof VersionView
+     */
+    status?: VersionViewStatusEnum;
+    /**
+     *
+     * @type {Set<VersionViewMovementPatternsEnum>}
+     * @memberof VersionView
+     */
+    movementPatterns?: Set<VersionViewMovementPatternsEnum>;
+    /**
+     *
+     * @type {string}
+     * @memberof VersionView
+     */
+    instruction?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof VersionView
+     */
+    mediaReference?: string;
+    /**
+     *
+     * @type {VersionViewStimulusTypeEnum}
+     * @memberof VersionView
+     */
+    stimulusType?: VersionViewStimulusTypeEnum;
+    /**
+     *
+     * @type {VersionViewFatigueProfileEnum}
+     * @memberof VersionView
+     */
+    fatigueProfile?: VersionViewFatigueProfileEnum;
+    /**
+     *
+     * @type {VersionViewTechnicalLevelEnum}
+     * @memberof VersionView
+     */
+    technicalLevel?: VersionViewTechnicalLevelEnum;
+    /**
+     *
+     * @type {VersionViewEnvironmentEnum}
+     * @memberof VersionView
+     */
+    environment?: VersionViewEnvironmentEnum;
+    /**
+     *
+     * @type {Set<string>}
+     * @memberof VersionView
+     */
+    requiredEquipment?: Set<string>;
+    /**
+     *
+     * @type {number}
+     * @memberof VersionView
+     */
+    profileSchemaVersion?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof VersionView
+     */
+    reviewedBySubject?: string;
+    /**
+     *
+     * @type {Date}
+     * @memberof VersionView
+     */
+    reviewedAt?: Date;
+    /**
+     *
+     * @type {Date}
+     * @memberof VersionView
+     */
+    publishedAt?: Date;
+    /**
+     *
+     * @type {Date}
+     * @memberof VersionView
+     */
+    withdrawnAt?: Date;
 }
+
 
 /**
  * @export
  */
 export const VersionViewStatusEnum = {
-  Draft: 'DRAFT',
-  InReview: 'IN_REVIEW',
-  ChangesRequested: 'CHANGES_REQUESTED',
-  Approved: 'APPROVED',
-  Published: 'PUBLISHED',
-  Withdrawn: 'WITHDRAWN',
+    Draft: 'DRAFT',
+    InReview: 'IN_REVIEW',
+    ChangesRequested: 'CHANGES_REQUESTED',
+    Approved: 'APPROVED',
+    Published: 'PUBLISHED',
+    Withdrawn: 'WITHDRAWN'
 } as const;
-export type VersionViewStatusEnum =
-  (typeof VersionViewStatusEnum)[keyof typeof VersionViewStatusEnum];
+export type VersionViewStatusEnum = typeof VersionViewStatusEnum[keyof typeof VersionViewStatusEnum];
 
 /**
  * @export
  */
 export const VersionViewMovementPatternsEnum = {
-  Squat: 'SQUAT',
-  Hinge: 'HINGE',
-  Push: 'PUSH',
-  Pull: 'PULL',
-  Lunge: 'LUNGE',
-  Carry: 'CARRY',
-  Rotation: 'ROTATION',
-  Locomotion: 'LOCOMOTION',
-  Breathing: 'BREATHING',
-  Mobility: 'MOBILITY',
-  Other: 'OTHER',
+    Squat: 'SQUAT',
+    Hinge: 'HINGE',
+    Push: 'PUSH',
+    Pull: 'PULL',
+    Lunge: 'LUNGE',
+    Carry: 'CARRY',
+    Rotation: 'ROTATION',
+    Locomotion: 'LOCOMOTION',
+    Breathing: 'BREATHING',
+    Mobility: 'MOBILITY',
+    Other: 'OTHER'
 } as const;
-export type VersionViewMovementPatternsEnum =
-  (typeof VersionViewMovementPatternsEnum)[keyof typeof VersionViewMovementPatternsEnum];
+export type VersionViewMovementPatternsEnum = typeof VersionViewMovementPatternsEnum[keyof typeof VersionViewMovementPatternsEnum];
 
 /**
  * @export
  */
 export const VersionViewStimulusTypeEnum = {
-  Strength: 'STRENGTH',
-  Endurance: 'ENDURANCE',
-  Power: 'POWER',
-  Mobility: 'MOBILITY',
-  Balance: 'BALANCE',
-  MotorControl: 'MOTOR_CONTROL',
-  Recovery: 'RECOVERY',
+    Strength: 'STRENGTH',
+    Endurance: 'ENDURANCE',
+    Power: 'POWER',
+    Mobility: 'MOBILITY',
+    Balance: 'BALANCE',
+    MotorControl: 'MOTOR_CONTROL',
+    Recovery: 'RECOVERY'
 } as const;
-export type VersionViewStimulusTypeEnum =
-  (typeof VersionViewStimulusTypeEnum)[keyof typeof VersionViewStimulusTypeEnum];
+export type VersionViewStimulusTypeEnum = typeof VersionViewStimulusTypeEnum[keyof typeof VersionViewStimulusTypeEnum];
 
 /**
  * @export
  */
 export const VersionViewFatigueProfileEnum = {
-  Low: 'LOW',
-  Moderate: 'MODERATE',
-  High: 'HIGH',
+    Low: 'LOW',
+    Moderate: 'MODERATE',
+    High: 'HIGH'
 } as const;
-export type VersionViewFatigueProfileEnum =
-  (typeof VersionViewFatigueProfileEnum)[keyof typeof VersionViewFatigueProfileEnum];
+export type VersionViewFatigueProfileEnum = typeof VersionViewFatigueProfileEnum[keyof typeof VersionViewFatigueProfileEnum];
 
 /**
  * @export
  */
 export const VersionViewTechnicalLevelEnum = {
-  Foundational: 'FOUNDATIONAL',
-  Intermediate: 'INTERMEDIATE',
-  Advanced: 'ADVANCED',
+    Foundational: 'FOUNDATIONAL',
+    Intermediate: 'INTERMEDIATE',
+    Advanced: 'ADVANCED'
 } as const;
-export type VersionViewTechnicalLevelEnum =
-  (typeof VersionViewTechnicalLevelEnum)[keyof typeof VersionViewTechnicalLevelEnum];
+export type VersionViewTechnicalLevelEnum = typeof VersionViewTechnicalLevelEnum[keyof typeof VersionViewTechnicalLevelEnum];
 
 /**
  * @export
  */
 export const VersionViewEnvironmentEnum = {
-  Home: 'HOME',
-  Gym: 'GYM',
-  Outdoor: 'OUTDOOR',
-  Clinic: 'CLINIC',
-  Any: 'ANY',
+    Home: 'HOME',
+    Gym: 'GYM',
+    Outdoor: 'OUTDOOR',
+    Clinic: 'CLINIC',
+    Any: 'ANY'
 } as const;
-export type VersionViewEnvironmentEnum =
-  (typeof VersionViewEnvironmentEnum)[keyof typeof VersionViewEnvironmentEnum];
+export type VersionViewEnvironmentEnum = typeof VersionViewEnvironmentEnum[keyof typeof VersionViewEnvironmentEnum];
+
 
 /**
  * Check if a given object implements the VersionView interface.
  */
 export function instanceOfVersionView(value: object): value is VersionView {
-  return true;
+    return true;
 }
 
 export function VersionViewFromJSON(json: any): VersionView {
-  return VersionViewFromJSONTyped(json, false);
+    return VersionViewFromJSONTyped(json, false);
 }
 
 export function VersionViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): VersionView {
-  if (json == null) {
-    return json;
-  }
-  return {
-    exerciseId: json['exerciseId'] == null ? undefined : json['exerciseId'],
-    canonicalName: json['canonicalName'] == null ? undefined : json['canonicalName'],
-    versionId: json['versionId'] == null ? undefined : json['versionId'],
-    versionNumber: json['versionNumber'] == null ? undefined : json['versionNumber'],
-    status: json['status'] == null ? undefined : json['status'],
-    movementPatterns:
-      json['movementPatterns'] == null ? undefined : new Set(json['movementPatterns']),
-    instruction: json['instruction'] == null ? undefined : json['instruction'],
-    mediaReference: json['mediaReference'] == null ? undefined : json['mediaReference'],
-    stimulusType: json['stimulusType'] == null ? undefined : json['stimulusType'],
-    fatigueProfile: json['fatigueProfile'] == null ? undefined : json['fatigueProfile'],
-    technicalLevel: json['technicalLevel'] == null ? undefined : json['technicalLevel'],
-    environment: json['environment'] == null ? undefined : json['environment'],
-    requiredEquipment:
-      json['requiredEquipment'] == null ? undefined : new Set(json['requiredEquipment']),
-    profileSchemaVersion:
-      json['profileSchemaVersion'] == null ? undefined : json['profileSchemaVersion'],
-    reviewedBySubject: json['reviewedBySubject'] == null ? undefined : json['reviewedBySubject'],
-    reviewedAt: json['reviewedAt'] == null ? undefined : new Date(json['reviewedAt']),
-    publishedAt: json['publishedAt'] == null ? undefined : new Date(json['publishedAt']),
-    withdrawnAt: json['withdrawnAt'] == null ? undefined : new Date(json['withdrawnAt']),
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'exerciseId': json['exerciseId'] == null ? undefined : json['exerciseId'],
+        'canonicalName': json['canonicalName'] == null ? undefined : json['canonicalName'],
+        'versionId': json['versionId'] == null ? undefined : json['versionId'],
+        'versionNumber': json['versionNumber'] == null ? undefined : json['versionNumber'],
+        'status': json['status'] == null ? undefined : json['status'],
+        'movementPatterns': json['movementPatterns'] == null ? undefined : new Set(json['movementPatterns']),
+        'instruction': json['instruction'] == null ? undefined : json['instruction'],
+        'mediaReference': json['mediaReference'] == null ? undefined : json['mediaReference'],
+        'stimulusType': json['stimulusType'] == null ? undefined : json['stimulusType'],
+        'fatigueProfile': json['fatigueProfile'] == null ? undefined : json['fatigueProfile'],
+        'technicalLevel': json['technicalLevel'] == null ? undefined : json['technicalLevel'],
+        'environment': json['environment'] == null ? undefined : json['environment'],
+        'requiredEquipment': json['requiredEquipment'] == null ? undefined : new Set(json['requiredEquipment']),
+        'profileSchemaVersion': json['profileSchemaVersion'] == null ? undefined : json['profileSchemaVersion'],
+        'reviewedBySubject': json['reviewedBySubject'] == null ? undefined : json['reviewedBySubject'],
+        'reviewedAt': json['reviewedAt'] == null ? undefined : (new Date(json['reviewedAt'])),
+        'publishedAt': json['publishedAt'] == null ? undefined : (new Date(json['publishedAt'])),
+        'withdrawnAt': json['withdrawnAt'] == null ? undefined : (new Date(json['withdrawnAt'])),
+    };
 }
 
 export function VersionViewToJSON(json: any): VersionView {
-  return VersionViewToJSONTyped(json, false);
+    return VersionViewToJSONTyped(json, false);
 }
 
-export function VersionViewToJSONTyped(
-  value?: VersionView | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function VersionViewToJSONTyped(value?: VersionView | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    exerciseId: value['exerciseId'],
-    canonicalName: value['canonicalName'],
-    versionId: value['versionId'],
-    versionNumber: value['versionNumber'],
-    status: value['status'],
-    movementPatterns:
-      value['movementPatterns'] == null
-        ? undefined
-        : Array.from(value['movementPatterns'] as Set<any>),
-    instruction: value['instruction'],
-    mediaReference: value['mediaReference'],
-    stimulusType: value['stimulusType'],
-    fatigueProfile: value['fatigueProfile'],
-    technicalLevel: value['technicalLevel'],
-    environment: value['environment'],
-    requiredEquipment:
-      value['requiredEquipment'] == null
-        ? undefined
-        : Array.from(value['requiredEquipment'] as Set<any>),
-    profileSchemaVersion: value['profileSchemaVersion'],
-    reviewedBySubject: value['reviewedBySubject'],
-    reviewedAt:
-      value['reviewedAt'] == null ? value['reviewedAt'] : value['reviewedAt'].toISOString(),
-    publishedAt:
-      value['publishedAt'] == null ? value['publishedAt'] : value['publishedAt'].toISOString(),
-    withdrawnAt:
-      value['withdrawnAt'] == null ? value['withdrawnAt'] : value['withdrawnAt'].toISOString(),
-  };
+    return {
+
+        'exerciseId': value['exerciseId'],
+        'canonicalName': value['canonicalName'],
+        'versionId': value['versionId'],
+        'versionNumber': value['versionNumber'],
+        'status': value['status'],
+        'movementPatterns': value['movementPatterns'] == null ? undefined : Array.from(value['movementPatterns'] as Set<any>),
+        'instruction': value['instruction'],
+        'mediaReference': value['mediaReference'],
+        'stimulusType': value['stimulusType'],
+        'fatigueProfile': value['fatigueProfile'],
+        'technicalLevel': value['technicalLevel'],
+        'environment': value['environment'],
+        'requiredEquipment': value['requiredEquipment'] == null ? undefined : Array.from(value['requiredEquipment'] as Set<any>),
+        'profileSchemaVersion': value['profileSchemaVersion'],
+        'reviewedBySubject': value['reviewedBySubject'],
+        'reviewedAt': value['reviewedAt'] == null ? value['reviewedAt'] : value['reviewedAt'].toISOString(),
+        'publishedAt': value['publishedAt'] == null ? value['publishedAt'] : value['publishedAt'].toISOString(),
+        'withdrawnAt': value['withdrawnAt'] == null ? value['withdrawnAt'] : value['withdrawnAt'].toISOString(),
+    };
 }

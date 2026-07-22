@@ -18,7 +18,7 @@ autoryzacji, idempotencji i dostępności adekwatnymi do zakresu.
 | 6 | worklista, issue i reply — dostarczone w `d004a36` | `specialist`, V027/V028 |
 | 7 | participant today-only flow — bieżące zmiany niecommitowane | Angular, kontrakty etapów 1–5 |
 | 8 | panel specjalisty V2 — dostarczony | Angular, wyłącznie kontrakty V2 i minimalna projekcja aktywnej relacji |
-| 9 | reminders rules-first — niewdrożone (brak modułu) | `notification`, decyzje adherence |
+| 9 | reminders rules-first — preferencje i deterministyczne reguły | `notification.reminders`, neutralny audit/dedupe |
 | 10 | metryki, eksperymenty i audyt slice — niewdrożone (brak modułu) | neutralna analityka oraz dokumentacja |
 
 P7 prowadzi przez `/sessions`: `TodayAgenda` → wariant → check-in → próba i

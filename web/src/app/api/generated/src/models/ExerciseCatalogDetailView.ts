@@ -15,24 +15,24 @@
 import { mapValues } from '../runtime';
 import type { PublicEvidenceView } from './PublicEvidenceView';
 import {
-  PublicEvidenceViewFromJSON,
-  PublicEvidenceViewFromJSONTyped,
-  PublicEvidenceViewToJSON,
-  PublicEvidenceViewToJSONTyped,
+    PublicEvidenceViewFromJSON,
+    PublicEvidenceViewFromJSONTyped,
+    PublicEvidenceViewToJSON,
+    PublicEvidenceViewToJSONTyped,
 } from './PublicEvidenceView';
 import type { PublicLoadCharacteristicView } from './PublicLoadCharacteristicView';
 import {
-  PublicLoadCharacteristicViewFromJSON,
-  PublicLoadCharacteristicViewFromJSONTyped,
-  PublicLoadCharacteristicViewToJSON,
-  PublicLoadCharacteristicViewToJSONTyped,
+    PublicLoadCharacteristicViewFromJSON,
+    PublicLoadCharacteristicViewFromJSONTyped,
+    PublicLoadCharacteristicViewToJSON,
+    PublicLoadCharacteristicViewToJSONTyped,
 } from './PublicLoadCharacteristicView';
 import type { PublicAnatomyContributionView } from './PublicAnatomyContributionView';
 import {
-  PublicAnatomyContributionViewFromJSON,
-  PublicAnatomyContributionViewFromJSONTyped,
-  PublicAnatomyContributionViewToJSON,
-  PublicAnatomyContributionViewToJSONTyped,
+    PublicAnatomyContributionViewFromJSON,
+    PublicAnatomyContributionViewFromJSONTyped,
+    PublicAnatomyContributionViewToJSON,
+    PublicAnatomyContributionViewToJSONTyped,
 } from './PublicAnatomyContributionView';
 
 /**
@@ -41,174 +41,150 @@ import {
  * @interface ExerciseCatalogDetailView
  */
 export interface ExerciseCatalogDetailView {
-  /**
-   *
-   * @type {string}
-   * @memberof ExerciseCatalogDetailView
-   */
-  exerciseId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ExerciseCatalogDetailView
-   */
-  versionId?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof ExerciseCatalogDetailView
-   */
-  versionNumber?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof ExerciseCatalogDetailView
-   */
-  canonicalName?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ExerciseCatalogDetailView
-   */
-  instruction?: string;
-  /**
-   *
-   * @type {Array<string>}
-   * @memberof ExerciseCatalogDetailView
-   */
-  movementPatterns?: Array<string>;
-  /**
-   *
-   * @type {string}
-   * @memberof ExerciseCatalogDetailView
-   */
-  stimulusType?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ExerciseCatalogDetailView
-   */
-  fatigueProfile?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ExerciseCatalogDetailView
-   */
-  technicalLevel?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ExerciseCatalogDetailView
-   */
-  environment?: string;
-  /**
-   *
-   * @type {Array<string>}
-   * @memberof ExerciseCatalogDetailView
-   */
-  requiredEquipment?: Array<string>;
-  /**
-   *
-   * @type {Array<PublicLoadCharacteristicView>}
-   * @memberof ExerciseCatalogDetailView
-   */
-  loadCharacteristics?: Array<PublicLoadCharacteristicView>;
-  /**
-   *
-   * @type {Array<PublicAnatomyContributionView>}
-   * @memberof ExerciseCatalogDetailView
-   */
-  anatomyContributions?: Array<PublicAnatomyContributionView>;
-  /**
-   *
-   * @type {Array<PublicEvidenceView>}
-   * @memberof ExerciseCatalogDetailView
-   */
-  evidence?: Array<PublicEvidenceView>;
+    /**
+     *
+     * @type {string}
+     * @memberof ExerciseCatalogDetailView
+     */
+    exerciseId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof ExerciseCatalogDetailView
+     */
+    versionId?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof ExerciseCatalogDetailView
+     */
+    versionNumber?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof ExerciseCatalogDetailView
+     */
+    canonicalName?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof ExerciseCatalogDetailView
+     */
+    instruction?: string;
+    /**
+     *
+     * @type {Array<string>}
+     * @memberof ExerciseCatalogDetailView
+     */
+    movementPatterns?: Array<string>;
+    /**
+     *
+     * @type {string}
+     * @memberof ExerciseCatalogDetailView
+     */
+    stimulusType?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof ExerciseCatalogDetailView
+     */
+    fatigueProfile?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof ExerciseCatalogDetailView
+     */
+    technicalLevel?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof ExerciseCatalogDetailView
+     */
+    environment?: string;
+    /**
+     *
+     * @type {Array<string>}
+     * @memberof ExerciseCatalogDetailView
+     */
+    requiredEquipment?: Array<string>;
+    /**
+     *
+     * @type {Array<PublicLoadCharacteristicView>}
+     * @memberof ExerciseCatalogDetailView
+     */
+    loadCharacteristics?: Array<PublicLoadCharacteristicView>;
+    /**
+     *
+     * @type {Array<PublicAnatomyContributionView>}
+     * @memberof ExerciseCatalogDetailView
+     */
+    anatomyContributions?: Array<PublicAnatomyContributionView>;
+    /**
+     *
+     * @type {Array<PublicEvidenceView>}
+     * @memberof ExerciseCatalogDetailView
+     */
+    evidence?: Array<PublicEvidenceView>;
 }
 
 /**
  * Check if a given object implements the ExerciseCatalogDetailView interface.
  */
-export function instanceOfExerciseCatalogDetailView(
-  value: object,
-): value is ExerciseCatalogDetailView {
-  return true;
+export function instanceOfExerciseCatalogDetailView(value: object): value is ExerciseCatalogDetailView {
+    return true;
 }
 
 export function ExerciseCatalogDetailViewFromJSON(json: any): ExerciseCatalogDetailView {
-  return ExerciseCatalogDetailViewFromJSONTyped(json, false);
+    return ExerciseCatalogDetailViewFromJSONTyped(json, false);
 }
 
-export function ExerciseCatalogDetailViewFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): ExerciseCatalogDetailView {
-  if (json == null) {
-    return json;
-  }
-  return {
-    exerciseId: json['exerciseId'] == null ? undefined : json['exerciseId'],
-    versionId: json['versionId'] == null ? undefined : json['versionId'],
-    versionNumber: json['versionNumber'] == null ? undefined : json['versionNumber'],
-    canonicalName: json['canonicalName'] == null ? undefined : json['canonicalName'],
-    instruction: json['instruction'] == null ? undefined : json['instruction'],
-    movementPatterns: json['movementPatterns'] == null ? undefined : json['movementPatterns'],
-    stimulusType: json['stimulusType'] == null ? undefined : json['stimulusType'],
-    fatigueProfile: json['fatigueProfile'] == null ? undefined : json['fatigueProfile'],
-    technicalLevel: json['technicalLevel'] == null ? undefined : json['technicalLevel'],
-    environment: json['environment'] == null ? undefined : json['environment'],
-    requiredEquipment: json['requiredEquipment'] == null ? undefined : json['requiredEquipment'],
-    loadCharacteristics:
-      json['loadCharacteristics'] == null
-        ? undefined
-        : (json['loadCharacteristics'] as Array<any>).map(PublicLoadCharacteristicViewFromJSON),
-    anatomyContributions:
-      json['anatomyContributions'] == null
-        ? undefined
-        : (json['anatomyContributions'] as Array<any>).map(PublicAnatomyContributionViewFromJSON),
-    evidence:
-      json['evidence'] == null
-        ? undefined
-        : (json['evidence'] as Array<any>).map(PublicEvidenceViewFromJSON),
-  };
+export function ExerciseCatalogDetailViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): ExerciseCatalogDetailView {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'exerciseId': json['exerciseId'] == null ? undefined : json['exerciseId'],
+        'versionId': json['versionId'] == null ? undefined : json['versionId'],
+        'versionNumber': json['versionNumber'] == null ? undefined : json['versionNumber'],
+        'canonicalName': json['canonicalName'] == null ? undefined : json['canonicalName'],
+        'instruction': json['instruction'] == null ? undefined : json['instruction'],
+        'movementPatterns': json['movementPatterns'] == null ? undefined : json['movementPatterns'],
+        'stimulusType': json['stimulusType'] == null ? undefined : json['stimulusType'],
+        'fatigueProfile': json['fatigueProfile'] == null ? undefined : json['fatigueProfile'],
+        'technicalLevel': json['technicalLevel'] == null ? undefined : json['technicalLevel'],
+        'environment': json['environment'] == null ? undefined : json['environment'],
+        'requiredEquipment': json['requiredEquipment'] == null ? undefined : json['requiredEquipment'],
+        'loadCharacteristics': json['loadCharacteristics'] == null ? undefined : ((json['loadCharacteristics'] as Array<any>).map(PublicLoadCharacteristicViewFromJSON)),
+        'anatomyContributions': json['anatomyContributions'] == null ? undefined : ((json['anatomyContributions'] as Array<any>).map(PublicAnatomyContributionViewFromJSON)),
+        'evidence': json['evidence'] == null ? undefined : ((json['evidence'] as Array<any>).map(PublicEvidenceViewFromJSON)),
+    };
 }
 
 export function ExerciseCatalogDetailViewToJSON(json: any): ExerciseCatalogDetailView {
-  return ExerciseCatalogDetailViewToJSONTyped(json, false);
+    return ExerciseCatalogDetailViewToJSONTyped(json, false);
 }
 
-export function ExerciseCatalogDetailViewToJSONTyped(
-  value?: ExerciseCatalogDetailView | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function ExerciseCatalogDetailViewToJSONTyped(value?: ExerciseCatalogDetailView | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    exerciseId: value['exerciseId'],
-    versionId: value['versionId'],
-    versionNumber: value['versionNumber'],
-    canonicalName: value['canonicalName'],
-    instruction: value['instruction'],
-    movementPatterns: value['movementPatterns'],
-    stimulusType: value['stimulusType'],
-    fatigueProfile: value['fatigueProfile'],
-    technicalLevel: value['technicalLevel'],
-    environment: value['environment'],
-    requiredEquipment: value['requiredEquipment'],
-    loadCharacteristics:
-      value['loadCharacteristics'] == null
-        ? undefined
-        : (value['loadCharacteristics'] as Array<any>).map(PublicLoadCharacteristicViewToJSON),
-    anatomyContributions:
-      value['anatomyContributions'] == null
-        ? undefined
-        : (value['anatomyContributions'] as Array<any>).map(PublicAnatomyContributionViewToJSON),
-    evidence:
-      value['evidence'] == null
-        ? undefined
-        : (value['evidence'] as Array<any>).map(PublicEvidenceViewToJSON),
-  };
+    return {
+
+        'exerciseId': value['exerciseId'],
+        'versionId': value['versionId'],
+        'versionNumber': value['versionNumber'],
+        'canonicalName': value['canonicalName'],
+        'instruction': value['instruction'],
+        'movementPatterns': value['movementPatterns'],
+        'stimulusType': value['stimulusType'],
+        'fatigueProfile': value['fatigueProfile'],
+        'technicalLevel': value['technicalLevel'],
+        'environment': value['environment'],
+        'requiredEquipment': value['requiredEquipment'],
+        'loadCharacteristics': value['loadCharacteristics'] == null ? undefined : ((value['loadCharacteristics'] as Array<any>).map(PublicLoadCharacteristicViewToJSON)),
+        'anatomyContributions': value['anatomyContributions'] == null ? undefined : ((value['anatomyContributions'] as Array<any>).map(PublicAnatomyContributionViewToJSON)),
+        'evidence': value['evidence'] == null ? undefined : ((value['evidence'] as Array<any>).map(PublicEvidenceViewToJSON)),
+    };
 }

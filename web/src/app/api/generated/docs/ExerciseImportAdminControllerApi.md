@@ -2,23 +2,27 @@
 
 All URIs are relative to *http://localhost*
 
-| Method                                                               | HTTP request                                                     | Description |
-| -------------------------------------------------------------------- | ---------------------------------------------------------------- | ----------- |
-| [**batch**](ExerciseImportAdminControllerApi.md#batch)               | **GET** /api/v1/admin/exercise-import/batches/{id}               |             |
-| [**createSource**](ExerciseImportAdminControllerApi.md#createsource) | **POST** /api/v1/admin/exercise-import/sources                   |             |
-| [**draft**](ExerciseImportAdminControllerApi.md#draft)               | **POST** /api/v1/admin/exercise-import/records/{id}/create-draft |             |
-| [**issues**](ExerciseImportAdminControllerApi.md#issues)             | **GET** /api/v1/admin/exercise-import/batches/{id}/issues        |             |
-| [**mapping**](ExerciseImportAdminControllerApi.md#mapping)           | **POST** /api/v1/admin/exercise-import/mappings/{id}/decision    |             |
-| [**match**](ExerciseImportAdminControllerApi.md#match)               | **POST** /api/v1/admin/exercise-import/records/{id}/match        |             |
-| [**record**](ExerciseImportAdminControllerApi.md#record)             | **GET** /api/v1/admin/exercise-import/records/{id}               |             |
-| [**records**](ExerciseImportAdminControllerApi.md#records)           | **GET** /api/v1/admin/exercise-import/batches/{id}/records       |             |
-| [**restart**](ExerciseImportAdminControllerApi.md#restart)           | **POST** /api/v1/admin/exercise-import/batches/{id}/restart      |             |
-| [**sources**](ExerciseImportAdminControllerApi.md#sources)           | **GET** /api/v1/admin/exercise-import/sources                    |             |
-| [**upload**](ExerciseImportAdminControllerApi.md#upload)             | **POST** /api/v1/admin/exercise-import/batches                   |             |
+| Method | HTTP request | Description |
+|------------- | ------------- | -------------|
+| [**batch**](ExerciseImportAdminControllerApi.md#batch) | **GET** /api/v1/admin/exercise-import/batches/{id} |  |
+| [**createSource**](ExerciseImportAdminControllerApi.md#createsource) | **POST** /api/v1/admin/exercise-import/sources |  |
+| [**draft**](ExerciseImportAdminControllerApi.md#draft) | **POST** /api/v1/admin/exercise-import/records/{id}/create-draft |  |
+| [**issues**](ExerciseImportAdminControllerApi.md#issues) | **GET** /api/v1/admin/exercise-import/batches/{id}/issues |  |
+| [**mapping**](ExerciseImportAdminControllerApi.md#mapping) | **POST** /api/v1/admin/exercise-import/mappings/{id}/decision |  |
+| [**match**](ExerciseImportAdminControllerApi.md#match) | **POST** /api/v1/admin/exercise-import/records/{id}/match |  |
+| [**record**](ExerciseImportAdminControllerApi.md#record) | **GET** /api/v1/admin/exercise-import/records/{id} |  |
+| [**records**](ExerciseImportAdminControllerApi.md#records) | **GET** /api/v1/admin/exercise-import/batches/{id}/records |  |
+| [**restart**](ExerciseImportAdminControllerApi.md#restart) | **POST** /api/v1/admin/exercise-import/batches/{id}/restart |  |
+| [**sources**](ExerciseImportAdminControllerApi.md#sources) | **GET** /api/v1/admin/exercise-import/sources |  |
+| [**upload**](ExerciseImportAdminControllerApi.md#upload) | **POST** /api/v1/admin/exercise-import/batches |  |
+
+
 
 ## batch
 
 > BatchView batch(id)
+
+
 
 ### Example
 
@@ -54,9 +58,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name   | Type     | Description | Notes                     |
-| ------ | -------- | ----------- | ------------------------- |
-| **id** | `string` |             | [Defaults to `undefined`] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **id** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -71,17 +76,20 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## createSource
 
 > SourceView createSource(createSource)
+
+
 
 ### Example
 
@@ -117,9 +125,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name             | Type                            | Description | Notes |
-| ---------------- | ------------------------------- | ----------- | ----- |
-| **createSource** | [CreateSource](CreateSource.md) |             |       |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **createSource** | [CreateSource](CreateSource.md) |  | |
 
 ### Return type
 
@@ -134,17 +143,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## draft
 
 > { [key: string]: string; } draft(id)
+
+
 
 ### Example
 
@@ -180,9 +192,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name   | Type     | Description | Notes                     |
-| ------ | -------- | ----------- | ------------------------- |
-| **id** | `string` |             | [Defaults to `undefined`] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **id** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -197,17 +210,20 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## issues
 
 > string issues(id, format, severity)
+
+
 
 ### Example
 
@@ -247,11 +263,12 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name         | Type     | Description | Notes                                      |
-| ------------ | -------- | ----------- | ------------------------------------------ |
-| **id**       | `string` |             | [Defaults to `undefined`]                  |
-| **format**   | `string` |             | [Optional] [Defaults to `&#39;jsonl&#39;`] |
-| **severity** | `string` |             | [Optional] [Defaults to `undefined`]       |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **id** | `string` |  | [Defaults to `undefined`] |
+| **format** | `string` |  | [Optional] [Defaults to `&#39;jsonl&#39;`] |
+| **severity** | `string` |  | [Optional] [Defaults to `undefined`] |
 
 ### Return type
 
@@ -266,17 +283,20 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## mapping
 
 > MappingView mapping(id, mappingDecision)
+
+
 
 ### Example
 
@@ -314,10 +334,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                | Type                                  | Description | Notes                     |
-| ------------------- | ------------------------------------- | ----------- | ------------------------- |
-| **id**              | `string`                              |             | [Defaults to `undefined`] |
-| **mappingDecision** | [MappingDecision](MappingDecision.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **id** | `string` |  | [Defaults to `undefined`] |
+| **mappingDecision** | [MappingDecision](MappingDecision.md) |  | |
 
 ### Return type
 
@@ -332,17 +353,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## match
 
 > RecordDetail match(id, matchDecision)
+
+
 
 ### Example
 
@@ -380,10 +404,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name              | Type                              | Description | Notes                     |
-| ----------------- | --------------------------------- | ----------- | ------------------------- |
-| **id**            | `string`                          |             | [Defaults to `undefined`] |
-| **matchDecision** | [MatchDecision](MatchDecision.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **id** | `string` |  | [Defaults to `undefined`] |
+| **matchDecision** | [MatchDecision](MatchDecision.md) |  | |
 
 ### Return type
 
@@ -398,17 +423,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## record
 
 > RecordDetail record(id)
+
+
 
 ### Example
 
@@ -444,9 +472,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name   | Type     | Description | Notes                     |
-| ------ | -------- | ----------- | ------------------------- |
-| **id** | `string` |             | [Defaults to `undefined`] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **id** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -461,17 +490,20 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## records
 
 > RecordPage records(id, status, severity, page, size)
+
+
 
 ### Example
 
@@ -515,13 +547,14 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name         | Type     | Description | Notes                                |
-| ------------ | -------- | ----------- | ------------------------------------ |
-| **id**       | `string` |             | [Defaults to `undefined`]            |
-| **status**   | `string` |             | [Optional] [Defaults to `undefined`] |
-| **severity** | `string` |             | [Optional] [Defaults to `undefined`] |
-| **page**     | `number` |             | [Optional] [Defaults to `0`]         |
-| **size**     | `number` |             | [Optional] [Defaults to `50`]        |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **id** | `string` |  | [Defaults to `undefined`] |
+| **status** | `string` |  | [Optional] [Defaults to `undefined`] |
+| **severity** | `string` |  | [Optional] [Defaults to `undefined`] |
+| **page** | `number` |  | [Optional] [Defaults to `0`] |
+| **size** | `number` |  | [Optional] [Defaults to `50`] |
 
 ### Return type
 
@@ -536,17 +569,20 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## restart
 
 > restart(id)
+
+
 
 ### Example
 
@@ -582,9 +618,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name   | Type     | Description | Notes                     |
-| ------ | -------- | ----------- | ------------------------- |
-| **id** | `string` |             | [Defaults to `undefined`] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **id** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -599,27 +636,34 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: Not defined
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## sources
 
 > Array&lt;SourceView&gt; sources()
 
+
+
 ### Example
 
 ```ts
-import { Configuration, ExerciseImportAdminControllerApi } from '@moves/api-client';
+import {
+  Configuration,
+  ExerciseImportAdminControllerApi,
+} from '@moves/api-client';
 import type { SourcesRequest } from '@moves/api-client';
 
 async function example() {
-  console.log('🚀 Testing @moves/api-client SDK...');
-  const config = new Configuration({});
+  console.log("🚀 Testing @moves/api-client SDK...");
+  const config = new Configuration({
+  });
   const api = new ExerciseImportAdminControllerApi(config);
 
   try {
@@ -651,17 +695,20 @@ This endpoint does not need any parameter.
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## upload
 
 > UploadAccepted upload(idempotencyKey, sourceId, file, forceReprocess)
+
+
 
 ### Example
 
@@ -703,12 +750,13 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name               | Type      | Description | Notes                            |
-| ------------------ | --------- | ----------- | -------------------------------- |
-| **idempotencyKey** | `string`  |             | [Defaults to `undefined`]        |
-| **sourceId**       | `string`  |             | [Defaults to `undefined`]        |
-| **file**           | `Blob`    |             | [Defaults to `undefined`]        |
-| **forceReprocess** | `boolean` |             | [Optional] [Defaults to `false`] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **idempotencyKey** | `string` |  | [Defaults to `undefined`] |
+| **sourceId** | `string` |  | [Defaults to `undefined`] |
+| **file** | `Blob` |  | [Defaults to `undefined`] |
+| **forceReprocess** | `boolean` |  | [Optional] [Defaults to `false`] |
 
 ### Return type
 
@@ -723,10 +771,10 @@ example().catch(console.error);
 - **Content-Type**: `multipart/form-data`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)

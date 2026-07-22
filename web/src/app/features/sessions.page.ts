@@ -252,12 +252,12 @@ export class SessionsPage {
   }
 
   private async openAttempt(attemptId: string): Promise<void> {
-    const detail = await this.api.attempts.get({ attemptId });
+    const detail = await this.api.attempts.get1({ attemptId });
     const session = this.agenda()?.sessions?.find(item => item.sessionId === detail.plannedSessionId);
     if (!session || !this.matchingSession(session)?.prescriptions?.length) { this.missingPrescriptions(); return; }
     this.todaySession.set(session);
     if (detail.state === 'PAUSED') await this.api.attempts.resume({ attemptId });
-    this.attempt.set(await this.api.attempts.get({ attemptId })); this.stage.set('guided'); this.persistAttempt(attemptId);
+    this.attempt.set(await this.api.attempts.get1({ attemptId })); this.stage.set('guided'); this.persistAttempt(attemptId);
   }
   private matchingSession(session: AgendaSessionView): SessionView | undefined { return this.plannedSessions().find(item => item.id === session.sessionId); }
   private prescriptionsForVariant(variant: Variant): PrescriptionView[] {

@@ -1,34 +1,36 @@
+
 # RankingRow
+
 
 ## Properties
 
-| Name        | Type   |
-| ----------- | ------ |
-| `position`  | number |
-| `pseudonym` | string |
-| `points`    | number |
+Name | Type
+------------ | -------------
+`position` | number
+`pseudonym` | string
+`points` | number
 
 ## Example
 
 ```typescript
-import type { RankingRow } from '@moves/api-client';
+import type { RankingRow } from '@moves/api-client'
 
 // TODO: Update the object below with actual values
 const example = {
-  position: null,
-  pseudonym: null,
-  points: null,
-} satisfies RankingRow;
+  "position": null,
+  "pseudonym": null,
+  "points": null,
+} satisfies RankingRow
 
-console.log(example);
+console.log(example)
 
 // Convert the instance to a JSON string
-const exampleJSON: string = JSON.stringify(example);
-console.log(exampleJSON);
+const exampleJSON: string = JSON.stringify(example)
+console.log(exampleJSON)
 
 // Parse the JSON string back to an object
-const exampleParsed = JSON.parse(exampleJSON) as RankingRow;
-console.log(exampleParsed);
+const exampleParsed = JSON.parse(exampleJSON) as RankingRow
+console.log(exampleParsed)
 ```
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)

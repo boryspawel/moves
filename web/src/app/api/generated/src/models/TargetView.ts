@@ -19,128 +19,126 @@ import { mapValues } from '../runtime';
  * @interface TargetView
  */
 export interface TargetView {
-  /**
-   *
-   * @type {string}
-   * @memberof TargetView
-   */
-  structureId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof TargetView
-   */
-  movementPattern?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof TargetView
-   */
-  channel?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof TargetView
-   */
-  loadCharacteristic?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof TargetView
-   */
-  side?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof TargetView
-   */
-  rangeOfMotion?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof TargetView
-   */
-  contractionType?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof TargetView
-   */
-  limitLow?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof TargetView
-   */
-  limitHigh?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof TargetView
-   */
-  unit?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof TargetView
-   */
-  minimumRecoveryHours?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof TargetView
+     */
+    structureId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof TargetView
+     */
+    movementPattern?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof TargetView
+     */
+    channel?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof TargetView
+     */
+    loadCharacteristic?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof TargetView
+     */
+    side?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof TargetView
+     */
+    rangeOfMotion?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof TargetView
+     */
+    contractionType?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof TargetView
+     */
+    limitLow?: number;
+    /**
+     *
+     * @type {number}
+     * @memberof TargetView
+     */
+    limitHigh?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof TargetView
+     */
+    unit?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof TargetView
+     */
+    minimumRecoveryHours?: number;
 }
 
 /**
  * Check if a given object implements the TargetView interface.
  */
 export function instanceOfTargetView(value: object): value is TargetView {
-  return true;
+    return true;
 }
 
 export function TargetViewFromJSON(json: any): TargetView {
-  return TargetViewFromJSONTyped(json, false);
+    return TargetViewFromJSONTyped(json, false);
 }
 
 export function TargetViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): TargetView {
-  if (json == null) {
-    return json;
-  }
-  return {
-    structureId: json['structureId'] == null ? undefined : json['structureId'],
-    movementPattern: json['movementPattern'] == null ? undefined : json['movementPattern'],
-    channel: json['channel'] == null ? undefined : json['channel'],
-    loadCharacteristic: json['loadCharacteristic'] == null ? undefined : json['loadCharacteristic'],
-    side: json['side'] == null ? undefined : json['side'],
-    rangeOfMotion: json['rangeOfMotion'] == null ? undefined : json['rangeOfMotion'],
-    contractionType: json['contractionType'] == null ? undefined : json['contractionType'],
-    limitLow: json['limitLow'] == null ? undefined : json['limitLow'],
-    limitHigh: json['limitHigh'] == null ? undefined : json['limitHigh'],
-    unit: json['unit'] == null ? undefined : json['unit'],
-    minimumRecoveryHours:
-      json['minimumRecoveryHours'] == null ? undefined : json['minimumRecoveryHours'],
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'structureId': json['structureId'] == null ? undefined : json['structureId'],
+        'movementPattern': json['movementPattern'] == null ? undefined : json['movementPattern'],
+        'channel': json['channel'] == null ? undefined : json['channel'],
+        'loadCharacteristic': json['loadCharacteristic'] == null ? undefined : json['loadCharacteristic'],
+        'side': json['side'] == null ? undefined : json['side'],
+        'rangeOfMotion': json['rangeOfMotion'] == null ? undefined : json['rangeOfMotion'],
+        'contractionType': json['contractionType'] == null ? undefined : json['contractionType'],
+        'limitLow': json['limitLow'] == null ? undefined : json['limitLow'],
+        'limitHigh': json['limitHigh'] == null ? undefined : json['limitHigh'],
+        'unit': json['unit'] == null ? undefined : json['unit'],
+        'minimumRecoveryHours': json['minimumRecoveryHours'] == null ? undefined : json['minimumRecoveryHours'],
+    };
 }
 
 export function TargetViewToJSON(json: any): TargetView {
-  return TargetViewToJSONTyped(json, false);
+    return TargetViewToJSONTyped(json, false);
 }
 
-export function TargetViewToJSONTyped(
-  value?: TargetView | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function TargetViewToJSONTyped(value?: TargetView | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    structureId: value['structureId'],
-    movementPattern: value['movementPattern'],
-    channel: value['channel'],
-    loadCharacteristic: value['loadCharacteristic'],
-    side: value['side'],
-    rangeOfMotion: value['rangeOfMotion'],
-    contractionType: value['contractionType'],
-    limitLow: value['limitLow'],
-    limitHigh: value['limitHigh'],
-    unit: value['unit'],
-    minimumRecoveryHours: value['minimumRecoveryHours'],
-  };
+    return {
+
+        'structureId': value['structureId'],
+        'movementPattern': value['movementPattern'],
+        'channel': value['channel'],
+        'loadCharacteristic': value['loadCharacteristic'],
+        'side': value['side'],
+        'rangeOfMotion': value['rangeOfMotion'],
+        'contractionType': value['contractionType'],
+        'limitLow': value['limitLow'],
+        'limitHigh': value['limitHigh'],
+        'unit': value['unit'],
+        'minimumRecoveryHours': value['minimumRecoveryHours'],
+    };
 }

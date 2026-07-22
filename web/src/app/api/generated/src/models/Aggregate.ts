@@ -19,111 +19,110 @@ import { mapValues } from '../runtime';
  * @interface Aggregate
  */
 export interface Aggregate {
-  /**
-   *
-   * @type {string}
-   * @memberof Aggregate
-   */
-  scope?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof Aggregate
-   */
-  scopeKey?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof Aggregate
-   */
-  structureId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof Aggregate
-   */
-  side?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof Aggregate
-   */
-  channel?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof Aggregate
-   */
-  observationFamily?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof Aggregate
-   */
-  unit?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof Aggregate
-   */
-  low?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof Aggregate
-   */
-  high?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof Aggregate
+     */
+    scope?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof Aggregate
+     */
+    scopeKey?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof Aggregate
+     */
+    structureId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof Aggregate
+     */
+    side?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof Aggregate
+     */
+    channel?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof Aggregate
+     */
+    observationFamily?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof Aggregate
+     */
+    unit?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof Aggregate
+     */
+    low?: number;
+    /**
+     *
+     * @type {number}
+     * @memberof Aggregate
+     */
+    high?: number;
 }
 
 /**
  * Check if a given object implements the Aggregate interface.
  */
 export function instanceOfAggregate(value: object): value is Aggregate {
-  return true;
+    return true;
 }
 
 export function AggregateFromJSON(json: any): Aggregate {
-  return AggregateFromJSONTyped(json, false);
+    return AggregateFromJSONTyped(json, false);
 }
 
 export function AggregateFromJSONTyped(json: any, ignoreDiscriminator: boolean): Aggregate {
-  if (json == null) {
-    return json;
-  }
-  return {
-    scope: json['scope'] == null ? undefined : json['scope'],
-    scopeKey: json['scopeKey'] == null ? undefined : json['scopeKey'],
-    structureId: json['structureId'] == null ? undefined : json['structureId'],
-    side: json['side'] == null ? undefined : json['side'],
-    channel: json['channel'] == null ? undefined : json['channel'],
-    observationFamily: json['observationFamily'] == null ? undefined : json['observationFamily'],
-    unit: json['unit'] == null ? undefined : json['unit'],
-    low: json['low'] == null ? undefined : json['low'],
-    high: json['high'] == null ? undefined : json['high'],
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'scope': json['scope'] == null ? undefined : json['scope'],
+        'scopeKey': json['scopeKey'] == null ? undefined : json['scopeKey'],
+        'structureId': json['structureId'] == null ? undefined : json['structureId'],
+        'side': json['side'] == null ? undefined : json['side'],
+        'channel': json['channel'] == null ? undefined : json['channel'],
+        'observationFamily': json['observationFamily'] == null ? undefined : json['observationFamily'],
+        'unit': json['unit'] == null ? undefined : json['unit'],
+        'low': json['low'] == null ? undefined : json['low'],
+        'high': json['high'] == null ? undefined : json['high'],
+    };
 }
 
 export function AggregateToJSON(json: any): Aggregate {
-  return AggregateToJSONTyped(json, false);
+    return AggregateToJSONTyped(json, false);
 }
 
-export function AggregateToJSONTyped(
-  value?: Aggregate | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function AggregateToJSONTyped(value?: Aggregate | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    scope: value['scope'],
-    scopeKey: value['scopeKey'],
-    structureId: value['structureId'],
-    side: value['side'],
-    channel: value['channel'],
-    observationFamily: value['observationFamily'],
-    unit: value['unit'],
-    low: value['low'],
-    high: value['high'],
-  };
+    return {
+
+        'scope': value['scope'],
+        'scopeKey': value['scopeKey'],
+        'structureId': value['structureId'],
+        'side': value['side'],
+        'channel': value['channel'],
+        'observationFamily': value['observationFamily'],
+        'unit': value['unit'],
+        'low': value['low'],
+        'high': value['high'],
+    };
 }

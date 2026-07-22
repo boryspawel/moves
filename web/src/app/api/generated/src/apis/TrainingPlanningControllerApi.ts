@@ -14,115 +14,115 @@
 
 import * as runtime from '../runtime';
 import {
-  type CreatePlanCommand,
-  CreatePlanCommandFromJSON,
-  CreatePlanCommandToJSON,
+    type CreatePlanCommand,
+    CreatePlanCommandFromJSON,
+    CreatePlanCommandToJSON,
 } from '../models/CreatePlanCommand';
-import { type PlanBundle, PlanBundleFromJSON, PlanBundleToJSON } from '../models/PlanBundle';
-import { type SessionView, SessionViewFromJSON, SessionViewToJSON } from '../models/SessionView';
+import {
+    type PlanBundle,
+    PlanBundleFromJSON,
+    PlanBundleToJSON,
+} from '../models/PlanBundle';
+import {
+    type SessionView,
+    SessionViewFromJSON,
+    SessionViewToJSON,
+} from '../models/SessionView';
 
 export interface CreateLegacyTrainingPlanRequest {
-  createPlanCommand: CreatePlanCommand;
+    createPlanCommand: CreatePlanCommand;
 }
 
 /**
  *
  */
 export class TrainingPlanningControllerApi extends runtime.BaseAPI {
-  /**
-   * Creates request options for createLegacyTrainingPlan without sending the request
-   * @deprecated
-   */
-  async createLegacyTrainingPlanRequestOpts(
-    requestParameters: CreateLegacyTrainingPlanRequest,
-  ): Promise<runtime.RequestOpts> {
-    if (requestParameters['createPlanCommand'] == null) {
-      throw new runtime.RequiredError(
-        'createPlanCommand',
-        'Required parameter "createPlanCommand" was null or undefined when calling createLegacyTrainingPlan().',
-      );
+
+    /**
+     * Creates request options for createLegacyTrainingPlan without sending the request
+     * @deprecated
+     */
+    async createLegacyTrainingPlanRequestOpts(requestParameters: CreateLegacyTrainingPlanRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['createPlanCommand'] == null) {
+            throw new runtime.RequiredError(
+                'createPlanCommand',
+                'Required parameter "createPlanCommand" was null or undefined when calling createLegacyTrainingPlan().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+
+        let urlPath = `/api/v1/training-plans`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: CreatePlanCommandToJSON(requestParameters['createPlanCommand']),
+        };
     }
 
-    const queryParameters: any = {};
+    /**
+     * Deprecated V1 plan creation endpoint
+     * @deprecated
+     */
+    async createLegacyTrainingPlanRaw(requestParameters: CreateLegacyTrainingPlanRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PlanBundle>> {
+        const requestOptions = await this.createLegacyTrainingPlanRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
-    const headerParameters: runtime.HTTPHeaders = {};
+        return new runtime.JSONApiResponse(response, (jsonValue) => PlanBundleFromJSON(jsonValue));
+    }
 
-    headerParameters['Content-Type'] = 'application/json';
+    /**
+     * Deprecated V1 plan creation endpoint
+     * @deprecated
+     */
+    async createLegacyTrainingPlan(requestParameters: CreateLegacyTrainingPlanRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PlanBundle> {
+        const response = await this.createLegacyTrainingPlanRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
-    let urlPath = `/api/v1/training-plans`;
+    /**
+     * Creates request options for sessions without sending the request
+     */
+    async sessionsRequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
 
-    return {
-      path: urlPath,
-      method: 'POST',
-      headers: headerParameters,
-      query: queryParameters,
-      body: CreatePlanCommandToJSON(requestParameters['createPlanCommand']),
-    };
-  }
+        const headerParameters: runtime.HTTPHeaders = {};
 
-  /**
-   * Deprecated V1 plan creation endpoint
-   * @deprecated
-   */
-  async createLegacyTrainingPlanRaw(
-    requestParameters: CreateLegacyTrainingPlanRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<PlanBundle>> {
-    const requestOptions = await this.createLegacyTrainingPlanRequestOpts(requestParameters);
-    const response = await this.request(requestOptions, initOverrides);
 
-    return new runtime.JSONApiResponse(response, (jsonValue) => PlanBundleFromJSON(jsonValue));
-  }
+        let urlPath = `/api/v1/planned-sessions`;
 
-  /**
-   * Deprecated V1 plan creation endpoint
-   * @deprecated
-   */
-  async createLegacyTrainingPlan(
-    requestParameters: CreateLegacyTrainingPlanRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<PlanBundle> {
-    const response = await this.createLegacyTrainingPlanRaw(requestParameters, initOverrides);
-    return await response.value();
-  }
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
 
-  /**
-   * Creates request options for sessions without sending the request
-   */
-  async sessionsRequestOpts(): Promise<runtime.RequestOpts> {
-    const queryParameters: any = {};
+    /**
+     * List planned sessions assigned to the current participant
+     */
+    async sessionsRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<SessionView>>> {
+        const requestOptions = await this.sessionsRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
-    const headerParameters: runtime.HTTPHeaders = {};
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(SessionViewFromJSON));
+    }
 
-    let urlPath = `/api/v1/planned-sessions`;
+    /**
+     * List planned sessions assigned to the current participant
+     */
+    async sessions(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<SessionView>> {
+        const response = await this.sessionsRaw(initOverrides);
+        return await response.value();
+    }
 
-    return {
-      path: urlPath,
-      method: 'GET',
-      headers: headerParameters,
-      query: queryParameters,
-    };
-  }
-
-  /**
-   * List planned sessions assigned to the current participant
-   */
-  async sessionsRaw(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<Array<SessionView>>> {
-    const requestOptions = await this.sessionsRequestOpts();
-    const response = await this.request(requestOptions, initOverrides);
-
-    return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(SessionViewFromJSON));
-  }
-
-  /**
-   * List planned sessions assigned to the current participant
-   */
-  async sessions(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<Array<SessionView>> {
-    const response = await this.sessionsRaw(initOverrides);
-    return await response.value();
-  }
 }

@@ -2,22 +2,26 @@
 
 All URIs are relative to *http://localhost*
 
-| Method                                                                              | HTTP request                                                                                                 | Description |
-| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ----------- |
-| [**clinicalRestriction**](SafetyV2ControllerApi.md#clinicalrestriction)             | **POST** /api/v2/safety/participants/{participantId}/restrictions                                            |             |
-| [**clinicalRestrictions**](SafetyV2ControllerApi.md#clinicalrestrictions)           | **GET** /api/v2/safety/participants/{participantId}/clinical-restrictions                                    |             |
-| [**declare**](SafetyV2ControllerApi.md#declare)                                     | **POST** /api/v2/safety/me/restrictions                                                                      |             |
-| [**effectiveRestrictions**](SafetyV2ControllerApi.md#effectiverestrictions)         | **GET** /api/v2/safety/participants/{participantId}/effective-restrictions                                   |             |
-| [**history1**](SafetyV2ControllerApi.md#history1)                                   | **GET** /api/v2/safety/me/restrictions/history                                                               |             |
-| [**legacyReport**](SafetyV2ControllerApi.md#legacyreport)                           | **GET** /api/v2/safety/admin/legacy/participant-restrictions                                                 |             |
-| [**override**](SafetyV2ControllerApi.md#override)                                   | **POST** /api/v2/safety/participants/{participantId}/assessments/{assessmentId}/factors/{factorId}/overrides |             |
-| [**revise**](SafetyV2ControllerApi.md#revise)                                       | **PATCH** /api/v2/safety/me/restrictions/{restrictionId}                                                     |             |
-| [**reviseClinicalRestriction**](SafetyV2ControllerApi.md#reviseclinicalrestriction) | **PATCH** /api/v2/safety/participants/{participantId}/restrictions/{restrictionId}                           |             |
-| [**withdraw2**](SafetyV2ControllerApi.md#withdraw2)                                 | **DELETE** /api/v2/safety/me/restrictions/{restrictionId}                                                    |             |
+| Method | HTTP request | Description |
+|------------- | ------------- | -------------|
+| [**clinicalRestriction**](SafetyV2ControllerApi.md#clinicalrestriction) | **POST** /api/v2/safety/participants/{participantId}/restrictions |  |
+| [**clinicalRestrictions**](SafetyV2ControllerApi.md#clinicalrestrictions) | **GET** /api/v2/safety/participants/{participantId}/clinical-restrictions |  |
+| [**declare**](SafetyV2ControllerApi.md#declare) | **POST** /api/v2/safety/me/restrictions |  |
+| [**effectiveRestrictions**](SafetyV2ControllerApi.md#effectiverestrictions) | **GET** /api/v2/safety/participants/{participantId}/effective-restrictions |  |
+| [**history1**](SafetyV2ControllerApi.md#history1) | **GET** /api/v2/safety/me/restrictions/history |  |
+| [**legacyReport**](SafetyV2ControllerApi.md#legacyreport) | **GET** /api/v2/safety/admin/legacy/participant-restrictions |  |
+| [**override**](SafetyV2ControllerApi.md#override) | **POST** /api/v2/safety/participants/{participantId}/assessments/{assessmentId}/factors/{factorId}/overrides |  |
+| [**revise**](SafetyV2ControllerApi.md#revise) | **PATCH** /api/v2/safety/me/restrictions/{restrictionId} |  |
+| [**reviseClinicalRestriction**](SafetyV2ControllerApi.md#reviseclinicalrestriction) | **PATCH** /api/v2/safety/participants/{participantId}/restrictions/{restrictionId} |  |
+| [**withdraw2**](SafetyV2ControllerApi.md#withdraw2) | **DELETE** /api/v2/safety/me/restrictions/{restrictionId} |  |
+
+
 
 ## clinicalRestriction
 
 > RestrictionView clinicalRestriction(participantId, actingContext, restrictionCommand)
+
+
 
 ### Example
 
@@ -57,11 +61,12 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                   | Type                                        | Description | Notes                                                      |
-| ---------------------- | ------------------------------------------- | ----------- | ---------------------------------------------------------- |
-| **participantId**      | `string`                                    |             | [Defaults to `undefined`]                                  |
-| **actingContext**      | `TRAINER`, `PHYSIOTHERAPIST`                |             | [Defaults to `undefined`] [Enum: TRAINER, PHYSIOTHERAPIST] |
-| **restrictionCommand** | [RestrictionCommand](RestrictionCommand.md) |             |                                                            |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **participantId** | `string` |  | [Defaults to `undefined`] |
+| **actingContext** | `TRAINER`, `PHYSIOTHERAPIST` |  | [Defaults to `undefined`] [Enum: TRAINER, PHYSIOTHERAPIST] |
+| **restrictionCommand** | [RestrictionCommand](RestrictionCommand.md) |  | |
 
 ### Return type
 
@@ -76,17 +81,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## clinicalRestrictions
 
 > Array&lt;ClinicalRestrictionView&gt; clinicalRestrictions(participantId, actingContext)
+
+
 
 ### Example
 
@@ -124,10 +132,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name              | Type                         | Description | Notes                                                      |
-| ----------------- | ---------------------------- | ----------- | ---------------------------------------------------------- |
-| **participantId** | `string`                     |             | [Defaults to `undefined`]                                  |
-| **actingContext** | `TRAINER`, `PHYSIOTHERAPIST` |             | [Defaults to `undefined`] [Enum: TRAINER, PHYSIOTHERAPIST] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **participantId** | `string` |  | [Defaults to `undefined`] |
+| **actingContext** | `TRAINER`, `PHYSIOTHERAPIST` |  | [Defaults to `undefined`] [Enum: TRAINER, PHYSIOTHERAPIST] |
 
 ### Return type
 
@@ -142,17 +151,20 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## declare
 
 > RestrictionView declare(restrictionCommand)
+
+
 
 ### Example
 
@@ -188,9 +200,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                   | Type                                        | Description | Notes |
-| ---------------------- | ------------------------------------------- | ----------- | ----- |
-| **restrictionCommand** | [RestrictionCommand](RestrictionCommand.md) |             |       |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **restrictionCommand** | [RestrictionCommand](RestrictionCommand.md) |  | |
 
 ### Return type
 
@@ -205,17 +218,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## effectiveRestrictions
 
 > Array&lt;EffectiveRestrictionView&gt; effectiveRestrictions(participantId, actingContext)
+
+
 
 ### Example
 
@@ -253,10 +269,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name              | Type                         | Description | Notes                                                      |
-| ----------------- | ---------------------------- | ----------- | ---------------------------------------------------------- |
-| **participantId** | `string`                     |             | [Defaults to `undefined`]                                  |
-| **actingContext** | `TRAINER`, `PHYSIOTHERAPIST` |             | [Defaults to `undefined`] [Enum: TRAINER, PHYSIOTHERAPIST] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **participantId** | `string` |  | [Defaults to `undefined`] |
+| **actingContext** | `TRAINER`, `PHYSIOTHERAPIST` |  | [Defaults to `undefined`] [Enum: TRAINER, PHYSIOTHERAPIST] |
 
 ### Return type
 
@@ -271,27 +288,34 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## history1
 
 > Array&lt;RestrictionView&gt; history1()
 
+
+
 ### Example
 
 ```ts
-import { Configuration, SafetyV2ControllerApi } from '@moves/api-client';
+import {
+  Configuration,
+  SafetyV2ControllerApi,
+} from '@moves/api-client';
 import type { History1Request } from '@moves/api-client';
 
 async function example() {
-  console.log('🚀 Testing @moves/api-client SDK...');
-  const config = new Configuration({});
+  console.log("🚀 Testing @moves/api-client SDK...");
+  const config = new Configuration({
+  });
   const api = new SafetyV2ControllerApi(config);
 
   try {
@@ -323,27 +347,34 @@ This endpoint does not need any parameter.
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## legacyReport
 
 > LegacyReport legacyReport()
 
+
+
 ### Example
 
 ```ts
-import { Configuration, SafetyV2ControllerApi } from '@moves/api-client';
+import {
+  Configuration,
+  SafetyV2ControllerApi,
+} from '@moves/api-client';
 import type { LegacyReportRequest } from '@moves/api-client';
 
 async function example() {
-  console.log('🚀 Testing @moves/api-client SDK...');
-  const config = new Configuration({});
+  console.log("🚀 Testing @moves/api-client SDK...");
+  const config = new Configuration({
+  });
   const api = new SafetyV2ControllerApi(config);
 
   try {
@@ -375,17 +406,20 @@ This endpoint does not need any parameter.
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## override
 
 > OverrideView override(participantId, assessmentId, factorId, actingContext, overrideCommand)
+
+
 
 ### Example
 
@@ -429,13 +463,14 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                | Type                                  | Description | Notes                                                      |
-| ------------------- | ------------------------------------- | ----------- | ---------------------------------------------------------- |
-| **participantId**   | `string`                              |             | [Defaults to `undefined`]                                  |
-| **assessmentId**    | `string`                              |             | [Defaults to `undefined`]                                  |
-| **factorId**        | `string`                              |             | [Defaults to `undefined`]                                  |
-| **actingContext**   | `TRAINER`, `PHYSIOTHERAPIST`          |             | [Defaults to `undefined`] [Enum: TRAINER, PHYSIOTHERAPIST] |
-| **overrideCommand** | [OverrideCommand](OverrideCommand.md) |             |                                                            |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **participantId** | `string` |  | [Defaults to `undefined`] |
+| **assessmentId** | `string` |  | [Defaults to `undefined`] |
+| **factorId** | `string` |  | [Defaults to `undefined`] |
+| **actingContext** | `TRAINER`, `PHYSIOTHERAPIST` |  | [Defaults to `undefined`] [Enum: TRAINER, PHYSIOTHERAPIST] |
+| **overrideCommand** | [OverrideCommand](OverrideCommand.md) |  | |
 
 ### Return type
 
@@ -450,17 +485,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## revise
 
 > RestrictionView revise(restrictionId, restrictionCommand)
+
+
 
 ### Example
 
@@ -498,10 +536,11 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                   | Type                                        | Description | Notes                     |
-| ---------------------- | ------------------------------------------- | ----------- | ------------------------- |
-| **restrictionId**      | `string`                                    |             | [Defaults to `undefined`] |
-| **restrictionCommand** | [RestrictionCommand](RestrictionCommand.md) |             |                           |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **restrictionId** | `string` |  | [Defaults to `undefined`] |
+| **restrictionCommand** | [RestrictionCommand](RestrictionCommand.md) |  | |
 
 ### Return type
 
@@ -516,17 +555,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## reviseClinicalRestriction
 
 > RestrictionView reviseClinicalRestriction(participantId, restrictionId, actingContext, restrictionCommand)
+
+
 
 ### Example
 
@@ -568,12 +610,13 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name                   | Type                                        | Description | Notes                                                      |
-| ---------------------- | ------------------------------------------- | ----------- | ---------------------------------------------------------- |
-| **participantId**      | `string`                                    |             | [Defaults to `undefined`]                                  |
-| **restrictionId**      | `string`                                    |             | [Defaults to `undefined`]                                  |
-| **actingContext**      | `TRAINER`, `PHYSIOTHERAPIST`                |             | [Defaults to `undefined`] [Enum: TRAINER, PHYSIOTHERAPIST] |
-| **restrictionCommand** | [RestrictionCommand](RestrictionCommand.md) |             |                                                            |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **participantId** | `string` |  | [Defaults to `undefined`] |
+| **restrictionId** | `string` |  | [Defaults to `undefined`] |
+| **actingContext** | `TRAINER`, `PHYSIOTHERAPIST` |  | [Defaults to `undefined`] [Enum: TRAINER, PHYSIOTHERAPIST] |
+| **restrictionCommand** | [RestrictionCommand](RestrictionCommand.md) |  | |
 
 ### Return type
 
@@ -588,17 +631,20 @@ example().catch(console.error);
 - **Content-Type**: `application/json`
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
 
 ## withdraw2
 
 > RestrictionView withdraw2(restrictionId)
+
+
 
 ### Example
 
@@ -634,9 +680,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name              | Type     | Description | Notes                     |
-| ----------------- | -------- | ----------- | ------------------------- |
-| **restrictionId** | `string` |             | [Defaults to `undefined`] |
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **restrictionId** | `string` |  | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -651,10 +698,10 @@ example().catch(console.error);
 - **Content-Type**: Not defined
 - **Accept**: `*/*`
 
-### HTTP response details
 
+### HTTP response details
 | Status code | Description | Response headers |
-| ----------- | ----------- | ---------------- |
-| **200**     | OK          | -                |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)

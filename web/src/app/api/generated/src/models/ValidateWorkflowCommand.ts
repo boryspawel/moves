@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { ActingContext } from './ActingContext';
 import {
-  ActingContextFromJSON,
-  ActingContextFromJSONTyped,
-  ActingContextToJSON,
-  ActingContextToJSONTyped,
+    ActingContextFromJSON,
+    ActingContextFromJSONTyped,
+    ActingContextToJSON,
+    ActingContextToJSONTyped,
 } from './ActingContext';
 
 /**
@@ -27,59 +27,54 @@ import {
  * @interface ValidateWorkflowCommand
  */
 export interface ValidateWorkflowCommand {
-  /**
-   *
-   * @type {number}
-   * @memberof ValidateWorkflowCommand
-   */
-  expectedVersion?: number;
-  /**
-   *
-   * @type {ActingContext}
-   * @memberof ValidateWorkflowCommand
-   */
-  actingContext?: ActingContext;
+    /**
+     *
+     * @type {number}
+     * @memberof ValidateWorkflowCommand
+     */
+    expectedVersion?: number;
+    /**
+     *
+     * @type {ActingContext}
+     * @memberof ValidateWorkflowCommand
+     */
+    actingContext?: ActingContext;
 }
 
 /**
  * Check if a given object implements the ValidateWorkflowCommand interface.
  */
 export function instanceOfValidateWorkflowCommand(value: object): value is ValidateWorkflowCommand {
-  return true;
+    return true;
 }
 
 export function ValidateWorkflowCommandFromJSON(json: any): ValidateWorkflowCommand {
-  return ValidateWorkflowCommandFromJSONTyped(json, false);
+    return ValidateWorkflowCommandFromJSONTyped(json, false);
 }
 
-export function ValidateWorkflowCommandFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): ValidateWorkflowCommand {
-  if (json == null) {
-    return json;
-  }
-  return {
-    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
-    actingContext:
-      json['actingContext'] == null ? undefined : ActingContextFromJSON(json['actingContext']),
-  };
+export function ValidateWorkflowCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): ValidateWorkflowCommand {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'expectedVersion': json['expectedVersion'] == null ? undefined : json['expectedVersion'],
+        'actingContext': json['actingContext'] == null ? undefined : ActingContextFromJSON(json['actingContext']),
+    };
 }
 
 export function ValidateWorkflowCommandToJSON(json: any): ValidateWorkflowCommand {
-  return ValidateWorkflowCommandToJSONTyped(json, false);
+    return ValidateWorkflowCommandToJSONTyped(json, false);
 }
 
-export function ValidateWorkflowCommandToJSONTyped(
-  value?: ValidateWorkflowCommand | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function ValidateWorkflowCommandToJSONTyped(value?: ValidateWorkflowCommand | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    expectedVersion: value['expectedVersion'],
-    actingContext: ActingContextToJSON(value['actingContext']),
-  };
+    return {
+
+        'expectedVersion': value['expectedVersion'],
+        'actingContext': ActingContextToJSON(value['actingContext']),
+    };
 }

@@ -14,332 +14,296 @@
 
 import * as runtime from '../runtime';
 import {
-  type AcknowledgeWarningCommand,
-  AcknowledgeWarningCommandFromJSON,
-  AcknowledgeWarningCommandToJSON,
+    type AcknowledgeWarningCommand,
+    AcknowledgeWarningCommandFromJSON,
+    AcknowledgeWarningCommandToJSON,
 } from '../models/AcknowledgeWarningCommand';
 import {
-  type AcknowledgementView,
-  AcknowledgementViewFromJSON,
-  AcknowledgementViewToJSON,
+    type AcknowledgementView,
+    AcknowledgementViewFromJSON,
+    AcknowledgementViewToJSON,
 } from '../models/AcknowledgementView';
 import {
-  type ActivateWorkflowCommand,
-  ActivateWorkflowCommandFromJSON,
-  ActivateWorkflowCommandToJSON,
+    type ActivateWorkflowCommand,
+    ActivateWorkflowCommandFromJSON,
+    ActivateWorkflowCommandToJSON,
 } from '../models/ActivateWorkflowCommand';
 import {
-  type ActivationOutcome,
-  ActivationOutcomeFromJSON,
-  ActivationOutcomeToJSON,
+    type ActivationOutcome,
+    ActivationOutcomeFromJSON,
+    ActivationOutcomeToJSON,
 } from '../models/ActivationOutcome';
 import {
-  type ValidateWorkflowCommand,
-  ValidateWorkflowCommandFromJSON,
-  ValidateWorkflowCommandToJSON,
+    type ValidateWorkflowCommand,
+    ValidateWorkflowCommandFromJSON,
+    ValidateWorkflowCommandToJSON,
 } from '../models/ValidateWorkflowCommand';
 import {
-  type ValidationView,
-  ValidationViewFromJSON,
-  ValidationViewToJSON,
+    type ValidationView,
+    ValidationViewFromJSON,
+    ValidationViewToJSON,
 } from '../models/ValidationView';
 import {
-  type WorkflowView,
-  WorkflowViewFromJSON,
-  WorkflowViewToJSON,
+    type WorkflowView,
+    WorkflowViewFromJSON,
+    WorkflowViewToJSON,
 } from '../models/WorkflowView';
 
 export interface AcknowledgeRequest {
-  revisionId: string;
-  acknowledgeWarningCommand: AcknowledgeWarningCommand;
+    revisionId: string;
+    acknowledgeWarningCommand: AcknowledgeWarningCommand;
 }
 
 export interface ActivateRequest {
-  revisionId: string;
-  idempotencyKey: string;
-  activateWorkflowCommand: ActivateWorkflowCommand;
+    revisionId: string;
+    idempotencyKey: string;
+    activateWorkflowCommand: ActivateWorkflowCommand;
 }
 
 export interface StatusRequest {
-  revisionId: string;
-  activateWorkflowCommand: ActivateWorkflowCommand;
+    revisionId: string;
+    activateWorkflowCommand: ActivateWorkflowCommand;
 }
 
 export interface ValidateRequest {
-  revisionId: string;
-  validateWorkflowCommand: ValidateWorkflowCommand;
+    revisionId: string;
+    validateWorkflowCommand: ValidateWorkflowCommand;
 }
 
 /**
  *
  */
 export class PlanRevisionWorkflowControllerApi extends runtime.BaseAPI {
-  /**
-   * Creates request options for acknowledge without sending the request
-   */
-  async acknowledgeRequestOpts(
-    requestParameters: AcknowledgeRequest,
-  ): Promise<runtime.RequestOpts> {
-    if (requestParameters['revisionId'] == null) {
-      throw new runtime.RequiredError(
-        'revisionId',
-        'Required parameter "revisionId" was null or undefined when calling acknowledge().',
-      );
+
+    /**
+     * Creates request options for acknowledge without sending the request
+     */
+    async acknowledgeRequestOpts(requestParameters: AcknowledgeRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['revisionId'] == null) {
+            throw new runtime.RequiredError(
+                'revisionId',
+                'Required parameter "revisionId" was null or undefined when calling acknowledge().'
+            );
+        }
+
+        if (requestParameters['acknowledgeWarningCommand'] == null) {
+            throw new runtime.RequiredError(
+                'acknowledgeWarningCommand',
+                'Required parameter "acknowledgeWarningCommand" was null or undefined when calling acknowledge().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+
+        let urlPath = `/api/v2/training-plans/revisions/{revisionId}/workflow/warning-acknowledgements`;
+        urlPath = urlPath.replace('{revisionId}', encodeURIComponent(String(requestParameters['revisionId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: AcknowledgeWarningCommandToJSON(requestParameters['acknowledgeWarningCommand']),
+        };
     }
 
-    if (requestParameters['acknowledgeWarningCommand'] == null) {
-      throw new runtime.RequiredError(
-        'acknowledgeWarningCommand',
-        'Required parameter "acknowledgeWarningCommand" was null or undefined when calling acknowledge().',
-      );
+    /**
+     * Acknowledge warning factors from the current assessment
+     */
+    async acknowledgeRaw(requestParameters: AcknowledgeRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AcknowledgementView>> {
+        const requestOptions = await this.acknowledgeRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => AcknowledgementViewFromJSON(jsonValue));
     }
 
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    headerParameters['Content-Type'] = 'application/json';
-
-    let urlPath = `/api/v2/training-plans/revisions/{revisionId}/workflow/warning-acknowledgements`;
-    urlPath = urlPath.replace(
-      '{revisionId}',
-      encodeURIComponent(String(requestParameters['revisionId'])),
-    );
-
-    return {
-      path: urlPath,
-      method: 'POST',
-      headers: headerParameters,
-      query: queryParameters,
-      body: AcknowledgeWarningCommandToJSON(requestParameters['acknowledgeWarningCommand']),
-    };
-  }
-
-  /**
-   * Acknowledge warning factors from the current assessment
-   */
-  async acknowledgeRaw(
-    requestParameters: AcknowledgeRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AcknowledgementView>> {
-    const requestOptions = await this.acknowledgeRequestOpts(requestParameters);
-    const response = await this.request(requestOptions, initOverrides);
-
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AcknowledgementViewFromJSON(jsonValue),
-    );
-  }
-
-  /**
-   * Acknowledge warning factors from the current assessment
-   */
-  async acknowledge(
-    requestParameters: AcknowledgeRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AcknowledgementView> {
-    const response = await this.acknowledgeRaw(requestParameters, initOverrides);
-    return await response.value();
-  }
-
-  /**
-   * Creates request options for activate without sending the request
-   */
-  async activateRequestOpts(requestParameters: ActivateRequest): Promise<runtime.RequestOpts> {
-    if (requestParameters['revisionId'] == null) {
-      throw new runtime.RequiredError(
-        'revisionId',
-        'Required parameter "revisionId" was null or undefined when calling activate().',
-      );
+    /**
+     * Acknowledge warning factors from the current assessment
+     */
+    async acknowledge(requestParameters: AcknowledgeRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AcknowledgementView> {
+        const response = await this.acknowledgeRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
-    if (requestParameters['idempotencyKey'] == null) {
-      throw new runtime.RequiredError(
-        'idempotencyKey',
-        'Required parameter "idempotencyKey" was null or undefined when calling activate().',
-      );
+    /**
+     * Creates request options for activate without sending the request
+     */
+    async activateRequestOpts(requestParameters: ActivateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['revisionId'] == null) {
+            throw new runtime.RequiredError(
+                'revisionId',
+                'Required parameter "revisionId" was null or undefined when calling activate().'
+            );
+        }
+
+        if (requestParameters['idempotencyKey'] == null) {
+            throw new runtime.RequiredError(
+                'idempotencyKey',
+                'Required parameter "idempotencyKey" was null or undefined when calling activate().'
+            );
+        }
+
+        if (requestParameters['activateWorkflowCommand'] == null) {
+            throw new runtime.RequiredError(
+                'activateWorkflowCommand',
+                'Required parameter "activateWorkflowCommand" was null or undefined when calling activate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (requestParameters['idempotencyKey'] != null) {
+            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        }
+
+
+        let urlPath = `/api/v2/training-plans/revisions/{revisionId}/workflow/activation`;
+        urlPath = urlPath.replace('{revisionId}', encodeURIComponent(String(requestParameters['revisionId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ActivateWorkflowCommandToJSON(requestParameters['activateWorkflowCommand']),
+        };
     }
 
-    if (requestParameters['activateWorkflowCommand'] == null) {
-      throw new runtime.RequiredError(
-        'activateWorkflowCommand',
-        'Required parameter "activateWorkflowCommand" was null or undefined when calling activate().',
-      );
+    /**
+     * Activate a validated plan revision
+     */
+    async activateRaw(requestParameters: ActivateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ActivationOutcome>> {
+        const requestOptions = await this.activateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ActivationOutcomeFromJSON(jsonValue));
     }
 
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    headerParameters['Content-Type'] = 'application/json';
-
-    if (requestParameters['idempotencyKey'] != null) {
-      headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+    /**
+     * Activate a validated plan revision
+     */
+    async activate(requestParameters: ActivateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ActivationOutcome> {
+        const response = await this.activateRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
-    let urlPath = `/api/v2/training-plans/revisions/{revisionId}/workflow/activation`;
-    urlPath = urlPath.replace(
-      '{revisionId}',
-      encodeURIComponent(String(requestParameters['revisionId'])),
-    );
+    /**
+     * Creates request options for status without sending the request
+     */
+    async statusRequestOpts(requestParameters: StatusRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['revisionId'] == null) {
+            throw new runtime.RequiredError(
+                'revisionId',
+                'Required parameter "revisionId" was null or undefined when calling status().'
+            );
+        }
 
-    return {
-      path: urlPath,
-      method: 'POST',
-      headers: headerParameters,
-      query: queryParameters,
-      body: ActivateWorkflowCommandToJSON(requestParameters['activateWorkflowCommand']),
-    };
-  }
+        if (requestParameters['activateWorkflowCommand'] == null) {
+            throw new runtime.RequiredError(
+                'activateWorkflowCommand',
+                'Required parameter "activateWorkflowCommand" was null or undefined when calling status().'
+            );
+        }
 
-  /**
-   * Activate a validated plan revision
-   */
-  async activateRaw(
-    requestParameters: ActivateRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<ActivationOutcome>> {
-    const requestOptions = await this.activateRequestOpts(requestParameters);
-    const response = await this.request(requestOptions, initOverrides);
+        const queryParameters: any = {};
 
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      ActivationOutcomeFromJSON(jsonValue),
-    );
-  }
+        const headerParameters: runtime.HTTPHeaders = {};
 
-  /**
-   * Activate a validated plan revision
-   */
-  async activate(
-    requestParameters: ActivateRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<ActivationOutcome> {
-    const response = await this.activateRaw(requestParameters, initOverrides);
-    return await response.value();
-  }
+        headerParameters['Content-Type'] = 'application/json';
 
-  /**
-   * Creates request options for status without sending the request
-   */
-  async statusRequestOpts(requestParameters: StatusRequest): Promise<runtime.RequestOpts> {
-    if (requestParameters['revisionId'] == null) {
-      throw new runtime.RequiredError(
-        'revisionId',
-        'Required parameter "revisionId" was null or undefined when calling status().',
-      );
+
+        let urlPath = `/api/v2/training-plans/revisions/{revisionId}/workflow/status`;
+        urlPath = urlPath.replace('{revisionId}', encodeURIComponent(String(requestParameters['revisionId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ActivateWorkflowCommandToJSON(requestParameters['activateWorkflowCommand']),
+        };
     }
 
-    if (requestParameters['activateWorkflowCommand'] == null) {
-      throw new runtime.RequiredError(
-        'activateWorkflowCommand',
-        'Required parameter "activateWorkflowCommand" was null or undefined when calling status().',
-      );
+    /**
+     * Read plan revision workflow status and current assessment
+     */
+    async statusRaw(requestParameters: StatusRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WorkflowView>> {
+        const requestOptions = await this.statusRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => WorkflowViewFromJSON(jsonValue));
     }
 
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    headerParameters['Content-Type'] = 'application/json';
-
-    let urlPath = `/api/v2/training-plans/revisions/{revisionId}/workflow/status`;
-    urlPath = urlPath.replace(
-      '{revisionId}',
-      encodeURIComponent(String(requestParameters['revisionId'])),
-    );
-
-    return {
-      path: urlPath,
-      method: 'POST',
-      headers: headerParameters,
-      query: queryParameters,
-      body: ActivateWorkflowCommandToJSON(requestParameters['activateWorkflowCommand']),
-    };
-  }
-
-  /**
-   * Read plan revision workflow status and current assessment
-   */
-  async statusRaw(
-    requestParameters: StatusRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<WorkflowView>> {
-    const requestOptions = await this.statusRequestOpts(requestParameters);
-    const response = await this.request(requestOptions, initOverrides);
-
-    return new runtime.JSONApiResponse(response, (jsonValue) => WorkflowViewFromJSON(jsonValue));
-  }
-
-  /**
-   * Read plan revision workflow status and current assessment
-   */
-  async status(
-    requestParameters: StatusRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<WorkflowView> {
-    const response = await this.statusRaw(requestParameters, initOverrides);
-    return await response.value();
-  }
-
-  /**
-   * Creates request options for validate without sending the request
-   */
-  async validateRequestOpts(requestParameters: ValidateRequest): Promise<runtime.RequestOpts> {
-    if (requestParameters['revisionId'] == null) {
-      throw new runtime.RequiredError(
-        'revisionId',
-        'Required parameter "revisionId" was null or undefined when calling validate().',
-      );
+    /**
+     * Read plan revision workflow status and current assessment
+     */
+    async status(requestParameters: StatusRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<WorkflowView> {
+        const response = await this.statusRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
-    if (requestParameters['validateWorkflowCommand'] == null) {
-      throw new runtime.RequiredError(
-        'validateWorkflowCommand',
-        'Required parameter "validateWorkflowCommand" was null or undefined when calling validate().',
-      );
+    /**
+     * Creates request options for validate without sending the request
+     */
+    async validateRequestOpts(requestParameters: ValidateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['revisionId'] == null) {
+            throw new runtime.RequiredError(
+                'revisionId',
+                'Required parameter "revisionId" was null or undefined when calling validate().'
+            );
+        }
+
+        if (requestParameters['validateWorkflowCommand'] == null) {
+            throw new runtime.RequiredError(
+                'validateWorkflowCommand',
+                'Required parameter "validateWorkflowCommand" was null or undefined when calling validate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+
+        let urlPath = `/api/v2/training-plans/revisions/{revisionId}/workflow/validation`;
+        urlPath = urlPath.replace('{revisionId}', encodeURIComponent(String(requestParameters['revisionId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ValidateWorkflowCommandToJSON(requestParameters['validateWorkflowCommand']),
+        };
     }
 
-    const queryParameters: any = {};
+    /**
+     * Validate load and safety for a plan revision
+     */
+    async validateRaw(requestParameters: ValidateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ValidationView>> {
+        const requestOptions = await this.validateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
-    const headerParameters: runtime.HTTPHeaders = {};
+        return new runtime.JSONApiResponse(response, (jsonValue) => ValidationViewFromJSON(jsonValue));
+    }
 
-    headerParameters['Content-Type'] = 'application/json';
+    /**
+     * Validate load and safety for a plan revision
+     */
+    async validate(requestParameters: ValidateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ValidationView> {
+        const response = await this.validateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
-    let urlPath = `/api/v2/training-plans/revisions/{revisionId}/workflow/validation`;
-    urlPath = urlPath.replace(
-      '{revisionId}',
-      encodeURIComponent(String(requestParameters['revisionId'])),
-    );
-
-    return {
-      path: urlPath,
-      method: 'POST',
-      headers: headerParameters,
-      query: queryParameters,
-      body: ValidateWorkflowCommandToJSON(requestParameters['validateWorkflowCommand']),
-    };
-  }
-
-  /**
-   * Validate load and safety for a plan revision
-   */
-  async validateRaw(
-    requestParameters: ValidateRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<ValidationView>> {
-    const requestOptions = await this.validateRequestOpts(requestParameters);
-    const response = await this.request(requestOptions, initOverrides);
-
-    return new runtime.JSONApiResponse(response, (jsonValue) => ValidationViewFromJSON(jsonValue));
-  }
-
-  /**
-   * Validate load and safety for a plan revision
-   */
-  async validate(
-    requestParameters: ValidateRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<ValidationView> {
-    const response = await this.validateRaw(requestParameters, initOverrides);
-    return await response.value();
-  }
 }

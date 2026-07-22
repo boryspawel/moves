@@ -19,58 +19,54 @@ import { mapValues } from '../runtime';
  * @interface ParticipantIssueCommand
  */
 export interface ParticipantIssueCommand {
-  /**
-   *
-   * @type {string}
-   * @memberof ParticipantIssueCommand
-   */
-  problemCode?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ParticipantIssueCommand
-   */
-  shortText?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof ParticipantIssueCommand
+     */
+    problemCode?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof ParticipantIssueCommand
+     */
+    shortText?: string;
 }
 
 /**
  * Check if a given object implements the ParticipantIssueCommand interface.
  */
 export function instanceOfParticipantIssueCommand(value: object): value is ParticipantIssueCommand {
-  return true;
+    return true;
 }
 
 export function ParticipantIssueCommandFromJSON(json: any): ParticipantIssueCommand {
-  return ParticipantIssueCommandFromJSONTyped(json, false);
+    return ParticipantIssueCommandFromJSONTyped(json, false);
 }
 
-export function ParticipantIssueCommandFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): ParticipantIssueCommand {
-  if (json == null) {
-    return json;
-  }
-  return {
-    problemCode: json['problemCode'] == null ? undefined : json['problemCode'],
-    shortText: json['shortText'] == null ? undefined : json['shortText'],
-  };
+export function ParticipantIssueCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): ParticipantIssueCommand {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'problemCode': json['problemCode'] == null ? undefined : json['problemCode'],
+        'shortText': json['shortText'] == null ? undefined : json['shortText'],
+    };
 }
 
 export function ParticipantIssueCommandToJSON(json: any): ParticipantIssueCommand {
-  return ParticipantIssueCommandToJSONTyped(json, false);
+    return ParticipantIssueCommandToJSONTyped(json, false);
 }
 
-export function ParticipantIssueCommandToJSONTyped(
-  value?: ParticipantIssueCommand | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function ParticipantIssueCommandToJSONTyped(value?: ParticipantIssueCommand | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    problemCode: value['problemCode'],
-    shortText: value['shortText'],
-  };
+    return {
+
+        'problemCode': value['problemCode'],
+        'shortText': value['shortText'],
+    };
 }

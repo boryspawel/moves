@@ -5,6 +5,7 @@ import {
   Configuration,
   ExerciseCatalogControllerApi,
   GamificationControllerApi,
+  ReminderPreferenceControllerApi,
   OnboardingControllerApi,
   ParticipantSafetyControllerApi,
   SessionExecutionAttemptControllerApi,
@@ -33,6 +34,7 @@ export class ApiFacade {
   readonly safety: ParticipantSafetyControllerApi;
   readonly barriers: BarrierReportControllerApi;
   readonly gamification: GamificationControllerApi;
+  readonly reminders: ReminderPreferenceControllerApi;
 
   constructor() {
     const auth = inject(AuthService);
@@ -53,5 +55,6 @@ export class ApiFacade {
     this.safety = new ParticipantSafetyControllerApi(configuration);
     this.barriers = new BarrierReportControllerApi(configuration);
     this.gamification = new GamificationControllerApi(configuration);
+    this.reminders = new ReminderPreferenceControllerApi(configuration);
   }
 }

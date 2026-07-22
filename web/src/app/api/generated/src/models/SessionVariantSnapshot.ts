@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { SessionVariantItemSnapshot } from './SessionVariantItemSnapshot';
 import {
-  SessionVariantItemSnapshotFromJSON,
-  SessionVariantItemSnapshotFromJSONTyped,
-  SessionVariantItemSnapshotToJSON,
-  SessionVariantItemSnapshotToJSONTyped,
+    SessionVariantItemSnapshotFromJSON,
+    SessionVariantItemSnapshotFromJSONTyped,
+    SessionVariantItemSnapshotToJSON,
+    SessionVariantItemSnapshotToJSONTyped,
 } from './SessionVariantItemSnapshot';
 
 /**
@@ -27,81 +27,70 @@ import {
  * @interface SessionVariantSnapshot
  */
 export interface SessionVariantSnapshot {
-  /**
-   *
-   * @type {string}
-   * @memberof SessionVariantSnapshot
-   */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof SessionVariantSnapshot
-   */
-  type?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof SessionVariantSnapshot
-   */
-  expectedDurationMinutes?: number;
-  /**
-   *
-   * @type {Array<SessionVariantItemSnapshot>}
-   * @memberof SessionVariantSnapshot
-   */
-  items?: Array<SessionVariantItemSnapshot>;
+    /**
+     *
+     * @type {string}
+     * @memberof SessionVariantSnapshot
+     */
+    id?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof SessionVariantSnapshot
+     */
+    type?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof SessionVariantSnapshot
+     */
+    expectedDurationMinutes?: number;
+    /**
+     *
+     * @type {Array<SessionVariantItemSnapshot>}
+     * @memberof SessionVariantSnapshot
+     */
+    items?: Array<SessionVariantItemSnapshot>;
 }
 
 /**
  * Check if a given object implements the SessionVariantSnapshot interface.
  */
 export function instanceOfSessionVariantSnapshot(value: object): value is SessionVariantSnapshot {
-  return true;
+    return true;
 }
 
 export function SessionVariantSnapshotFromJSON(json: any): SessionVariantSnapshot {
-  return SessionVariantSnapshotFromJSONTyped(json, false);
+    return SessionVariantSnapshotFromJSONTyped(json, false);
 }
 
-export function SessionVariantSnapshotFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): SessionVariantSnapshot {
-  if (json == null) {
-    return json;
-  }
-  return {
-    id: json['id'] == null ? undefined : json['id'],
-    type: json['type'] == null ? undefined : json['type'],
-    expectedDurationMinutes:
-      json['expectedDurationMinutes'] == null ? undefined : json['expectedDurationMinutes'],
-    items:
-      json['items'] == null
-        ? undefined
-        : (json['items'] as Array<any>).map(SessionVariantItemSnapshotFromJSON),
-  };
+export function SessionVariantSnapshotFromJSONTyped(json: any, ignoreDiscriminator: boolean): SessionVariantSnapshot {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'id': json['id'] == null ? undefined : json['id'],
+        'type': json['type'] == null ? undefined : json['type'],
+        'expectedDurationMinutes': json['expectedDurationMinutes'] == null ? undefined : json['expectedDurationMinutes'],
+        'items': json['items'] == null ? undefined : ((json['items'] as Array<any>).map(SessionVariantItemSnapshotFromJSON)),
+    };
 }
 
 export function SessionVariantSnapshotToJSON(json: any): SessionVariantSnapshot {
-  return SessionVariantSnapshotToJSONTyped(json, false);
+    return SessionVariantSnapshotToJSONTyped(json, false);
 }
 
-export function SessionVariantSnapshotToJSONTyped(
-  value?: SessionVariantSnapshot | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function SessionVariantSnapshotToJSONTyped(value?: SessionVariantSnapshot | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    id: value['id'],
-    type: value['type'],
-    expectedDurationMinutes: value['expectedDurationMinutes'],
-    items:
-      value['items'] == null
-        ? undefined
-        : (value['items'] as Array<any>).map(SessionVariantItemSnapshotToJSON),
-  };
+    return {
+
+        'id': value['id'],
+        'type': value['type'],
+        'expectedDurationMinutes': value['expectedDurationMinutes'],
+        'items': value['items'] == null ? undefined : ((value['items'] as Array<any>).map(SessionVariantItemSnapshotToJSON)),
+    };
 }

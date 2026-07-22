@@ -19,118 +19,118 @@ import { mapValues } from '../runtime';
  * @interface LedgerView
  */
 export interface LedgerView {
-  /**
-   *
-   * @type {string}
-   * @memberof LedgerView
-   */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof LedgerView
-   */
-  sourceExecutionId?: string;
-  /**
-   *
-   * @type {LedgerViewTypeEnum}
-   * @memberof LedgerView
-   */
-  type?: LedgerViewTypeEnum;
-  /**
-   *
-   * @type {number}
-   * @memberof LedgerView
-   */
-  points?: number;
-  /**
-   *
-   * @type {LedgerViewReasonEnum}
-   * @memberof LedgerView
-   */
-  reason?: LedgerViewReasonEnum;
-  /**
-   *
-   * @type {string}
-   * @memberof LedgerView
-   */
-  reversesEntryId?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof LedgerView
-   */
-  occurredAt?: Date;
+    /**
+     *
+     * @type {string}
+     * @memberof LedgerView
+     */
+    id?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof LedgerView
+     */
+    sourceExecutionId?: string;
+    /**
+     *
+     * @type {LedgerViewTypeEnum}
+     * @memberof LedgerView
+     */
+    type?: LedgerViewTypeEnum;
+    /**
+     *
+     * @type {number}
+     * @memberof LedgerView
+     */
+    points?: number;
+    /**
+     *
+     * @type {LedgerViewReasonEnum}
+     * @memberof LedgerView
+     */
+    reason?: LedgerViewReasonEnum;
+    /**
+     *
+     * @type {string}
+     * @memberof LedgerView
+     */
+    reversesEntryId?: string;
+    /**
+     *
+     * @type {Date}
+     * @memberof LedgerView
+     */
+    occurredAt?: Date;
 }
+
 
 /**
  * @export
  */
 export const LedgerViewTypeEnum = {
-  Award: 'AWARD',
-  Reversal: 'REVERSAL',
+    Award: 'AWARD',
+    Reversal: 'REVERSAL'
 } as const;
-export type LedgerViewTypeEnum = (typeof LedgerViewTypeEnum)[keyof typeof LedgerViewTypeEnum];
+export type LedgerViewTypeEnum = typeof LedgerViewTypeEnum[keyof typeof LedgerViewTypeEnum];
 
 /**
  * @export
  */
 export const LedgerViewReasonEnum = {
-  SessionCompletion: 'SESSION_COMPLETION',
-  DiminishingReturn: 'DIMINISHING_RETURN',
-  DailyLimit: 'DAILY_LIMIT',
-  WeeklyLimit: 'WEEKLY_LIMIT',
-  Cooldown: 'COOLDOWN',
-  Reversal: 'REVERSAL',
+    SessionCompletion: 'SESSION_COMPLETION',
+    DiminishingReturn: 'DIMINISHING_RETURN',
+    DailyLimit: 'DAILY_LIMIT',
+    WeeklyLimit: 'WEEKLY_LIMIT',
+    Cooldown: 'COOLDOWN',
+    Reversal: 'REVERSAL'
 } as const;
-export type LedgerViewReasonEnum = (typeof LedgerViewReasonEnum)[keyof typeof LedgerViewReasonEnum];
+export type LedgerViewReasonEnum = typeof LedgerViewReasonEnum[keyof typeof LedgerViewReasonEnum];
+
 
 /**
  * Check if a given object implements the LedgerView interface.
  */
 export function instanceOfLedgerView(value: object): value is LedgerView {
-  return true;
+    return true;
 }
 
 export function LedgerViewFromJSON(json: any): LedgerView {
-  return LedgerViewFromJSONTyped(json, false);
+    return LedgerViewFromJSONTyped(json, false);
 }
 
 export function LedgerViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): LedgerView {
-  if (json == null) {
-    return json;
-  }
-  return {
-    id: json['id'] == null ? undefined : json['id'],
-    sourceExecutionId: json['sourceExecutionId'] == null ? undefined : json['sourceExecutionId'],
-    type: json['type'] == null ? undefined : json['type'],
-    points: json['points'] == null ? undefined : json['points'],
-    reason: json['reason'] == null ? undefined : json['reason'],
-    reversesEntryId: json['reversesEntryId'] == null ? undefined : json['reversesEntryId'],
-    occurredAt: json['occurredAt'] == null ? undefined : new Date(json['occurredAt']),
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'id': json['id'] == null ? undefined : json['id'],
+        'sourceExecutionId': json['sourceExecutionId'] == null ? undefined : json['sourceExecutionId'],
+        'type': json['type'] == null ? undefined : json['type'],
+        'points': json['points'] == null ? undefined : json['points'],
+        'reason': json['reason'] == null ? undefined : json['reason'],
+        'reversesEntryId': json['reversesEntryId'] == null ? undefined : json['reversesEntryId'],
+        'occurredAt': json['occurredAt'] == null ? undefined : (new Date(json['occurredAt'])),
+    };
 }
 
 export function LedgerViewToJSON(json: any): LedgerView {
-  return LedgerViewToJSONTyped(json, false);
+    return LedgerViewToJSONTyped(json, false);
 }
 
-export function LedgerViewToJSONTyped(
-  value?: LedgerView | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function LedgerViewToJSONTyped(value?: LedgerView | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    id: value['id'],
-    sourceExecutionId: value['sourceExecutionId'],
-    type: value['type'],
-    points: value['points'],
-    reason: value['reason'],
-    reversesEntryId: value['reversesEntryId'],
-    occurredAt:
-      value['occurredAt'] == null ? value['occurredAt'] : value['occurredAt'].toISOString(),
-  };
+    return {
+
+        'id': value['id'],
+        'sourceExecutionId': value['sourceExecutionId'],
+        'type': value['type'],
+        'points': value['points'],
+        'reason': value['reason'],
+        'reversesEntryId': value['reversesEntryId'],
+        'occurredAt': value['occurredAt'] == null ? value['occurredAt'] : value['occurredAt'].toISOString(),
+    };
 }

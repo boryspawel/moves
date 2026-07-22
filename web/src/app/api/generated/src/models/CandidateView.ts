@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { JsonNode } from './JsonNode';
 import {
-  JsonNodeFromJSON,
-  JsonNodeFromJSONTyped,
-  JsonNodeToJSON,
-  JsonNodeToJSONTyped,
+    JsonNodeFromJSON,
+    JsonNodeFromJSONTyped,
+    JsonNodeToJSON,
+    JsonNodeToJSONTyped,
 } from './JsonNode';
 
 /**
@@ -27,119 +27,118 @@ import {
  * @interface CandidateView
  */
 export interface CandidateView {
-  /**
-   *
-   * @type {string}
-   * @memberof CandidateView
-   */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof CandidateView
-   */
-  exerciseId?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof CandidateView
-   */
-  rank?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof CandidateView
-   */
-  score?: number;
-  /**
-   *
-   * @type {JsonNode}
-   * @memberof CandidateView
-   */
-  reasons?: JsonNode;
-  /**
-   *
-   * @type {string}
-   * @memberof CandidateView
-   */
-  algorithmVersion?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof CandidateView
-   */
-  decision?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof CandidateView
-   */
-  decidedBySubject?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof CandidateView
-   */
-  decidedAt?: Date;
-  /**
-   *
-   * @type {number}
-   * @memberof CandidateView
-   */
-  version?: number;
+    /**
+     *
+     * @type {string}
+     * @memberof CandidateView
+     */
+    id?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof CandidateView
+     */
+    exerciseId?: string;
+    /**
+     *
+     * @type {number}
+     * @memberof CandidateView
+     */
+    rank?: number;
+    /**
+     *
+     * @type {number}
+     * @memberof CandidateView
+     */
+    score?: number;
+    /**
+     *
+     * @type {JsonNode}
+     * @memberof CandidateView
+     */
+    reasons?: JsonNode;
+    /**
+     *
+     * @type {string}
+     * @memberof CandidateView
+     */
+    algorithmVersion?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof CandidateView
+     */
+    decision?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof CandidateView
+     */
+    decidedBySubject?: string;
+    /**
+     *
+     * @type {Date}
+     * @memberof CandidateView
+     */
+    decidedAt?: Date;
+    /**
+     *
+     * @type {number}
+     * @memberof CandidateView
+     */
+    version?: number;
 }
 
 /**
  * Check if a given object implements the CandidateView interface.
  */
 export function instanceOfCandidateView(value: object): value is CandidateView {
-  return true;
+    return true;
 }
 
 export function CandidateViewFromJSON(json: any): CandidateView {
-  return CandidateViewFromJSONTyped(json, false);
+    return CandidateViewFromJSONTyped(json, false);
 }
 
 export function CandidateViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): CandidateView {
-  if (json == null) {
-    return json;
-  }
-  return {
-    id: json['id'] == null ? undefined : json['id'],
-    exerciseId: json['exerciseId'] == null ? undefined : json['exerciseId'],
-    rank: json['rank'] == null ? undefined : json['rank'],
-    score: json['score'] == null ? undefined : json['score'],
-    reasons: json['reasons'] == null ? undefined : JsonNodeFromJSON(json['reasons']),
-    algorithmVersion: json['algorithmVersion'] == null ? undefined : json['algorithmVersion'],
-    decision: json['decision'] == null ? undefined : json['decision'],
-    decidedBySubject: json['decidedBySubject'] == null ? undefined : json['decidedBySubject'],
-    decidedAt: json['decidedAt'] == null ? undefined : new Date(json['decidedAt']),
-    version: json['version'] == null ? undefined : json['version'],
-  };
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'id': json['id'] == null ? undefined : json['id'],
+        'exerciseId': json['exerciseId'] == null ? undefined : json['exerciseId'],
+        'rank': json['rank'] == null ? undefined : json['rank'],
+        'score': json['score'] == null ? undefined : json['score'],
+        'reasons': json['reasons'] == null ? undefined : JsonNodeFromJSON(json['reasons']),
+        'algorithmVersion': json['algorithmVersion'] == null ? undefined : json['algorithmVersion'],
+        'decision': json['decision'] == null ? undefined : json['decision'],
+        'decidedBySubject': json['decidedBySubject'] == null ? undefined : json['decidedBySubject'],
+        'decidedAt': json['decidedAt'] == null ? undefined : (new Date(json['decidedAt'])),
+        'version': json['version'] == null ? undefined : json['version'],
+    };
 }
 
 export function CandidateViewToJSON(json: any): CandidateView {
-  return CandidateViewToJSONTyped(json, false);
+    return CandidateViewToJSONTyped(json, false);
 }
 
-export function CandidateViewToJSONTyped(
-  value?: CandidateView | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function CandidateViewToJSONTyped(value?: CandidateView | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    id: value['id'],
-    exerciseId: value['exerciseId'],
-    rank: value['rank'],
-    score: value['score'],
-    reasons: JsonNodeToJSON(value['reasons']),
-    algorithmVersion: value['algorithmVersion'],
-    decision: value['decision'],
-    decidedBySubject: value['decidedBySubject'],
-    decidedAt: value['decidedAt'] == null ? value['decidedAt'] : value['decidedAt'].toISOString(),
-    version: value['version'],
-  };
+    return {
+
+        'id': value['id'],
+        'exerciseId': value['exerciseId'],
+        'rank': value['rank'],
+        'score': value['score'],
+        'reasons': JsonNodeToJSON(value['reasons']),
+        'algorithmVersion': value['algorithmVersion'],
+        'decision': value['decision'],
+        'decidedBySubject': value['decidedBySubject'],
+        'decidedAt': value['decidedAt'] == null ? value['decidedAt'] : value['decidedAt'].toISOString(),
+        'version': value['version'],
+    };
 }

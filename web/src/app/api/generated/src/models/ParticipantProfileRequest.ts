@@ -19,60 +19,54 @@ import { mapValues } from '../runtime';
  * @interface ParticipantProfileRequest
  */
 export interface ParticipantProfileRequest {
-  /**
-   *
-   * @type {string}
-   * @memberof ParticipantProfileRequest
-   */
-  displayName?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ParticipantProfileRequest
-   */
-  timeZoneId?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof ParticipantProfileRequest
+     */
+    displayName?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof ParticipantProfileRequest
+     */
+    timeZoneId?: string;
 }
 
 /**
  * Check if a given object implements the ParticipantProfileRequest interface.
  */
-export function instanceOfParticipantProfileRequest(
-  value: object,
-): value is ParticipantProfileRequest {
-  return true;
+export function instanceOfParticipantProfileRequest(value: object): value is ParticipantProfileRequest {
+    return true;
 }
 
 export function ParticipantProfileRequestFromJSON(json: any): ParticipantProfileRequest {
-  return ParticipantProfileRequestFromJSONTyped(json, false);
+    return ParticipantProfileRequestFromJSONTyped(json, false);
 }
 
-export function ParticipantProfileRequestFromJSONTyped(
-  json: any,
-  ignoreDiscriminator: boolean,
-): ParticipantProfileRequest {
-  if (json == null) {
-    return json;
-  }
-  return {
-    displayName: json['displayName'] == null ? undefined : json['displayName'],
-    timeZoneId: json['timeZoneId'] == null ? undefined : json['timeZoneId'],
-  };
+export function ParticipantProfileRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): ParticipantProfileRequest {
+    if (json == null) {
+        return json;
+    }
+    return {
+
+        'displayName': json['displayName'] == null ? undefined : json['displayName'],
+        'timeZoneId': json['timeZoneId'] == null ? undefined : json['timeZoneId'],
+    };
 }
 
 export function ParticipantProfileRequestToJSON(json: any): ParticipantProfileRequest {
-  return ParticipantProfileRequestToJSONTyped(json, false);
+    return ParticipantProfileRequestToJSONTyped(json, false);
 }
 
-export function ParticipantProfileRequestToJSONTyped(
-  value?: ParticipantProfileRequest | null,
-  ignoreDiscriminator: boolean = false,
-): any {
-  if (value == null) {
-    return value;
-  }
+export function ParticipantProfileRequestToJSONTyped(value?: ParticipantProfileRequest | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-  return {
-    displayName: value['displayName'],
-    timeZoneId: value['timeZoneId'],
-  };
+    return {
+
+        'displayName': value['displayName'],
+        'timeZoneId': value['timeZoneId'],
+    };
 }
