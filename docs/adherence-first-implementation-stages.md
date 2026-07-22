@@ -17,7 +17,7 @@ autoryzacji, idempotencji i dostępności adekwatnymi do zakresu.
 | 5 | epizod powrotu, oferta i wybór — dostarczone | `adherence` projection/aggregate |
 | 6 | worklista, issue i reply — dostarczone w `d004a36` | `specialist`, V027/V028 |
 | 7 | participant today-only flow — bieżące zmiany niecommitowane | Angular, kontrakty etapów 1–5 |
-| 8 | panel specjalisty V2 | Angular, wyłącznie kontrakty V2 |
+| 8 | panel specjalisty V2 — dostarczony | Angular, wyłącznie kontrakty V2 i minimalna projekcja aktywnej relacji |
 | 9 | reminders rules-first — niewdrożone (brak modułu) | `notification`, decyzje adherence |
 | 10 | metryki, eksperymenty i audyt slice — niewdrożone (brak modułu) | neutralna analityka oraz dokumentacja |
 
@@ -37,7 +37,10 @@ worklisty. Odpowiadające im widoki Angular (`/plan`, `/sessions`,
 `/specialist-alerts`) pozostają do czasu potwierdzenia braku klientów, a potem
 są oznaczane deprecated przed usunięciem. `/specialist-alerts` nadal eksponuje
 ręczny UUID i surowe widoki wykonań; wymaga osobnej deprecacji albo naprawy.
-Endpointy nie są usuwane w MVP.
+Endpointy nie są usuwane w MVP. Ekrany `/plan` i `/specialist-alerts` korzystają
+odpowiednio z V2 workflow oraz worklisty; nie przyjmują ani nie wyświetlają
+UUID. Selektor uczestnika pobiera wyłącznie aktywną relację specjalisty i
+prezentuje minimalną etykietę UI.
 
 ## Niezmienniki wdrożeniowe
 

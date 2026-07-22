@@ -140,6 +140,11 @@ All URIs are relative to *http://localhost*
 | _SessionExecutionControllerApi_        | [**post24h**](docs/SessionExecutionControllerApi.md#post24h)                                           | **POST** /api/v1/session-executions/{executionId}/post-24h-responses                                         | Append an idempotent post-24h session response                                |
 | _SessionExecutionControllerApi_        | [**specialistExecutions**](docs/SessionExecutionControllerApi.md#specialistexecutions)                 | **GET** /api/v1/specialist/participants/{participantAccountId}/executions                                    | List executions and alerts for a participant with an active relationship      |
 | _SessionExecutionControllerApi_        | [**transitionAlert**](docs/SessionExecutionControllerApi.md#transitionalert)                           | **POST** /api/v1/session-executions/{executionId}/alerts/{alertId}/transitions                               | Acknowledge, resolve or reopen an execution safety alert                      |
+| _SpecialistRelationshipControllerApi_  | [**activeParticipants**](docs/SpecialistRelationshipControllerApi.md#activeparticipants)               | **GET** /api/v1/specialist/participants                                                                      | List participants with an active specialist relationship for UI selection     |
+| _SpecialistWorklistControllerApi_      | [**actOnWorklist**](docs/SpecialistWorklistControllerApi.md#actonworklist)                             | **POST** /api/v1/specialist/worklist/{itemId}/actions                                                        |
+| _SpecialistWorklistControllerApi_      | [**listWorklist**](docs/SpecialistWorklistControllerApi.md#listworklist)                               | **GET** /api/v1/specialist/worklist                                                                          |
+| _SpecialistWorklistControllerApi_      | [**replyToIssue**](docs/SpecialistWorklistControllerApi.md#replytoissue)                               | **POST** /api/v1/specialist/worklist/{itemId}/reply                                                          |
+| _SpecialistWorklistControllerApi_      | [**reportParticipantIssue**](docs/SpecialistWorklistControllerApi.md#reportparticipantissue)           | **POST** /api/v1/participant/issues                                                                          |
 | _TodayAgendaControllerApi_             | [**today**](docs/TodayAgendaControllerApi.md#today)                                                    | **GET** /api/v1/participant/today                                                                            | Get the signed-in participant\&#39;s daily training agenda                    |
 | _TrainingPlanningControllerApi_        | [**createLegacyTrainingPlan**](docs/TrainingPlanningControllerApi.md#createlegacytrainingplan)         | **POST** /api/v1/training-plans                                                                              | Deprecated V1 plan creation endpoint                                          |
 | _TrainingPlanningControllerApi_        | [**sessions**](docs/TrainingPlanningControllerApi.md#sessions)                                         | **GET** /api/v1/planned-sessions                                                                             | List planned sessions assigned to the current participant                     |
@@ -163,8 +168,10 @@ All URIs are relative to *http://localhost*
 - [AcknowledgeWarningCommand](docs/AcknowledgeWarningCommand.md)
 - [AcknowledgementView](docs/AcknowledgementView.md)
 - [ActingContext](docs/ActingContext.md)
+- [ActionCommand](docs/ActionCommand.md)
 - [ActivateWorkflowCommand](docs/ActivateWorkflowCommand.md)
 - [ActivationOutcome](docs/ActivationOutcome.md)
+- [ActiveParticipantView](docs/ActiveParticipantView.md)
 - [ActivePlanView](docs/ActivePlanView.md)
 - [AddCycleCommand](docs/AddCycleCommand.md)
 - [AddGoalCommand](docs/AddGoalCommand.md)
@@ -242,6 +249,7 @@ All URIs are relative to *http://localhost*
 - [OutcomeCommand](docs/OutcomeCommand.md)
 - [OverrideCommand](docs/OverrideCommand.md)
 - [OverrideView](docs/OverrideView.md)
+- [ParticipantIssueCommand](docs/ParticipantIssueCommand.md)
 - [ParticipantProfileRequest](docs/ParticipantProfileRequest.md)
 - [PlanBundle](docs/PlanBundle.md)
 - [PlanRevisionSnapshot](docs/PlanRevisionSnapshot.md)
@@ -270,6 +278,8 @@ All URIs are relative to *http://localhost*
 - [RecoveryView](docs/RecoveryView.md)
 - [RelationSnapshot](docs/RelationSnapshot.md)
 - [ReorderCommand](docs/ReorderCommand.md)
+- [ReplyCommand](docs/ReplyCommand.md)
+- [ReplyView](docs/ReplyView.md)
 - [RestrictionCommand](docs/RestrictionCommand.md)
 - [RestrictionView](docs/RestrictionView.md)
 - [ResultCommand](docs/ResultCommand.md)
@@ -315,6 +325,7 @@ All URIs are relative to *http://localhost*
 - [View](docs/View.md)
 - [WorkflowState](docs/WorkflowState.md)
 - [WorkflowView](docs/WorkflowView.md)
+- [WorklistItemView](docs/WorklistItemView.md)
 
 ### Authorization
 

@@ -19,14 +19,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController @SecurityRequirement(name = "oidc") @RequiredArgsConstructor
-class SpecialistWorklistController {
+public class SpecialistWorklistController {
     private final SpecialistWorklistService worklist;
     @GetMapping("/api/v1/specialist/worklist") @PreAuthorize("hasRole('SPECIALIST')")
-    List<SpecialistWorklistService.WorklistItemView> list(@AuthenticationPrincipal Jwt jwt, @RequestParam ProfessionalRole actingContext, @RequestParam Purpose purpose) { return worklist.list(jwt.getSubject(), new ActingContext(actingContext), purpose); }
+    List<SpecialistWorklistService.WorklistItemView> listWorklist(@AuthenticationPrincipal Jwt jwt, @RequestParam ProfessionalRole actingContext, @RequestParam Purpose purpose) { return worklist.list(jwt.getSubject(), new ActingContext(actingContext), purpose); }
     @PostMapping("/api/v1/specialist/worklist/{itemId}/actions") @PreAuthorize("hasRole('SPECIALIST')")
-    SpecialistWorklistService.WorklistItemView action(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID itemId, @RequestParam ProfessionalRole actingContext, @RequestParam Purpose purpose, @RequestBody SpecialistWorklistService.ActionCommand command) { return worklist.action(jwt.getSubject(), itemId, new ActingContext(actingContext), purpose, command); }
+    SpecialistWorklistService.WorklistItemView actOnWorklist(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID itemId, @RequestParam ProfessionalRole actingContext, @RequestParam Purpose purpose, @RequestBody SpecialistWorklistService.ActionCommand command) { return worklist.action(jwt.getSubject(), itemId, new ActingContext(actingContext), purpose, command); }
     @PostMapping("/api/v1/specialist/worklist/{itemId}/reply") @PreAuthorize("hasRole('SPECIALIST')")
-    SpecialistWorklistService.ReplyView reply(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID itemId, @RequestParam ProfessionalRole actingContext, @RequestParam Purpose purpose, @RequestBody SpecialistWorklistService.ReplyCommand command) { return worklist.reply(jwt.getSubject(), itemId, new ActingContext(actingContext), purpose, command); }
+    SpecialistWorklistService.ReplyView replyToIssue(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID itemId, @RequestParam ProfessionalRole actingContext, @RequestParam Purpose purpose, @RequestBody SpecialistWorklistService.ReplyCommand command) { return worklist.reply(jwt.getSubject(), itemId, new ActingContext(actingContext), purpose, command); }
     @PostMapping("/api/v1/participant/issues") @PreAuthorize("hasRole('PARTICIPANT')")
-    SpecialistWorklistService.WorklistItemView report(@AuthenticationPrincipal Jwt jwt, @RequestBody SpecialistWorklistService.ParticipantIssueCommand command) { return worklist.reportIssue(jwt.getSubject(), command); }
+    SpecialistWorklistService.WorklistItemView reportParticipantIssue(@AuthenticationPrincipal Jwt jwt, @RequestBody SpecialistWorklistService.ParticipantIssueCommand command) { return worklist.reportIssue(jwt.getSubject(), command); }
 }

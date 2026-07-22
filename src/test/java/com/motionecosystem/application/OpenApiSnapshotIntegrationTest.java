@@ -36,6 +36,8 @@ class OpenApiSnapshotIntegrationTest {
                 "/api/v1/onboarding",
                 "/api/v1/planned-sessions",
                 "/api/v1/gamification/me",
+                "/api/v1/specialist/participants",
+                "/api/v1/specialist/worklist",
                 "/api/v2/training-plans/{planId}/collaborators",
                 "/api/v2/training-plans/{planId}/collaborators/{collaboratorId}",
                 "/api/v2/training-plans/revisions/{revisionId}/reviews",

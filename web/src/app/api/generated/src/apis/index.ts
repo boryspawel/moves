@@ -18,6 +18,8 @@ export * from './RecoveryEpisodeControllerApi';
 export * from './SafetyV2ControllerApi';
 export * from './SessionExecutionAttemptControllerApi';
 export * from './SessionExecutionControllerApi';
+export * from './SpecialistRelationshipControllerApi';
+export * from './SpecialistWorklistControllerApi';
 export * from './TodayAgendaControllerApi';
 export * from './TrainingPlanningControllerApi';
 export * from './TrainingPlanningV2ControllerApi';

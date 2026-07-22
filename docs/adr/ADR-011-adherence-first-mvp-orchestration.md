@@ -63,6 +63,9 @@ prezentuje technicznych UUID ani clinical rationale. Neutralne sygnały i przysz
 powiadomienia nie zawierają pełnej historii ani danych klinicznych. Funkcje
 społeczne, rankingi, serie i kary nie są elementem MVP adherence-first.
 
-P6 (worklista, issue i reply) jest dostarczone w commicie `d004a36`. P7 ma
-bieżące, jeszcze niecommitowane zmiany UI; jego ograniczenia statusowe są w
-mapie wymagań i etapach, nie w tej ponadczasowej decyzji.
+P6 (worklista, issue i reply) jest dostarczone w commicie `d004a36`. P8
+udostępnia minimalną, autoryzowaną projekcję aktywnych relacji wyłącznie do
+selekcji uczestnika przez specjalistę. Plan builder używa V2 rewizji,
+strukturalnej walidacji, safety assessment, acknowledgement i atomowej
+aktywacji z `Idempotency-Key`; worklista używa własnych akcji i reply. Ani
+widok, ani etykiety UI nie eksponują UUID.

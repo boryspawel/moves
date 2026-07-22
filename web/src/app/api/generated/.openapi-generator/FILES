@@ -5,8 +5,10 @@ docs/AbandonAttemptCommand.md
 docs/AcknowledgeWarningCommand.md
 docs/AcknowledgementView.md
 docs/ActingContext.md
+docs/ActionCommand.md
 docs/ActivateWorkflowCommand.md
 docs/ActivationOutcome.md
+docs/ActiveParticipantView.md
 docs/ActivePlanView.md
 docs/AddCycleCommand.md
 docs/AddGoalCommand.md
@@ -95,6 +97,7 @@ docs/OnboardingControllerApi.md
 docs/OutcomeCommand.md
 docs/OverrideCommand.md
 docs/OverrideView.md
+docs/ParticipantIssueCommand.md
 docs/ParticipantProfileRequest.md
 docs/ParticipantSafetyControllerApi.md
 docs/PlanBundle.md
@@ -127,6 +130,8 @@ docs/RecoveryEpisodeControllerApi.md
 docs/RecoveryView.md
 docs/RelationSnapshot.md
 docs/ReorderCommand.md
+docs/ReplyCommand.md
+docs/ReplyView.md
 docs/RestrictionCommand.md
 docs/RestrictionView.md
 docs/ResultCommand.md
@@ -153,6 +158,8 @@ docs/Slot.md
 docs/SlotRequest.md
 docs/SourceView.md
 docs/SpecialistProfileRequest.md
+docs/SpecialistRelationshipControllerApi.md
+docs/SpecialistWorklistControllerApi.md
 docs/StartAttemptCommand.md
 docs/State.md
 docs/StructuralValidationView.md
@@ -178,6 +185,7 @@ docs/VersionView.md
 docs/View.md
 docs/WorkflowState.md
 docs/WorkflowView.md
+docs/WorklistItemView.md
 package.json
 src/apis/AnatomyReferenceAdminControllerApi.ts
 src/apis/BarrierReportControllerApi.ts
@@ -197,6 +205,8 @@ src/apis/RecoveryEpisodeControllerApi.ts
 src/apis/SafetyV2ControllerApi.ts
 src/apis/SessionExecutionAttemptControllerApi.ts
 src/apis/SessionExecutionControllerApi.ts
+src/apis/SpecialistRelationshipControllerApi.ts
+src/apis/SpecialistWorklistControllerApi.ts
 src/apis/TodayAgendaControllerApi.ts
 src/apis/TrainingPlanningControllerApi.ts
 src/apis/TrainingPlanningV2ControllerApi.ts
@@ -206,8 +216,10 @@ src/models/AbandonAttemptCommand.ts
 src/models/AcknowledgeWarningCommand.ts
 src/models/AcknowledgementView.ts
 src/models/ActingContext.ts
+src/models/ActionCommand.ts
 src/models/ActivateWorkflowCommand.ts
 src/models/ActivationOutcome.ts
+src/models/ActiveParticipantView.ts
 src/models/ActivePlanView.ts
 src/models/AddCycleCommand.ts
 src/models/AddGoalCommand.ts
@@ -285,6 +297,7 @@ src/models/Observation.ts
 src/models/OutcomeCommand.ts
 src/models/OverrideCommand.ts
 src/models/OverrideView.ts
+src/models/ParticipantIssueCommand.ts
 src/models/ParticipantProfileRequest.ts
 src/models/PlanBundle.ts
 src/models/PlanRevisionSnapshot.ts
@@ -313,6 +326,8 @@ src/models/RecoveryChoiceCommand.ts
 src/models/RecoveryView.ts
 src/models/RelationSnapshot.ts
 src/models/ReorderCommand.ts
+src/models/ReplyCommand.ts
+src/models/ReplyView.ts
 src/models/RestrictionCommand.ts
 src/models/RestrictionView.ts
 src/models/ResultCommand.ts
@@ -358,6 +373,7 @@ src/models/VersionView.ts
 src/models/View.ts
 src/models/WorkflowState.ts
 src/models/WorkflowView.ts
+src/models/WorklistItemView.ts
 src/models/index.ts
 src/runtime.ts
 tsconfig.esm.json
