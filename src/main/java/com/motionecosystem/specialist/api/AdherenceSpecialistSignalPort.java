@@ -6,4 +6,8 @@ import java.util.UUID;
 public interface AdherenceSpecialistSignalPort {
     void signalContact(UUID participantAccountId, UUID barrierReportId, String category, boolean prompt);
     void signalRecoveryContact(UUID participantAccountId, UUID recoveryEpisodeId);
+    void signalWorklist(WorklistSignal signal);
+
+    record WorklistSignal(UUID participantAccountId, UUID planRevisionId, String category,
+                          String priority, String reasonCode, String policyVersion) { }
 }

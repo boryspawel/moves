@@ -42,6 +42,14 @@ class AdherenceSpecialistSignalAdapter implements AdherenceSpecialistSignalPort 
             // The unique recovery reference makes concurrent retries safely idempotent.
         }
     }
+
+    @Override
+    public void signalWorklist(AdherenceSpecialistSignalPort.WorklistSignal signal) {
+        // Worklist projection is owned by the specialist module; this adapter is its adherence boundary.
+        worklist.signal(signal);
+    }
+
+    private final SpecialistWorklistService worklist;
 }
 
 interface AdherenceContactSignalRepository extends JpaRepository<AdherenceContactSignal, UUID> {

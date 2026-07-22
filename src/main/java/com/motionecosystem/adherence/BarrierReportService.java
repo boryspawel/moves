@@ -59,6 +59,21 @@ public class BarrierReportService {
                     .map(BarrierReportService::view).orElseThrow(() -> exception);
         }
         recovery.detectFromBarrier(created);
+        long categoryCount = reports.countByParticipantAccountIdAndCategory(participant, category);
+        if (categoryCount >= 2) {
+            specialistSignals.signalWorklist(new AdherenceSpecialistSignalPort.WorklistSignal(participant,
+                    context.revisionId(), "REPEATED_BARRIERS", "MEDIUM", "BARRIER_PATTERN_" + category,
+                    created.ruleVersionCode));
+        }
+        if ("PAIN_OR_SYMPTOMS".equals(category) || "UNSURE_TECHNIQUE".equals(category)
+                || "TOO_DIFFICULT".equals(category)) {
+            String worklistCategory = "PAIN_OR_SYMPTOMS".equals(category) ? "ESCALATING_SYMPTOMS"
+                    : "UNSURE_TECHNIQUE".equals(category) ? "TECHNIQUE_UNCERTAINTY" : "PLAN_MISMATCH";
+            specialistSignals.signalWorklist(new AdherenceSpecialistSignalPort.WorklistSignal(participant,
+                    context.revisionId(), worklistCategory,
+                    "PAIN_OR_SYMPTOMS".equals(category) ? "HIGH" : "MEDIUM", category,
+                    created.ruleVersionCode));
+        }
         if ("CONTACT_SPECIALIST".equals(selected)) {
             specialistSignals.signalContact(participant, created.id, category,
                     "PAIN_OR_SYMPTOMS".equals(category) || "UNSURE_TECHNIQUE".equals(category));

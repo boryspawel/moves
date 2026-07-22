@@ -32,4 +32,8 @@ class ParticipantSpecialistRelationship {
 
     protected ParticipantSpecialistRelationship() {
     }
+
+    UUID participantAccountId() {
+        return participantAccountId;
+    }
 }

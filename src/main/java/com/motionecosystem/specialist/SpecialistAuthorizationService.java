@@ -52,13 +52,17 @@ class SpecialistAuthorizationService implements SpecialistAuthorizationPort {
                         Capability.PLAN_PERFORMANCE,
                         Capability.SET_PERFORMANCE_BUDGET,
                         Capability.VIEW_EFFECTIVE_RESTRICTION,
-                        Capability.ACKNOWLEDGE_PERFORMANCE_WARNING)
+                        Capability.ACKNOWLEDGE_PERFORMANCE_WARNING,
+                        Capability.VIEW_ADHERENCE_WORKLIST,
+                        Capability.RESPOND_TO_PARTICIPANT_ISSUE)
                 : EnumSet.of(
                         Capability.PLAN_FUNCTIONAL_RECOVERY,
                         Capability.SET_CLINICAL_RESTRICTION,
                         Capability.VIEW_EFFECTIVE_RESTRICTION,
                         Capability.VIEW_CLINICAL_RATIONALE,
-                        Capability.OVERRIDE_CLINICAL_BLOCK);
+                        Capability.OVERRIDE_CLINICAL_BLOCK,
+                        Capability.VIEW_ADHERENCE_WORKLIST,
+                        Capability.RESPOND_TO_PARTICIPANT_ISSUE);
         if (!granted.containsAll(required)) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN, "required domain capability is missing");
@@ -77,6 +81,10 @@ class SpecialistAuthorizationService implements SpecialistAuthorizationPort {
                 || value == Capability.PLAN_FUNCTIONAL_RECOVERY
                 || value == Capability.SET_PERFORMANCE_BUDGET)) {
             dataScopes.add(ConsentDecisionPort.DataScope.PLAN);
+        }
+        if (required.stream().anyMatch(value -> value == Capability.VIEW_ADHERENCE_WORKLIST
+                || value == Capability.RESPOND_TO_PARTICIPANT_ISSUE)) {
+            dataScopes.add(ConsentDecisionPort.DataScope.EXECUTION);
         }
         if (!dataScopes.isEmpty()) {
             consent.requireAccess(
