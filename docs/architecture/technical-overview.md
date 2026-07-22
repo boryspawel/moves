@@ -1,6 +1,6 @@
 # Dokumentacja techniczna `moves`
 
-Status: dokument rozwijany wraz z migracją. `spec.md` jest źródłem nadrzędnym i nie jest przez ten dokument zastępowany.
+Status: dokument rozwijany wraz z migracją. `spec.md` jest źródłem nadrzędnym i nie jest przez ten dokument zastępowany. Dla adherence bieżący zakres określa [`prompt.md`](../../prompt.md); starszy `docs/moves-codex-implementation-prompts-training.md` ma inną numerację i nie jest roadmapą statusową.
 
 ## Kontekst i topologia
 
@@ -18,7 +18,7 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
 
 - `identityaccess`: mapowanie `sub`, status konta i role techniczne;
 - `participant`: profil uczestnika;
-- `specialist`: profil specjalisty i relacja do uczestnika;
+- `specialist`: profil specjalisty, relacja do uczestnika oraz worklista adherence z participant issue/reply i aktywną deduplikacją;
 - `consent`: wersje dokumentów, granty, wycofanie i ważność;
 - `availability`: cykliczne przedziały i przyszłe wyjątki;
 - `anatomyreference`: wersjonowana taksonomia struktur anatomicznych;
@@ -29,6 +29,7 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
 - `planworkflow`: walidacja, acknowledgement i atomowa aktywacja rewizji;
 - `trainingexecution`: append-only wykonanie i dawka rzeczywista, projekcje, raport bólu/post24h, alerty i korekty;
 - `safety`: wersjonowane ograniczenia, niezmienne assessmenty i jawne override;
+- `adherence`: `TodayAgenda`, wersjonowana bariera, recovery episode/offer/choice oraz neutralne sygnały do specjalisty;
 - `calendar`, `notification`: późniejsze moduły zakresu MVP;
 - `gamification`: opt-in i append-only ledger bez danych medycznych;
 - `audit`: istotne operacje i dostęp do danych wrażliwych.
@@ -41,6 +42,7 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
 - Execution wskazuje planowaną sesję i receptę, a korekta dopisuje rekord.
 - Uprawnienia zasobowe są sprawdzane w przypadkach użycia, nie tylko w route guards lub rolach tokenu.
 - Operacja specjalisty wskazuje jawny kontekst zawodowy i purpose; capability, relacja i zgoda są sprawdzane centralnie przy każdym dostępie.
+- Worklista i neutralne notifications przenoszą minimalne kody, nie pełną historię ani clinical rationale; system nie podejmuje automatycznych decyzji klinicznych.
 - Każdy moduł posiada własny schemat/tabele i nie odczytuje repozytorium innego modułu bez jawnego portu.
 
 ## Dane i czas
@@ -66,3 +68,8 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
 - integracyjne MockMvc + prawdziwy PostgreSQL w Testcontainers;
 - walidacja Flyway i `ddl-auto=validate`;
 - kontrakt OpenAPI, frontendowe testy komponentów i główny Playwright E2E.
+
+P6 worklisty jest w `d004a36`. P7 `/sessions` ma niecommitowane testy
+komponentowe, lecz nadal wymaga E2E dla mobile viewport, 200% zoomu, klawiatury
+i reduced motion. P9 notification routing i P10 analytics/metrics nie są
+wdrożone, ponieważ odpowiadających modułów nie ma.

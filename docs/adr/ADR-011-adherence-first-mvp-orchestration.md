@@ -3,6 +3,10 @@
 Status: accepted  
 Data: 2026-07-21
 
+Aktualny zakres realizacyjny określa [`prompt.md`](../../prompt.md). Starszy
+`docs/moves-codex-implementation-prompts-training.md` ma inną numerację i nie
+jest statusową roadmapą tego strumienia.
+
 ## Kontekst
 
 MVP ma pomagać uczestnikowi przejść przez cztery momenty: rozpoczęcie,
@@ -26,7 +30,7 @@ bezpieczeństwem klinicznym.
   bariery i powrotu oraz ich audytowalnych decyzji. Komponuje dane przez
   publiczne porty `trainingplanning`, `trainingexecution` i `safety`; nie ma
   własnych planów, wykonań ani alertów bezpieczeństwa.
-- `adherence` wystawia projekcję uczestnika `TodayAgenda` dla zalogowanego
+- `adherence` wystawia zaimplementowaną projekcję uczestnika `TodayAgenda` dla zalogowanego
   uczestnika i publikuje neutralne sygnały do projekcji `specialist` worklisty.
   Worklista jest własnością `specialist`, deduplikuje wzorce wymagające decyzji
   i sprawdza relację, capability, consent oraz purpose przed odczytem i akcją.
@@ -35,7 +39,8 @@ bezpieczeństwem klinicznym.
   agendy są wyliczane z `scheduledDate`, `availableFrom`, `availableTo` oraz
   strefy uczestnika; UTC pozostaje formatem trwałych chwil.
 - Reguły są wersjonowane, wyjaśnialne i zapisywane wraz z decyzją. Operacje
-  ponawialne są autoryzowane zasobowo, audytowane oraz idempotentne.
+  ponawialne są autoryzowane zasobowo, audytowane oraz idempotentne. Dostęp
+  specjalisty wymaga capability, aktywnej relacji, consent i purpose.
 - Gamifikacja nie jest częścią tego przepływu ani nawigacji domyślnej. Może
   konsumować wyłącznie dotychczasowe neutralne zdarzenie kwalifikacji i tylko w
   trybie opt-in.
@@ -47,12 +52,17 @@ bezpieczeństwem klinicznym.
 | `adherence` | `PlanRevisionQueryPort`, `PlannedSessionExecutionPort` | aktywna rewizja, sesja, okno, recepty, stan |
 | `adherence` | `SafetyAssessmentPort` | effective result i neutralny explanation code |
 | `trainingexecution` | port planowania i safety | zablokowana sesja, rewizja, wariant, dopuszczenie |
-| `specialist` | sygnał adherence / port relacji i zgody | kategoria, priorytet, wyjaśnienie, plan i uczestnik |
+| `specialist` | sygnał adherence / port relacji i zgody | kategoria, priorytet, minimalne dane, plan i uczestnik |
 | `notification` | wersjonowane decyzje adherence | reason code, kanał, strefa, bez danych klinicznych |
 
 ## Konsekwencje
 
 Nie powstaje drugi silnik planowania, wykonania ani safety alertów. Projekcje
-mogą zostać odbudowane z rekordów źródłowych i wersji reguł. UI nie prezentuje
-technicznych UUID ani clinical rationale. Funkcje społeczne, rankingi, serie i
-kary nie są elementem MVP adherence-first.
+mogą zostać odbudowane z rekordów źródłowych i wersji reguł. UI uczestnika nie
+prezentuje technicznych UUID ani clinical rationale. Neutralne sygnały i przyszłe
+powiadomienia nie zawierają pełnej historii ani danych klinicznych. Funkcje
+społeczne, rankingi, serie i kary nie są elementem MVP adherence-first.
+
+P6 (worklista, issue i reply) jest dostarczone w commicie `d004a36`. P7 ma
+bieżące, jeszcze niecommitowane zmiany UI; jego ograniczenia statusowe są w
+mapie wymagań i etapach, nie w tej ponadczasowej decyzji.

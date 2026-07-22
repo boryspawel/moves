@@ -1,5 +1,11 @@
 # Status przerwania migracji
 
+> **Snapshot historyczny — przestarzały.** Poniższy zapis opisuje stan z
+> 2026-07-20 i nie jest bieżącym statusem adherence. Aktualny zakres i status
+> są w [prompt.md](../../prompt.md), [etapach adherence-first](../adherence-first-implementation-stages.md)
+> oraz [mapie wymagań](../adherence-first-requirements-map.md). Zachowano go dla
+> historii przerwania migracji.
+
 Data przerwania: 2026-07-20, na wyraźne polecenie użytkownika.
 
 ## Stan zakończony i zweryfikowany

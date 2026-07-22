@@ -62,6 +62,20 @@ Domyślne porty są częścią kontraktu lokalnego realm importu. Dla zmienionyc
 PostgreSQL 18 używa nazwanego wolumenu `motion-postgres` pod `/var/lib/postgresql`, zgodnie ze zmienionym `PGDATA` obrazu 18. Flyway pozostaje właścicielem schematu, a Hibernate działa w trybie `validate`.
 Oryginalne artefakty JSONL są przechowywane w osobnym nazwanym wolumenie `motion-exercise-import`; zwykły restart stosu zachowuje oba wolumeny.
 
+## Adherence-first
+
+Aktualny zakres tego strumienia określa [prompt.md](prompt.md); starszy
+`docs/moves-codex-implementation-prompts-training.md` ma inną numerację i nie
+jest roadmapą statusową adherence. Stan implementacji i ograniczenia opisują
+[etapy](docs/adherence-first-implementation-stages.md),
+[mapa wymagań](docs/adherence-first-requirements-map.md) oraz
+[ADR-011](docs/adr/ADR-011-adherence-first-mvp-orchestration.md).
+
+Główny przepływ uczestnika to `/sessions`: agenda „Dzisiaj” → wybór
+zatwierdzonego wariantu → check-in → prowadzona próba z zapisem postępu → wynik
+lub bezpieczne zgłoszenie bariery. System nie podejmuje automatycznych decyzji
+klinicznych.
+
 ## Diagnostyka i smoke test
 
 ```bash
