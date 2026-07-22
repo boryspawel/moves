@@ -1,0 +1,121 @@
+source_record_key,editorial_segment,body_region,primary_movement_pattern,stimulus_type,purpose,technical_level,environment,equipment,unilateral,review_priority
+moves-starter-v1:balance:anteroposterior-weight-shift,Równowaga i kontrola motoryczna,Stopa; staw skokowy; równowaga,OTHER,MOTOR_CONTROL,TRAINING,FOUNDATIONAL,ANY,WALL,false,MEDIUM
+moves-starter-v1:balance:controlled-march,Równowaga i kontrola motoryczna,Całe ciało; miednica; równowaga,LOCOMOTION,MOTOR_CONTROL,TRAINING,INTERMEDIATE,ANY,,true,MEDIUM
+moves-starter-v1:balance:heel-to-toe-walk,Równowaga i kontrola motoryczna,Całe ciało; równowaga,LOCOMOTION,MOTOR_CONTROL,TRAINING,INTERMEDIATE,ANY,,false,MEDIUM
+moves-starter-v1:balance:lateral-weight-shift,Równowaga i kontrola motoryczna,Biodro; staw skokowy; równowaga,OTHER,MOTOR_CONTROL,TRAINING,FOUNDATIONAL,ANY,WALL,false,MEDIUM
+moves-starter-v1:balance:single-leg-clock-reach,Równowaga i kontrola motoryczna,Biodro; staw skokowy; równowaga,OTHER,MOTOR_CONTROL,TRAINING,INTERMEDIATE,ANY,,true,MEDIUM
+moves-starter-v1:balance:single-leg-stance,Równowaga i kontrola motoryczna,Stopa; biodro; równowaga,OTHER,BALANCE,TRAINING,INTERMEDIATE,ANY,,true,MEDIUM
+moves-starter-v1:balance:supported-single-leg-stance,Równowaga i kontrola motoryczna,Stopa; biodro; równowaga,OTHER,BALANCE,TRAINING,FOUNDATIONAL,ANY,WALL,true,MEDIUM
+moves-starter-v1:balance:tandem-stance,Równowaga i kontrola motoryczna,Równowaga całego ciała,OTHER,BALANCE,TRAINING,FOUNDATIONAL,ANY,WALL,false,MEDIUM
+moves-starter-v1:breathing:paced-longer-exhale,Oddychanie i regeneracja,Klatka piersiowa; tułów,BREATHING,RECOVERY,RECOVERY,FOUNDATIONAL,ANY,CHAIR,false,MEDIUM
+moves-starter-v1:breathing:prone-crocodile-breathing,Oddychanie i regeneracja,Klatka piersiowa; tułów,BREATHING,RECOVERY,RECOVERY,FOUNDATIONAL,ANY,MAT,false,MEDIUM
+moves-starter-v1:breathing:seated-360-breathing,Oddychanie i regeneracja,Klatka piersiowa; tułów,BREATHING,RECOVERY,RECOVERY,FOUNDATIONAL,ANY,CHAIR,false,MEDIUM
+moves-starter-v1:breathing:supine-diaphragmatic-breathing,Oddychanie i regeneracja,Klatka piersiowa; tułów,BREATHING,RECOVERY,RECOVERY,FOUNDATIONAL,ANY,MAT,false,MEDIUM
+moves-starter-v1:mobility:active-cross-body-shoulder,Mobilność,Bark; obręcz barkowa,MOBILITY,MOBILITY,WARM_UP|TRAINING,FOUNDATIONAL,ANY,,true,LOW
+moves-starter-v1:mobility:adductor-rock-back,Mobilność,Udo; biodro i miednica,MOBILITY,MOBILITY,WARM_UP|TRAINING,INTERMEDIATE,ANY,MAT,true,MEDIUM
+moves-starter-v1:mobility:ankle-circles,Mobilność,Stopa i staw skokowy,MOBILITY,MOBILITY,WARM_UP|TRAINING,FOUNDATIONAL,ANY,CHAIR,true,LOW
+moves-starter-v1:mobility:ankle-knee-to-wall,Mobilność,Stopa i staw skokowy,MOBILITY,MOBILITY,WARM_UP|TRAINING,FOUNDATIONAL,ANY,WALL,true,LOW
+moves-starter-v1:mobility:cat-camel,Mobilność,Kręgosłup piersiowy i lędźwiowy,MOBILITY,MOBILITY,WARM_UP|TRAINING,FOUNDATIONAL,ANY,MAT,false,LOW
+moves-starter-v1:mobility:controlled-neck-lateral-flexion,Mobilność,Szyja; obręcz barkowa,MOBILITY,MOBILITY,WARM_UP|TRAINING,FOUNDATIONAL,ANY,CHAIR,false,LOW
+moves-starter-v1:mobility:controlled-neck-rotation,Mobilność,Szyja,MOBILITY,MOBILITY,WARM_UP|TRAINING,FOUNDATIONAL,ANY,CHAIR,false,LOW
+moves-starter-v1:mobility:deep-squat-mobility-hold,Mobilność,Biodro; kolano; staw skokowy,MOBILITY,MOBILITY,WARM_UP|TRAINING,INTERMEDIATE,ANY,WALL,false,MEDIUM
+moves-starter-v1:mobility:dynamic-half-kneeling-hip-flexor,Mobilność,Biodro i miednica,MOBILITY,MOBILITY,WARM_UP|TRAINING,FOUNDATIONAL,ANY,MAT,true,LOW
+moves-starter-v1:mobility:forearm-pronation-supination,Mobilność,Przedramię; łokieć,MOBILITY,MOBILITY,WARM_UP|TRAINING,FOUNDATIONAL,ANY,CHAIR,true,LOW
+moves-starter-v1:mobility:hip-90-90-switch,Mobilność,Biodro i miednica,MOBILITY,MOBILITY,WARM_UP|TRAINING,INTERMEDIATE,ANY,MAT,false,MEDIUM
+moves-starter-v1:mobility:quadruped-thoracic-rotation,Mobilność,Odcinek piersiowy; obręcz barkowa,MOBILITY,MOBILITY,WARM_UP|TRAINING,INTERMEDIATE,ANY,MAT,true,MEDIUM
+moves-starter-v1:mobility:quadruped-wrist-rock,Mobilność,Nadgarstek i przedramię,MOBILITY,MOBILITY,WARM_UP|TRAINING,FOUNDATIONAL,ANY,MAT,false,LOW
+moves-starter-v1:mobility:scapular-circles,Mobilność,Obręcz barkowa,MOBILITY,MOBILITY,WARM_UP|TRAINING,FOUNDATIONAL,ANY,,false,LOW
+moves-starter-v1:mobility:seated-hip-external-rotation,Mobilność,Biodro i miednica,MOBILITY,MOBILITY,WARM_UP|TRAINING,FOUNDATIONAL,ANY,CHAIR,true,LOW
+moves-starter-v1:mobility:seated-hip-internal-rotation,Mobilność,Biodro i miednica,MOBILITY,MOBILITY,WARM_UP|TRAINING,FOUNDATIONAL,ANY,CHAIR,true,LOW
+moves-starter-v1:mobility:shoulder-car,Mobilność,Bark; obręcz barkowa,MOBILITY,MOBILITY,WARM_UP|TRAINING,INTERMEDIATE,ANY,,true,MEDIUM
+moves-starter-v1:mobility:side-lying-open-book,Mobilność,Odcinek piersiowy; klatka piersiowa,MOBILITY,MOBILITY,WARM_UP|TRAINING,FOUNDATIONAL,ANY,MAT,true,LOW
+moves-starter-v1:mobility:thoracic-extension-chair,Mobilność,Odcinek piersiowy,MOBILITY,MOBILITY,WARM_UP|TRAINING,INTERMEDIATE,ANY,CHAIR,false,MEDIUM
+moves-starter-v1:mobility:toe-extension-rock,Mobilność,Stopa,MOBILITY,MOBILITY,WARM_UP|TRAINING,INTERMEDIATE,ANY,MAT,false,MEDIUM
+moves-starter-v1:mobility:wall-angels,Mobilność,Bark; obręcz barkowa; odcinek piersiowy,MOBILITY,MOBILITY,WARM_UP|TRAINING,INTERMEDIATE,ANY,WALL,false,MEDIUM
+moves-starter-v1:mobility:wall-shoulder-flexion-slide,Mobilność,Bark; obręcz barkowa,MOBILITY,MOBILITY,WARM_UP|TRAINING,FOUNDATIONAL,ANY,WALL,false,LOW
+moves-starter-v1:strength:band-pull-apart,Ogólny trening siłowy,Obręcz barkowa; górna część grzbietu,PULL,STRENGTH,TRAINING,FOUNDATIONAL,ANY,BAND,false,LOW
+moves-starter-v1:strength:band-pulldown,Ogólny trening siłowy,Grzbiet; obręcz barkowa; ramię,PULL,STRENGTH,TRAINING,INTERMEDIATE,ANY,BAND,false,MEDIUM
+moves-starter-v1:strength:band-row,Ogólny trening siłowy,Grzbiet; obręcz barkowa; ramię,PULL,STRENGTH,TRAINING,FOUNDATIONAL,ANY,BAND,false,LOW
+moves-starter-v1:strength:band-triceps-extension,Ogólny trening siłowy,Ramię; łokieć,PUSH,STRENGTH,TRAINING,FOUNDATIONAL,ANY,BAND,false,LOW
+moves-starter-v1:strength:bilateral-calf-raise,Ogólny trening siłowy,Łydka; stopa i staw skokowy,OTHER,STRENGTH,TRAINING,FOUNDATIONAL,ANY,BODYWEIGHT,false,LOW
+moves-starter-v1:strength:bodyweight-hip-hinge,Ogólny trening siłowy,Biodro; tył uda; tułów,HINGE,STRENGTH,TRAINING,FOUNDATIONAL,ANY,BODYWEIGHT,false,LOW
+moves-starter-v1:strength:bodyweight-squat,Ogólny trening siłowy,Kończyna dolna; tułów,SQUAT,STRENGTH,TRAINING,FOUNDATIONAL,ANY,BODYWEIGHT,false,LOW
+moves-starter-v1:strength:box-squat,Ogólny trening siłowy,Kończyna dolna; tułów,SQUAT,STRENGTH,TRAINING,FOUNDATIONAL,ANY,CHAIR,false,LOW
+moves-starter-v1:strength:bulgarian-split-squat,Ogólny trening siłowy,Kończyna dolna; miednica,LUNGE,STRENGTH,TRAINING,INTERMEDIATE,ANY,BENCH,true,MEDIUM
+moves-starter-v1:strength:dead-bug,Ogólny trening siłowy,Tułów; biodro,OTHER,STRENGTH,TRAINING,INTERMEDIATE,ANY,MAT,true,MEDIUM
+moves-starter-v1:strength:dumbbell-biceps-curl,Ogólny trening siłowy,Ramię; przedramię,PULL,STRENGTH,TRAINING,FOUNDATIONAL,ANY,DUMBBELL,false,LOW
+moves-starter-v1:strength:dumbbell-floor-press,Ogólny trening siłowy,Klatka piersiowa; bark; ramię,PUSH,STRENGTH,TRAINING,INTERMEDIATE,ANY,DUMBBELL|MAT,false,MEDIUM
+moves-starter-v1:strength:dumbbell-lateral-raise,Ogólny trening siłowy,Bark; obręcz barkowa,PUSH,STRENGTH,TRAINING,INTERMEDIATE,ANY,DUMBBELL,false,MEDIUM
+moves-starter-v1:strength:dumbbell-overhead-press,Ogólny trening siłowy,Bark; ramię; tułów,PUSH,STRENGTH,TRAINING,INTERMEDIATE,ANY,DUMBBELL|CHAIR,false,MEDIUM
+moves-starter-v1:strength:dumbbell-rdl,Ogólny trening siłowy,Tył uda; biodro; tułów,HINGE,STRENGTH,TRAINING,INTERMEDIATE,ANY,DUMBBELL,false,MEDIUM
+moves-starter-v1:strength:dumbbell-wrist-curl,Ogólny trening siłowy,Przedramię; nadgarstek,OTHER,STRENGTH,TRAINING,FOUNDATIONAL,ANY,DUMBBELL|CHAIR,false,LOW
+moves-starter-v1:strength:dumbbell-wrist-extension,Ogólny trening siłowy,Przedramię; nadgarstek,OTHER,STRENGTH,TRAINING,FOUNDATIONAL,ANY,DUMBBELL|CHAIR,false,LOW
+moves-starter-v1:strength:farmer-carry,Ogólny trening siłowy,Całe ciało; tułów; chwyt,CARRY,STRENGTH,TRAINING,INTERMEDIATE,ANY,DUMBBELL,false,MEDIUM
+moves-starter-v1:strength:forward-lunge,Ogólny trening siłowy,Kończyna dolna; miednica,LUNGE,STRENGTH,TRAINING,INTERMEDIATE,ANY,BODYWEIGHT,true,MEDIUM
+moves-starter-v1:strength:front-plank,Ogólny trening siłowy,Tułów; obręcz barkowa,OTHER,STRENGTH,TRAINING,INTERMEDIATE,ANY,MAT,false,MEDIUM
+moves-starter-v1:strength:glute-bridge,Ogólny trening siłowy,Biodro; miednica; tułów,HINGE,STRENGTH,TRAINING,FOUNDATIONAL,ANY,MAT,false,LOW
+moves-starter-v1:strength:goblet-squat,Ogólny trening siłowy,Kończyna dolna; tułów,SQUAT,STRENGTH,TRAINING,INTERMEDIATE,ANY,KETTLEBELL,false,MEDIUM
+moves-starter-v1:strength:incline-push-up,Ogólny trening siłowy,Klatka piersiowa; obręcz barkowa; tułów,PUSH,STRENGTH,TRAINING,FOUNDATIONAL,ANY,BENCH,false,LOW
+moves-starter-v1:strength:kettlebell-deadlift,Ogólny trening siłowy,Biodro; tył uda; tułów,HINGE,STRENGTH,TRAINING,FOUNDATIONAL,ANY,KETTLEBELL|STEP_BOX,false,LOW
+moves-starter-v1:strength:knee-push-up,Ogólny trening siłowy,Klatka piersiowa; obręcz barkowa; tułów,PUSH,STRENGTH,TRAINING,FOUNDATIONAL,ANY,MAT,false,LOW
+moves-starter-v1:strength:one-arm-dumbbell-row,Ogólny trening siłowy,Grzbiet; obręcz barkowa; ramię,PULL,STRENGTH,TRAINING,INTERMEDIATE,ANY,DUMBBELL|BENCH,true,MEDIUM
+moves-starter-v1:strength:reverse-lunge,Ogólny trening siłowy,Kończyna dolna; miednica,LUNGE,STRENGTH,TRAINING,FOUNDATIONAL,ANY,BODYWEIGHT,true,LOW
+moves-starter-v1:strength:side-plank-knees,Ogólny trening siłowy,Tułów; biodro; obręcz barkowa,OTHER,STRENGTH,TRAINING,INTERMEDIATE,ANY,MAT,true,MEDIUM
+moves-starter-v1:strength:single-leg-bridge,Ogólny trening siłowy,Biodro; miednica; tułów,HINGE,STRENGTH,TRAINING,INTERMEDIATE,ANY,MAT,true,MEDIUM
+moves-starter-v1:strength:single-leg-calf-raise,Ogólny trening siłowy,Łydka; stopa i staw skokowy,OTHER,STRENGTH,TRAINING,INTERMEDIATE,ANY,WALL,true,MEDIUM
+moves-starter-v1:strength:split-squat,Ogólny trening siłowy,Kończyna dolna; miednica,LUNGE,STRENGTH,TRAINING,INTERMEDIATE,ANY,BODYWEIGHT,true,MEDIUM
+moves-starter-v1:strength:standard-push-up,Ogólny trening siłowy,Klatka piersiowa; obręcz barkowa; tułów,PUSH,STRENGTH,TRAINING,INTERMEDIATE,ANY,BODYWEIGHT,false,MEDIUM
+moves-starter-v1:strength:step-up,Ogólny trening siłowy,Kończyna dolna; miednica,LOCOMOTION,STRENGTH,TRAINING,FOUNDATIONAL,ANY,STEP_BOX,true,LOW
+moves-starter-v1:strength:suitcase-carry,Ogólny trening siłowy,Całe ciało; tułów; chwyt,CARRY,STRENGTH,TRAINING,INTERMEDIATE,ANY,DUMBBELL,true,MEDIUM
+moves-starter-v1:strength:wall-push-up,Ogólny trening siłowy,Klatka piersiowa; obręcz barkowa; tułów,PUSH,STRENGTH,TRAINING,FOUNDATIONAL,ANY,WALL,false,LOW
+moves-starter-v1:strength:wall-sit,Ogólny trening siłowy,Kończyna dolna; tułów,SQUAT,STRENGTH,TRAINING,FOUNDATIONAL,ANY,WALL,false,LOW
+moves-starter-v1:stretching:butterfly-adductor-stretch,Stretching,Przywodziciele; biodro,MOBILITY,MOBILITY,RECOVERY,FOUNDATIONAL,ANY,MAT,false,LOW
+moves-starter-v1:stretching:child-pose-thoracolumbar-stretch,Stretching,Tułów; odcinek piersiowy i lędźwiowy,MOBILITY,MOBILITY,RECOVERY,INTERMEDIATE,ANY,MAT,false,MEDIUM
+moves-starter-v1:stretching:cross-body-posterior-shoulder-stretch,Stretching,Bark; obręcz barkowa,MOBILITY,MOBILITY,RECOVERY,FOUNDATIONAL,ANY,,true,LOW
+moves-starter-v1:stretching:doorway-chest-stretch,Stretching,Klatka piersiowa; bark,MOBILITY,MOBILITY,RECOVERY,FOUNDATIONAL,ANY,WALL,true,LOW
+moves-starter-v1:stretching:half-kneeling-hip-flexor-stretch,Stretching,Biodro i miednica,MOBILITY,MOBILITY,RECOVERY,FOUNDATIONAL,ANY,MAT,true,LOW
+moves-starter-v1:stretching:kneeling-lat-stretch,Stretching,Grzbiet; bark; odcinek piersiowy,MOBILITY,MOBILITY,RECOVERY,INTERMEDIATE,ANY,BENCH|MAT,false,MEDIUM
+moves-starter-v1:stretching:levator-scapulae-stretch,Stretching,Szyja; obręcz barkowa,MOBILITY,MOBILITY,RECOVERY,FOUNDATIONAL,ANY,CHAIR,true,LOW
+moves-starter-v1:stretching:overhead-triceps-stretch,Stretching,Ramię; bark,MOBILITY,MOBILITY,RECOVERY,FOUNDATIONAL,ANY,,true,LOW
+moves-starter-v1:stretching:seated-hamstring-stretch,Stretching,Tył uda; biodro,MOBILITY,MOBILITY,RECOVERY,FOUNDATIONAL,ANY,CHAIR,true,LOW
+moves-starter-v1:stretching:side-lunge-adductor-stretch,Stretching,Przywodziciele; biodro,MOBILITY,MOBILITY,RECOVERY,INTERMEDIATE,ANY,,true,MEDIUM
+moves-starter-v1:stretching:standing-gastrocnemius-stretch,Stretching,Łydka; staw skokowy,MOBILITY,MOBILITY,RECOVERY,FOUNDATIONAL,ANY,WALL,true,LOW
+moves-starter-v1:stretching:standing-quadriceps-stretch,Stretching,Przód uda; biodro,MOBILITY,MOBILITY,RECOVERY,FOUNDATIONAL,ANY,WALL,true,LOW
+moves-starter-v1:stretching:standing-soleus-stretch,Stretching,Łydka; staw skokowy,MOBILITY,MOBILITY,RECOVERY,FOUNDATIONAL,ANY,WALL,true,LOW
+moves-starter-v1:stretching:supine-figure-four-stretch,Stretching,Pośladek; biodro,MOBILITY,MOBILITY,RECOVERY,FOUNDATIONAL,ANY,MAT,true,LOW
+moves-starter-v1:stretching:supine-hamstring-strap-stretch,Stretching,Tył uda; biodro,MOBILITY,MOBILITY,RECOVERY,INTERMEDIATE,ANY,MAT|STRAP,true,MEDIUM
+moves-starter-v1:stretching:upper-trapezius-stretch,Stretching,Szyja; obręcz barkowa,MOBILITY,MOBILITY,RECOVERY,FOUNDATIONAL,ANY,CHAIR,true,LOW
+moves-starter-v1:stretching:wrist-extensor-stretch,Stretching,Przedramię; nadgarstek,MOBILITY,MOBILITY,RECOVERY,FOUNDATIONAL,ANY,,true,LOW
+moves-starter-v1:stretching:wrist-flexor-stretch,Stretching,Przedramię; nadgarstek,MOBILITY,MOBILITY,RECOVERY,FOUNDATIONAL,ANY,,true,LOW
+moves-starter-v1:therapeutic:band-ankle-dorsiflexion,Ćwiczenia terapeutyczne,Staw skokowy; podudzie,OTHER,STRENGTH,THERAPEUTIC_EXERCISE,FOUNDATIONAL,CLINIC,BAND|CHAIR,true,HIGH
+moves-starter-v1:therapeutic:band-ankle-eversion,Ćwiczenia terapeutyczne,Staw skokowy; podudzie,OTHER,STRENGTH,THERAPEUTIC_EXERCISE,INTERMEDIATE,CLINIC,BAND|CHAIR,true,HIGH
+moves-starter-v1:therapeutic:band-ankle-inversion,Ćwiczenia terapeutyczne,Staw skokowy; podudzie,OTHER,STRENGTH,THERAPEUTIC_EXERCISE,INTERMEDIATE,CLINIC,BAND|CHAIR,true,HIGH
+moves-starter-v1:therapeutic:band-shoulder-external-rotation,Ćwiczenia terapeutyczne,Bark; obręcz barkowa,OTHER,STRENGTH,THERAPEUTIC_EXERCISE,FOUNDATIONAL,CLINIC,BAND|CHAIR,true,HIGH
+moves-starter-v1:therapeutic:band-shoulder-internal-rotation,Ćwiczenia terapeutyczne,Bark; obręcz barkowa,OTHER,STRENGTH,THERAPEUTIC_EXERCISE,INTERMEDIATE,CLINIC,BAND|CHAIR,true,HIGH
+moves-starter-v1:therapeutic:band-terminal-knee-extension,Ćwiczenia terapeutyczne,Kolano; przód uda,OTHER,STRENGTH,THERAPEUTIC_EXERCISE,FOUNDATIONAL,CLINIC,BAND,true,HIGH
+moves-starter-v1:therapeutic:bent-knee-calf-raise,Ćwiczenia terapeutyczne,Łydka; staw skokowy,OTHER,STRENGTH,THERAPEUTIC_EXERCISE,INTERMEDIATE,CLINIC,WALL,false,HIGH
+moves-starter-v1:therapeutic:bird-dog,Ćwiczenia terapeutyczne,Tułów; biodro; obręcz barkowa,OTHER,MOTOR_CONTROL,THERAPEUTIC_EXERCISE,INTERMEDIATE,CLINIC,MAT,true,HIGH
+moves-starter-v1:therapeutic:bridge-march,Ćwiczenia terapeutyczne,Biodro; miednica; tułów,HINGE,STRENGTH,THERAPEUTIC_EXERCISE,INTERMEDIATE,CLINIC,MAT,true,HIGH
+moves-starter-v1:therapeutic:calf-isometric-hold,Ćwiczenia terapeutyczne,Łydka; staw skokowy,OTHER,STRENGTH,THERAPEUTIC_EXERCISE,FOUNDATIONAL,CLINIC,WALL,false,HIGH
+moves-starter-v1:therapeutic:chair-sit-to-stand,Ćwiczenia terapeutyczne,Kończyna dolna; tułów,SQUAT,STRENGTH,THERAPEUTIC_EXERCISE,FOUNDATIONAL,CLINIC,CHAIR,false,HIGH
+moves-starter-v1:therapeutic:chin-tuck,Ćwiczenia terapeutyczne,Szyja,OTHER,MOTOR_CONTROL,THERAPEUTIC_EXERCISE,FOUNDATIONAL,CLINIC,MAT,false,HIGH
+moves-starter-v1:therapeutic:clamshell,Ćwiczenia terapeutyczne,Biodro i miednica,OTHER,STRENGTH,THERAPEUTIC_EXERCISE,FOUNDATIONAL,CLINIC,MAT,true,HIGH
+moves-starter-v1:therapeutic:dead-bug-heel-tap,Ćwiczenia terapeutyczne,Tułów; biodro,OTHER,MOTOR_CONTROL,THERAPEUTIC_EXERCISE,FOUNDATIONAL,CLINIC,MAT,true,HIGH
+moves-starter-v1:therapeutic:heel-slide,Ćwiczenia terapeutyczne,Kolano; udo,OTHER,STRENGTH,THERAPEUTIC_EXERCISE,FOUNDATIONAL,CLINIC,MAT,true,HIGH
+moves-starter-v1:therapeutic:low-step-down,Ćwiczenia terapeutyczne,Kolano; biodro,SQUAT,STRENGTH,THERAPEUTIC_EXERCISE,INTERMEDIATE,CLINIC,STEP_BOX,true,HIGH
+moves-starter-v1:therapeutic:posterior-pelvic-tilt,Ćwiczenia terapeutyczne,Miednica; odcinek lędźwiowy,OTHER,MOTOR_CONTROL,THERAPEUTIC_EXERCISE,FOUNDATIONAL,CLINIC,MAT,false,HIGH
+moves-starter-v1:therapeutic:prone-y-raise,Ćwiczenia terapeutyczne,Obręcz barkowa; odcinek piersiowy,PULL,STRENGTH,THERAPEUTIC_EXERCISE,INTERMEDIATE,CLINIC,MAT,false,HIGH
+moves-starter-v1:therapeutic:quadriceps-set,Ćwiczenia terapeutyczne,Kolano; przód uda,OTHER,STRENGTH,THERAPEUTIC_EXERCISE,FOUNDATIONAL,CLINIC,MAT,true,HIGH
+moves-starter-v1:therapeutic:scapular-setting,Ćwiczenia terapeutyczne,Obręcz barkowa,OTHER,MOTOR_CONTROL,THERAPEUTIC_EXERCISE,FOUNDATIONAL,CLINIC,MAT,false,HIGH
+moves-starter-v1:therapeutic:seated-partial-knee-extension,Ćwiczenia terapeutyczne,Kolano; przód uda,OTHER,STRENGTH,THERAPEUTIC_EXERCISE,FOUNDATIONAL,CLINIC,CHAIR,true,HIGH
+moves-starter-v1:therapeutic:short-foot,Ćwiczenia terapeutyczne,Stopa,OTHER,MOTOR_CONTROL,THERAPEUTIC_EXERCISE,FOUNDATIONAL,CLINIC,CHAIR,true,HIGH
+moves-starter-v1:therapeutic:shoulder-external-rotation-isometric-wall,Ćwiczenia terapeutyczne,Bark; obręcz barkowa,OTHER,STRENGTH,THERAPEUTIC_EXERCISE,FOUNDATIONAL,CLINIC,WALL,true,HIGH
+moves-starter-v1:therapeutic:shoulder-flexion-isometric-wall,Ćwiczenia terapeutyczne,Bark; obręcz barkowa,PUSH,STRENGTH,THERAPEUTIC_EXERCISE,FOUNDATIONAL,CLINIC,WALL,true,HIGH
+moves-starter-v1:therapeutic:side-lying-hip-abduction,Ćwiczenia terapeutyczne,Biodro i miednica,OTHER,STRENGTH,THERAPEUTIC_EXERCISE,FOUNDATIONAL,CLINIC,MAT,true,HIGH
+moves-starter-v1:therapeutic:small-range-lumbar-rotation,Ćwiczenia terapeutyczne,Odcinek lędźwiowy; miednica,ROTATION,MOTOR_CONTROL,THERAPEUTIC_EXERCISE,FOUNDATIONAL,CLINIC,MAT,false,HIGH
+moves-starter-v1:therapeutic:standing-band-hip-abduction,Ćwiczenia terapeutyczne,Biodro i miednica,OTHER,STRENGTH,THERAPEUTIC_EXERCISE,INTERMEDIATE,CLINIC,BAND|WALL,true,HIGH
+moves-starter-v1:therapeutic:straight-leg-raise,Ćwiczenia terapeutyczne,Kolano; biodro,OTHER,STRENGTH,THERAPEUTIC_EXERCISE,FOUNDATIONAL,CLINIC,MAT,true,HIGH
+moves-starter-v1:therapeutic:supine-abdominal-bracing,Ćwiczenia terapeutyczne,Tułów; odcinek lędźwiowy,OTHER,MOTOR_CONTROL,THERAPEUTIC_EXERCISE,FOUNDATIONAL,CLINIC,MAT,false,HIGH
+moves-starter-v1:therapeutic:supine-serratus-punch,Ćwiczenia terapeutyczne,Obręcz barkowa,PUSH,STRENGTH,THERAPEUTIC_EXERCISE,FOUNDATIONAL,CLINIC,MAT,true,HIGH
+moves-starter-v1:therapeutic:toe-yoga,Ćwiczenia terapeutyczne,Stopa,OTHER,MOTOR_CONTROL,THERAPEUTIC_EXERCISE,INTERMEDIATE,CLINIC,CHAIR,true,HIGH
+moves-starter-v1:therapeutic:wall-push-up-plus,Ćwiczenia terapeutyczne,Obręcz barkowa; klatka piersiowa,PUSH,STRENGTH,THERAPEUTIC_EXERCISE,FOUNDATIONAL,CLINIC,WALL,false,HIGH

@@ -322,9 +322,9 @@ public class ImportRecordUseCases implements NormalizeImportRecord, ValidateImpo
                     "SOURCE_ASSERTION", contribution.path("sideRule").asText(), sql(now), actor);
             jdbc.update("INSERT INTO exercise_catalog.exercise_contribution_evidence(id,contribution_id,evidence_source_id) VALUES (?,?,?)",
                     UUID.randomUUID(), contributionId, evidenceId);
-            jdbc.update("INSERT INTO exercise_catalog.exercise_evidence_link(id,exercise_version_id,evidence_source_id,claim_type,json_pointer) VALUES (?,?,?,'ANATOMY_EXPOSURE',?)",
-                    UUID.randomUUID(), versionId, evidenceId, "/contributions");
         }
+        jdbc.update("INSERT INTO exercise_catalog.exercise_evidence_link(id,exercise_version_id,evidence_source_id,claim_type,json_pointer) VALUES (?,?,?,'ANATOMY_EXPOSURE',?)",
+                UUID.randomUUID(), versionId, evidenceId, "/contributions");
     }
 
     private List<Candidate> candidates(RecordData record) {

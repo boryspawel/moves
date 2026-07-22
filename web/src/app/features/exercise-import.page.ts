@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { JsonPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -18,11 +18,12 @@ import { ExerciseImportApi, ImportBatch, ImportRecord, ImportSource, RecordDetai
       <p class="status" aria-live="polite" [class.error]="failed()">{{ message() }}</p>
 
       <div class="toolbar">
-        <mat-form-field><mat-label>Źródło</mat-label><mat-select [(ngModel)]="sourceId">
+        <mat-form-field><mat-label>Źródło</mat-label><mat-select [ngModel]="sourceId()" (ngModelChange)="sourceId.set($event)">
           @for (source of sources(); track source.id) { <mat-option [value]="source.id">{{ source.displayName }} · {{ source.licenseCode }}</mat-option> }
         </mat-select></mat-form-field>
+        <button mat-stroked-button type="button" (click)="createStarterSource()">Utwórz źródło MOVES_STARTER_V1</button>
         <label class="file">Plik JSONL <input type="file" accept=".jsonl,application/x-ndjson" (change)="choose($event)"></label>
-        <button mat-flat-button type="button" [disabled]="!sourceId || !file" (click)="upload()">Prześlij</button>
+        <button mat-flat-button type="button" [disabled]="!canUpload()" (click)="upload()">Prześlij</button>
       </div>
 
       @if (batch(); as current) {
@@ -67,11 +68,12 @@ import { ExerciseImportApi, ImportBatch, ImportRecord, ImportSource, RecordDetai
 export class ExerciseImportPage implements OnDestroy {
   private readonly api = inject(ExerciseImportApi); private timer?: number;
   protected readonly sources = signal<ImportSource[]>([]); protected readonly batch = signal<ImportBatch | null>(null); protected readonly records = signal<ImportRecord[]>([]); protected readonly detail = signal<RecordDetail | null>(null); protected readonly review = signal<ReviewResult | null>(null); protected readonly difference = signal<unknown>(null); protected readonly message = signal('Ładowanie źródeł…'); protected readonly failed = signal(false);
-  protected sourceId=''; protected file?:File; protected statusFilter=''; protected severityFilter=''; protected reviewArea='CONTENT'; protected reviewDecision='APPROVED'; protected readonly reviewAreas=['CONTENT','TECHNIQUE','ANATOMY_EXPOSURE','LICENSE','MEDIA'];
+  protected readonly sourceId = signal(''); protected readonly file = signal<File | null>(null); protected readonly canUpload = computed(() => Boolean(this.sourceId() && this.file())); protected statusFilter=''; protected severityFilter=''; protected reviewArea='CONTENT'; protected reviewDecision='APPROVED'; protected readonly reviewAreas=['CONTENT','TECHNIQUE','ANATOMY_EXPOSURE','LICENSE','MEDIA'];
   constructor(){void this.loadSources();}
   ngOnDestroy():void{if(this.timer)window.clearTimeout(this.timer);}
-  protected choose(event:Event):void{this.file=(event.target as HTMLInputElement).files?.[0];}
-  protected async upload():Promise<void>{if(!this.file||!this.sourceId)return;await this.run(async()=>{const result=await this.api.upload(this.sourceId,this.file!,false);await this.refresh(result.batchId);});}
+  protected choose(event:Event):void{this.file.set((event.target as HTMLInputElement).files?.[0] ?? null);}
+  protected async upload():Promise<void>{const sourceId=this.sourceId();const file=this.file();if(!file||!sourceId)return;await this.run(async()=>{const result=await this.api.upload(sourceId,file,false);await this.refresh(result.batchId);});}
+  protected async createStarterSource():Promise<void>{await this.run(async()=>{const source=await this.api.createSource({code:'MOVES_STARTER_V1',displayName:'Moves starter exercises V1',defaultLocale:'pl-PL',licenseCode:'MOVES-INTERNAL-AUTHORING-1.0',licenseVerified:true});await this.reloadSources(source.id);});}
   protected async loadRecords():Promise<void>{const current=this.batch();if(!current)return;await this.run(async()=>{this.records.set((await this.api.records(current.id,this.statusFilter,this.severityFilter)).content);});}
   protected async open(record:ImportRecord):Promise<void>{await this.run(async()=>this.detail.set(await this.api.record(record.id)));}
   protected async decide(candidateId:string,decision:string):Promise<void>{const item=this.detail();if(!item)return;await this.run(async()=>{this.detail.set(await this.api.decide(item.id,candidateId,decision));await this.loadRecords();});}
@@ -79,7 +81,8 @@ export class ExerciseImportPage implements OnDestroy {
   protected async loadEditorial(versionId:string):Promise<void>{await this.run(async()=>{this.review.set(await this.api.reviewStatus(versionId));this.difference.set(await this.api.diff(versionId));});}
   protected async submitReview():Promise<void>{const value=this.review();if(!value)return;await this.run(async()=>this.review.set(await this.api.review(value.exerciseVersionId,this.reviewArea,this.reviewDecision,value.version)));}
   protected async publish():Promise<void>{const value=this.review();if(!value)return;await this.run(async()=>this.review.set(await this.api.publish(value.exerciseVersionId,value.version)));}
-  private async loadSources():Promise<void>{await this.run(async()=>{const values=await this.api.sources();this.sources.set(values);if(values.length)this.sourceId=values[0].id;this.message.set(`${values.length} źródeł.`);});}
+  private async loadSources():Promise<void>{await this.run(()=>this.reloadSources());}
+  private async reloadSources(selectedId?:string):Promise<void>{const values=await this.api.sources();this.sources.set(values);const selected=selectedId ?? values[0]?.id ?? '';this.sourceId.set(selected);this.message.set(`${values.length} źródeł.`);}
   private async refresh(id:string):Promise<void>{const current=await this.api.batch(id);this.batch.set(current);await this.loadRecords();if(['QUEUED','PROCESSING','RECEIVED'].includes(current.status))this.timer=window.setTimeout(()=>void this.refresh(id),1000);}
   private async run(action:()=>Promise<void>):Promise<void>{this.failed.set(false);try{await action();this.message.set('Operacja zakończona.');}catch(error){this.failed.set(true);this.message.set(error instanceof Error?error.message:'Operacja nie powiodła się.');}}
 }

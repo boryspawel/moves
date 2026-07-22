@@ -3,6 +3,7 @@ import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 
 export interface ImportSource { id: string; code: string; displayName: string; licenseCode: string; licenseVerified: boolean; }
+export interface CreateImportSource { code: string; displayName: string; defaultLocale: string; licenseCode: string; licenseVerified: boolean; }
 export interface ImportBatch { id: string; status: string; totalCount: number; validCount: number; invalidCount: number; blockedCount: number; draftedCount: number; unchangedCount: number; }
 export interface ImportRecord { id: string; rowNumber: number; sourceRecordKey?: string; status: string; draftVersionId?: string; }
 export interface ImportIssue { code: string; severity: string; stage: string; jsonPointer: string; message: string; }
@@ -19,6 +20,7 @@ export class ExerciseImportApi {
     : `${environment.apiBaseUrl}/api/v1/admin`;
 
   sources(): Promise<ImportSource[]> { return this.get('/exercise-import/sources'); }
+  createSource(source: CreateImportSource): Promise<ImportSource> { return this.json('/exercise-import/sources', source); }
   batch(id: string): Promise<ImportBatch> { return this.get(`/exercise-import/batches/${id}`); }
   records(id: string, status = '', severity = ''): Promise<RecordPage> {
     const query = new URLSearchParams({ page: '0', size: '100' });
@@ -57,7 +59,8 @@ export class ExerciseImportApi {
     const response = await fetch(`${this.root}${path}`, { ...init, headers });
     if (!response.ok) {
       const problem = await response.json().catch(() => ({ detail: `HTTP ${response.status}` })) as { detail?: string };
-      throw new Error(problem.detail ?? `HTTP ${response.status}`);
+      const detail = problem.detail ?? `HTTP ${response.status}`;
+      throw new Error(response.status === 409 ? `Konflikt (HTTP 409): ${detail}` : detail);
     }
     return response.json() as Promise<T>;
   }

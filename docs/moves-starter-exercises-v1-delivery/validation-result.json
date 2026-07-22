@@ -1,0 +1,23 @@
+{
+  "status": "PASS_STATIC",
+  "recordCount": 120,
+  "segmentCounts": {
+    "Mobilność": 22,
+    "Oddychanie i regeneracja": 4,
+    "Ogólny trening siłowy": 36,
+    "Równowaga i kontrola motoryczna": 8,
+    "Stretching": 18,
+    "Ćwiczenia terapeutyczne": 32
+  },
+  "technicalLevels": {
+    "FOUNDATIONAL": 76,
+    "INTERMEDIATE": 44
+  },
+  "fileBytes": 186341,
+  "maximumLineBytes": 1705,
+  "sha256": "b48464dd4ccd574b68d013233314ad14bba46160363d1995d29c3e8a5e31e3f1",
+  "schemaValidation": "PASS",
+  "semanticValidation": "PASS",
+  "postgresTestcontainers": "NOT_RUN_NO_CHECKOUT",
+  "mavenVerify": "NOT_RUN_NO_CHECKOUT"
+}

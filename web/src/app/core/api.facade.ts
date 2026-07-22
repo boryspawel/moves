@@ -17,7 +17,22 @@ import {
   TrainingPlanningV2ControllerApi,
   PlanRevisionWorkflowControllerApi
 } from '../api/generated/src';
+import { Middleware } from '../api/generated/src/runtime';
 import { AuthService } from './auth.service';
+
+export function normalizeGeneratedApiBasePath(apiBaseUrl: string): string {
+  return apiBaseUrl.replace(/\/api\/?$/, '');
+}
+
+export function generatedAuthorizationMiddleware(accessToken: () => Promise<string>): Middleware {
+  return { pre: async ({ url, init }) => {
+    const token = await accessToken();
+    if (!token) return { url, init };
+    const headers = new Headers(init.headers);
+    headers.set('Authorization', `Bearer ${token}`);
+    return { url, init: { ...init, headers } };
+  }};
+}
 
 @Injectable({ providedIn: 'root' })
 export class ApiFacade {
@@ -39,8 +54,9 @@ export class ApiFacade {
   constructor() {
     const auth = inject(AuthService);
     const configuration = new Configuration({
-      basePath: environment.apiBaseUrl,
-      accessToken: () => auth.accessToken()
+      basePath: normalizeGeneratedApiBasePath(environment.apiBaseUrl),
+      accessToken: () => auth.accessToken(),
+      middleware: [generatedAuthorizationMiddleware(() => auth.accessToken())]
     });
     this.onboarding = new OnboardingControllerApi(configuration);
     this.catalog = new ExerciseCatalogControllerApi(configuration);
