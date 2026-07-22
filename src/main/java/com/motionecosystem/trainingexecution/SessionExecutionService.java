@@ -86,7 +86,7 @@ public class SessionExecutionService {
                 .map(item -> new PrescriptionReference(item.id(), item.exerciseVersionId()))
                 .toList();
         validateResults(prescribed, command.results());
-        validatePainDifficulty(command.painLevel(), command.difficultyLevel());
+        validatePainDifficulty(command.painLevel(), command.difficultyLevel(), command.techniqueConfidenceLevel());
         if (command.sessionRpe() != null && (command.sessionRpe() < 1 || command.sessionRpe() > 10)) {
             throw badRequest("session RPE is outside range");
         }
@@ -99,7 +99,7 @@ public class SessionExecutionService {
         SessionExecution execution = new SessionExecution(executionId, plannedSessionId, participant.id(),
                 true, key, now);
         PainDifficultyReport report = new PainDifficultyReport(UUID.randomUUID(), execution.id(),
-                command.painLevel(), command.difficultyLevel(), optionalText(command.note(), 500), now);
+                command.painLevel(), command.difficultyLevel(), command.techniqueConfidenceLevel(), optionalText(command.note(), 500), now);
         List<AlertData> alerts = new java.util.ArrayList<>();
         if (report.painLevel() > 0) {
             alerts.add(new AlertData(UUID.randomUUID(), execution.id(), "PAIN_REPORTED",
@@ -107,7 +107,7 @@ public class SessionExecutionService {
                         now.plusSeconds(report.painLevel() >= 7 ? 4 * 60 * 60 : 24 * 60 * 60),
                         report.id(), now));
         }
-        if (report.difficultyLevel() >= 8) {
+        if (report.difficultyLevel() >= 8 || (report.techniqueConfidenceLevel() != null && report.techniqueConfidenceLevel() <= 3)) {
             alerts.add(new AlertData(UUID.randomUUID(), execution.id(), "DIFFICULTY_REPORTED",
                     "MEDIUM", null, "OPEN", now.plusSeconds(24 * 60 * 60), report.id(), now));
         }
@@ -128,9 +128,9 @@ public class SessionExecutionService {
                             Boolean.TRUE.equals(item.skipped()), mode(item.observationMode()));
                 }).toList(),
                 new ReportData(report.id(), report.sessionExecutionId(), report.painLevel(),
-                        report.difficultyLevel(), report.note(), command.sessionRpe(),
+                        report.difficultyLevel(), report.techniqueConfidenceLevel(), report.note(), command.sessionRpe(),
                         mode(command.observationMode()), report.reportedAt()), alerts);
-        attempts.completeAfterFinalDeclaration(participant.id(), plannedSessionId);
+        attempts.completeAfterFinalDeclaration(subject, participant.id(), plannedSessionId);
         plannedSessions.markCompleted(plannedSessionId);
         audit.record(subject, "SESSION_EXECUTION_DECLARED", "SessionExecution", execution.id());
         return execution(execution.id());
@@ -201,8 +201,8 @@ public class SessionExecutionService {
     }
 
     private static void validateResults(List<PrescriptionReference> prescribed, List<ResultCommand> results) {
-        if (results == null || results.size() != prescribed.size()) {
-            throw badRequest("one result for every prescribed exercise is required");
+        if (results == null || results.isEmpty() || results.size() > prescribed.size()) {
+            throw badRequest("at least one result from the planned session is required");
         }
         Set<UUID> expected = prescribed.stream().map(PrescriptionReference::id).collect(java.util.stream.Collectors.toSet());
         Set<UUID> actual = new HashSet<>();
@@ -211,7 +211,7 @@ public class SessionExecutionService {
                 throw badRequest("exercise result prescriptions must be present and unique");
             }
         });
-        if (!actual.equals(expected)) {
+        if (!expected.containsAll(actual)) {
             throw badRequest("exercise result must reference a prescription from the planned session");
         }
     }
@@ -241,8 +241,8 @@ public class SessionExecutionService {
         }
     }
 
-    private static void validatePainDifficulty(int pain, int difficulty) {
-        if (pain < 0 || pain > 10 || difficulty < 1 || difficulty > 10) {
+    private static void validatePainDifficulty(int pain, int difficulty, Integer confidence) {
+        if (pain < 0 || pain > 10 || difficulty < 1 || difficulty > 10 || confidence != null && (confidence < 1 || confidence > 10)) {
             throw badRequest("pain or difficulty level is outside range");
         }
     }
@@ -296,7 +296,7 @@ public class SessionExecutionService {
         ExecutionData execution = aggregate.execution();
         ReportData report = aggregate.report();
         return new ExecutionView(execution.id(), execution.plannedSessionId(), execution.participantAccountId(),
-                execution.declaredCompletion(), execution.recordedAt(), report.painLevel(), report.difficultyLevel(),
+                execution.declaredCompletion(), execution.recordedAt(), report.painLevel(), report.difficultyLevel(), report.techniqueConfidenceLevel(),
                 report.note(), report.sessionRpe(), report.observationMode(),
                 aggregate.results().stream().map(item -> new ResultView(
                 item.exercisePrescriptionId(), item.exerciseVersionId(), item.actualSets(),
@@ -353,7 +353,7 @@ public class SessionExecutionService {
     }
 
     public record DeclareExecutionCommand(boolean declaredCompletion, List<ResultCommand> results,
-                                          int painLevel, int difficultyLevel, String note,
+                                          int painLevel, int difficultyLevel, Integer techniqueConfidenceLevel, String note,
                                           Integer sessionRpe, String observationMode) {
     }
 
@@ -375,8 +375,8 @@ public class SessionExecutionService {
     }
 
     public record ExecutionView(UUID id, UUID plannedSessionId, UUID participantAccountId,
-                                boolean declaredCompletion, Instant recordedAt, int painLevel,
-                                int difficultyLevel, String note, Integer sessionRpe,
+                                 boolean declaredCompletion, Instant recordedAt, int painLevel,
+                                 int difficultyLevel, Integer techniqueConfidenceLevel, String note, Integer sessionRpe,
                                 String observationMode, List<ResultView> results,
                                 List<CorrectionView> corrections, List<String> alerts,
                                 List<AlertData> safetyAlerts) {

@@ -61,7 +61,9 @@ public class OnboardingService {
     public State saveParticipantProfile(String subject, String displayName, String timeZoneId) {
         CurrentAccount account = requireProfileType(subject, ProfileType.PARTICIPANT);
         ParticipantProfileService.ProfileView profile = participantProfiles.save(account.id(), displayName);
-        participantContexts.setTimeZone(account.id(), timeZoneId);
+        if (timeZoneId != null && !timeZoneId.isBlank()) {
+            participantContexts.setTimeZone(account.id(), timeZoneId);
+        }
         audit.record(subject, "PARTICIPANT_PROFILE_SAVED", "ParticipantProfile", profile.id());
         return stateFor(account);
     }

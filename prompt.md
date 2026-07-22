@@ -2,7 +2,7 @@
 
 ## Zasady wspólne dla wszystkich etapów
 
-Każdy prompt wykonuj w osobnej turze Codexa, sekwencyjnie. Do każdego etapu dołącz poniższy kontrakt.
+Wykonuj prompty sekwencyjnie w sposób ciągły, przechodząc do następnego etapu natychmiast po ukończeniu poprzedniego. Zatrzymaj pracę wyłącznie przy rzeczywistej przeszkodzie wymagającej decyzji użytkownika lub zewnętrznej zmiany stanu. Do każdego etapu stosuj poniższy kontrakt.
 
 ### KONTRAKT NADRZĘDNY
 
@@ -95,48 +95,6 @@ Ustanów obowiązującą ramę architektoniczną dla MVP Moves opartą na cztere
 
 ---
 
-# PROMPT 1 — agenda uczestnika „Dzisiaj”
-
-## Cel
-
-Zaimplementuj jedno stabilne API będące źródłem danych dla ekranu „Co mam zrobić dzisiaj”.
-
-## Wymagane zachowanie
-
-API ma zwracać dla zalogowanego uczestnika:
-
-* aktualny aktywny plan i rewizję;
-* sesje dostępne teraz lub w bieżącym lokalnym dniu;
-* elastyczne okno wykonania;
-* status: `AVAILABLE`, `IN_PROGRESS`, `COMPLETED`, `MISSED`, `PAUSED`, `RETURN_AVAILABLE`;
-* nazwę i sens funkcjonalny sesji;
-* przewidywany czas;
-* uproszczone podsumowanie dawki;
-* informację, czy występuje aktywna blokada bezpieczeństwa;
-* następne jedno zalecane działanie;
-* neutralny stan braku planu.
-
-Wykorzystaj istniejące `scheduledDate`, `availableFrom`, `availableTo`, aktywną rewizję planu i projekcje wykonania. Nie kopiuj encji między modułami. Kompozycja ma korzystać z publicznych portów.
-
-Uwzględnij strefę czasową uczestnika. Zdefiniuj deterministyczne sortowanie i zachowanie przy kilku sesjach tego samego dnia.
-
-## API
-
-Preferuj uczestnikowy kontrakt fasadowy w rodzaju:
-
-`GET /api/v1/participant/today`
-
-Ostateczną ścieżkę dobierz po analizie istniejącego API.
-
-## Kryteria zakończenia
-
-* brak konieczności podawania identyfikatora uczestnika;
-* brak aktywnego planu nie jest błędem;
-* sesje poza oknem nie są prezentowane jako dostępne;
-* nie wycieka kliniczne uzasadnienie ograniczeń;
-* testy obejmują strefy czasowe, granice okna, aktywację nowej rewizji oraz autoryzację.
-
----
 
 # PROMPT 2 — zatwierdzone warianty sesji i „plan minimum”
 

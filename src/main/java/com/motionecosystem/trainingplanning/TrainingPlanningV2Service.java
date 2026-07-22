@@ -33,6 +33,7 @@ import com.motionecosystem.trainingplanning.TrainingPlanningModel.PlanMode;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.PlanStatus;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.PrescriptionSide;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.RevisionStatus;
+import com.motionecosystem.trainingplanning.TrainingPlanningModel.SessionVariantType;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.ValidationResult;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort;
 import com.motionecosystem.trainingplanning.api.TrainingPlanningWorkflowPort;
@@ -235,6 +236,32 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
         }
         mutate(() -> persistence.reorderPrescriptions(revisionId, command.expectedVersion(), command.sessionId(),
                 List.copyOf(command.prescriptionIds()), clock.instant()));
+        return editorView(access.planId(), revisionId);
+    }
+
+    @Transactional
+    public EditorView defineSessionVariant(String subject, UUID revisionId, DefineSessionVariantCommand command) {
+        var access = requireEditable(subject, revisionId, command == null ? null : command.expectedVersion());
+        if (command.sessionId() == null || command.type() == null || command.type() == SessionVariantType.STANDARD
+                || command.items() == null || command.items().isEmpty()) throw badRequest("a SHORT or MINIMUM session variant requires items");
+        if (command.expectedDurationMinutes() != null) positive(command.expectedDurationMinutes(), "variant duration");
+        var session = requireSnapshot(revisionId).cycles().stream().flatMap(cycle -> cycle.microcycles().stream())
+                .flatMap(microcycle -> microcycle.sessions().stream()).filter(item -> item.id().equals(command.sessionId()))
+                .findFirst().orElseThrow(() -> badRequest("session does not belong to revision"));
+        if (session.variants().stream().anyMatch(item -> item.type().equals(command.type().name()))) throw conflict("session variant already exists", null);
+        Set<UUID> prescriptions = session.prescriptions().stream().map(PlanRevisionQueryPort.PrescriptionSnapshot::id).collect(java.util.stream.Collectors.toSet());
+        Set<UUID> selected = command.items().stream().map(VariantItemCommand::basePrescriptionId).collect(java.util.stream.Collectors.toSet());
+        Set<Integer> positions = command.items().stream().map(VariantItemCommand::position).collect(java.util.stream.Collectors.toSet());
+        if (selected.size() != command.items().size() || !prescriptions.containsAll(selected) || positions.contains(null)
+                || positions.size() != command.items().size() || positions.stream().anyMatch(value -> value < 1)) {
+            throw badRequest("variant items must be unique, ordered session prescriptions");
+        }
+        UUID variantId = UUID.randomUUID();
+        var variant = new TrainingPlanningModel.SessionVariant(variantId, command.sessionId(), command.type(), command.expectedDurationMinutes());
+        var items = command.items().stream().map(item -> new TrainingPlanningModel.SessionVariantItem(
+                UUID.randomUUID(), variantId, item.basePrescriptionId(), item.position(), item.overrideSets(),
+                item.overrideRepetitions(), item.overrideDurationSeconds(), item.overrideContacts())).toList();
+        mutate(() -> persistence.defineSessionVariant(revisionId, command.expectedVersion(), variant, items, clock.instant()));
         return editorView(access.planId(), revisionId);
     }
 
@@ -659,6 +686,13 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
                                           Integer restSeconds, String substituteGroup, String notes) {
     }
     public record ReorderCommand(long expectedVersion, UUID sessionId, List<UUID> prescriptionIds) {
+    }
+    public record DefineSessionVariantCommand(long expectedVersion, UUID sessionId, SessionVariantType type,
+                                              Integer expectedDurationMinutes, List<VariantItemCommand> items) {
+    }
+    public record VariantItemCommand(UUID basePrescriptionId, Integer position, Integer overrideSets,
+                                     Integer overrideRepetitions, Integer overrideDurationSeconds,
+                                     Integer overrideContacts) {
     }
     public record AddLoadBudgetCommand(long expectedVersion, String channel, BigDecimal low,
                                        BigDecimal high, String unit, BudgetAction action) {

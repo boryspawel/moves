@@ -22,6 +22,7 @@ public final class TrainingPlanningModel {
     public enum IntensityType { RPE, RIR, PERCENT_1RM, ZONE }
     public enum BudgetAction { INFO, WARNING }
     public enum ValidationResult { PASS, FAIL }
+    public enum SessionVariantType { STANDARD, SHORT, MINIMUM }
 
     public record PlanDraft(UUID id, UUID participantAccountId, String name, String purpose,
                             UUID ownerAccountId, PlanMode mode, PlanStatus status,
@@ -70,6 +71,13 @@ public final class TrainingPlanningModel {
                                String intensityZone, String tempo, String rangeOfMotion,
                                Integer restSeconds, String substituteGroup, String notes) {
     }
+
+    public record SessionVariant(UUID id, UUID plannedSessionId, SessionVariantType type,
+                                 Integer expectedDurationMinutes) { }
+
+    public record SessionVariantItem(UUID id, UUID sessionVariantId, UUID basePrescriptionId, int position,
+                                     Integer overrideSets, Integer overrideRepetitions,
+                                     Integer overrideDurationSeconds, Integer overrideContacts) { }
 
     public record LoadBudget(UUID id, UUID revisionId, String channel,
                              BigDecimal low, BigDecimal high, String unit,

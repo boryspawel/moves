@@ -14,6 +14,8 @@ import com.motionecosystem.trainingplanning.TrainingPlanningModel.PlanDraft;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.Prescription;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.Revision;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.Session;
+import com.motionecosystem.trainingplanning.TrainingPlanningModel.SessionVariant;
+import com.motionecosystem.trainingplanning.TrainingPlanningModel.SessionVariantItem;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.StructuralValidation;
 
 public interface TrainingPlanningV2Persistence {
@@ -35,6 +37,9 @@ public interface TrainingPlanningV2Persistence {
 
     void reorderPrescriptions(UUID revisionId, long expectedVersion, UUID sessionId,
                               List<UUID> orderedPrescriptionIds, Instant updatedAt);
+
+    void defineSessionVariant(UUID revisionId, long expectedVersion, SessionVariant variant,
+                              List<SessionVariantItem> items, Instant updatedAt);
 
     void addLoadBudget(UUID revisionId, long expectedVersion,
                        LoadBudget budget, Instant updatedAt);

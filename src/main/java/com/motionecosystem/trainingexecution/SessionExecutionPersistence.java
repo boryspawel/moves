@@ -64,7 +64,7 @@ public interface SessionExecutionPersistence {
     }
 
     record ReportData(UUID id, UUID sessionExecutionId, int painLevel, int difficultyLevel,
-                      String note, Integer sessionRpe, String observationMode, Instant reportedAt) {
+                      Integer techniqueConfidenceLevel, String note, Integer sessionRpe, String observationMode, Instant reportedAt) {
     }
 
     record CorrectionData(UUID id, UUID sessionExecutionId, UUID correctedByAccountId,

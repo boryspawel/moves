@@ -11,6 +11,7 @@ import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.AddMicrocy
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.AddPrescriptionCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.AddSessionCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.CreateDraftCommand;
+import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.DefineSessionVariantCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.CreateRevisionCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.EditorView;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.ReorderCommand;
@@ -85,6 +86,13 @@ class TrainingPlanningV2Controller {
     EditorView reorder(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID revisionId,
                        @RequestBody ReorderCommand command) {
         return planning.reorder(jwt.getSubject(), revisionId, command);
+    }
+
+    @PostMapping("/revisions/{revisionId}/session-variants")
+    @PreAuthorize("hasAnyRole('PARTICIPANT', 'SPECIALIST')")
+    EditorView defineSessionVariant(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID revisionId,
+                                    @RequestBody DefineSessionVariantCommand command) {
+        return planning.defineSessionVariant(jwt.getSubject(), revisionId, command);
     }
 
     @PostMapping("/revisions/{revisionId}/load-budgets")

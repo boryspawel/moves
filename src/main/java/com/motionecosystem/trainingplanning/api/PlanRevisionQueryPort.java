@@ -54,8 +54,26 @@ public interface PlanRevisionQueryPort {
     record SessionSnapshot(UUID id, String title, LocalDate scheduledDate,
                            Instant availableFrom, Instant availableTo,
                            int expectedDurationMinutes, String status,
-                           List<PrescriptionSnapshot> prescriptions) {
-        public SessionSnapshot { prescriptions = List.copyOf(prescriptions); }
+                           List<PrescriptionSnapshot> prescriptions, List<SessionVariantSnapshot> variants) {
+        public SessionSnapshot { prescriptions = List.copyOf(prescriptions); variants = List.copyOf(variants); }
+        /** Compatibility constructor for consumers which predate approved session variants. */
+        public SessionSnapshot(UUID id, String title, LocalDate scheduledDate,
+                               Instant availableFrom, Instant availableTo,
+                               int expectedDurationMinutes, String status,
+                               List<PrescriptionSnapshot> prescriptions) {
+            this(id, title, scheduledDate, availableFrom, availableTo, expectedDurationMinutes,
+                    status, prescriptions, List.of());
+        }
+    }
+
+    record SessionVariantSnapshot(UUID id, String type, Integer expectedDurationMinutes,
+                                  List<SessionVariantItemSnapshot> items) {
+        public SessionVariantSnapshot { items = List.copyOf(items); }
+    }
+
+    record SessionVariantItemSnapshot(UUID id, UUID basePrescriptionId, int position,
+                                      Integer overrideSets, Integer overrideRepetitions,
+                                      Integer overrideDurationSeconds, Integer overrideContacts) {
     }
 
     record PrescriptionSnapshot(

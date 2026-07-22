@@ -117,6 +117,7 @@ class PainDifficultyReportJpaEntity {
     @Column(name = "session_execution_id", nullable = false, unique = true) UUID sessionExecutionId;
     @Column(name = "pain_level", nullable = false) int painLevel;
     @Column(name = "difficulty_level", nullable = false) int difficultyLevel;
+    @Column(name = "technique_confidence_level") Integer techniqueConfidenceLevel;
     @Column(length = 500) String note;
     @Column(name = "reported_at", nullable = false, updatable = false) Instant reportedAt;
     @Column(name = "session_rpe") Integer sessionRpe;
@@ -130,6 +131,7 @@ class PainDifficultyReportJpaEntity {
         sessionExecutionId = source.sessionExecutionId();
         painLevel = source.painLevel();
         difficultyLevel = source.difficultyLevel();
+        techniqueConfidenceLevel = source.techniqueConfidenceLevel();
         note = source.note();
         sessionRpe = source.sessionRpe();
         observationMode = source.observationMode();
@@ -139,7 +141,7 @@ class PainDifficultyReportJpaEntity {
     UUID sessionExecutionId() { return sessionExecutionId; }
 
     ReportData data() {
-        return new ReportData(id, sessionExecutionId, painLevel, difficultyLevel, note,
+        return new ReportData(id, sessionExecutionId, painLevel, difficultyLevel, techniqueConfidenceLevel, note,
                 sessionRpe, observationMode, reportedAt);
     }
 }

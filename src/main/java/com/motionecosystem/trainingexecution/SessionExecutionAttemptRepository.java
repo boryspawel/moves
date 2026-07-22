@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 interface SessionExecutionAttemptRepository extends JpaRepository<SessionExecutionAttempt, UUID> {
     Optional<SessionExecutionAttempt> findFirstByParticipantAccountIdAndPlannedSessionIdOrderByUpdatedAtDesc(
             UUID participantAccountId, UUID plannedSessionId);
+    Optional<SessionExecutionAttempt> findByParticipantAccountIdAndStartIdempotencyKey(
+            UUID participantAccountId, String startIdempotencyKey);
     List<SessionExecutionAttempt> findByParticipantAccountIdAndPlannedSessionIdInOrderByUpdatedAtDesc(
             UUID participantAccountId, Collection<UUID> plannedSessionIds);
 }
