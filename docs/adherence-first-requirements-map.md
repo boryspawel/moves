@@ -16,7 +16,7 @@ jest statusową roadmapą adherence.
 | participant UX | `/sessions`: today → wariant → check-in → guided attempt/result, `sessionStorage` resume | zmiany P7 niecommitowane; warianty wycinają istniejące recepty, nie treść serwerowego wariantu — 7 |
 | specialist UX V2 | `/plan` korzysta z V2 rewizji/workflow, `/specialist-alerts` z worklisty | dostarczone — 8; UI używa aktywnych relacji i nie eksponuje UUID |
 | powiadomienia | `notification.reminders`: preferencje, reason codes, suppression i dedupe | P9: kanał `IN_APP`; bez predykcji i bez alertu specjalisty dla pojedynczego skip |
-| mierzenie adherence | wykonania/projekcje jako dane źródłowe | P10 niewdrożone: brak modułu metryk/analityki |
+| mierzenie adherence | `analytics.adherencemetrics`, neutralne zdarzenia, wersjonowane assignmenty eksperymentów i retencja | dostarczone — 10; tylko dane techniczne, bez tekstu i danych klinicznych |
 | gamifikacja | osobny `gamification`, ADR-007 | pozostaje opt-in, poza primary flow |
 
 Każdy odczyt i zapis pozostaje ograniczony aktorem i zasobem; akcje specjalisty

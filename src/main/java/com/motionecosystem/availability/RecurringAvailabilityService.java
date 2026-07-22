@@ -1,5 +1,6 @@
 package com.motionecosystem.availability;
 
+import com.motionecosystem.analytics.adherencemetrics.AdherenceMetricsService;
 import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
@@ -21,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class RecurringAvailabilityService {
 
     private final RecurringSlotRepository slots;
+    private final AdherenceMetricsService metrics;
     private final Clock clock;
 
     @Transactional
@@ -29,6 +31,9 @@ public class RecurringAvailabilityService {
         slots.deleteByAccountId(accountId);
         slots.flush();
         slots.saveAll(validated.stream().map(slot -> new RecurringSlot(accountId, slot, clock.instant())).toList());
+        metrics.ensureAssignments(accountId);
+        metrics.record(accountId, "AVAILABILITY_REPLACED", accountId, null, null, null,
+                "AVAILABILITY_V1", "CONFIGURED");
         return list(accountId);
     }
 

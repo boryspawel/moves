@@ -1,6 +1,7 @@
 package com.motionecosystem.trainingexecution;
 
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
+import com.motionecosystem.analytics.adherencemetrics.AdherenceMetricsService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.safety.api.SessionSafetyDecisionQueryPort;
@@ -33,6 +34,7 @@ public class SessionExecutionAttemptService implements SessionExecutionProgressQ
     private final SessionSafetyDecisionQueryPort safety;
     private final SessionStartAuthorizationPort startAuthorization;
     private final RecoveryEpisodeService recovery;
+    private final AdherenceMetricsService metrics;
     private final AuditRecorder audit;
     private final Clock clock;
 
@@ -67,6 +69,8 @@ public class SessionExecutionAttemptService implements SessionExecutionProgressQ
             throw new ResponseStatusException(HttpStatus.CONFLICT, "session already has final execution");
         }
         SessionExecutionAttempt created = attempts.save(new SessionExecutionAttempt(participant, plannedSessionId, planRevisionId, variant, key, clock.instant()));
+        metrics.record(participant, "SESSION_ATTEMPT_STARTED", created.id, planRevisionId, plannedSessionId,
+                created.id, "SESSION_ATTEMPT_V1", variant);
         recovery.attemptStarted(participant, created.id, plannedSessionId);
         recovery.detect(participant);
         audit.record(subject, "SESSION_ATTEMPT_STARTED", "SessionExecutionAttempt", created.id);
@@ -131,6 +135,8 @@ public class SessionExecutionAttemptService implements SessionExecutionProgressQ
         attempts.findFirstByParticipantAccountIdAndPlannedSessionIdOrderByUpdatedAtDesc(participantAccountId, plannedSessionId)
                 .filter(SessionExecutionAttempt::active).ifPresent(attempt -> {
                     attempt.complete(clock.instant());
+                    metrics.record(participantAccountId, "SESSION_COMPLETED", attempt.id, attempt.planRevisionId,
+                            plannedSessionId, attempt.id, "SESSION_COMPLETION_V1", attempt.selectedVariantType);
                     audit.record(subject, "SESSION_ATTEMPT_COMPLETED", "SessionExecutionAttempt", attempt.id);
                 });
     }

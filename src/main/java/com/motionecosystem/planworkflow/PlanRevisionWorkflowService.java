@@ -1,6 +1,7 @@
 package com.motionecosystem.planworkflow;
 
 import com.motionecosystem.audit.AuditRecorder;
+import com.motionecosystem.analytics.adherencemetrics.AdherenceMetricsService;
 import com.motionecosystem.exercisecatalog.api.ExerciseCatalogQueryPort;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
@@ -51,6 +52,7 @@ public class PlanRevisionWorkflowService {
     private final SpecialistAuthorizationPort authorization;
     private final ExerciseCatalogQueryPort catalog;
     private final PlanRevisionWorkflowPersistence persistence;
+    private final AdherenceMetricsService metrics;
     private final AuditRecorder audit;
     private final Clock clock;
 
@@ -181,6 +183,9 @@ public class PlanRevisionWorkflowService {
                 revisionId, checksum, key, actor.id(), clock.instant()));
         if (!outcome.repeated()) {
             audit.record(subject, "PLAN_REVISION_ACTIVATED", "PlanRevision", revisionId);
+            metrics.ensureAssignments(state.participantId());
+            metrics.record(state.participantId(), "PLAN_ACTIVATED", revisionId, revisionId, null, null,
+                    "PLAN_ACTIVATION_V1", null);
         }
         return outcome;
     }

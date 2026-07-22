@@ -14,6 +14,77 @@ import org.testcontainers.utility.DockerImageName;
 class TrainingFoundationUpgradeMigrationTest {
 
     @Test
+    void upgradesV029WhenStarterAnatomyAndDictionariesAlreadyContainCodes() {
+        try (PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
+                DockerImageName.parse("postgres:18-alpine"))) {
+            postgres.start();
+            Flyway.configure()
+                    .dataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())
+                    .target("029")
+                    .load()
+                    .migrate();
+            JdbcTemplate jdbc = new JdbcTemplate(new DriverManagerDataSource(
+                    postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword()));
+            UUID lowerLimbId = UUID.randomUUID();
+
+            jdbc.update("""
+                    INSERT INTO anatomy_reference.anatomical_structure
+                        (id, code, type, display_name, side_policy, status, taxonomy_version,
+                         created_by_subject, created_at, published_at, version)
+                    VALUES (?, 'BODY_REGION:LOWER_LIMB', 'BODY_REGION', 'Existing lower limb',
+                            'LEFT_RIGHT', 'PUBLISHED', 7, 'existing-seed', now(), now(), 4)
+                    """, lowerLimbId);
+            jdbc.update("""
+                    INSERT INTO exercise_catalog.exercise_equipment_dictionary
+                        (code, display_name, dictionary_version, active)
+                    VALUES ('BENCH', 'Existing bench', 7, FALSE)
+                    """);
+            jdbc.update("""
+                    INSERT INTO exercise_catalog.exercise_position_dictionary
+                        (code, display_name, dictionary_version, active)
+                    VALUES ('FRONT_SUPPORT', 'Existing front support', 7, FALSE)
+                    """);
+
+            Flyway.configure()
+                    .dataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())
+                    .load()
+                    .migrate();
+
+            assertThat(jdbc.queryForMap("""
+                    SELECT id, display_name, taxonomy_version, version
+                    FROM anatomy_reference.anatomical_structure
+                    WHERE code = 'BODY_REGION:LOWER_LIMB'
+                    """)).containsEntry("id", lowerLimbId)
+                    .containsEntry("display_name", "Existing lower limb")
+                    .containsEntry("taxonomy_version", 7)
+                    .containsEntry("version", 4L);
+            assertThat(jdbc.queryForObject("""
+                    SELECT COUNT(*) FROM anatomy_reference.anatomical_structure_relation relation
+                    JOIN anatomy_reference.anatomical_structure parent ON parent.id = relation.parent_id
+                    WHERE parent.code = 'BODY_REGION:LOWER_LIMB'
+                    """, Integer.class)).isEqualTo(5);
+            assertThat(jdbc.queryForMap("""
+                    SELECT display_name, dictionary_version, active
+                    FROM exercise_catalog.exercise_equipment_dictionary WHERE code = 'BENCH'
+                    """)).containsEntry("display_name", "Existing bench")
+                    .containsEntry("dictionary_version", 7)
+                    .containsEntry("active", false);
+            assertThat(jdbc.queryForMap("""
+                    SELECT display_name, dictionary_version, active
+                    FROM exercise_catalog.exercise_position_dictionary WHERE code = 'FRONT_SUPPORT'
+                    """)).containsEntry("display_name", "Existing front support")
+                    .containsEntry("dictionary_version", 7)
+                    .containsEntry("active", false);
+            assertThat(jdbc.queryForObject("""
+                    SELECT COUNT(*) FROM exercise_catalog.exercise_equipment_dictionary WHERE code = 'WALL'
+                    """, Integer.class)).isEqualTo(1);
+            assertThat(jdbc.queryForObject("""
+                    SELECT COUNT(*) FROM exercise_catalog.exercise_position_dictionary WHERE code = 'SQUAT'
+                    """, Integer.class)).isEqualTo(1);
+        }
+    }
+
+    @Test
     void upgradesExistingOfflineAppointmentFromV005WithoutChangingItsMeaning() {
         try (PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
                 DockerImageName.parse("postgres:18-alpine"))) {

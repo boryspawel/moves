@@ -1,6 +1,7 @@
 package com.motionecosystem.adherence;
 
 import com.motionecosystem.adherence.BarrierReportController.BarrierReportCommand;
+import com.motionecosystem.analytics.adherencemetrics.AdherenceMetricsService;
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
@@ -33,6 +34,7 @@ public class BarrierReportService {
     private final BarrierReportRepository reports;
     private final AdherenceSpecialistSignalPort specialistSignals;
     private final RecoveryEpisodeService recovery;
+    private final AdherenceMetricsService metrics;
     private final AuditRecorder audit;
     private final Clock clock;
 
@@ -59,6 +61,8 @@ public class BarrierReportService {
                     .map(BarrierReportService::view).orElseThrow(() -> exception);
         }
         recovery.detectFromBarrier(created);
+        metrics.record(participant, "BARRIER_REPORTED", created.id, context.revisionId(), command.plannedSessionId(),
+                command.sessionAttemptId(), created.ruleVersionCode, selected);
         long categoryCount = reports.countByParticipantAccountIdAndCategory(participant, category);
         if (categoryCount >= 2) {
             specialistSignals.signalWorklist(new AdherenceSpecialistSignalPort.WorklistSignal(participant,

@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.motionecosystem.audit.AuditRecorder;
+import com.motionecosystem.analytics.adherencemetrics.AdherenceMetricsService;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
@@ -42,9 +43,10 @@ class BarrierReportServiceTest {
         when(safety.evaluateForSessions(eq(participant), eq(revision), any(), any())).thenReturn(Map.of(session,
                 new SessionSafetyDecisionQueryPort.SessionSafetyDecision(session,
                         SessionSafetyDecisionQueryPort.SafetyDecisionStatus.ALLOWED, UUID.randomUUID(), List.of(), Instant.EPOCH)));
+        AdherenceMetricsService metrics = mock(AdherenceMetricsService.class);
         BarrierReportService service = new BarrierReportService(accounts, revisions,
                 mock(SessionExecutionAttemptQueryPort.class), safety, reports, signals, mock(RecoveryEpisodeService.class),
-                mock(AuditRecorder.class), Clock.fixed(Instant.EPOCH, ZoneOffset.UTC));
+                metrics, mock(AuditRecorder.class), Clock.fixed(Instant.EPOCH, ZoneOffset.UTC));
 
         var view = service.report("participant", new BarrierReportController.BarrierReportCommand(session, null,
                 "NO_TIME", null), "no-time-1");
@@ -52,6 +54,8 @@ class BarrierReportServiceTest {
         assertThat(view.proposedOptions()).containsExactly("START_SHORT", "START_MINIMUM", "RESCHEDULE", "CONTACT_SPECIALIST");
         assertThat(view.actionOutcome()).isEqualTo("OPTIONS_PRESENTED");
         verify(reports).saveAndFlush(any(BarrierReport.class));
+        verify(metrics).record(eq(participant), eq("BARRIER_REPORTED"), any(), eq(revision), eq(session),
+                org.mockito.ArgumentMatchers.isNull(), eq("BARRIER_RESPONSE_V1"), org.mockito.ArgumentMatchers.isNull());
         verify(signals, never()).signalContact(any(), any(), any(), anyBoolean());
     }
 

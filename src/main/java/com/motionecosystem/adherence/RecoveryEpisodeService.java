@@ -1,6 +1,7 @@
 package com.motionecosystem.adherence;
 
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
+import com.motionecosystem.analytics.adherencemetrics.AdherenceMetricsService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.participant.api.ParticipantContextQueryPort;
 import com.motionecosystem.safety.api.SessionSafetyDecisionQueryPort;
@@ -42,6 +43,7 @@ public class RecoveryEpisodeService implements SessionStartAuthorizationPort {
     private final RecoveryChoiceRepository choices;
     private final ObjectProvider<SessionExecutionAttemptService> attempts;
     private final AdherenceSpecialistSignalPort specialistSignals;
+    private final AdherenceMetricsService metrics;
     private final Clock clock;
 
     /** Called after a persisted barrier; only illness and symptom reports open a recovery episode immediately. */
@@ -105,6 +107,8 @@ public class RecoveryEpisodeService implements SessionStartAuthorizationPort {
         UUID target = targetSession(active);
         episode.select(path, target, clock.instant());
         choices.save(new RecoveryChoice(episode.id, offer.id, path, key.trim(), clock.instant()));
+        metrics.record(participant, "RECOVERY_CHOICE_SELECTED", episode.id, active.revisionId(), target, null,
+                episode.policyVersionCode, path);
         if ("CONTACT_SPECIALIST".equals(path)) specialistSignals.signalRecoveryContact(participant, episode.id);
         if ("START_MINIMUM".equals(path) || "START_SHORT".equals(path)) {
             String variant = path.substring("START_".length());
@@ -146,7 +150,11 @@ public class RecoveryEpisodeService implements SessionStartAuthorizationPort {
     @Transactional
     public void executionCompleted(UUID participant, UUID sessionId, UUID executionId) {
         episodes.findFirstByParticipantAccountIdAndTargetPlannedSessionIdAndStatusIn(participant, sessionId, ACTIVE)
-                .ifPresent(episode -> episode.resolved(executionId, clock.instant()));
+                .ifPresent(episode -> {
+                    episode.resolved(executionId, clock.instant());
+                    metrics.record(participant, "RECOVERY_RETURN_COMPLETED", episode.id, episode.planRevisionIdAtOpening,
+                            sessionId, episode.returnAttemptId, episode.policyVersionCode, episode.selectedPath);
+                });
     }
 
     private RecoveryView view(UUID participant, boolean createOffer) {

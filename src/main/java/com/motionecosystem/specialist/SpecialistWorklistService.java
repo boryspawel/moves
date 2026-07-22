@@ -1,6 +1,7 @@
 package com.motionecosystem.specialist;
 
 import com.motionecosystem.audit.AuditRecorder;
+import com.motionecosystem.analytics.adherencemetrics.AdherenceMetricsService;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.specialist.api.AdherenceSpecialistSignalPort;
@@ -38,6 +39,7 @@ class SpecialistWorklistService {
     private final AuditRecorder audit;
     private final Clock clock;
     private final JdbcTemplate jdbc;
+    private final AdherenceMetricsService metrics;
 
     @Transactional
     void signal(AdherenceSpecialistSignalPort.WorklistSignal signal) {
@@ -111,6 +113,8 @@ class SpecialistWorklistService {
         ParticipantIssueReply reply = replies.save(new ParticipantIssueReply(issue.id, specialist, text, clock.instant()));
         item.acknowledge(clock.instant());
         audit.record(subject, "SPECIALIST_REPLIED_TO_PARTICIPANT_ISSUE", "ParticipantIssueReply", reply.id);
+        metrics.record(item.participantAccountId, "WORKLIST_REPLIED", reply.id, item.planRevisionId, null, null,
+                "WORKLIST_REPLY_V1", null);
         return new ReplyView(reply.id, reply.shortText, reply.createdAt);
     }
 

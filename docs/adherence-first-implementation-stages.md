@@ -19,7 +19,7 @@ autoryzacji, idempotencji i dostępności adekwatnymi do zakresu.
 | 7 | participant today-only flow — bieżące zmiany niecommitowane | Angular, kontrakty etapów 1–5 |
 | 8 | panel specjalisty V2 — dostarczony | Angular, wyłącznie kontrakty V2 i minimalna projekcja aktywnej relacji |
 | 9 | reminders rules-first — preferencje i deterministyczne reguły | `notification.reminders`, neutralny audit/dedupe |
-| 10 | metryki, eksperymenty i audyt slice — niewdrożone (brak modułu) | neutralna analityka oraz dokumentacja |
+| 10 | metryki, trzy eksperymenty i audyt slice — dostarczone | `analytics.adherencemetrics`, V032 i dokumentacja końcowa |
 
 P7 prowadzi przez `/sessions`: `TodayAgenda` → wariant → check-in → próba i
 postęp → wynik albo bariera. Id aktywnej próby jest w `sessionStorage`; UI
@@ -51,5 +51,8 @@ prezentuje minimalną etykietę UI.
   wariant, barierę, powrót, reminder ani eksperyment.
 - Dane kliniczne i swobodny tekst nie są zawartością neutralnych powiadomień,
   worklisty ani analityki.
+- Zdarzenia metryk adherence wygasają po 180 dniach; automatyczne, codzienne
+  zadanie wewnętrzne wywołuje idempotentne `purgeExpired()`. Nie jest to kanał
+  SaaS ani mechanizm automatycznej decyzji.
 - P7 ma testy komponentowe, ale brakuje dowodu E2E dla mobile viewport, 200%
   zoomu, klawiatury i reduced motion.
