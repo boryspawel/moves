@@ -50,7 +50,7 @@ class OnboardingController {
     @PutMapping("/participant-profile")
     OnboardingService.State participantProfile(@AuthenticationPrincipal Jwt jwt,
                                                @RequestBody ParticipantProfileRequest request) {
-        return onboarding.saveParticipantProfile(jwt.getSubject(), request.displayName());
+        return onboarding.saveParticipantProfile(jwt.getSubject(), request.displayName(), request.timeZoneId());
     }
 
     @PutMapping("/specialist-profile")
@@ -76,7 +76,7 @@ class OnboardingController {
     record LegalRequest(boolean termsAccepted, boolean privacyNoticeAcknowledged) {
     }
 
-    record ParticipantProfileRequest(String displayName) {
+    record ParticipantProfileRequest(String displayName, String timeZoneId) {
     }
 
     record SpecialistProfileRequest(String displayName, SpecialistKind specialistKind) {

@@ -20,6 +20,8 @@ public interface SessionExecutionPersistence {
 
     List<ExecutionAggregate> findByParticipant(UUID participantAccountId);
 
+    java.util.Set<UUID> findDeclaredSessionIds(UUID participantAccountId, java.util.Collection<UUID> plannedSessionIds);
+
     void save(ExecutionData execution, List<ResultData> results, ReportData report, List<AlertData> alerts);
 
     void appendCorrection(CorrectionData correction);

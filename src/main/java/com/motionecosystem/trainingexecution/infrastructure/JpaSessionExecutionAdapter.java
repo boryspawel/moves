@@ -72,7 +72,18 @@ public class JpaSessionExecutionAdapter implements SessionExecutionPersistence {
         return aggregates(executions);
     }
 
-    @Override
+
+    public java.util.Set<UUID> findDeclaredSessionIds(UUID participantAccountId, java.util.Collection<UUID> plannedSessionIds) {
+        if (plannedSessionIds.isEmpty()) return java.util.Set.of();
+        return new java.util.HashSet<>(entityManager.createQuery("""
+                SELECT execution.plannedSessionId FROM SessionExecutionJpaEntity execution
+                WHERE execution.participantAccountId=:participantAccountId
+                  AND execution.plannedSessionId IN :plannedSessionIds
+                """, UUID.class).setParameter("participantAccountId", participantAccountId)
+                .setParameter("plannedSessionIds", plannedSessionIds).getResultList());
+    }
+
+
     public void save(ExecutionData execution, List<ResultData> results,
                      ReportData report, List<AlertData> alerts) {
         entityManager.persist(new SessionExecutionJpaEntity(execution));

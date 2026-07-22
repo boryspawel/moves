@@ -39,6 +39,7 @@ public class SessionExecutionService {
     private final AuditRecorder audit;
     private final TransactionalOutbox outbox;
     private final ExecutionProjectionService projections;
+    private final SessionExecutionAttemptService attempts;
     private final Clock clock;
 
     @Transactional
@@ -129,6 +130,7 @@ public class SessionExecutionService {
                 new ReportData(report.id(), report.sessionExecutionId(), report.painLevel(),
                         report.difficultyLevel(), report.note(), command.sessionRpe(),
                         mode(command.observationMode()), report.reportedAt()), alerts);
+        attempts.completeAfterFinalDeclaration(participant.id(), plannedSessionId);
         plannedSessions.markCompleted(plannedSessionId);
         audit.record(subject, "SESSION_EXECUTION_DECLARED", "SessionExecution", execution.id());
         return execution(execution.id());

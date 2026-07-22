@@ -10,6 +10,7 @@ import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.participant.ParticipantProfileService;
+import com.motionecosystem.participant.ParticipantContextService;
 import com.motionecosystem.specialist.SpecialistKind;
 import com.motionecosystem.specialist.SpecialistProfileService;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class OnboardingService {
     private final CurrentAccountService accounts;
     private final LegalAcknowledgementService legal;
     private final ParticipantProfileService participantProfiles;
+    private final ParticipantContextService participantContexts;
     private final SpecialistProfileService specialistProfiles;
     private final RecurringAvailabilityService availability;
     private final AuditRecorder audit;
@@ -56,9 +58,10 @@ public class OnboardingService {
     }
 
     @Transactional
-    public State saveParticipantProfile(String subject, String displayName) {
+    public State saveParticipantProfile(String subject, String displayName, String timeZoneId) {
         CurrentAccount account = requireProfileType(subject, ProfileType.PARTICIPANT);
         ParticipantProfileService.ProfileView profile = participantProfiles.save(account.id(), displayName);
+        participantContexts.setTimeZone(account.id(), timeZoneId);
         audit.record(subject, "PARTICIPANT_PROFILE_SAVED", "ParticipantProfile", profile.id());
         return stateFor(account);
     }
