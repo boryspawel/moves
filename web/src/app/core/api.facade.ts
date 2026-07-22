@@ -1,11 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
 import {
+  BarrierReportControllerApi,
   Configuration,
   ExerciseCatalogControllerApi,
   GamificationControllerApi,
   OnboardingControllerApi,
+  ParticipantSafetyControllerApi,
+  SessionExecutionAttemptControllerApi,
   SessionExecutionControllerApi,
+  TodayAgendaControllerApi,
   TrainingPlanningControllerApi
 } from '../api/generated/src';
 import { AuthService } from './auth.service';
@@ -16,6 +20,10 @@ export class ApiFacade {
   readonly catalog: ExerciseCatalogControllerApi;
   readonly planning: TrainingPlanningControllerApi;
   readonly execution: SessionExecutionControllerApi;
+  readonly attempts: SessionExecutionAttemptControllerApi;
+  readonly today: TodayAgendaControllerApi;
+  readonly safety: ParticipantSafetyControllerApi;
+  readonly barriers: BarrierReportControllerApi;
   readonly gamification: GamificationControllerApi;
 
   constructor() {
@@ -28,6 +36,10 @@ export class ApiFacade {
     this.catalog = new ExerciseCatalogControllerApi(configuration);
     this.planning = new TrainingPlanningControllerApi(configuration);
     this.execution = new SessionExecutionControllerApi(configuration);
+    this.attempts = new SessionExecutionAttemptControllerApi(configuration);
+    this.today = new TodayAgendaControllerApi(configuration);
+    this.safety = new ParticipantSafetyControllerApi(configuration);
+    this.barriers = new BarrierReportControllerApi(configuration);
     this.gamification = new GamificationControllerApi(configuration);
   }
 }
