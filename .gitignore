@@ -7,3 +7,7 @@ node_modules/
 dist/
 test-results/
 playwright-report/
+
+docs/moves-anatomy-v1.patch
+docs/moves-anatomy-v1.zip
+docs/moves-anatomy-v1/
