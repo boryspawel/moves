@@ -25,6 +25,12 @@ export interface ParticipantProfileRequest {
    * @memberof ParticipantProfileRequest
    */
   displayName?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ParticipantProfileRequest
+   */
+  timeZoneId?: string;
 }
 
 /**
@@ -49,6 +55,7 @@ export function ParticipantProfileRequestFromJSONTyped(
   }
   return {
     displayName: json['displayName'] == null ? undefined : json['displayName'],
+    timeZoneId: json['timeZoneId'] == null ? undefined : json['timeZoneId'],
   };
 }
 
@@ -66,5 +73,6 @@ export function ParticipantProfileRequestToJSONTyped(
 
   return {
     displayName: value['displayName'],
+    timeZoneId: value['timeZoneId'],
   };
 }

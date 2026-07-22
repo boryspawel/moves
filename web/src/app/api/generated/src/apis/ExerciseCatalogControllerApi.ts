@@ -15,10 +15,10 @@
 import * as runtime from '../runtime';
 import { type CatalogPage, CatalogPageFromJSON, CatalogPageToJSON } from '../models/CatalogPage';
 import {
-  type PublishedExerciseVersionSnapshot,
-  PublishedExerciseVersionSnapshotFromJSON,
-  PublishedExerciseVersionSnapshotToJSON,
-} from '../models/PublishedExerciseVersionSnapshot';
+  type ExerciseCatalogDetailView,
+  ExerciseCatalogDetailViewFromJSON,
+  ExerciseCatalogDetailViewToJSON,
+} from '../models/ExerciseCatalogDetailView';
 
 export interface ListRequest {
   query?: string;
@@ -133,25 +133,27 @@ export class ExerciseCatalogControllerApi extends runtime.BaseAPI {
   }
 
   /**
+   * Read a public detail projection of one published exercise version
    */
   async versionRaw(
     requestParameters: VersionRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<PublishedExerciseVersionSnapshot>> {
+  ): Promise<runtime.ApiResponse<ExerciseCatalogDetailView>> {
     const requestOptions = await this.versionRequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      PublishedExerciseVersionSnapshotFromJSON(jsonValue),
+      ExerciseCatalogDetailViewFromJSON(jsonValue),
     );
   }
 
   /**
+   * Read a public detail projection of one published exercise version
    */
   async version(
     requestParameters: VersionRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<PublishedExerciseVersionSnapshot> {
+  ): Promise<ExerciseCatalogDetailView> {
     const response = await this.versionRaw(requestParameters, initOverrides);
     return await response.value();
   }

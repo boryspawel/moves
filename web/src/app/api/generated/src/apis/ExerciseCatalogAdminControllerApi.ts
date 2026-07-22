@@ -50,6 +50,16 @@ import {
   LoadCharacteristicCommandToJSON,
 } from '../models/LoadCharacteristicCommand';
 import {
+  type PublicationResult,
+  PublicationResultFromJSON,
+  PublicationResultToJSON,
+} from '../models/PublicationResult';
+import {
+  type ReviewResult,
+  ReviewResultFromJSON,
+  ReviewResultToJSON,
+} from '../models/ReviewResult';
+import {
   type VersionCommand,
   VersionCommandFromJSON,
   VersionCommandToJSON,
@@ -279,11 +289,11 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
   async approveRaw(
     requestParameters: ApproveRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<VersionView>> {
+  ): Promise<runtime.ApiResponse<ReviewResult>> {
     const requestOptions = await this.approveRequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
-    return new runtime.JSONApiResponse(response, (jsonValue) => VersionViewFromJSON(jsonValue));
+    return new runtime.JSONApiResponse(response, (jsonValue) => ReviewResultFromJSON(jsonValue));
   }
 
   /**
@@ -291,7 +301,7 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
   async approve(
     requestParameters: ApproveRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<VersionView> {
+  ): Promise<ReviewResult> {
     const response = await this.approveRaw(requestParameters, initOverrides);
     return await response.value();
   }
@@ -534,11 +544,13 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
   async publishRaw(
     requestParameters: PublishRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<VersionView>> {
+  ): Promise<runtime.ApiResponse<PublicationResult>> {
     const requestOptions = await this.publishRequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
-    return new runtime.JSONApiResponse(response, (jsonValue) => VersionViewFromJSON(jsonValue));
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      PublicationResultFromJSON(jsonValue),
+    );
   }
 
   /**
@@ -546,7 +558,7 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
   async publish(
     requestParameters: PublishRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<VersionView> {
+  ): Promise<PublicationResult> {
     const response = await this.publishRaw(requestParameters, initOverrides);
     return await response.value();
   }

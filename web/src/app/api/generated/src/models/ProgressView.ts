@@ -13,21 +13,6 @@
  */
 
 import { mapValues } from '../runtime';
-import type { LedgerView } from './LedgerView';
-import {
-  LedgerViewFromJSON,
-  LedgerViewFromJSONTyped,
-  LedgerViewToJSON,
-  LedgerViewToJSONTyped,
-} from './LedgerView';
-import type { ProfileView } from './ProfileView';
-import {
-  ProfileViewFromJSON,
-  ProfileViewFromJSONTyped,
-  ProfileViewToJSON,
-  ProfileViewToJSONTyped,
-} from './ProfileView';
-
 /**
  *
  * @export
@@ -36,22 +21,22 @@ import {
 export interface ProgressView {
   /**
    *
-   * @type {ProfileView}
+   * @type {string}
    * @memberof ProgressView
    */
-  profile?: ProfileView;
+  exercisePrescriptionId?: string;
   /**
    *
-   * @type {number}
+   * @type {boolean}
    * @memberof ProgressView
    */
-  points?: number;
+  completed?: boolean;
   /**
    *
-   * @type {Array<LedgerView>}
+   * @type {Date}
    * @memberof ProgressView
    */
-  ledger?: Array<LedgerView>;
+  updatedAt?: Date;
 }
 
 /**
@@ -70,10 +55,10 @@ export function ProgressViewFromJSONTyped(json: any, ignoreDiscriminator: boolea
     return json;
   }
   return {
-    profile: json['profile'] == null ? undefined : ProfileViewFromJSON(json['profile']),
-    points: json['points'] == null ? undefined : json['points'],
-    ledger:
-      json['ledger'] == null ? undefined : (json['ledger'] as Array<any>).map(LedgerViewFromJSON),
+    exercisePrescriptionId:
+      json['exercisePrescriptionId'] == null ? undefined : json['exercisePrescriptionId'],
+    completed: json['completed'] == null ? undefined : json['completed'],
+    updatedAt: json['updatedAt'] == null ? undefined : new Date(json['updatedAt']),
   };
 }
 
@@ -90,9 +75,8 @@ export function ProgressViewToJSONTyped(
   }
 
   return {
-    profile: ProfileViewToJSON(value['profile']),
-    points: value['points'],
-    ledger:
-      value['ledger'] == null ? undefined : (value['ledger'] as Array<any>).map(LedgerViewToJSON),
+    exercisePrescriptionId: value['exercisePrescriptionId'],
+    completed: value['completed'],
+    updatedAt: value['updatedAt'] == null ? value['updatedAt'] : value['updatedAt'].toISOString(),
   };
 }

@@ -5,6 +5,7 @@
 | Name          | Type   |
 | ------------- | ------ |
 | `displayName` | string |
+| `timeZoneId`  | string |
 
 ## Example
 
@@ -14,6 +15,7 @@ import type { ParticipantProfileRequest } from '@moves/api-client';
 // TODO: Update the object below with actual values
 const example = {
   displayName: null,
+  timeZoneId: null,
 } satisfies ParticipantProfileRequest;
 
 console.log(example);

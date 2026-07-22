@@ -12,6 +12,7 @@ All URIs are relative to *http://localhost*
 | [**addSession**](TrainingPlanningV2ControllerApi.md#addsession)                     | **POST** /api/v2/training-plans/revisions/{revisionId}/sessions              |                                        |
 | [**createDraft**](TrainingPlanningV2ControllerApi.md#createdraft)                   | **POST** /api/v2/training-plans                                              | Create an inactive training plan draft |
 | [**createRevision**](TrainingPlanningV2ControllerApi.md#createrevision)             | **POST** /api/v2/training-plans/{planId}/revisions                           |                                        |
+| [**defineSessionVariant**](TrainingPlanningV2ControllerApi.md#definesessionvariant) | **POST** /api/v2/training-plans/revisions/{revisionId}/session-variants      |                                        |
 | [**editor**](TrainingPlanningV2ControllerApi.md#editor)                             | **GET** /api/v2/training-plans/revisions/{revisionId}                        |                                        |
 | [**history**](TrainingPlanningV2ControllerApi.md#history)                           | **GET** /api/v2/training-plans/{planId}/revisions                            |                                        |
 | [**reorder**](TrainingPlanningV2ControllerApi.md#reorder)                           | **PUT** /api/v2/training-plans/revisions/{revisionId}/prescriptions/order    |                                        |
@@ -522,6 +523,72 @@ example().catch(console.error);
 | ------------------------- | ------------------------------------------------- | ----------- | ------------------------- |
 | **planId**                | `string`                                          |             | [Defaults to `undefined`] |
 | **createRevisionCommand** | [CreateRevisionCommand](CreateRevisionCommand.md) |             |                           |
+
+### Return type
+
+[**EditorView**](EditorView.md)
+
+### Authorization
+
+[oidc](../README.md#oidc)
+
+### HTTP request headers
+
+- **Content-Type**: `application/json`
+- **Accept**: `*/*`
+
+### HTTP response details
+
+| Status code | Description | Response headers |
+| ----------- | ----------- | ---------------- |
+| **200**     | OK          | -                |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+## defineSessionVariant
+
+> EditorView defineSessionVariant(revisionId, defineSessionVariantCommand)
+
+### Example
+
+```ts
+import {
+  Configuration,
+  TrainingPlanningV2ControllerApi,
+} from '@moves/api-client';
+import type { DefineSessionVariantRequest } from '@moves/api-client';
+
+async function example() {
+  console.log("🚀 Testing @moves/api-client SDK...");
+  const config = new Configuration({
+  });
+  const api = new TrainingPlanningV2ControllerApi(config);
+
+  const body = {
+    // string
+    revisionId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
+    // DefineSessionVariantCommand
+    defineSessionVariantCommand: ...,
+  } satisfies DefineSessionVariantRequest;
+
+  try {
+    const data = await api.defineSessionVariant(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+| Name                            | Type                                                          | Description | Notes                     |
+| ------------------------------- | ------------------------------------------------------------- | ----------- | ------------------------- |
+| **revisionId**                  | `string`                                                      |             | [Defaults to `undefined`] |
+| **defineSessionVariantCommand** | [DefineSessionVariantCommand](DefineSessionVariantCommand.md) |             |                           |
 
 ### Return type
 

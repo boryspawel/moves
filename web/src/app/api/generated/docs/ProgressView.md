@@ -2,11 +2,11 @@
 
 ## Properties
 
-| Name      | Type                                     |
-| --------- | ---------------------------------------- |
-| `profile` | [ProfileView](ProfileView.md)            |
-| `points`  | number                                   |
-| `ledger`  | [Array&lt;LedgerView&gt;](LedgerView.md) |
+| Name                     | Type    |
+| ------------------------ | ------- |
+| `exercisePrescriptionId` | string  |
+| `completed`              | boolean |
+| `updatedAt`              | Date    |
 
 ## Example
 
@@ -15,9 +15,9 @@ import type { ProgressView } from '@moves/api-client';
 
 // TODO: Update the object below with actual values
 const example = {
-  profile: null,
-  points: null,
-  ledger: null,
+  exercisePrescriptionId: null,
+  completed: null,
+  updatedAt: null,
 } satisfies ProgressView;
 
 console.log(example);

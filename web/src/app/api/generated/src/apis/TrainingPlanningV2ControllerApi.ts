@@ -53,6 +53,11 @@ import {
   CreateRevisionCommandFromJSON,
   CreateRevisionCommandToJSON,
 } from '../models/CreateRevisionCommand';
+import {
+  type DefineSessionVariantCommand,
+  DefineSessionVariantCommandFromJSON,
+  DefineSessionVariantCommandToJSON,
+} from '../models/DefineSessionVariantCommand';
 import { type EditorView, EditorViewFromJSON, EditorViewToJSON } from '../models/EditorView';
 import {
   type ReorderCommand,
@@ -112,6 +117,11 @@ export interface CreateDraftRequest {
 export interface CreateRevisionRequest {
   planId: string;
   createRevisionCommand: CreateRevisionCommand;
+}
+
+export interface DefineSessionVariantRequest {
+  revisionId: string;
+  defineSessionVariantCommand: DefineSessionVariantCommand;
 }
 
 export interface EditorRequest {
@@ -619,6 +629,69 @@ export class TrainingPlanningV2ControllerApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<EditorView> {
     const response = await this.createRevisionRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for defineSessionVariant without sending the request
+   */
+  async defineSessionVariantRequestOpts(
+    requestParameters: DefineSessionVariantRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['revisionId'] == null) {
+      throw new runtime.RequiredError(
+        'revisionId',
+        'Required parameter "revisionId" was null or undefined when calling defineSessionVariant().',
+      );
+    }
+
+    if (requestParameters['defineSessionVariantCommand'] == null) {
+      throw new runtime.RequiredError(
+        'defineSessionVariantCommand',
+        'Required parameter "defineSessionVariantCommand" was null or undefined when calling defineSessionVariant().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v2/training-plans/revisions/{revisionId}/session-variants`;
+    urlPath = urlPath.replace(
+      '{revisionId}',
+      encodeURIComponent(String(requestParameters['revisionId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+      body: DefineSessionVariantCommandToJSON(requestParameters['defineSessionVariantCommand']),
+    };
+  }
+
+  /**
+   */
+  async defineSessionVariantRaw(
+    requestParameters: DefineSessionVariantRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<EditorView>> {
+    const requestOptions = await this.defineSessionVariantRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => EditorViewFromJSON(jsonValue));
+  }
+
+  /**
+   */
+  async defineSessionVariant(
+    requestParameters: DefineSessionVariantRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<EditorView> {
+    const response = await this.defineSessionVariantRaw(requestParameters, initOverrides);
     return await response.value();
   }
 

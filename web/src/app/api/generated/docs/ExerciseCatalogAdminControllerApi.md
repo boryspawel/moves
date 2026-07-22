@@ -153,7 +153,7 @@ example().catch(console.error);
 
 ## approve
 
-> VersionView approve(versionId)
+> ReviewResult approve(versionId)
 
 ### Example
 
@@ -195,7 +195,7 @@ example().catch(console.error);
 
 ### Return type
 
-[**VersionView**](VersionView.md)
+[**ReviewResult**](ReviewResult.md)
 
 ### Authorization
 
@@ -460,7 +460,7 @@ This endpoint does not need any parameter.
 
 ## publish
 
-> VersionView publish(versionId)
+> PublicationResult publish(versionId)
 
 ### Example
 
@@ -502,7 +502,7 @@ example().catch(console.error);
 
 ### Return type
 
-[**VersionView**](VersionView.md)
+[**PublicationResult**](PublicationResult.md)
 
 ### Authorization
 

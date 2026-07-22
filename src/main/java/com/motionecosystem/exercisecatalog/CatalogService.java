@@ -233,6 +233,43 @@ public class CatalogService implements ExerciseCatalogQueryPort {
                 .orElseThrow(() -> notFound("published exercise version not found"));
     }
 
+    /** UI-specific published projection.  Keep the calculation port deliberately narrower. */
+    @Transactional(readOnly = true)
+    public ExerciseCatalogDetailView publishedDetail(UUID versionId) {
+        ExerciseVersion version = versions.findById(versionId)
+                .filter(item -> item.status == ExerciseVersionStatus.PUBLISHED)
+                .orElseThrow(() -> notFound("published exercise version not found"));
+        Exercise exercise = exercise(version.exerciseId);
+        List<ExerciseContribution> items = contributions.findByExerciseVersionIdOrderById(versionId);
+        Map<UUID, EvidenceSource> sources = evidenceSources.findByExerciseVersionIdIn(Set.of(versionId)).stream()
+                .collect(Collectors.toMap(item -> item.id, Function.identity()));
+        Map<UUID, List<EvidenceSource>> linked = linkedEvidence(items.stream().map(item -> item.id)
+                .collect(Collectors.toSet()), sources);
+        List<AnatomyContributionView> anatomyItems = items.stream()
+                .map(item -> anatomy.findStructure(item.anatomicalStructureId)
+                        .map(structure -> new AnatomyContributionView(structure.code(), structure.displayName(),
+                                structure.type().name(), item.role.name(), item.loadChannel.name(),
+                                item.contributionBand.name(), item.confidenceClass, item.evidenceGrade,
+                                linked.getOrDefault(item.id, List.of()).stream()
+                                        .sorted(Comparator.comparing(value -> value.citation))
+                                        .map(CatalogService::evidenceView).toList()))
+                        .orElseThrow(() -> new IllegalStateException("published contribution references missing anatomy")))
+                .sorted(Comparator.comparing(AnatomyContributionView::displayName)
+                        .thenComparing(AnatomyContributionView::code)).toList();
+        List<LoadCharacteristicView> characteristics = loadCharacteristics.findByExerciseVersionIdOrderById(versionId)
+                .stream().map(CatalogService::characteristicView)
+                .sorted(Comparator.comparing((LoadCharacteristicView item) -> item.characteristicType().name())
+                        .thenComparing(item -> item.movementPlane().name())
+                        .thenComparing(item -> item.contractionType().name())).toList();
+        List<EvidenceView> evidence = sources.values().stream().sorted(Comparator.comparing(item -> item.citation))
+                .map(CatalogService::evidenceView).toList();
+        return new ExerciseCatalogDetailView(exercise.id, version.id, version.versionNumber, exercise.canonicalName,
+                version.instruction, version.movementPatterns.stream().sorted().map(Enum::name).toList(),
+                version.stimulusType.name(), version.fatigueProfile.name(), version.technicalLevel.name(),
+                version.environment.name(), version.requiredEquipment.stream().sorted().toList(),
+                characteristics, anatomyItems, evidence);
+    }
+
     @Transactional(readOnly = true)
     public EditorView editor(UUID versionId) {
         ExerciseVersion version = version(versionId);
@@ -650,6 +687,27 @@ public class CatalogService implements ExerciseCatalogQueryPort {
         public CatalogPage {
             content = List.copyOf(content);
         }
+    }
+
+    public record ExerciseCatalogDetailView(UUID exerciseId, UUID versionId, int versionNumber,
+                                            String canonicalName, String instruction,
+                                            List<String> movementPatterns, String stimulusType,
+                                            String fatigueProfile, String technicalLevel, String environment,
+                                            List<String> requiredEquipment,
+                                            List<LoadCharacteristicView> loadCharacteristics,
+                                            List<AnatomyContributionView> anatomyContributions,
+                                            List<EvidenceView> evidence) {
+        public ExerciseCatalogDetailView {
+            movementPatterns = List.copyOf(movementPatterns); requiredEquipment = List.copyOf(requiredEquipment);
+            loadCharacteristics = List.copyOf(loadCharacteristics); anatomyContributions = List.copyOf(anatomyContributions);
+            evidence = List.copyOf(evidence);
+        }
+    }
+    public record AnatomyContributionView(String code, String displayName, String structureType,
+                                          String role, String loadChannel, String contributionBand,
+                                          String confidenceClass, String evidenceGrade,
+                                          List<EvidenceView> evidence) {
+        public AnatomyContributionView { evidence = List.copyOf(evidence); }
     }
 
     public record EditorView(VersionView version, List<LoadCharacteristicView> loadCharacteristics,

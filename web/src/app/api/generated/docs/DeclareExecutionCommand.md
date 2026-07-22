@@ -2,15 +2,16 @@
 
 ## Properties
 
-| Name                 | Type                                           |
-| -------------------- | ---------------------------------------------- |
-| `declaredCompletion` | boolean                                        |
-| `results`            | [Array&lt;ResultCommand&gt;](ResultCommand.md) |
-| `painLevel`          | number                                         |
-| `difficultyLevel`    | number                                         |
-| `note`               | string                                         |
-| `sessionRpe`         | number                                         |
-| `observationMode`    | string                                         |
+| Name                       | Type                                           |
+| -------------------------- | ---------------------------------------------- |
+| `declaredCompletion`       | boolean                                        |
+| `results`                  | [Array&lt;ResultCommand&gt;](ResultCommand.md) |
+| `painLevel`                | number                                         |
+| `difficultyLevel`          | number                                         |
+| `techniqueConfidenceLevel` | number                                         |
+| `note`                     | string                                         |
+| `sessionRpe`               | number                                         |
+| `observationMode`          | string                                         |
 
 ## Example
 
@@ -23,6 +24,7 @@ const example = {
   results: null,
   painLevel: null,
   difficultyLevel: null,
+  techniqueConfidenceLevel: null,
   note: null,
   sessionRpe: null,
   observationMode: null,

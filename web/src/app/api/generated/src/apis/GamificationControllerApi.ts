@@ -114,9 +114,9 @@ export class GamificationControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for progress without sending the request
+   * Creates request options for progress1 without sending the request
    */
-  async progressRequestOpts(): Promise<runtime.RequestOpts> {
+  async progress1RequestOpts(): Promise<runtime.RequestOpts> {
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -134,10 +134,10 @@ export class GamificationControllerApi extends runtime.BaseAPI {
   /**
    * Return private points and a non-medical ledger view
    */
-  async progressRaw(
+  async progress1Raw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<ProgressView>> {
-    const requestOptions = await this.progressRequestOpts();
+    const requestOptions = await this.progress1RequestOpts();
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) => ProgressViewFromJSON(jsonValue));
@@ -146,10 +146,10 @@ export class GamificationControllerApi extends runtime.BaseAPI {
   /**
    * Return private points and a non-medical ledger view
    */
-  async progress(
+  async progress1(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<ProgressView> {
-    const response = await this.progressRaw(initOverrides);
+    const response = await this.progress1Raw(initOverrides);
     return await response.value();
   }
 

@@ -20,6 +20,13 @@ import {
   PrescriptionSnapshotToJSON,
   PrescriptionSnapshotToJSONTyped,
 } from './PrescriptionSnapshot';
+import type { SessionVariantSnapshot } from './SessionVariantSnapshot';
+import {
+  SessionVariantSnapshotFromJSON,
+  SessionVariantSnapshotFromJSONTyped,
+  SessionVariantSnapshotToJSON,
+  SessionVariantSnapshotToJSONTyped,
+} from './SessionVariantSnapshot';
 
 /**
  *
@@ -75,6 +82,12 @@ export interface SessionSnapshot {
    * @memberof SessionSnapshot
    */
   prescriptions?: Array<PrescriptionSnapshot>;
+  /**
+   *
+   * @type {Array<SessionVariantSnapshot>}
+   * @memberof SessionSnapshot
+   */
+  variants?: Array<SessionVariantSnapshot>;
 }
 
 /**
@@ -108,6 +121,10 @@ export function SessionSnapshotFromJSONTyped(
       json['prescriptions'] == null
         ? undefined
         : (json['prescriptions'] as Array<any>).map(PrescriptionSnapshotFromJSON),
+    variants:
+      json['variants'] == null
+        ? undefined
+        : (json['variants'] as Array<any>).map(SessionVariantSnapshotFromJSON),
   };
 }
 
@@ -142,5 +159,9 @@ export function SessionSnapshotToJSONTyped(
       value['prescriptions'] == null
         ? undefined
         : (value['prescriptions'] as Array<any>).map(PrescriptionSnapshotToJSON),
+    variants:
+      value['variants'] == null
+        ? undefined
+        : (value['variants'] as Array<any>).map(SessionVariantSnapshotToJSON),
   };
 }

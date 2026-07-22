@@ -5,7 +5,7 @@ All URIs are relative to *http://localhost*
 | Method                                                 | HTTP request                                   | Description                                                         |
 | ------------------------------------------------------ | ---------------------------------------------- | ------------------------------------------------------------------- |
 | [**list**](ExerciseCatalogControllerApi.md#list)       | **GET** /api/v1/exercises                      | Search published exercise versions using explicitly allowed filters |
-| [**version**](ExerciseCatalogControllerApi.md#version) | **GET** /api/v1/exercises/versions/{versionId} |                                                                     |
+| [**version**](ExerciseCatalogControllerApi.md#version) | **GET** /api/v1/exercises/versions/{versionId} | Read a public detail projection of one published exercise version   |
 
 ## list
 
@@ -85,7 +85,9 @@ example().catch(console.error);
 
 ## version
 
-> PublishedExerciseVersionSnapshot version(versionId)
+> ExerciseCatalogDetailView version(versionId)
+
+Read a public detail projection of one published exercise version
 
 ### Example
 
@@ -127,7 +129,7 @@ example().catch(console.error);
 
 ### Return type
 
-[**PublishedExerciseVersionSnapshot**](PublishedExerciseVersionSnapshot.md)
+[**ExerciseCatalogDetailView**](ExerciseCatalogDetailView.md)
 
 ### Authorization
 

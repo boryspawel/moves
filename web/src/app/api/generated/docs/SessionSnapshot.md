@@ -2,16 +2,17 @@
 
 ## Properties
 
-| Name                      | Type                                                         |
-| ------------------------- | ------------------------------------------------------------ |
-| `id`                      | string                                                       |
-| `title`                   | string                                                       |
-| `scheduledDate`           | Date                                                         |
-| `availableFrom`           | Date                                                         |
-| `availableTo`             | Date                                                         |
-| `expectedDurationMinutes` | number                                                       |
-| `status`                  | string                                                       |
-| `prescriptions`           | [Array&lt;PrescriptionSnapshot&gt;](PrescriptionSnapshot.md) |
+| Name                      | Type                                                             |
+| ------------------------- | ---------------------------------------------------------------- |
+| `id`                      | string                                                           |
+| `title`                   | string                                                           |
+| `scheduledDate`           | Date                                                             |
+| `availableFrom`           | Date                                                             |
+| `availableTo`             | Date                                                             |
+| `expectedDurationMinutes` | number                                                           |
+| `status`                  | string                                                           |
+| `prescriptions`           | [Array&lt;PrescriptionSnapshot&gt;](PrescriptionSnapshot.md)     |
+| `variants`                | [Array&lt;SessionVariantSnapshot&gt;](SessionVariantSnapshot.md) |
 
 ## Example
 
@@ -28,6 +29,7 @@ const example = {
   expectedDurationMinutes: null,
   status: null,
   prescriptions: null,
+  variants: null,
 } satisfies SessionSnapshot;
 
 console.log(example);

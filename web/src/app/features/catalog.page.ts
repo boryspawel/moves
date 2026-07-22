@@ -1,49 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import type { CatalogItem } from '../api/generated/src';
+import { MatSelectModule } from '@angular/material/select';
 import { ApiFacade } from '../core/api.facade';
 
-@Component({
-  selector: 'app-catalog-page',
-  imports: [ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule],
-  template: `
-    <section class="panel">
-      <h1>Katalog ćwiczeń</h1>
-      <p class="muted">Wyświetlane są wyłącznie opublikowane, niezmienne wersje ćwiczeń.</p>
-      <form (ngSubmit)="load()">
-        <mat-form-field><mat-label>Szukaj po nazwie lub instrukcji</mat-label><input matInput type="search" [formControl]="query"></mat-form-field>
-        <button mat-flat-button type="submit">Szukaj</button>
-      </form>
-      <p class="status" aria-live="polite" [class.error]="error()">{{ status() }}</p>
-      <ul class="card-list">
-        @for (exercise of exercises(); track exercise.versionId) {
-          <li>
-            <h2>{{ exercise.canonicalName }} <small>v{{ exercise.versionNumber }}</small></h2>
-            <p class="muted">{{ exercise.primaryMovementPattern }} · {{ exercise.technicalLevel }} · {{ exercise.environment }}</p>
-          </li>
-        } @empty { <li>Brak ćwiczeń spełniających kryteria.</li> }
-      </ul>
-    </section>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush
-})
-export class CatalogPage {
-  private readonly api = inject(ApiFacade).catalog;
-  protected readonly query = new FormControl('', { nonNullable: true });
-  protected readonly exercises = signal<CatalogItem[]>([]);
-  protected readonly status = signal('Ładowanie…');
-  protected readonly error = signal(false);
-  constructor() { void this.load(); }
-  protected async load(): Promise<void> {
-    this.error.set(false);
-    try {
-      const page = await this.api.list({ query: this.query.value || undefined });
-      this.exercises.set(page.content ?? []);
-      this.status.set(`${page.totalElements ?? this.exercises().length} wyników.`);
-    }
-    catch { this.error.set(true); this.status.set('Nie udało się pobrać katalogu.'); }
-  }
-}
+@Component({selector:'app-catalog-page',imports:[ReactiveFormsModule,RouterLink,MatButtonModule,MatFormFieldModule,MatInputModule,MatSelectModule],changeDetection:ChangeDetectionStrategy.OnPush,template:`<main class="panel"><h1 tabindex="-1">Katalog ćwiczeń</h1><p>Wyświetlane są wyłącznie opublikowane wersje.</p><form (ngSubmit)="apply()"><mat-form-field><mat-label>Szukaj</mat-label><input matInput type="search" [formControl]="query"></mat-form-field><mat-form-field><mat-label>Wzorzec ruchu</mat-label><mat-select [formControl]="pattern"><mat-option value="">Wszystkie</mat-option>@for(x of patterns;track x){<mat-option [value]="x">{{label(x)}}</mat-option>}</mat-select></mat-form-field><mat-form-field><mat-label>Poziom techniczny</mat-label><mat-select [formControl]="level"><mat-option value="">Wszystkie</mat-option><mat-option value="FOUNDATIONAL">Podstawowy</mat-option><mat-option value="INTERMEDIATE">Średni</mat-option><mat-option value="ADVANCED">Zaawansowany</mat-option></mat-select></mat-form-field><mat-form-field><mat-label>Sprzęt</mat-label><input matInput [formControl]="equipment"></mat-form-field><button mat-flat-button>Filtruj</button><button mat-button type="button" (click)="reset()">Wyczyść</button></form><p aria-live="polite">{{status()}}</p>@if(error()){<p role="alert">Nie udało się pobrać katalogu.</p>}@else if(!loading()){<p>{{total()}} wyników</p><ul class="card-list">@for(x of items();track x.versionId){<li><a [routerLink]="['/catalog',x.versionId]" [queryParams]="params()"><h2>{{x.canonicalName}} <small>v{{x.versionNumber}}</small></h2><p>{{label(x.primaryMovementPattern)}} · {{label(x.technicalLevel)}}</p></a></li>}@empty{<li>Brak ćwiczeń spełniających kryteria.</li>}</ul><nav><button mat-button [disabled]="page()===0" (click)="go(page()-1)">Poprzednia</button><span>Strona {{page()+1}}</span><button mat-button [disabled]="page()+1>=pages()" (click)="go(page()+1)">Następna</button></nav>}</main>`})
+export class CatalogPage{private api=inject(ApiFacade).catalog;private route=inject(ActivatedRoute);private router=inject(Router);query=new FormControl('',{nonNullable:true});pattern=new FormControl('',{nonNullable:true});level=new FormControl('',{nonNullable:true});equipment=new FormControl('',{nonNullable:true});items=signal<any[]>([]);page=signal(0);pages=signal(0);total=signal(0);loading=signal(false);error=signal(false);status=signal('');patterns=['SQUAT','HINGE','PUSH','PULL','LUNGE','CARRY','ROTATION','LOCOMOTION','BREATHING','MOBILITY','OTHER'];constructor(){const q=this.route.snapshot.queryParams;this.query.setValue(q['query']??'');this.pattern.setValue(q['movementPattern']??'');this.level.setValue(q['technicalLevel']??'');this.equipment.setValue(q['equipment']??'');this.page.set(Number(q['page']??0));void this.load();}params(){return {query:this.query.value||null,movementPattern:this.pattern.value||null,technicalLevel:this.level.value||null,equipment:this.equipment.value||null,page:this.page()||null};}async load(){this.loading.set(true);this.error.set(false);this.status.set('Ładowanie…');try{const d=await this.api.list({query:this.query.value||undefined,movementPattern:this.pattern.value||undefined as any,technicalLevel:this.level.value||undefined as any,equipment:this.equipment.value||undefined,page:this.page(),size:12});this.items.set(d.content??[]);this.total.set(d.totalElements??0);this.pages.set(d.totalPages??0);this.status.set('Wyniki zaktualizowane.');}catch{this.error.set(true);this.status.set('Błąd pobierania katalogu.');}finally{this.loading.set(false);}}apply(){this.page.set(0);this.router.navigate([],{relativeTo:this.route,queryParams:this.params()});void this.load();}go(p:number){this.page.set(p);this.router.navigate([],{relativeTo:this.route,queryParams:this.params()});void this.load();}reset(){this.query.setValue('');this.pattern.setValue('');this.level.setValue('');this.equipment.setValue('');this.apply();}label(v:string){return ({SQUAT:'Przysiad',HINGE:'Zgięcie biodra',PUSH:'Pchanie',PULL:'Przyciąganie',FOUNDATIONAL:'Podstawowy',INTERMEDIATE:'Średni',ADVANCED:'Zaawansowany'}as Record<string,string>)[v]??v;}}

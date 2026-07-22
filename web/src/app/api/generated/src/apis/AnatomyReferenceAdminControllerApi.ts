@@ -51,11 +51,11 @@ export interface Create1Request {
   createStructureRequest: CreateStructureRequest;
 }
 
-export interface GetRequest {
+export interface Get1Request {
   structureId: string;
 }
 
-export interface Publish1Request {
+export interface Publish2Request {
   structureId: string;
 }
 
@@ -231,13 +231,13 @@ export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for get without sending the request
+   * Creates request options for get1 without sending the request
    */
-  async getRequestOpts(requestParameters: GetRequest): Promise<runtime.RequestOpts> {
+  async get1RequestOpts(requestParameters: Get1Request): Promise<runtime.RequestOpts> {
     if (requestParameters['structureId'] == null) {
       throw new runtime.RequiredError(
         'structureId',
-        'Required parameter "structureId" was null or undefined when calling get().',
+        'Required parameter "structureId" was null or undefined when calling get1().',
       );
     }
 
@@ -261,11 +261,11 @@ export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async getRaw(
-    requestParameters: GetRequest,
+  async get1Raw(
+    requestParameters: Get1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AnatomicalStructureSnapshot>> {
-    const requestOptions = await this.getRequestOpts(requestParameters);
+    const requestOptions = await this.get1RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
@@ -275,22 +275,22 @@ export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async get(
-    requestParameters: GetRequest,
+  async get1(
+    requestParameters: Get1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<AnatomicalStructureSnapshot> {
-    const response = await this.getRaw(requestParameters, initOverrides);
+    const response = await this.get1Raw(requestParameters, initOverrides);
     return await response.value();
   }
 
   /**
-   * Creates request options for publish1 without sending the request
+   * Creates request options for publish2 without sending the request
    */
-  async publish1RequestOpts(requestParameters: Publish1Request): Promise<runtime.RequestOpts> {
+  async publish2RequestOpts(requestParameters: Publish2Request): Promise<runtime.RequestOpts> {
     if (requestParameters['structureId'] == null) {
       throw new runtime.RequiredError(
         'structureId',
-        'Required parameter "structureId" was null or undefined when calling publish1().',
+        'Required parameter "structureId" was null or undefined when calling publish2().',
       );
     }
 
@@ -315,11 +315,11 @@ export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
   /**
    * Publish an immutable anatomical structure
    */
-  async publish1Raw(
-    requestParameters: Publish1Request,
+  async publish2Raw(
+    requestParameters: Publish2Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AnatomicalStructureSnapshot>> {
-    const requestOptions = await this.publish1RequestOpts(requestParameters);
+    const requestOptions = await this.publish2RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
@@ -330,11 +330,11 @@ export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
   /**
    * Publish an immutable anatomical structure
    */
-  async publish1(
-    requestParameters: Publish1Request,
+  async publish2(
+    requestParameters: Publish2Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<AnatomicalStructureSnapshot> {
-    const response = await this.publish1Raw(requestParameters, initOverrides);
+    const response = await this.publish2Raw(requestParameters, initOverrides);
     return await response.value();
   }
 

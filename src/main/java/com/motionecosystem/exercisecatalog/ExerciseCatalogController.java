@@ -2,7 +2,6 @@ package com.motionecosystem.exercisecatalog;
 
 import java.util.UUID;
 
-import com.motionecosystem.exercisecatalog.api.ExerciseCatalogQueryPort.PublishedExerciseVersionSnapshot;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,7 +34,8 @@ class ExerciseCatalogController {
     }
 
     @GetMapping("/versions/{versionId}")
-    PublishedExerciseVersionSnapshot version(@PathVariable UUID versionId) {
-        return catalog.published(versionId);
+    @Operation(summary = "Read a public detail projection of one published exercise version")
+    CatalogService.ExerciseCatalogDetailView version(@PathVariable UUID versionId) {
+        return catalog.publishedDetail(versionId);
     }
 }

@@ -2,22 +2,23 @@
 
 ## Properties
 
-| Name                   | Type                                             |
-| ---------------------- | ------------------------------------------------ |
-| `id`                   | string                                           |
-| `plannedSessionId`     | string                                           |
-| `participantAccountId` | string                                           |
-| `declaredCompletion`   | boolean                                          |
-| `recordedAt`           | Date                                             |
-| `painLevel`            | number                                           |
-| `difficultyLevel`      | number                                           |
-| `note`                 | string                                           |
-| `sessionRpe`           | number                                           |
-| `observationMode`      | string                                           |
-| `results`              | [Array&lt;ResultView&gt;](ResultView.md)         |
-| `corrections`          | [Array&lt;CorrectionView&gt;](CorrectionView.md) |
-| `alerts`               | Array&lt;string&gt;                              |
-| `safetyAlerts`         | [Array&lt;AlertData&gt;](AlertData.md)           |
+| Name                       | Type                                             |
+| -------------------------- | ------------------------------------------------ |
+| `id`                       | string                                           |
+| `plannedSessionId`         | string                                           |
+| `participantAccountId`     | string                                           |
+| `declaredCompletion`       | boolean                                          |
+| `recordedAt`               | Date                                             |
+| `painLevel`                | number                                           |
+| `difficultyLevel`          | number                                           |
+| `techniqueConfidenceLevel` | number                                           |
+| `note`                     | string                                           |
+| `sessionRpe`               | number                                           |
+| `observationMode`          | string                                           |
+| `results`                  | [Array&lt;ResultView&gt;](ResultView.md)         |
+| `corrections`              | [Array&lt;CorrectionView&gt;](CorrectionView.md) |
+| `alerts`                   | Array&lt;string&gt;                              |
+| `safetyAlerts`             | [Array&lt;AlertData&gt;](AlertData.md)           |
 
 ## Example
 
@@ -33,6 +34,7 @@ const example = {
   recordedAt: null,
   painLevel: null,
   difficultyLevel: null,
+  techniqueConfidenceLevel: null,
   note: null,
   sessionRpe: null,
   observationMode: null,

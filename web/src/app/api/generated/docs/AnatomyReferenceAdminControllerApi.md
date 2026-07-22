@@ -7,8 +7,8 @@ All URIs are relative to *http://localhost*
 | [**addRelation**](AnatomyReferenceAdminControllerApi.md#addrelationoperation) | **POST** /api/v1/admin/anatomical-structures/relations              | Add an acyclic parent-child relation between draft structures |
 | [**ancestors**](AnatomyReferenceAdminControllerApi.md#ancestors)              | **GET** /api/v1/admin/anatomical-structures/{structureId}/ancestors |                                                               |
 | [**create1**](AnatomyReferenceAdminControllerApi.md#create1)                  | **POST** /api/v1/admin/anatomical-structures                        | Create a draft anatomical structure                           |
-| [**get**](AnatomyReferenceAdminControllerApi.md#get)                          | **GET** /api/v1/admin/anatomical-structures/{structureId}           |                                                               |
-| [**publish1**](AnatomyReferenceAdminControllerApi.md#publish1)                | **POST** /api/v1/admin/anatomical-structures/{structureId}/publish  | Publish an immutable anatomical structure                     |
+| [**get1**](AnatomyReferenceAdminControllerApi.md#get1)                        | **GET** /api/v1/admin/anatomical-structures/{structureId}           |                                                               |
+| [**publish2**](AnatomyReferenceAdminControllerApi.md#publish2)                | **POST** /api/v1/admin/anatomical-structures/{structureId}/publish  | Publish an immutable anatomical structure                     |
 | [**withdraw1**](AnatomyReferenceAdminControllerApi.md#withdraw1)              | **POST** /api/v1/admin/anatomical-structures/{structureId}/withdraw | Withdraw a published anatomical structure                     |
 
 ## addRelation
@@ -204,9 +204,9 @@ example().catch(console.error);
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
-## get
+## get1
 
-> AnatomicalStructureSnapshot get(structureId)
+> AnatomicalStructureSnapshot get1(structureId)
 
 ### Example
 
@@ -215,7 +215,7 @@ import {
   Configuration,
   AnatomyReferenceAdminControllerApi,
 } from '@moves/api-client';
-import type { GetRequest } from '@moves/api-client';
+import type { Get1Request } from '@moves/api-client';
 
 async function example() {
   console.log("🚀 Testing @moves/api-client SDK...");
@@ -226,10 +226,10 @@ async function example() {
   const body = {
     // string
     structureId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
-  } satisfies GetRequest;
+  } satisfies Get1Request;
 
   try {
-    const data = await api.get(body);
+    const data = await api.get1(body);
     console.log(data);
   } catch (error) {
     console.error(error);
@@ -267,9 +267,9 @@ example().catch(console.error);
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
-## publish1
+## publish2
 
-> AnatomicalStructureSnapshot publish1(structureId)
+> AnatomicalStructureSnapshot publish2(structureId)
 
 Publish an immutable anatomical structure
 
@@ -280,7 +280,7 @@ import {
   Configuration,
   AnatomyReferenceAdminControllerApi,
 } from '@moves/api-client';
-import type { Publish1Request } from '@moves/api-client';
+import type { Publish2Request } from '@moves/api-client';
 
 async function example() {
   console.log("🚀 Testing @moves/api-client SDK...");
@@ -291,10 +291,10 @@ async function example() {
   const body = {
     // string
     structureId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
-  } satisfies Publish1Request;
+  } satisfies Publish2Request;
 
   try {
-    const data = await api.publish1(body);
+    const data = await api.publish2(body);
     console.log(data);
   } catch (error) {
     console.error(error);

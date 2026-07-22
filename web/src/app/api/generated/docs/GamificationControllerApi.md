@@ -5,7 +5,7 @@ All URIs are relative to *http://localhost*
 | Method                                                      | HTTP request                                                          | Description                                                   |
 | ----------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------- |
 | [**profile**](GamificationControllerApi.md#profile)         | **PUT** /api/v1/gamification/me/profile                               | Enable, disable or configure the private gamification profile |
-| [**progress**](GamificationControllerApi.md#progress)       | **GET** /api/v1/gamification/me                                       | Return private points and a non-medical ledger view           |
+| [**progress1**](GamificationControllerApi.md#progress1)     | **GET** /api/v1/gamification/me                                       | Return private points and a non-medical ledger view           |
 | [**publishRule**](GamificationControllerApi.md#publishrule) | **POST** /api/v1/admin/gamification/rules                             | Publish an immutable point rule version                       |
 | [**qualify**](GamificationControllerApi.md#qualify)         | **POST** /api/v1/gamification/executions/{executionId}/qualifications | Qualify a declared execution for points                       |
 | [**ranking**](GamificationControllerApi.md#ranking)         | **GET** /api/v1/gamification/ranking                                  | Return the opt-in pseudonymous ranking                        |
@@ -77,9 +77,9 @@ example().catch(console.error);
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
-## progress
+## progress1
 
-> ProgressView progress()
+> ProgressView progress1()
 
 Return private points and a non-medical ledger view
 
@@ -87,7 +87,7 @@ Return private points and a non-medical ledger view
 
 ```ts
 import { Configuration, GamificationControllerApi } from '@moves/api-client';
-import type { ProgressRequest } from '@moves/api-client';
+import type { Progress1Request } from '@moves/api-client';
 
 async function example() {
   console.log('🚀 Testing @moves/api-client SDK...');
@@ -95,7 +95,7 @@ async function example() {
   const api = new GamificationControllerApi(config);
 
   try {
-    const data = await api.progress();
+    const data = await api.progress1();
     console.log(data);
   } catch (error) {
     console.error(error);
