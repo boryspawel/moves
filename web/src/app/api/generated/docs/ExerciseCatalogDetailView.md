@@ -2,22 +2,22 @@
 
 ## Properties
 
-| Name                   | Type                                                               |
-| ---------------------- | ------------------------------------------------------------------ |
-| `exerciseId`           | string                                                             |
-| `versionId`            | string                                                             |
-| `versionNumber`        | number                                                             |
-| `canonicalName`        | string                                                             |
-| `instruction`          | string                                                             |
-| `movementPatterns`     | Array&lt;string&gt;                                                |
-| `stimulusType`         | string                                                             |
-| `fatigueProfile`       | string                                                             |
-| `technicalLevel`       | string                                                             |
-| `environment`          | string                                                             |
-| `requiredEquipment`    | Array&lt;string&gt;                                                |
-| `loadCharacteristics`  | [Array&lt;LoadCharacteristicView&gt;](LoadCharacteristicView.md)   |
-| `anatomyContributions` | [Array&lt;AnatomyContributionView&gt;](AnatomyContributionView.md) |
-| `evidence`             | [Array&lt;EvidenceView&gt;](EvidenceView.md)                       |
+| Name                   | Type                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------ |
+| `exerciseId`           | string                                                                         |
+| `versionId`            | string                                                                         |
+| `versionNumber`        | number                                                                         |
+| `canonicalName`        | string                                                                         |
+| `instruction`          | string                                                                         |
+| `movementPatterns`     | Array&lt;string&gt;                                                            |
+| `stimulusType`         | string                                                                         |
+| `fatigueProfile`       | string                                                                         |
+| `technicalLevel`       | string                                                                         |
+| `environment`          | string                                                                         |
+| `requiredEquipment`    | Array&lt;string&gt;                                                            |
+| `loadCharacteristics`  | [Array&lt;PublicLoadCharacteristicView&gt;](PublicLoadCharacteristicView.md)   |
+| `anatomyContributions` | [Array&lt;PublicAnatomyContributionView&gt;](PublicAnatomyContributionView.md) |
+| `evidence`             | [Array&lt;PublicEvidenceView&gt;](PublicEvidenceView.md)                       |
 
 ## Example
 

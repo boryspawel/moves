@@ -4,11 +4,11 @@ All URIs are relative to *http://localhost*
 
 | Method                                                   | HTTP request                | Description                                |
 | -------------------------------------------------------- | --------------------------- | ------------------------------------------ |
-| [**current1**](CurrentIdentityControllerApi.md#current1) | **GET** /api/v1/identity/me | Return the authenticated external identity |
+| [**current2**](CurrentIdentityControllerApi.md#current2) | **GET** /api/v1/identity/me | Return the authenticated external identity |
 
-## current1
+## current2
 
-> IdentityResponse current1()
+> IdentityResponse current2()
 
 Return the authenticated external identity
 
@@ -16,7 +16,7 @@ Return the authenticated external identity
 
 ```ts
 import { Configuration, CurrentIdentityControllerApi } from '@moves/api-client';
-import type { Current1Request } from '@moves/api-client';
+import type { Current2Request } from '@moves/api-client';
 
 async function example() {
   console.log('🚀 Testing @moves/api-client SDK...');
@@ -24,7 +24,7 @@ async function example() {
   const api = new CurrentIdentityControllerApi(config);
 
   try {
-    const data = await api.current1();
+    const data = await api.current2();
     console.log(data);
   } catch (error) {
     console.error(error);

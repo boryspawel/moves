@@ -14,15 +14,15 @@
 
 import * as runtime from '../runtime';
 import {
+  type ExerciseVersionPublishRequest,
+  ExerciseVersionPublishRequestFromJSON,
+  ExerciseVersionPublishRequestToJSON,
+} from '../models/ExerciseVersionPublishRequest';
+import {
   type PublicationResult,
   PublicationResultFromJSON,
   PublicationResultToJSON,
 } from '../models/PublicationResult';
-import {
-  type PublishRequest,
-  PublishRequestFromJSON,
-  PublishRequestToJSON,
-} from '../models/PublishRequest';
 import {
   type ReviewCommand,
   ReviewCommandFromJSON,
@@ -41,7 +41,7 @@ export interface DiffRequest {
 
 export interface Publish1Request {
   id: string;
-  publishRequest?: PublishRequest;
+  exerciseVersionPublishRequest?: ExerciseVersionPublishRequest;
 }
 
 export interface ReviewRequest {
@@ -130,7 +130,7 @@ export class ExerciseVersionReviewControllerApi extends runtime.BaseAPI {
       method: 'POST',
       headers: headerParameters,
       query: queryParameters,
-      body: PublishRequestToJSON(requestParameters['publishRequest']),
+      body: ExerciseVersionPublishRequestToJSON(requestParameters['exerciseVersionPublishRequest']),
     };
   }
 

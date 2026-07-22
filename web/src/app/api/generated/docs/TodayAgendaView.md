@@ -9,6 +9,7 @@
 | `activePlan` | [ActivePlanView](ActivePlanView.md)                    |
 | `sessions`   | [Array&lt;AgendaSessionView&gt;](AgendaSessionView.md) |
 | `state`      | string                                                 |
+| `recovery`   | [RecoveryView](RecoveryView.md)                        |
 
 ## Example
 
@@ -22,6 +23,7 @@ const example = {
   activePlan: null,
   sessions: null,
   state: null,
+  recovery: null,
 } satisfies TodayAgendaView;
 
 console.log(example);

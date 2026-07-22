@@ -74,7 +74,7 @@ example().catch(console.error);
 
 ## publish1
 
-> PublicationResult publish1(id, publishRequest)
+> PublicationResult publish1(id, exerciseVersionPublishRequest)
 
 ### Example
 
@@ -94,8 +94,8 @@ async function example() {
   const body = {
     // string
     id: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
-    // PublishRequest (optional)
-    publishRequest: ...,
+    // ExerciseVersionPublishRequest (optional)
+    exerciseVersionPublishRequest: ...,
   } satisfies Publish1Request;
 
   try {
@@ -112,10 +112,10 @@ example().catch(console.error);
 
 ### Parameters
 
-| Name               | Type                                | Description | Notes                     |
-| ------------------ | ----------------------------------- | ----------- | ------------------------- |
-| **id**             | `string`                            |             | [Defaults to `undefined`] |
-| **publishRequest** | [PublishRequest](PublishRequest.md) |             | [Optional]                |
+| Name                              | Type                                                              | Description | Notes                     |
+| --------------------------------- | ----------------------------------------------------------------- | ----------- | ------------------------- |
+| **id**                            | `string`                                                          |             | [Defaults to `undefined`] |
+| **exerciseVersionPublishRequest** | [ExerciseVersionPublishRequest](ExerciseVersionPublishRequest.md) |             | [Optional]                |
 
 ### Return type
 

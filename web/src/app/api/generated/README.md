@@ -60,7 +60,7 @@ All URIs are relative to *http://localhost*
 | _ConsentControllerApi_                 | [**grant**](docs/ConsentControllerApi.md#grant)                                                        | **POST** /api/v1/consent/grants                                                                              |
 | _ConsentControllerApi_                 | [**revoke**](docs/ConsentControllerApi.md#revoke)                                                      | **POST** /api/v1/consent/grants/{grantId}/revoke                                                             |
 | _ConsentControllerApi_                 | [**template**](docs/ConsentControllerApi.md#template)                                                  | **POST** /api/v1/consent/templates                                                                           |
-| _CurrentIdentityControllerApi_         | [**current1**](docs/CurrentIdentityControllerApi.md#current1)                                          | **GET** /api/v1/identity/me                                                                                  | Return the authenticated external identity                                    |
+| _CurrentIdentityControllerApi_         | [**current2**](docs/CurrentIdentityControllerApi.md#current2)                                          | **GET** /api/v1/identity/me                                                                                  | Return the authenticated external identity                                    |
 | _ExerciseCatalogAdminControllerApi_    | [**addContribution**](docs/ExerciseCatalogAdminControllerApi.md#addcontribution)                       | **POST** /api/v1/admin/exercises/versions/{versionId}/contributions                                          |
 | _ExerciseCatalogAdminControllerApi_    | [**addEvidence**](docs/ExerciseCatalogAdminControllerApi.md#addevidence)                               | **POST** /api/v1/admin/exercises/versions/{versionId}/evidence                                               |
 | _ExerciseCatalogAdminControllerApi_    | [**approve**](docs/ExerciseCatalogAdminControllerApi.md#approve)                                       | **POST** /api/v1/admin/exercises/versions/{versionId}/approve                                                |
@@ -92,8 +92,8 @@ All URIs are relative to *http://localhost*
 | _ExerciseVersionReviewControllerApi_   | [**publish1**](docs/ExerciseVersionReviewControllerApi.md#publish1)                                    | **POST** /api/v1/admin/exercise-versions/{id}/publish                                                        |
 | _ExerciseVersionReviewControllerApi_   | [**review**](docs/ExerciseVersionReviewControllerApi.md#review)                                        | **POST** /api/v1/admin/exercise-versions/{id}/reviews                                                        |
 | _ExerciseVersionReviewControllerApi_   | [**reviews**](docs/ExerciseVersionReviewControllerApi.md#reviews)                                      | **GET** /api/v1/admin/exercise-versions/{id}/reviews                                                         |
+| _GamificationControllerApi_            | [**gamificationProgress**](docs/GamificationControllerApi.md#gamificationprogress)                     | **GET** /api/v1/gamification/me                                                                              | Return private points and a non-medical ledger view                           |
 | _GamificationControllerApi_            | [**profile**](docs/GamificationControllerApi.md#profile)                                               | **PUT** /api/v1/gamification/me/profile                                                                      | Enable, disable or configure the private gamification profile                 |
-| _GamificationControllerApi_            | [**progress1**](docs/GamificationControllerApi.md#progress1)                                           | **GET** /api/v1/gamification/me                                                                              | Return private points and a non-medical ledger view                           |
 | _GamificationControllerApi_            | [**publishRule**](docs/GamificationControllerApi.md#publishrule)                                       | **POST** /api/v1/admin/gamification/rules                                                                    | Publish an immutable point rule version                                       |
 | _GamificationControllerApi_            | [**qualify**](docs/GamificationControllerApi.md#qualify)                                               | **POST** /api/v1/gamification/executions/{executionId}/qualifications                                        | Qualify a declared execution for points                                       |
 | _GamificationControllerApi_            | [**ranking**](docs/GamificationControllerApi.md#ranking)                                               | **GET** /api/v1/gamification/ranking                                                                         | Return the opt-in pseudonymous ranking                                        |
@@ -116,6 +116,8 @@ All URIs are relative to *http://localhost*
 | _PlanRevisionWorkflowControllerApi_    | [**activate**](docs/PlanRevisionWorkflowControllerApi.md#activate)                                     | **POST** /api/v2/training-plans/revisions/{revisionId}/workflow/activation                                   | Activate a validated plan revision                                            |
 | _PlanRevisionWorkflowControllerApi_    | [**status**](docs/PlanRevisionWorkflowControllerApi.md#status)                                         | **POST** /api/v2/training-plans/revisions/{revisionId}/workflow/status                                       | Read plan revision workflow status and current assessment                     |
 | _PlanRevisionWorkflowControllerApi_    | [**validate**](docs/PlanRevisionWorkflowControllerApi.md#validate)                                     | **POST** /api/v2/training-plans/revisions/{revisionId}/workflow/validation                                   | Validate load and safety for a plan revision                                  |
+| _RecoveryEpisodeControllerApi_         | [**choose**](docs/RecoveryEpisodeControllerApi.md#choose)                                              | **POST** /api/v1/participant/recovery-episodes/{episodeId}/choices                                           |
+| _RecoveryEpisodeControllerApi_         | [**current1**](docs/RecoveryEpisodeControllerApi.md#current1)                                          | **GET** /api/v1/participant/recovery-episodes/current                                                        |
 | _SafetyV2ControllerApi_                | [**clinicalRestriction**](docs/SafetyV2ControllerApi.md#clinicalrestriction)                           | **POST** /api/v2/safety/participants/{participantId}/restrictions                                            |
 | _SafetyV2ControllerApi_                | [**clinicalRestrictions**](docs/SafetyV2ControllerApi.md#clinicalrestrictions)                         | **GET** /api/v2/safety/participants/{participantId}/clinical-restrictions                                    |
 | _SafetyV2ControllerApi_                | [**declare**](docs/SafetyV2ControllerApi.md#declare)                                                   | **POST** /api/v2/safety/me/restrictions                                                                      |
@@ -176,7 +178,6 @@ All URIs are relative to *http://localhost*
 - [AlertData](docs/AlertData.md)
 - [AlertTransitionCommand](docs/AlertTransitionCommand.md)
 - [AnatomicalStructureSnapshot](docs/AnatomicalStructureSnapshot.md)
-- [AnatomyContributionView](docs/AnatomyContributionView.md)
 - [AncestorPath](docs/AncestorPath.md)
 - [AncestorStep](docs/AncestorStep.md)
 - [ArtifactView](docs/ArtifactView.md)
@@ -215,7 +216,9 @@ All URIs are relative to *http://localhost*
 - [ExecutionView](docs/ExecutionView.md)
 - [ExerciseCatalogDetailView](docs/ExerciseCatalogDetailView.md)
 - [ExercisePrescription](docs/ExercisePrescription.md)
+- [ExerciseVersionPublishRequest](docs/ExerciseVersionPublishRequest.md)
 - [FactorSnapshot](docs/FactorSnapshot.md)
+- [GamificationProgressView](docs/GamificationProgressView.md)
 - [GoalOutcomeSnapshot](docs/GoalOutcomeSnapshot.md)
 - [GoalSnapshot](docs/GoalSnapshot.md)
 - [GrantCommand](docs/GrantCommand.md)
@@ -229,7 +232,6 @@ All URIs are relative to *http://localhost*
 - [LegalRequest](docs/LegalRequest.md)
 - [LoadBudgetSnapshot](docs/LoadBudgetSnapshot.md)
 - [LoadCharacteristicCommand](docs/LoadCharacteristicCommand.md)
-- [LoadCharacteristicView](docs/LoadCharacteristicView.md)
 - [LoadProfile](docs/LoadProfile.md)
 - [MappingDecision](docs/MappingDecision.md)
 - [MappingView](docs/MappingView.md)
@@ -255,13 +257,17 @@ All URIs are relative to *http://localhost*
 - [ProfileView](docs/ProfileView.md)
 - [ProgressCommand](docs/ProgressCommand.md)
 - [ProgressView](docs/ProgressView.md)
+- [PublicAnatomyContributionView](docs/PublicAnatomyContributionView.md)
+- [PublicEvidenceView](docs/PublicEvidenceView.md)
+- [PublicLoadCharacteristicView](docs/PublicLoadCharacteristicView.md)
 - [PublicationResult](docs/PublicationResult.md)
-- [PublishRequest](docs/PublishRequest.md)
 - [QualificationView](docs/QualificationView.md)
 - [RankingRow](docs/RankingRow.md)
 - [RecordDetail](docs/RecordDetail.md)
 - [RecordPage](docs/RecordPage.md)
 - [RecordSummary](docs/RecordSummary.md)
+- [RecoveryChoiceCommand](docs/RecoveryChoiceCommand.md)
+- [RecoveryView](docs/RecoveryView.md)
 - [RelationSnapshot](docs/RelationSnapshot.md)
 - [ReorderCommand](docs/ReorderCommand.md)
 - [RestrictionCommand](docs/RestrictionCommand.md)

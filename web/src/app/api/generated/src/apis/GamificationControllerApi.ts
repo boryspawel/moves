@@ -13,6 +13,11 @@
  */
 
 import * as runtime from '../runtime';
+import {
+  type GamificationProgressView,
+  GamificationProgressViewFromJSON,
+  GamificationProgressViewToJSON,
+} from '../models/GamificationProgressView';
 import { type LedgerView, LedgerViewFromJSON, LedgerViewToJSON } from '../models/LedgerView';
 import {
   type ProfileCommand,
@@ -20,11 +25,6 @@ import {
   ProfileCommandToJSON,
 } from '../models/ProfileCommand';
 import { type ProfileView, ProfileViewFromJSON, ProfileViewToJSON } from '../models/ProfileView';
-import {
-  type ProgressView,
-  ProgressViewFromJSON,
-  ProgressViewToJSON,
-} from '../models/ProgressView';
 import {
   type QualificationView,
   QualificationViewFromJSON,
@@ -61,6 +61,48 @@ export interface ReverseRequest {
  *
  */
 export class GamificationControllerApi extends runtime.BaseAPI {
+  /**
+   * Creates request options for gamificationProgress without sending the request
+   */
+  async gamificationProgressRequestOpts(): Promise<runtime.RequestOpts> {
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v1/gamification/me`;
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   * Return private points and a non-medical ledger view
+   */
+  async gamificationProgressRaw(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<GamificationProgressView>> {
+    const requestOptions = await this.gamificationProgressRequestOpts();
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      GamificationProgressViewFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   * Return private points and a non-medical ledger view
+   */
+  async gamificationProgress(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<GamificationProgressView> {
+    const response = await this.gamificationProgressRaw(initOverrides);
+    return await response.value();
+  }
+
   /**
    * Creates request options for profile without sending the request
    */
@@ -110,46 +152,6 @@ export class GamificationControllerApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<ProfileView> {
     const response = await this.profileRaw(requestParameters, initOverrides);
-    return await response.value();
-  }
-
-  /**
-   * Creates request options for progress1 without sending the request
-   */
-  async progress1RequestOpts(): Promise<runtime.RequestOpts> {
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    let urlPath = `/api/v1/gamification/me`;
-
-    return {
-      path: urlPath,
-      method: 'GET',
-      headers: headerParameters,
-      query: queryParameters,
-    };
-  }
-
-  /**
-   * Return private points and a non-medical ledger view
-   */
-  async progress1Raw(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<ProgressView>> {
-    const requestOptions = await this.progress1RequestOpts();
-    const response = await this.request(requestOptions, initOverrides);
-
-    return new runtime.JSONApiResponse(response, (jsonValue) => ProgressViewFromJSON(jsonValue));
-  }
-
-  /**
-   * Return private points and a non-medical ledger view
-   */
-  async progress1(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<ProgressView> {
-    const response = await this.progress1Raw(initOverrides);
     return await response.value();
   }
 

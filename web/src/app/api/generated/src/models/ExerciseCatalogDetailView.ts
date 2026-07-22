@@ -13,27 +13,27 @@
  */
 
 import { mapValues } from '../runtime';
-import type { LoadCharacteristicView } from './LoadCharacteristicView';
+import type { PublicEvidenceView } from './PublicEvidenceView';
 import {
-  LoadCharacteristicViewFromJSON,
-  LoadCharacteristicViewFromJSONTyped,
-  LoadCharacteristicViewToJSON,
-  LoadCharacteristicViewToJSONTyped,
-} from './LoadCharacteristicView';
-import type { EvidenceView } from './EvidenceView';
+  PublicEvidenceViewFromJSON,
+  PublicEvidenceViewFromJSONTyped,
+  PublicEvidenceViewToJSON,
+  PublicEvidenceViewToJSONTyped,
+} from './PublicEvidenceView';
+import type { PublicLoadCharacteristicView } from './PublicLoadCharacteristicView';
 import {
-  EvidenceViewFromJSON,
-  EvidenceViewFromJSONTyped,
-  EvidenceViewToJSON,
-  EvidenceViewToJSONTyped,
-} from './EvidenceView';
-import type { AnatomyContributionView } from './AnatomyContributionView';
+  PublicLoadCharacteristicViewFromJSON,
+  PublicLoadCharacteristicViewFromJSONTyped,
+  PublicLoadCharacteristicViewToJSON,
+  PublicLoadCharacteristicViewToJSONTyped,
+} from './PublicLoadCharacteristicView';
+import type { PublicAnatomyContributionView } from './PublicAnatomyContributionView';
 import {
-  AnatomyContributionViewFromJSON,
-  AnatomyContributionViewFromJSONTyped,
-  AnatomyContributionViewToJSON,
-  AnatomyContributionViewToJSONTyped,
-} from './AnatomyContributionView';
+  PublicAnatomyContributionViewFromJSON,
+  PublicAnatomyContributionViewFromJSONTyped,
+  PublicAnatomyContributionViewToJSON,
+  PublicAnatomyContributionViewToJSONTyped,
+} from './PublicAnatomyContributionView';
 
 /**
  *
@@ -109,22 +109,22 @@ export interface ExerciseCatalogDetailView {
   requiredEquipment?: Array<string>;
   /**
    *
-   * @type {Array<LoadCharacteristicView>}
+   * @type {Array<PublicLoadCharacteristicView>}
    * @memberof ExerciseCatalogDetailView
    */
-  loadCharacteristics?: Array<LoadCharacteristicView>;
+  loadCharacteristics?: Array<PublicLoadCharacteristicView>;
   /**
    *
-   * @type {Array<AnatomyContributionView>}
+   * @type {Array<PublicAnatomyContributionView>}
    * @memberof ExerciseCatalogDetailView
    */
-  anatomyContributions?: Array<AnatomyContributionView>;
+  anatomyContributions?: Array<PublicAnatomyContributionView>;
   /**
    *
-   * @type {Array<EvidenceView>}
+   * @type {Array<PublicEvidenceView>}
    * @memberof ExerciseCatalogDetailView
    */
-  evidence?: Array<EvidenceView>;
+  evidence?: Array<PublicEvidenceView>;
 }
 
 /**
@@ -162,15 +162,15 @@ export function ExerciseCatalogDetailViewFromJSONTyped(
     loadCharacteristics:
       json['loadCharacteristics'] == null
         ? undefined
-        : (json['loadCharacteristics'] as Array<any>).map(LoadCharacteristicViewFromJSON),
+        : (json['loadCharacteristics'] as Array<any>).map(PublicLoadCharacteristicViewFromJSON),
     anatomyContributions:
       json['anatomyContributions'] == null
         ? undefined
-        : (json['anatomyContributions'] as Array<any>).map(AnatomyContributionViewFromJSON),
+        : (json['anatomyContributions'] as Array<any>).map(PublicAnatomyContributionViewFromJSON),
     evidence:
       json['evidence'] == null
         ? undefined
-        : (json['evidence'] as Array<any>).map(EvidenceViewFromJSON),
+        : (json['evidence'] as Array<any>).map(PublicEvidenceViewFromJSON),
   };
 }
 
@@ -201,14 +201,14 @@ export function ExerciseCatalogDetailViewToJSONTyped(
     loadCharacteristics:
       value['loadCharacteristics'] == null
         ? undefined
-        : (value['loadCharacteristics'] as Array<any>).map(LoadCharacteristicViewToJSON),
+        : (value['loadCharacteristics'] as Array<any>).map(PublicLoadCharacteristicViewToJSON),
     anatomyContributions:
       value['anatomyContributions'] == null
         ? undefined
-        : (value['anatomyContributions'] as Array<any>).map(AnatomyContributionViewToJSON),
+        : (value['anatomyContributions'] as Array<any>).map(PublicAnatomyContributionViewToJSON),
     evidence:
       value['evidence'] == null
         ? undefined
-        : (value['evidence'] as Array<any>).map(EvidenceViewToJSON),
+        : (value['evidence'] as Array<any>).map(PublicEvidenceViewToJSON),
   };
 }

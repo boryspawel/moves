@@ -13,6 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
+import type { RecoveryView } from './RecoveryView';
+import {
+  RecoveryViewFromJSON,
+  RecoveryViewFromJSONTyped,
+  RecoveryViewToJSON,
+  RecoveryViewToJSONTyped,
+} from './RecoveryView';
 import type { ActivePlanView } from './ActivePlanView';
 import {
   ActivePlanViewFromJSON,
@@ -64,6 +71,12 @@ export interface TodayAgendaView {
    * @memberof TodayAgendaView
    */
   state?: string;
+  /**
+   *
+   * @type {RecoveryView}
+   * @memberof TodayAgendaView
+   */
+  recovery?: RecoveryView;
 }
 
 /**
@@ -93,6 +106,7 @@ export function TodayAgendaViewFromJSONTyped(
         ? undefined
         : (json['sessions'] as Array<any>).map(AgendaSessionViewFromJSON),
     state: json['state'] == null ? undefined : json['state'],
+    recovery: json['recovery'] == null ? undefined : RecoveryViewFromJSON(json['recovery']),
   };
 }
 
@@ -120,5 +134,6 @@ export function TodayAgendaViewToJSONTyped(
         ? undefined
         : (value['sessions'] as Array<any>).map(AgendaSessionViewToJSON),
     state: value['state'],
+    recovery: RecoveryViewToJSON(value['recovery']),
   };
 }
