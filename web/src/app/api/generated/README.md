@@ -56,6 +56,7 @@ All URIs are relative to *http://localhost*
 | _AnatomyReferenceAdminControllerApi_   | [**get1**](docs/AnatomyReferenceAdminControllerApi.md#get1)                                            | **GET** /api/v1/admin/anatomical-structures/{structureId}                                                    |
 | _AnatomyReferenceAdminControllerApi_   | [**publish2**](docs/AnatomyReferenceAdminControllerApi.md#publish2)                                    | **POST** /api/v1/admin/anatomical-structures/{structureId}/publish                                           | Publish an immutable anatomical structure                                     |
 | _AnatomyReferenceAdminControllerApi_   | [**withdraw1**](docs/AnatomyReferenceAdminControllerApi.md#withdraw1)                                  | **POST** /api/v1/admin/anatomical-structures/{structureId}/withdraw                                          | Withdraw a published anatomical structure                                     |
+| _BarrierReportControllerApi_           | [**report**](docs/BarrierReportControllerApi.md#report)                                                | **POST** /api/v1/participant/barrier-reports                                                                 | Report a session barrier and receive deterministic, safe options              |
 | _ConsentControllerApi_                 | [**grant**](docs/ConsentControllerApi.md#grant)                                                        | **POST** /api/v1/consent/grants                                                                              |
 | _ConsentControllerApi_                 | [**revoke**](docs/ConsentControllerApi.md#revoke)                                                      | **POST** /api/v1/consent/grants/{grantId}/revoke                                                             |
 | _ConsentControllerApi_                 | [**template**](docs/ConsentControllerApi.md#template)                                                  | **POST** /api/v1/consent/templates                                                                           |
@@ -183,6 +184,8 @@ All URIs are relative to *http://localhost*
 - [AttemptDetailView](docs/AttemptDetailView.md)
 - [AttemptView](docs/AttemptView.md)
 - [AvailabilityRequest](docs/AvailabilityRequest.md)
+- [BarrierReportCommand](docs/BarrierReportCommand.md)
+- [BarrierReportView](docs/BarrierReportView.md)
 - [BatchView](docs/BatchView.md)
 - [CandidateView](docs/CandidateView.md)
 - [CatalogItem](docs/CatalogItem.md)

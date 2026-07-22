@@ -51,6 +51,18 @@ export interface JsonNode {
   _float?: boolean;
   /**
    *
+   * @type {boolean}
+   * @memberof JsonNode
+   */
+  valueNode?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof JsonNode
+   */
+  missingNode?: boolean;
+  /**
+   *
    * @type {JsonNodeNodeTypeEnum}
    * @memberof JsonNode
    */
@@ -67,18 +79,6 @@ export interface JsonNode {
    * @memberof JsonNode
    */
   integralNumber?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof JsonNode
-   */
-  valueNode?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof JsonNode
-   */
-  missingNode?: boolean;
   /**
    *
    * @type {boolean}
@@ -203,11 +203,11 @@ export function JsonNodeFromJSONTyped(json: any, ignoreDiscriminator: boolean): 
     _null: json['null'] == null ? undefined : json['null'],
     object: json['object'] == null ? undefined : json['object'],
     _float: json['float'] == null ? undefined : json['float'],
+    valueNode: json['valueNode'] == null ? undefined : json['valueNode'],
+    missingNode: json['missingNode'] == null ? undefined : json['missingNode'],
     nodeType: json['nodeType'] == null ? undefined : json['nodeType'],
     string: json['string'] == null ? undefined : json['string'],
     integralNumber: json['integralNumber'] == null ? undefined : json['integralNumber'],
-    valueNode: json['valueNode'] == null ? undefined : json['valueNode'],
-    missingNode: json['missingNode'] == null ? undefined : json['missingNode'],
     pojo: json['pojo'] == null ? undefined : json['pojo'],
     floatingPointNumber:
       json['floatingPointNumber'] == null ? undefined : json['floatingPointNumber'],
@@ -244,11 +244,11 @@ export function JsonNodeToJSONTyped(
     null: value['_null'],
     object: value['object'],
     float: value['_float'],
+    valueNode: value['valueNode'],
+    missingNode: value['missingNode'],
     nodeType: value['nodeType'],
     string: value['string'],
     integralNumber: value['integralNumber'],
-    valueNode: value['valueNode'],
-    missingNode: value['missingNode'],
     pojo: value['pojo'],
     floatingPointNumber: value['floatingPointNumber'],
     short: value['_short'],

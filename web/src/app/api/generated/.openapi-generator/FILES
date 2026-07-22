@@ -29,6 +29,9 @@ docs/AssessmentSnapshot.md
 docs/AttemptDetailView.md
 docs/AttemptView.md
 docs/AvailabilityRequest.md
+docs/BarrierReportCommand.md
+docs/BarrierReportControllerApi.md
+docs/BarrierReportView.md
 docs/BatchView.md
 docs/CandidateView.md
 docs/CatalogItem.md
@@ -172,6 +175,7 @@ docs/WorkflowState.md
 docs/WorkflowView.md
 package.json
 src/apis/AnatomyReferenceAdminControllerApi.ts
+src/apis/BarrierReportControllerApi.ts
 src/apis/ConsentControllerApi.ts
 src/apis/CurrentIdentityControllerApi.ts
 src/apis/ExerciseCatalogAdminControllerApi.ts
@@ -219,6 +223,8 @@ src/models/AssessmentSnapshot.ts
 src/models/AttemptDetailView.ts
 src/models/AttemptView.ts
 src/models/AvailabilityRequest.ts
+src/models/BarrierReportCommand.ts
+src/models/BarrierReportView.ts
 src/models/BatchView.ts
 src/models/CandidateView.ts
 src/models/CatalogItem.ts

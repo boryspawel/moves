@@ -27,6 +27,8 @@ export * from './AssessmentSnapshot';
 export * from './AttemptDetailView';
 export * from './AttemptView';
 export * from './AvailabilityRequest';
+export * from './BarrierReportCommand';
+export * from './BarrierReportView';
 export * from './BatchView';
 export * from './CandidateView';
 export * from './CatalogItem';

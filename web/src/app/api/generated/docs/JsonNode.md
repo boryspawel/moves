@@ -9,11 +9,11 @@
 | `_null`               | boolean |
 | `object`              | boolean |
 | `_float`              | boolean |
+| `valueNode`           | boolean |
+| `missingNode`         | boolean |
 | `nodeType`            | string  |
 | `string`              | boolean |
 | `integralNumber`      | boolean |
-| `valueNode`           | boolean |
-| `missingNode`         | boolean |
 | `pojo`                | boolean |
 | `floatingPointNumber` | boolean |
 | `_short`              | boolean |
@@ -41,11 +41,11 @@ const example = {
   _null: null,
   object: null,
   _float: null,
+  valueNode: null,
+  missingNode: null,
   nodeType: null,
   string: null,
   integralNumber: null,
-  valueNode: null,
-  missingNode: null,
   pojo: null,
   floatingPointNumber: null,
   _short: null,

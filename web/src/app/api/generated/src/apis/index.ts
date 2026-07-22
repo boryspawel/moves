@@ -1,6 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export * from './AnatomyReferenceAdminControllerApi';
+export * from './BarrierReportControllerApi';
 export * from './ConsentControllerApi';
 export * from './CurrentIdentityControllerApi';
 export * from './ExerciseCatalogAdminControllerApi';
