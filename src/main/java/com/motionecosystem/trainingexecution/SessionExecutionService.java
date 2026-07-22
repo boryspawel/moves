@@ -22,6 +22,7 @@ import com.motionecosystem.trainingexecution.SessionExecutionPersistence.ReportD
 import com.motionecosystem.trainingexecution.SessionExecutionPersistence.ResultData;
 import com.motionecosystem.trainingplanning.api.PlannedSessionExecutionPort;
 import com.motionecosystem.trainingplanning.api.PlannedSessionExecutionPort.SessionState;
+import com.motionecosystem.adherence.RecoveryEpisodeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
-public class SessionExecutionService {
+public class SessionExecutionService implements com.motionecosystem.trainingexecution.api.ExecutionHistoryQueryPort {
 
     private final CurrentAccountService accounts;
     private final SpecialistRelationshipService relationships;
@@ -40,6 +41,7 @@ public class SessionExecutionService {
     private final TransactionalOutbox outbox;
     private final ExecutionProjectionService projections;
     private final SessionExecutionAttemptService attempts;
+    private final RecoveryEpisodeService recovery;
     private final Clock clock;
 
     @Transactional
@@ -131,6 +133,8 @@ public class SessionExecutionService {
                         report.difficultyLevel(), report.techniqueConfidenceLevel(), report.note(), command.sessionRpe(),
                         mode(command.observationMode()), report.reportedAt()), alerts);
         attempts.completeAfterFinalDeclaration(subject, participant.id(), plannedSessionId);
+        recovery.executionCompleted(participant.id(), plannedSessionId, execution.id());
+        recovery.detect(participant.id());
         plannedSessions.markCompleted(plannedSessionId);
         audit.record(subject, "SESSION_EXECUTION_DECLARED", "SessionExecution", execution.id());
         return execution(execution.id());
@@ -190,6 +194,14 @@ public class SessionExecutionService {
         }
         audit.record(subject, "SESSION_EXECUTION_CORRECTED", "SessionExecution", executionId);
         return execution(executionId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.Optional<java.time.Instant> latestDeclaredCompletion(UUID participantAccountId) {
+        return persistence.findByParticipant(participantAccountId).stream()
+                .filter(item -> item.execution().declaredCompletion())
+                .map(item -> item.execution().recordedAt()).max(java.time.Instant::compareTo);
     }
 
     @Transactional(readOnly = true)

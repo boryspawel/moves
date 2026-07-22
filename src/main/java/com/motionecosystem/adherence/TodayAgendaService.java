@@ -33,6 +33,7 @@ public class TodayAgendaService {
     private final PlanRevisionQueryPort revisions;
     private final SessionExecutionProgressQueryPort progress;
     private final SessionSafetyDecisionQueryPort safety;
+    private final RecoveryEpisodeService recovery;
     private final Clock clock;
 
     @Transactional(readOnly = true)
@@ -43,14 +44,14 @@ public class TodayAgendaService {
         }
         Optional<ParticipantContextQueryPort.ParticipantContext> participant = participants.findContext(account.id());
         if (participant.isEmpty()) {
-            return new TodayAgendaView(null, null, null, List.of(), "TIME_ZONE_REQUIRED");
+            return new TodayAgendaView(null, null, null, List.of(), "TIME_ZONE_REQUIRED", null);
         }
         ZoneId timeZone = participant.get().timeZone();
         Instant now = clock.instant();
         LocalDate localDate = now.atZone(timeZone).toLocalDate();
         Optional<PlanRevisionSnapshot> revision = revisions.findActiveRevision(account.id());
         if (revision.isEmpty()) {
-            return new TodayAgendaView(timeZone.getId(), localDate, null, List.of(), "NO_ACTIVE_PLAN");
+            return new TodayAgendaView(timeZone.getId(), localDate, null, List.of(), "NO_ACTIVE_PLAN", recovery.current(subject));
         }
         PlanRevisionSnapshot snapshot = revision.get();
         List<SessionSnapshot> todaySessions = snapshot.cycles().stream()
@@ -65,9 +66,11 @@ public class TodayAgendaService {
                 .sorted(Comparator.comparing(AgendaSessionView::sortAt)
                         .thenComparing(AgendaSessionView::title).thenComparing(AgendaSessionView::sessionId))
                 .toList();
+        var recoveryView = recovery.current(subject);
+        if (recoveryView != null) sessions = sessions.stream().map(item -> new AgendaSessionView(item.sessionId(), item.title(), item.expectedDurationMinutes(), item.scheduledDate(), item.availableFrom(), item.availableTo(), item.executionState(), item.doseSummary(), item.safetyState(), "RECOVERY_REQUIRED", item.sortAt())).toList();
         return new TodayAgendaView(timeZone.getId(), localDate,
                 new ActivePlanView(snapshot.planId(), snapshot.revisionId(), snapshot.revisionNumber()),
-                sessions, sessions.isEmpty() ? "NO_SESSION_TODAY" : "READY");
+                sessions, sessions.isEmpty() ? "NO_SESSION_TODAY" : "READY", recoveryView);
     }
 
     private static boolean belongsToLocalDay(SessionSnapshot session, LocalDate day, ZoneId zone) {
@@ -90,7 +93,7 @@ public class TodayAgendaService {
     }
 
     public record TodayAgendaView(String timeZone, LocalDate localDate, ActivePlanView activePlan,
-                                  List<AgendaSessionView> sessions, String state) {
+                                  List<AgendaSessionView> sessions, String state, RecoveryEpisodeService.RecoveryView recovery) {
         public TodayAgendaView { sessions = List.copyOf(sessions); }
     }
 

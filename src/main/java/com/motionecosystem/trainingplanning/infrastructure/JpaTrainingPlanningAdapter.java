@@ -14,6 +14,8 @@ import com.motionecosystem.trainingplanning.TrainingGoal;
 import com.motionecosystem.trainingplanning.TrainingPlan;
 import com.motionecosystem.trainingplanning.TrainingPlanningPersistence;
 import com.motionecosystem.trainingplanning.api.PlannedSessionExecutionPort;
+import com.motionecosystem.trainingplanning.api.ParticipantPlanWindowHistoryQueryPort;
+import java.time.Instant;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +23,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class JpaTrainingPlanningAdapter implements TrainingPlanningPersistence, PlannedSessionExecutionPort {
+public class JpaTrainingPlanningAdapter implements TrainingPlanningPersistence, PlannedSessionExecutionPort, ParticipantPlanWindowHistoryQueryPort {
 
     private final EntityManager entityManager;
 
@@ -82,6 +84,30 @@ public class JpaTrainingPlanningAdapter implements TrainingPlanningPersistence, 
             throw new IllegalStateException("planned session disappeared during execution");
         }
         session.complete();
+    }
+
+    @Override
+    public List<PlanWindow> completedWindows(UUID participantAccountId, Instant before, int limit) {
+        return entityManager.createQuery("""
+                SELECT session, cycle.revisionId FROM PlannedSessionJpaEntity session,
+                  MicrocycleJpaEntity microcycle, TrainingCycleJpaEntity cycle
+                WHERE session.participantAccountId=:participant AND session.microcycleId=microcycle.id
+                  AND microcycle.cycleId=cycle.id AND session.availableTo IS NOT NULL AND session.availableTo<=:before
+                ORDER BY session.availableTo DESC, session.id DESC
+                """, Object[].class).setParameter("participant", participantAccountId).setParameter("before", before)
+                .setMaxResults(limit).getResultList().stream().map(row -> {
+                    PlannedSessionJpaEntity session=(PlannedSessionJpaEntity) row[0];
+                    return new PlanWindow(session.id, (UUID) row[1], session.availableTo, session.status.name());
+                }).toList();
+    }
+
+    @Override
+    public List<UUID> participantsWithCompletedWindows(Instant before, int limit, int offset) {
+        return entityManager.createQuery("""
+                SELECT DISTINCT session.participantAccountId FROM PlannedSessionJpaEntity session
+                WHERE session.availableTo IS NOT NULL AND session.availableTo<=:before
+                ORDER BY session.participantAccountId
+                """, UUID.class).setParameter("before", before).setFirstResult(offset).setMaxResults(limit).getResultList();
     }
 
     private PlannedSessionSnapshot snapshot(PlannedSessionJpaEntity session) {

@@ -32,6 +32,7 @@ public class BarrierReportService {
     private final SessionSafetyDecisionQueryPort safety;
     private final BarrierReportRepository reports;
     private final AdherenceSpecialistSignalPort specialistSignals;
+    private final RecoveryEpisodeService recovery;
     private final AuditRecorder audit;
     private final Clock clock;
 
@@ -57,6 +58,7 @@ public class BarrierReportService {
             return reports.findByParticipantAccountIdAndIdempotencyKey(participant, key)
                     .map(BarrierReportService::view).orElseThrow(() -> exception);
         }
+        recovery.detectFromBarrier(created);
         if ("CONTACT_SPECIALIST".equals(selected)) {
             specialistSignals.signalContact(participant, created.id, category,
                     "PAIN_OR_SYMPTOMS".equals(category) || "UNSURE_TECHNIQUE".equals(category));

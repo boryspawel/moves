@@ -30,10 +30,23 @@ class AdherenceSpecialistSignalAdapter implements AdherenceSpecialistSignalPort 
             // The unique barrier reference makes concurrent retries safely idempotent.
         }
     }
+
+    @Override
+    @Transactional
+    public void signalRecoveryContact(UUID participantAccountId, UUID recoveryEpisodeId) {
+        if (signals.existsByRecoveryEpisodeId(recoveryEpisodeId)) return;
+        try {
+            signals.saveAndFlush(new AdherenceContactSignal(participantAccountId, null, recoveryEpisodeId,
+                    "RECOVERY_EPISODE", "ROUTINE", clock.instant()));
+        } catch (DataIntegrityViolationException ignored) {
+            // The unique recovery reference makes concurrent retries safely idempotent.
+        }
+    }
 }
 
 interface AdherenceContactSignalRepository extends JpaRepository<AdherenceContactSignal, UUID> {
     boolean existsByBarrierReportId(UUID barrierReportId);
+    boolean existsByRecoveryEpisodeId(UUID recoveryEpisodeId);
 }
 
 @Entity
@@ -42,13 +55,18 @@ class AdherenceContactSignal {
     @Id UUID id;
     UUID participantAccountId;
     UUID barrierReportId;
+    UUID recoveryEpisodeId;
     String category;
     String priority;
     String status;
     Instant createdAt;
     protected AdherenceContactSignal() { }
     AdherenceContactSignal(UUID participantAccountId, UUID barrierReportId, String category, String priority, Instant createdAt) {
+        this(participantAccountId, barrierReportId, null, category, priority, createdAt);
+    }
+    AdherenceContactSignal(UUID participantAccountId, UUID barrierReportId, UUID recoveryEpisodeId, String category, String priority, Instant createdAt) {
         this.id = UUID.randomUUID(); this.participantAccountId = participantAccountId; this.barrierReportId = barrierReportId;
+        this.recoveryEpisodeId = recoveryEpisodeId;
         this.category = category; this.priority = priority; this.status = "OPEN"; this.createdAt = createdAt;
     }
 }

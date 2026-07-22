@@ -43,8 +43,8 @@ class BarrierReportServiceTest {
                 new SessionSafetyDecisionQueryPort.SessionSafetyDecision(session,
                         SessionSafetyDecisionQueryPort.SafetyDecisionStatus.ALLOWED, UUID.randomUUID(), List.of(), Instant.EPOCH)));
         BarrierReportService service = new BarrierReportService(accounts, revisions,
-                mock(SessionExecutionAttemptQueryPort.class), safety, reports, signals, mock(AuditRecorder.class),
-                Clock.fixed(Instant.EPOCH, ZoneOffset.UTC));
+                mock(SessionExecutionAttemptQueryPort.class), safety, reports, signals, mock(RecoveryEpisodeService.class),
+                mock(AuditRecorder.class), Clock.fixed(Instant.EPOCH, ZoneOffset.UTC));
 
         var view = service.report("participant", new BarrierReportController.BarrierReportCommand(session, null,
                 "NO_TIME", null), "no-time-1");

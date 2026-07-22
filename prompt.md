@@ -268,43 +268,185 @@ Zaimplementuj powrót po przerwie jako pełnoprawny przypadek użycia, bez reset
 
 ## Model
 
-Wprowadź projekcję lub agregat `RecoveryEpisode`, uruchamiany po deterministycznym wzorcu przerwy, np.:
 
-* kilku niewykonanych oknach;
-* określonej liczbie dni bez rozpoczęcia;
-* przerwaniu wcześniejszej regularności;
-* zgłoszeniu choroby albo pogorszenia.
+RecoveryEpisode powinien być agregatem w module adherence, nie tylko projekcją. Projekcja jest potrzebna wyłącznie do zasilania ekranu „Dzisiaj”.
 
-Progi mają być konfigurowalne i wersjonowane.
+Nie należy rozszerzać BarrierReport:
 
-## Zachowanie
+BarrierReport dotyczy pojedynczego problemu przy konkretnej sesji;
+RecoveryEpisode opisuje okres przerwy, wybór ścieżki oraz pierwszy powrót;
+BARRIER_RESPONSE_V1 pozostaje osobną polityką;
+powstaje nowa polityka RECOVERY_RETURN_V1.
+Model domenowy
 
-Po wykryciu przerwy ekran „Dzisiaj” ma zaproponować:
+RecoveryEpisode:
 
-1. powrót od wariantu minimum;
-2. powrót od wariantu skróconego;
-3. przeplanowanie;
-4. kontakt ze specjalistą.
+id
+participantAccountId
+status: OPEN | RETURN_IN_PROGRESS | RESOLVED | CLOSED
+policyVersionCode
+openedAt
+participantTimeZone
+detectedLocalDate
+planRevisionIdAtOpening
+primaryTrigger
+knownReason
+sourceBarrierReportId?
+gapDays
+missedWindowCount
+lastSessionStartedAt?
+selectedPath?
+selectedAt?
+targetPlannedSessionId?
+returnAttemptId?
+returnStartedAt?
+returnLocalDate?
+firstSessionExecutionId?
+firstSessionOutcome: COMPLETED | ABANDONED
+resolvedAt?
+version
 
-Opcje zależą od aktywnego planu, dostępnych wariantów i safety envelope.
+Dodatkowe encje:
 
-Zapisuj:
+RecoveryEpisodeEvidence — przesłanki uruchomienia epizodu;
+RecoveryOffer — migawka aktualnego planu, safety i wygenerowanych opcji;
+RecoveryOfferOption — uporządkowane opcje;
+RecoveryChoice — append-only historia wyborów użytkownika.
 
-* rozpoczęcie epizodu;
-* powód, jeżeli znany;
-* zaproponowaną ścieżkę;
-* wybór użytkownika;
-* datę powrotu;
-* wynik pierwszej sesji po powrocie.
+W bazie należy zagwarantować maksymalnie jeden aktywny epizod na uczestnika przez częściowy indeks unikalny.
 
-## Kryteria zakończenia
+Polityka RECOVERY_RETURN_V1
 
-* powrót nie zeruje historii ani postępu;
-* komunikacja nie używa języka porażki;
-* system nie proponuje pełnej sesji, jeśli reguła wymaga wariantu łagodniejszego;
-* pojedyncze opuszczenie nie tworzy alertu specjalisty;
-* testy obejmują powrót po 3, 7 i 14 dniach oraz aktywne ograniczenia.
+Rekomendowane progi startowe, zapisane jako niezmienny rekord w adherence.recovery_policy_version:
 
+Parametr	Wartość
+brak rozpoczęcia	3 dni
+kolejne niewykonane okna	2
+analiza regularności	28 dni
+minimalna liczba wcześniejszych rozpoczęć	3
+krótka przerwa	3–6 dni
+średnia przerwa	7–13 dni
+długa przerwa	≥14 dni
+
+Epizod otwiera się, jeśli zachodzi przynajmniej jeden warunek:
+
+co najmniej dwa zakończone okna bez rozpoczęcia;
+co najmniej trzy lokalne dni bez rozpoczęcia i wystąpiło przynajmniej jedno zakończone okno;
+wcześniejsze minimum trzy rozpoczęcia w 28 dniach, a aktualna przerwa przekroczyła dwukrotność mediany odstępu, nie mniej niż trzy dni;
+zgłoszono ILLNESS albo PAIN_OR_SYMPTOMS.
+
+Pojedyncze opuszczenie nie tworzy sygnału specjalisty. Prompt 5 w ogóle nie powinien tworzyć automatycznych alertów — kontakt powstaje wyłącznie po świadomym wyborze CONTACT_SPECIALIST.
+
+Reguły rekomendacji
+Sytuacja	Dozwolone opcje
+3–6 dni	minimum, skrócona, przeplanowanie, kontakt
+7–13 dni	minimum jako główna, skrócona, przeplanowanie, kontakt
+≥14 dni	minimum, przeplanowanie, kontakt
+brak zatwierdzonego minimum	nie pokazuj minimum
+brak zatwierdzonego short	nie pokazuj short
+safety BLOCKED lub NOT_ASSESSED	tylko przeplanowanie i kontakt
+safety REQUIRES_REVIEW	rekomenduję bez uruchamiania sesji do zakończenia przeglądu
+choroba lub pogorszenie	wykonanie dopiero po ocenie safety nowszej niż zgłoszenie
+
+W żadnym aktywnym epizodzie nie wolno proponować STANDARD.
+
+Brakujące porty
+
+Obecny SessionExecutionProgressQueryPort obsługuje tylko podane identyfikatory sesji. Należy dodać:
+
+ParticipantExecutionHistoryQueryPort
+
+Z ograniczonym przedziałem czasu, zwracający:
+
+próbę i jej stan;
+wariant;
+startedAt, completedAt, abandonedAt;
+powód przerwania;
+finalne wykonanie istniejące bez próby.
+
+Moduł planning powinien wystawić:
+
+ParticipantPlanWindowHistoryQueryPort
+
+Zwracający zakończone okna również z historycznych rewizji, z informacją o anulowaniu, zastąpieniu albo świadomym przeplanowaniu. Sam aktywny PlanRevisionQueryPort jest niewystarczający.
+
+Wykrywanie
+
+Nie wykonywać zapisu podczas GET /today.
+
+RecoveryDetectionService powinien być uruchamiany:
+
+po BarrierReport;
+po rozpoczęciu lub zakończeniu próby;
+po finalnym wykonaniu;
+po aktywacji nowej rewizji planu;
+okresowo przez ograniczony, stronicowany job wykrywający zakończone okna.
+
+Operacja musi być idempotentna i odporna na równoległe uruchomienia.
+
+Integracja z wykonaniem
+
+SessionExecutionAttemptService obsługuje już STANDARD, SHORT, MINIMUM i sprawdza safety, ale można go ominąć, żądając STANDARD.
+
+Należy dodać port należący do execution:
+
+SessionStartAuthorizationPort
+
+Jego implementacja kompozycyjna sprawdza aktywny RecoveryEpisode. Dzięki temu:
+
+bezpośrednie wywołanie startu także nie ominie ograniczeń;
+training execution nie importuje bezpośrednio modułu adherence;
+nie powstaje cykliczna zależność modułów.
+
+Wybór START_MINIMUM lub START_SHORT i utworzenie próby powinny być jedną operacją aplikacyjną. Epizod zapisuje returnAttemptId, ale nie modyfikuje historii wykonania ani planu.
+
+Projekcja „Dzisiaj”
+
+Obecny TodayAgendaService powinien otrzymać pole najwyższego poziomu:
+
+recovery:
+episodeId
+state
+messageCode
+policyVersion
+openedAt
+gapDays
+targetSessionId?
+offerId
+options[]
+selectedPath?
+returnState?
+
+Recovery nie może być udawane jako zwykła sesja. Gdy epizod jest aktywny, nextAction sesji nie może zwracać START_SESSION.
+
+Backend zwraca neutralne messageCode; polskie treści tworzy frontend, np. „Dobrze, że wracasz. Zacznijmy spokojnie”.
+
+API
+GET  /api/v1/participant/today
+GET  /api/v1/participant/recovery-episodes/current
+POST /api/v1/participant/recovery-episodes/{id}/choices
+
+POST choices wymaga Idempotency-Key, offerId i wersji agregatu. Nieaktualna oferta po zmianie planu lub safety zwraca 409 RECOVERY_OFFER_STALE wraz z aktualną projekcją.
+
+RESCHEDULE zapisuje prośbę — nie zmienia po cichu niezmiennej rewizji planu. CONTACT_SPECIALIST wykorzystuje istniejący mechanizm sygnałów, rozszerzony o źródło RECOVERY_EPISODE.
+
+Minimalne testy
+dokładnie 3, 7 i 14 dni;
+dwa niewykonane okna;
+pojedyncze opuszczenie bez alertu;
+przerwanie wcześniejszej regularności;
+choroba i safety starsze niż zgłoszenie;
+wszystkie cztery stany safety;
+brak wariantu minimum lub short;
+próba obejścia przez start STANDARD;
+zmiana aktywnej rewizji;
+strefa czasowa i DST;
+równoległe wykrycie bez dwóch epizodów;
+idempotentny wybór;
+ukończenie i porzucenie pierwszej sesji;
+potwierdzenie, że historia i postęp nie zostały usunięte ani wyzerowane.
+
+Jedyną decyzją produktową wymagającą zatwierdzenia jest przyjęcie powyższej macierzy 3/7/14; rekomenduję ją jako bezpieczny wariant MVP, z późniejszą recenzją specjalisty medycznego.
 ---
 
 # PROMPT 6 — niskoszumowa worklista specjalisty i kontakt z człowiekiem

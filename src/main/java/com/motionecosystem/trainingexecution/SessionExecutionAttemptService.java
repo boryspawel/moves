@@ -5,6 +5,8 @@ import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.safety.api.SessionSafetyDecisionQueryPort;
 import com.motionecosystem.trainingexecution.api.SessionExecutionProgressQueryPort;
+import com.motionecosystem.trainingexecution.api.SessionStartAuthorizationPort;
+import com.motionecosystem.adherence.RecoveryEpisodeService;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort;
 import com.motionecosystem.trainingplanning.api.PlannedSessionExecutionPort;
 import java.time.Clock;
@@ -29,6 +31,8 @@ public class SessionExecutionAttemptService implements SessionExecutionProgressQ
     private final SessionExecutionPersistence executions;
     private final PlanRevisionQueryPort revisions;
     private final SessionSafetyDecisionQueryPort safety;
+    private final SessionStartAuthorizationPort startAuthorization;
+    private final RecoveryEpisodeService recovery;
     private final AuditRecorder audit;
     private final Clock clock;
 
@@ -53,6 +57,7 @@ public class SessionExecutionAttemptService implements SessionExecutionProgressQ
         String variant = selectedVariantType == null || selectedVariantType.isBlank() ? "STANDARD" : selectedVariantType.trim();
         if (!java.util.Set.of("STANDARD", "SHORT", "MINIMUM").contains(variant)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "selected variant is invalid");
         if (!"STANDARD".equals(variant) && snapshot.variants().stream().noneMatch(item -> variant.equals(item.type()))) throw new ResponseStatusException(HttpStatus.CONFLICT, "selected variant is not approved");
+        startAuthorization.authorize(participant, plannedSessionId, variant);
         requireSafety(participant, planRevisionId, plannedSessionId);
         SessionExecutionAttempt existing = attempts
                 .findFirstByParticipantAccountIdAndPlannedSessionIdOrderByUpdatedAtDesc(participant, plannedSessionId)
@@ -62,6 +67,8 @@ public class SessionExecutionAttemptService implements SessionExecutionProgressQ
             throw new ResponseStatusException(HttpStatus.CONFLICT, "session already has final execution");
         }
         SessionExecutionAttempt created = attempts.save(new SessionExecutionAttempt(participant, plannedSessionId, planRevisionId, variant, key, clock.instant()));
+        recovery.attemptStarted(participant, created.id, plannedSessionId);
+        recovery.detect(participant);
         audit.record(subject, "SESSION_ATTEMPT_STARTED", "SessionExecutionAttempt", created.id);
         return view(created);
     }
@@ -155,6 +162,7 @@ public class SessionExecutionAttemptService implements SessionExecutionProgressQ
             case "ABANDON" -> { if (attempt.active()) { attempt.abandon(validReason(reason), now); audit.record(subject, "SESSION_ATTEMPT_ABANDONED", "SessionExecutionAttempt", attemptId); } }
             default -> throw new IllegalArgumentException(action);
         }
+        if ("ABANDON".equals(action)) recovery.detect(participant);
         return view(attempt);
     }
 
