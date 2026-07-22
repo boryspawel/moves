@@ -53,6 +53,12 @@ export interface DeclareExecutionCommand {
   difficultyLevel?: number;
   /**
    *
+   * @type {number}
+   * @memberof DeclareExecutionCommand
+   */
+  techniqueConfidenceLevel?: number;
+  /**
+   *
    * @type {string}
    * @memberof DeclareExecutionCommand
    */
@@ -97,6 +103,8 @@ export function DeclareExecutionCommandFromJSONTyped(
         : (json['results'] as Array<any>).map(ResultCommandFromJSON),
     painLevel: json['painLevel'] == null ? undefined : json['painLevel'],
     difficultyLevel: json['difficultyLevel'] == null ? undefined : json['difficultyLevel'],
+    techniqueConfidenceLevel:
+      json['techniqueConfidenceLevel'] == null ? undefined : json['techniqueConfidenceLevel'],
     note: json['note'] == null ? undefined : json['note'],
     sessionRpe: json['sessionRpe'] == null ? undefined : json['sessionRpe'],
     observationMode: json['observationMode'] == null ? undefined : json['observationMode'],
@@ -123,6 +131,7 @@ export function DeclareExecutionCommandToJSONTyped(
         : (value['results'] as Array<any>).map(ResultCommandToJSON),
     painLevel: value['painLevel'],
     difficultyLevel: value['difficultyLevel'],
+    techniqueConfidenceLevel: value['techniqueConfidenceLevel'],
     note: value['note'],
     sessionRpe: value['sessionRpe'],
     observationMode: value['observationMode'],

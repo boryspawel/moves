@@ -85,6 +85,12 @@ export interface ExecutionView {
   difficultyLevel?: number;
   /**
    *
+   * @type {number}
+   * @memberof ExecutionView
+   */
+  techniqueConfidenceLevel?: number;
+  /**
+   *
    * @type {string}
    * @memberof ExecutionView
    */
@@ -151,6 +157,8 @@ export function ExecutionViewFromJSONTyped(json: any, ignoreDiscriminator: boole
     recordedAt: json['recordedAt'] == null ? undefined : new Date(json['recordedAt']),
     painLevel: json['painLevel'] == null ? undefined : json['painLevel'],
     difficultyLevel: json['difficultyLevel'] == null ? undefined : json['difficultyLevel'],
+    techniqueConfidenceLevel:
+      json['techniqueConfidenceLevel'] == null ? undefined : json['techniqueConfidenceLevel'],
     note: json['note'] == null ? undefined : json['note'],
     sessionRpe: json['sessionRpe'] == null ? undefined : json['sessionRpe'],
     observationMode: json['observationMode'] == null ? undefined : json['observationMode'],
@@ -189,6 +197,7 @@ export function ExecutionViewToJSONTyped(
       value['recordedAt'] == null ? value['recordedAt'] : value['recordedAt'].toISOString(),
     painLevel: value['painLevel'],
     difficultyLevel: value['difficultyLevel'],
+    techniqueConfidenceLevel: value['techniqueConfidenceLevel'],
     note: value['note'],
     sessionRpe: value['sessionRpe'],
     observationMode: value['observationMode'],
