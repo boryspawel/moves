@@ -1,133 +1,615 @@
-1)
-Zaimplementuj Lombok, podmień konstruktory, obowiązuje constructor dependancy injection
+# MOVES — prompty implementacyjne „adherence-first”
 
-2) jebc jest zakazane. Wyszukaj wszystkie przypadku użycia, obowiązuje cię jpa, hibernate. Utwórz oddzielne pliki repozytoriów.
+## Zasady wspólne dla wszystkich etapów
 
-3) Dokończ implementację front end, wykonaj przerwany prompt 7
+Każdy prompt wykonuj w osobnej turze Codexa, sekwencyjnie. Do każdego etapu dołącz poniższy kontrakt.
 
+### KONTRAKT NADRZĘDNY
 
-Prompt 7 — nowy Angular i selektywny port UI
-W repo `moves` utwórz docelowy frontend web w Angularze i selektywnie wykorzystaj doświadczenia z frontendu `gra-mateusza`.
+Pracujesz bezpośrednio w aktualnym repozytorium `boryspawel/moves`. Masz wykonać rzeczywistą implementację wraz z testami i dokumentacją, a nie jedynie analizę lub plan.
 
-Najpierw sprawdź oba frontendowe drzewa w `gra-mateusza`:
+Przed zmianami:
 
-- `frontend/power-rpg-frontend` — aktywne;
-- `frontend/src` — legacy;
-- komponenty profilu;
-- katalog ćwiczeń;
-- plan i wykonanie treningu;
-- gamifikację;
-- panel administracyjny;
-- autoryzację;
-- klienty API;
-- testy.
+1. przeczytaj wszystkie `AGENTS.md`, `spec.md`, `docs/architecture/technical-overview.md`, istniejące ADR-y oraz dokumenty dotyczące Training Planning, Safety, Training Execution i importu;
+2. sprawdź bieżący branch, HEAD i working tree;
+3. nie cofaj ani nie nadpisuj zmian użytkownika;
+4. zweryfikuj opis zadania z rzeczywistym kodem, migracjami, OpenAPI i frontendem;
+5. używaj dostępnych skills oraz MCP IntelliJ do nawigacji, refaktoryzacji, analizy zależności i uruchamiania testów;
+6. nie zakładaj nazw klas, endpointów ani tabel bez ich sprawdzenia.
 
-Nie kopiuj całego projektu Angular 17. Nie kopiuj legacy frontendu. Użyj istniejących komponentów wyłącznie jako źródła zachowań, informacji i ewentualnie niewielkich neutralnych fragmentów.
+Zasady techniczne:
 
-Docelowo
+* Java 25 i Spring Boot 4.1 pozostają bazą;
+* przed walidacją Maven aktywuj Java 25 przez SDKMAN zgodnie z instrukcją repozytorium;
+* zachowaj modularny monolit, granice modułów i architekturę portów/adaptorów;
+* PostgreSQL i Flyway pozostają źródłem prawdy dla DDL;
+* migracje są forward-only;
+* nowe operacje modyfikujące muszą być autoryzowane zasobowo, audytowane i idempotentne, gdy mogą być ponawiane;
+* nie wystawiaj encji JPA w API;
+* nie implementuj AI, diagnostyki medycznej ani automatycznej zmiany ograniczeń klinicznych;
+* reguły bezpieczeństwa mają pierwszeństwo przed mechanizmami adherence;
+* nie twórz osobnych silników dla trenera i fizjoterapeuty;
+* nie dodawaj rankingu, sztywnych serii, kar, publicznego feedu ani obowiązkowej gamifikacji;
+* nie commituj i nie pushuj bez wyraźnego polecenia.
 
-- Angular 22;
-- TypeScript 6;
-- standalone components;
-- Angular Material/CDK;
-- responsywny web;
-- wygenerowany klient TypeScript z OpenAPI;
-- OIDC/PKCE z Keycloak;
-- route guards wyłącznie jako UX — backend pozostaje źródłem autoryzacji;
-- dostępność WCAG 2.2 AA;
-- brak nazw `power-rpg`, `gra-mateusza` i `ruszsie` w kodzie technicznym;
-- neutralny branding `moves` jako nazwa robocza.
+Po implementacji:
 
-Pierwszy zakres UI
+* wykonaj testy domenowe, integracyjne z PostgreSQL, frontendowe i E2E adekwatne do zakresu;
+* uruchom pełne walidacje backendu i frontendu;
+* zregeneruj klienta OpenAPI, jeśli zmienił się kontrakt;
+* sprawdź `git diff --check`;
+* wykonaj self-review pod kątem bezpieczeństwa, prywatności, N+1, wyścigów, dostępności i złamania granic modułów.
 
-1. Logowanie.
-2. Onboarding zależny od roli.
-3. Profil uczestnika.
-4. Profil specjalisty.
-5. Katalog ćwiczeń.
-6. Utworzenie prostego planu przez specjalistę.
-7. Lista sesji uczestnika.
-8. Deklaracja wykonania, bólu i trudności.
-9. Alert w panelu specjalisty.
-10. Podstawowy opt-in i wynik gamifikacji.
+Raport końcowy ma zawierać:
 
-Nie implementuj teraz pełnej aplikacji mobilnej. Architektura i design system mają jednak umożliwiać późniejsze wykorzystanie w Ionic Angular + Capacitor.
+1. stan repozytorium przed i po pracy;
+2. rezultat funkcjonalny;
+3. zmienione pliki według modułów;
+4. migracje i niezmienniki;
+5. wykonane testy;
+6. kompromisy i decyzje;
+7. niewykonane elementy i ryzyka;
+8. jednoznaczną ocenę spełnienia kryteriów zakończenia.
 
-Testy
+---
 
-- testy komponentów;
-- routing i guards;
-- kontrakty klienta OpenAPI;
-- Playwright dla głównego vertical slice;
-- dostępność kluczowych ekranów;
-- brak odwołań do mock API, jeśli istnieje realny endpoint;
-- build produkcyjny.
+# PROMPT 0 — ADR i techniczna rama MVP adherence-first
 
-Przed użyciem backendu aktywuj Java 25 przez SDKMAN. Korzystaj maksymalnie z MCP IntelliJ i własnych skills.
+## Cel
 
-Na końcu przedstaw:
-- elementy UI portowane funkcjonalnie;
-- elementy napisane od nowa;
-- odrzucone elementy legacy;
-- wyniki testów i builda;
-- stan Git;
-- rekomendację następnego kroku.
+Ustanów obowiązującą ramę architektoniczną dla MVP Moves opartą na czterech momentach: rozpoczęcie, wykonanie, bariera i powrót po przerwie.
 
-Nie wykonuj push.
-Prompt 8 — końcowy audyt migracji
-Wykonaj końcowy audyt repo `moves` po migracji z `ruszsie` i `gra-mateusza`.
+## Zadanie
 
-Jest to zadanie diagnostyczne. Nie implementuj nowych funkcji, chyba że znajdziesz mały, jednoznaczny błąd uniemożliwiający walidację. Każdą taką poprawkę wyraźnie opisz.
+1. Zmapuj obecne możliwości modułów:
 
-Sprawdź:
+   * `trainingplanning`;
+   * `trainingexecution`;
+   * `safety`;
+   * `loadanalysis`;
+   * `specialist`;
+   * `consent`;
+   * `notification`;
+   * frontend Angular.
+2. Wskaż, które istniejące modele mogą zostać rozszerzone, a gdzie potrzebny jest nowy, cienki moduł orkiestracyjny lub projekcyjny.
+3. Nie twórz równoległego modelu planów, wykonań ani alertów.
+4. Dodaj ADR opisujący:
 
-1. Granice modularnego monolitu.
-2. Brak zależności od pakietów i nazw:
-    - powerrpg;
-    - gra-mateusza;
-    - ruszsie;
-    - WspólnyRuch, poza dokumentacją pochodzenia.
-3. Brak API Gateway, Spring Cloud i nieużywanych mikroserwisów.
-4. Java 25 i Spring Boot 4.1.x.
-5. Angular 22 i jeden aktywny frontend.
-6. Keycloak/OIDC bez równoległego własnego systemu sesji.
-7. Spójność migracji Flyway.
-8. Relacje i uprawnienia uczestnik–specjalista.
-9. Izolację danych medycznych od gamifikacji.
-10. Wersjonowanie ćwiczeń.
-11. Powiązanie plan → sesja → wykonanie.
-12. Append-only execution i point ledger.
-13. Zgody, audyt i widoczność danych.
-14. Testy PostgreSQL/Testcontainers.
-15. OpenAPI i wygenerowany klient Angular.
-16. Brak martwego, mockowego i legacy kodu.
-17. Dokumentację migracji i wskazanie źródłowych SHA.
-18. Brak modyfikacji w repozytoriach źródłowych.
+   * pozycjonowanie adherence-first;
+   * własność danych;
+   * przepływ `plan → agenda dnia → próba wykonania → wykonanie/bariera → reakcja → powrót`;
+   * rozdzielenie bezpieczeństwa klinicznego od wsparcia adherence;
+   * zakaz automatycznej modyfikacji ograniczeń medycznych;
+   * brak obowiązkowej gamifikacji;
+   * architekturę projekcji uczestnika i worklisty specjalisty.
+5. Dodaj dokument etapów implementacji oraz tabelę mapującą wymagania badania na istniejące i brakujące elementy kodu.
+6. Zaktualizuj ograniczony zakres dokumentacji technicznej, ale nie wykonuj jeszcze dużych zmian domenowych.
 
-Przed buildem/testami aktywuj Java 25 przez SDKMAN. Wykorzystaj MCP IntelliJ do pełnej inspekcji, wyszukiwania użyć, analizy zależności i uruchomienia testów.
+## Kryteria zakończenia
 
-Przeprowadź walidację proporcjonalną do ryzyka:
+* własność każdej nowej informacji jest jednoznaczna;
+* nie powstaje drugi silnik planowania lub wykonania;
+* zostały opisane kontrakty między modułami;
+* wiadomo, które endpointy i widoki legacy będą później wycofywane;
+* dokumentacja nie przedstawia gamifikacji ani funkcji społecznościowych jako rdzenia MVP.
 
-- pełny backend;
-- pełny frontend;
-- testy integracyjne;
-- testy architektury;
-- migracje;
-- główny E2E;
-- analiza zależności;
-- kontrola working tree wszystkich trzech repozytoriów.
+---
 
-Raport końcowy musi zawierać:
+# PROMPT 1 — agenda uczestnika „Dzisiaj”
 
-- co rzeczywiście zostało przeniesione z każdego repo;
-- co zostało napisane od nowa;
-- co odrzucono;
-- aktualne możliwości produktu;
-- niespełnione wymagania;
-- regresje lub sprzeczności;
-- aktywny dług techniczny;
-- gotowość do dalszego rozwoju;
-- stan Git każdego repo;
-- rekomendację, czy `moves` może stać się nowym głównym repozytorium.
+## Cel
 
-Nie wykonuj push ani nie archiwizuj repo źródłowych.
+Zaimplementuj jedno stabilne API będące źródłem danych dla ekranu „Co mam zrobić dzisiaj”.
+
+## Wymagane zachowanie
+
+API ma zwracać dla zalogowanego uczestnika:
+
+* aktualny aktywny plan i rewizję;
+* sesje dostępne teraz lub w bieżącym lokalnym dniu;
+* elastyczne okno wykonania;
+* status: `AVAILABLE`, `IN_PROGRESS`, `COMPLETED`, `MISSED`, `PAUSED`, `RETURN_AVAILABLE`;
+* nazwę i sens funkcjonalny sesji;
+* przewidywany czas;
+* uproszczone podsumowanie dawki;
+* informację, czy występuje aktywna blokada bezpieczeństwa;
+* następne jedno zalecane działanie;
+* neutralny stan braku planu.
+
+Wykorzystaj istniejące `scheduledDate`, `availableFrom`, `availableTo`, aktywną rewizję planu i projekcje wykonania. Nie kopiuj encji między modułami. Kompozycja ma korzystać z publicznych portów.
+
+Uwzględnij strefę czasową uczestnika. Zdefiniuj deterministyczne sortowanie i zachowanie przy kilku sesjach tego samego dnia.
+
+## API
+
+Preferuj uczestnikowy kontrakt fasadowy w rodzaju:
+
+`GET /api/v1/participant/today`
+
+Ostateczną ścieżkę dobierz po analizie istniejącego API.
+
+## Kryteria zakończenia
+
+* brak konieczności podawania identyfikatora uczestnika;
+* brak aktywnego planu nie jest błędem;
+* sesje poza oknem nie są prezentowane jako dostępne;
+* nie wycieka kliniczne uzasadnienie ograniczeń;
+* testy obejmują strefy czasowe, granice okna, aktywację nowej rewizji oraz autoryzację.
+
+---
+
+# PROMPT 2 — zatwierdzone warianty sesji i „plan minimum”
+
+## Cel
+
+Rozszerz model planu o bezpieczne, wcześniej zatwierdzone warianty sesji: pełny, skrócony i minimum.
+
+## Model
+
+Każda planowana sesja może posiadać:
+
+* wariant `STANDARD`;
+* opcjonalny `SHORT`;
+* opcjonalny `MINIMUM`.
+
+Wariant zawiera własną uporządkowaną listę recept ćwiczeń albo jawne nadpisania dawki. Musi być częścią wersjonowanej rewizji planu i po aktywacji pozostawać niezmienny.
+
+Nie generuj wariantu automatycznie w czasie wykonania. Specjalista lub autor planu definiuje go wcześniej.
+
+## Reguły
+
+* `MINIMUM` nie może omijać ograniczeń bezpieczeństwa;
+* każdy wariant jest oceniany przed aktywacją rewizji;
+* wariant skrócony nie jest osobnym planem;
+* wykonanie wariantu zachowuje informację, który wariant wybrano;
+* wariant nie może samodzielnie zmieniać ćwiczenia na wersję niezatwierdzoną;
+* aktywna rewizja pozostaje immutable.
+
+Rozszerz:
+
+* model planowania;
+* workflow walidacji i aktywacji;
+* snapshot aktywnego planu;
+* OpenAPI;
+* testy migracyjne i integracyjne.
+
+## Kryteria zakończenia
+
+* standardowa sesja nadal działa bez dodatkowej konfiguracji;
+* plan minimum jest opcjonalny;
+* wszystkie warianty przechodzą ocenę safety;
+* wykonanie może jednoznacznie wskazać wariant;
+* nie występuje duplikacja planu ani recept.
+
+---
+
+# PROMPT 3 — prowadzone wykonanie i cykl życia próby sesji
+
+## Cel
+
+Zastąp model „wypełnij formularz po wszystkim” rzeczywistym, prowadzonym cyklem wykonania.
+
+## Model
+
+Dodaj jawny, audytowalny cykl próby wykonania:
+
+* `STARTED`;
+* `PAUSED`;
+* `RESUMED`;
+* `COMPLETED`;
+* `ABANDONED`.
+
+Próba ma wskazywać:
+
+* planowaną sesję;
+* aktywną rewizję;
+* wybrany wariant;
+* uczestnika;
+* czas rozpoczęcia i ostatniej aktywności;
+* postęp po receptach;
+* powód zakończenia bez wykonania, jeżeli został podany.
+
+Nie zmieniaj istniejącego finalnego `SessionExecution` w mutowalny rekord. Próba może być mutowalnym agregatem, ale finalne wykonanie pozostaje append-only.
+
+## API uczestnika
+
+Zapewnij operacje:
+
+* rozpoczęcie;
+* zapis postępu;
+* pauza;
+* wznowienie;
+* ukończenie;
+* zakończenie bez ukończenia.
+
+Wszystkie operacje muszą być idempotentne i kontrolować właściciela zasobu.
+
+Po ukończeniu zbieraj minimalny check-in:
+
+* ból lub reakcja objawowa;
+* trudność;
+* pewność wykonania techniki.
+
+Nie wymagaj notatki ani szczegółowego dziennika.
+
+## Kryteria zakończenia
+
+* nie można równolegle rozpocząć dwóch aktywnych prób tej samej sesji;
+* odświeżenie przeglądarki nie traci postępu;
+* ukończenie tworzy dokładnie jedno finalne wykonanie;
+* ponowione żądanie nie dubluje danych;
+* blokada bezpieczeństwa uniemożliwia start lub kontynuację zgodnie z regułą;
+* gamifikacja nie jest wywoływana przez podstawowy flow.
+
+---
+
+# PROMPT 4 — zgłoszenie bariery i deterministyczna ścieżka ratunkowa
+
+## Cel
+
+Zaimplementuj mechanizm „bariera zamiast winy”: użytkownik zgłasza problem jednym działaniem, a system proponuje bezpieczną, z góry określoną odpowiedź.
+
+## Kategorie bariery
+
+Wprowadź wersjonowany słownik obejmujący co najmniej:
+
+* `NO_TIME`;
+* `PAIN_OR_SYMPTOMS`;
+* `TOO_DIFFICULT`;
+* `UNSURE_TECHNIQUE`;
+* `FATIGUE`;
+* `ILLNESS`;
+* `LOGISTICS`;
+* `LOW_MOTIVATION`;
+* `OTHER`.
+
+Zgłoszenie może dotyczyć sesji przed rozpoczęciem albo aktywnej próby.
+
+## Reguły odpowiedzi
+
+Reguły mają być deterministyczne i wyjaśnialne:
+
+* brak czasu → wariant `SHORT` lub `MINIMUM`;
+* zmęczenie → wariant zatwierdzony albo przeplanowanie;
+* niepewna technika → zatrzymanie ćwiczenia i prośba o kontakt;
+* zbyt trudno → zatwierdzony wariant minimum albo zgłoszenie specjaliście;
+* ból lub objawy → reakcja zgodna z safety, bez diagnozowania;
+* choroba → pauza lub przeplanowanie;
+* niski poziom motywacji → plan minimum, przeplanowanie albo rezygnacja na dziś bez kary.
+
+Zapisuj:
+
+* zgłoszoną barierę;
+* zaproponowane opcje;
+* wybraną akcję;
+* wynik akcji;
+* wersję zastosowanej reguły.
+
+## Zakazy
+
+* brak komunikatów zawstydzających;
+* brak utraty serii;
+* brak automatycznej zmiany ograniczeń;
+* brak dowolnie generowanych porad medycznych.
+
+## Kryteria zakończenia
+
+* jedno zgłoszenie tworzy jeden rekord;
+* każda odpowiedź jest odtwarzalna z wersji reguły;
+* użytkownik może wybrać kontakt zamiast automatycznej opcji;
+* ból i niepewność techniki mogą utworzyć sygnał dla specjalisty;
+* brak czasu samodzielnie nie generuje pilnego alertu.
+
+---
+
+# PROMPT 5 — bezpieczny powrót po przerwie
+
+## Cel
+
+Zaimplementuj powrót po przerwie jako pełnoprawny przypadek użycia, bez resetowania postępu i komunikowania porażki.
+
+## Model
+
+Wprowadź projekcję lub agregat `RecoveryEpisode`, uruchamiany po deterministycznym wzorcu przerwy, np.:
+
+* kilku niewykonanych oknach;
+* określonej liczbie dni bez rozpoczęcia;
+* przerwaniu wcześniejszej regularności;
+* zgłoszeniu choroby albo pogorszenia.
+
+Progi mają być konfigurowalne i wersjonowane.
+
+## Zachowanie
+
+Po wykryciu przerwy ekran „Dzisiaj” ma zaproponować:
+
+1. powrót od wariantu minimum;
+2. powrót od wariantu skróconego;
+3. przeplanowanie;
+4. kontakt ze specjalistą.
+
+Opcje zależą od aktywnego planu, dostępnych wariantów i safety envelope.
+
+Zapisuj:
+
+* rozpoczęcie epizodu;
+* powód, jeżeli znany;
+* zaproponowaną ścieżkę;
+* wybór użytkownika;
+* datę powrotu;
+* wynik pierwszej sesji po powrocie.
+
+## Kryteria zakończenia
+
+* powrót nie zeruje historii ani postępu;
+* komunikacja nie używa języka porażki;
+* system nie proponuje pełnej sesji, jeśli reguła wymaga wariantu łagodniejszego;
+* pojedyncze opuszczenie nie tworzy alertu specjalisty;
+* testy obejmują powrót po 3, 7 i 14 dniach oraz aktywne ograniczenia.
+
+---
+
+# PROMPT 6 — niskoszumowa worklista specjalisty i kontakt z człowiekiem
+
+## Cel
+
+Zastąp listę surowych wykonań i alertów worklistą wymagającą decyzji specjalisty.
+
+## Worklista
+
+Utwórz projekcję autoryzowanych uczestników i elementów wymagających uwagi:
+
+* nasilające się objawy;
+* niepewność techniki;
+* powtarzające się bariery;
+* kilka nieudanych prób;
+* brak powrotu po przerwie;
+* niedopasowanie planu;
+* wymagany post-24h follow-up.
+
+Każdy element ma posiadać:
+
+* kategorię;
+* priorytet wyznaczony regułą;
+* wyjaśnienie powodów;
+* istotne, minimalne dane;
+* stan `OPEN`, `ACKNOWLEDGED`, `SNOOZED`, `RESOLVED`;
+* powiązanie z uczestnikiem i planem;
+* wersję polityki.
+
+Nie pokazuj pełnej historii medycznej na liście.
+
+## Minimalna komunikacja
+
+Zaimplementuj prostą komunikację asynchroniczną:
+
+* uczestnik zgłasza ustrukturyzowany problem i opcjonalny krótki tekst;
+* specjalista odpowiada;
+* nie twórz pełnego komunikatora, statusu online, załączników ani grup;
+* kontroluj aktywną relację, capability, zgodę i purpose.
+
+## Kryteria zakończenia
+
+* specjalista nie wpisuje ręcznie UUID uczestnika;
+* widzi tylko uczestników objętych aktywną relacją;
+* jeden wzorzec problemu nie produkuje wielu duplikatów;
+* każdy element worklisty wyjaśnia, dlaczego powstał;
+* można zmierzyć, czy element był użyteczny;
+* dane kliniczne nie trafiają do neutralnych powiadomień.
+
+---
+
+# PROMPT 7 — frontend uczestnika „tylko dzisiaj” i dostępny shell
+
+## Cel
+
+Przebuduj frontend uczestnika wokół jednego ekranu dziennego i prowadzonego wykonania.
+
+## Zakres
+
+Dodaj główną ścieżkę uczestnika:
+
+`Dzisiaj → wybór pełna/krótsza/minimum → prowadzone wykonanie → check-in → wynik`
+
+Na ekranie głównym umieść:
+
+* jedno dominujące działanie;
+* czas i sens sesji;
+* opcjonalny wariant krótszy;
+* przycisk „Mam problem”;
+* prosty postęp tygodniowy;
+* kontakt ze specjalistą;
+* komunikat powrotu po przerwie.
+
+Nie pokazuj identyfikatorów technicznych, wersji ćwiczeń ani surowych statusów domenowych.
+
+## Dostępność
+
+Interfejs domyślnie ma być dostępny, a uproszczony shell ma wynikać z ustawienia potrzeb użytkownika, nie z wieku.
+
+Wymagania:
+
+* tekst bazowy uproszczonego shellu 18–20 px;
+* cele dotykowe co najmniej 44×44 px;
+* zgodność WCAG 2.2 AA;
+* poprawny reflow i zoom 200%;
+* pełna obsługa klawiaturą;
+* etykiety tekstowe obok ikon;
+* czytelny focus;
+* redukcja animacji;
+* bezpieczne cofnięcie operacji;
+* komunikaty błędów mówiące, co zrobić dalej;
+* nie więcej niż jedno dominujące działanie na ekranie.
+
+Usuń gamifikację z domyślnej nawigacji uczestnika. Może pozostać wyłącznie jako oddzielna funkcja opt-in.
+
+## Kryteria zakończenia
+
+* pierwszy trening można uruchomić bez konfiguracji dodatkowych danych;
+* wznowienie działa po odświeżeniu;
+* zgłoszenie bariery wymaga maksymalnie dwóch działań;
+* dostępność jest pokryta testami komponentowymi i E2E;
+* istnieją testy dla mobile viewport, zoomu, klawiatury i reduced motion.
+
+---
+
+# PROMPT 8 — panel specjalisty V2 i plan builder oparty na aktywnych kontraktach
+
+## Cel
+
+Usuń z głównych flow specjalisty zależność od formularzy legacy i surowych identyfikatorów.
+
+## Plan builder
+
+Przebuduj obecny ekran planu tak, aby korzystał z:
+
+* Training Planning V2;
+* rewizji;
+* walidacji strukturalnej;
+* safety assessment;
+* acknowledgement;
+* atomowej aktywacji.
+
+UI ma umożliwiać:
+
+* wybór uczestnika z aktywnych relacji;
+* wybór ćwiczeń z katalogu;
+* ustawienie celu funkcjonalnego lub treningowego;
+* utworzenie sesji i elastycznego okna;
+* utworzenie wariantów `STANDARD`, `SHORT`, `MINIMUM`;
+* podgląd problemów bezpieczeństwa;
+* aktywację dopiero po wymaganych potwierdzeniach.
+
+Nie wymagaj ręcznego kopiowania UUID.
+
+## Worklista
+
+Dodaj:
+
+* listę elementów wymagających uwagi;
+* filtrowanie według rodzaju i priorytetu;
+* widok minimalnego kontekstu uczestnika;
+* odpowiedź na zgłoszenie;
+* rozwiązanie, odroczenie i potwierdzenie elementu.
+
+## Zakazy
+
+* bez kalendarza wizyt, billing, pełnego CRM i rozbudowanych raportów;
+* bez masowego dashboardu wszystkich możliwych danych;
+* bez automatycznej zmiany planu na podstawie samego alertu.
+
+## Kryteria zakończenia
+
+* podstawowy plan można utworzyć bez surowych identyfikatorów;
+* aktywacja używa wyłącznie workflow V2;
+* legacy endpoint nie jest używany przez nowy ekran;
+* błędy optimistic locking są obsługiwane czytelnie;
+* panel działa na desktopie i tablecie.
+
+---
+
+# PROMPT 9 — przypomnienia rules-first i kontrola zmęczenia powiadomieniami
+
+## Cel
+
+Zaimplementuj minimalny system przypomnień wspierający wykonanie, bez generowania presji i nadmiaru komunikatów.
+
+## Model
+
+Użytkownik może ustawić:
+
+* preferowane okno przypomnienia;
+* kanał;
+* wyciszenie;
+* maksymalną częstotliwość;
+* brak przypomnień;
+* zgodę na przypomnienie o powrocie po przerwie.
+
+Reguły:
+
+* nie przypominaj po ukończeniu lub świadomym przeplanowaniu;
+* nie wysyłaj kilku komunikatów dotyczących tej samej sesji;
+* po zgłoszeniu bólu nie wysyłaj standardowego motywacyjnego reminderu;
+* po przerwie wysyłaj komunikat o łatwym powrocie, nie o zaległości;
+* respektuj quiet hours i strefę czasową;
+* każde powiadomienie musi mieć wersjonowany reason code;
+* specjalista nie otrzymuje wiadomości o każdym pominięciu.
+
+Zacznij od deterministycznych reguł. Nie implementuj predykcyjnego wyboru czasu.
+
+## Kryteria zakończenia
+
+* deduplikacja i idempotencja dostarczeń;
+* pełny audyt decyzji bez zapisywania w treści danych medycznych;
+* użytkownik może wyłączyć powiadomienia;
+* metryka liczby komunikatów na aktywnego użytkownika;
+* testy stref czasowych, quiet hours, przeplanowania i bólu.
+
+---
+
+# PROMPT 10 — metryki adherence, eksperymenty i końcowy audyt vertical slice
+
+## Cel
+
+Zaimplementuj pomiar rzeczywistego wykonywania ćwiczeń i przeprowadź końcowy audyt całego MVP adherence-first.
+
+## Metryki
+
+Zdefiniuj i wyliczaj co najmniej:
+
+* ukończenie pierwszej sesji w 72 godziny;
+* odsetek tygodni z wykonanym planem minimum;
+* wykonanie pełnej zaleconej dawki;
+* `salvage rate` wariantów krótszych i minimum;
+* powrót po przerwie w 7 i 14 dni;
+* czas od pierwszego niewykonania do rezygnacji;
+* aktywność po 4, 8, 12 i 24 tygodniach;
+* liczbę alertów na uczestnika;
+* odsetek alertów uznanych za użyteczne;
+* czas pracy specjalisty związany z worklistą;
+* skuteczność wykonania głównych zadań w uproszczonym shellu.
+
+Nie traktuj czasu w aplikacji, liczby kliknięć ani otwarć jako głównej wartości.
+
+## Prywatność
+
+* analityka nie może zawierać notatek klinicznych ani swobodnego tekstu;
+* używaj neutralnych kodów zdarzeń;
+* zapewnij retencję i możliwość usunięcia danych zgodnie z polityką;
+* nie eksportuj danych do zewnętrznego SaaS bez osobnej decyzji.
+
+## Eksperymenty
+
+Dodaj minimalny, deterministyczny mechanizm przypisania wariantu eksperymentu, początkowo dla:
+
+* klasycznego przypomnienia kontra barrier-first;
+* zwykłego dashboardu kontra today-only;
+* dostępności planu minimum.
+
+Eksperyment nie może zmieniać safety ani ograniczeń medycznych.
+
+## Audyt końcowy
+
+Zweryfikuj pełny przepływ:
+
+1. specjalista tworzy i aktywuje plan;
+2. uczestnik widzi „Dzisiaj”;
+3. rozpoczyna i kończy sesję;
+4. wybiera plan minimum;
+5. zgłasza barierę;
+6. wraca po przerwie;
+7. specjalista otrzymuje jeden użyteczny element worklisty;
+8. uczestnik otrzymuje odpowiedź;
+9. metryki zapisują poprawny wynik.
+
+Usuń lub oznacz jako deprecated nieużywane kontrakty legacy, ale nie wykonuj destrukcyjnego usunięcia bez dowodu braku klientów.
+
+## Kryteria zakończenia
+
+* pełne E2E przechodzi na Docker Compose;
+* backend, frontend, OpenAPI, Flyway i smoke test są zielone;
+* brak obowiązkowej zależności od gamifikacji;
+* brak surowych UUID w podstawowych flow UI;
+* brak powiadomień i alertów bez uzasadnionej następnej decyzji;
+* dokumentacja opisuje rzeczywisty stan po implementacji;
+* powstaje końcowy raport techniczny z listą elementów `MVP`, `LATER`, `EXPERIMENT`, `DO_NOT_BUILD`.
