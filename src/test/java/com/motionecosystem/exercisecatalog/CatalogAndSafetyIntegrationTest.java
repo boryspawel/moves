@@ -254,6 +254,30 @@ class CatalogAndSafetyIntegrationTest {
                 .andExpect(jsonPath("$.contraindicationTags.length()").value(0));
     }
 
+    @Test
+    void publicDetailContainsPublishedEditorialDataWithoutTechnicalRecordIds() throws Exception {
+        UUID structureId = createPublishedAnatomy("QUADRICEPS", "MUSCLE_GROUP");
+        CreatedExercise exercise = createExercise("Public squat");
+        completeAndPublish(exercise.versionId(), structureId);
+
+        mvc.perform(get("/api/v1/exercises/versions/{id}", exercise.versionId()).with(participant("participant")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.canonicalName").value("Public squat"))
+                .andExpect(jsonPath("$.instruction").exists())
+                .andExpect(jsonPath("$.anatomyContributions[0].code").value("QUADRICEPS"))
+                .andExpect(jsonPath("$.anatomyContributions[0].displayName").value("QUADRICEPS"))
+                .andExpect(jsonPath("$.anatomyContributions[0].structureType").value("MUSCLE_GROUP"))
+                .andExpect(jsonPath("$.anatomyContributions[0].coefficientLow").value(0.2))
+                .andExpect(jsonPath("$.loadCharacteristics[0].id").doesNotExist())
+                .andExpect(jsonPath("$.evidence[0].id").doesNotExist())
+                .andExpect(jsonPath("$.mediaReference").doesNotExist())
+                .andExpect(jsonPath("$.legacyContraindicationTags").doesNotExist());
+
+        CreatedExercise draft = createExercise("Draft squat");
+        mvc.perform(get("/api/v1/exercises/versions/{id}", draft.versionId()).with(participant("participant")))
+                .andExpect(status().isNotFound());
+    }
+
     private CreatedExercise createExercise(String name) throws Exception {
         mvc.perform(post("/api/v1/admin/exercises").with(contentAdmin())
                         .contentType("application/json").content(createExerciseRequest(name)))

@@ -24,6 +24,6 @@ class ExerciseVersionReviewController {
     @PostMapping("/{id}/reviews") ReviewExerciseVersion.ReviewResult review(@AuthenticationPrincipal Jwt jwt,@PathVariable UUID id,@RequestBody ReviewExerciseVersion.ReviewCommand request){return workflow.review(id,jwt.getSubject(),request);}
     @GetMapping("/{id}/reviews") ReviewExerciseVersion.ReviewResult reviews(@PathVariable UUID id){return workflow.status(id);}
     @GetMapping("/{id}/diff") ExerciseEditorialWorkflowService.VersionDiff diff(@PathVariable UUID id){return workflow.diff(id);}
-    @PostMapping("/{id}/publish") PublishExerciseVersion.PublicationResult publish(@AuthenticationPrincipal Jwt jwt,@PathVariable UUID id,@RequestBody(required=false) PublishRequest request){return workflow.publish(id,jwt.getSubject(),request==null?null:request.expectedVersion());}
-    record PublishRequest(Long expectedVersion){}
+    @PostMapping("/{id}/publish") PublishExerciseVersion.PublicationResult publish(@AuthenticationPrincipal Jwt jwt,@PathVariable UUID id,@RequestBody(required=false) ExerciseVersionPublishRequest request){return workflow.publish(id,jwt.getSubject(),request==null?null:request.expectedVersion());}
+    record ExerciseVersionPublishRequest(Long expectedVersion){}
 }

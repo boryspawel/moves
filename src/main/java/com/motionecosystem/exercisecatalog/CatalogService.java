@@ -245,24 +245,26 @@ public class CatalogService implements ExerciseCatalogQueryPort {
                 .collect(Collectors.toMap(item -> item.id, Function.identity()));
         Map<UUID, List<EvidenceSource>> linked = linkedEvidence(items.stream().map(item -> item.id)
                 .collect(Collectors.toSet()), sources);
-        List<AnatomyContributionView> anatomyItems = items.stream()
+        List<PublicAnatomyContributionView> anatomyItems = items.stream()
                 .map(item -> anatomy.findStructure(item.anatomicalStructureId)
-                        .map(structure -> new AnatomyContributionView(structure.code(), structure.displayName(),
+                        .map(structure -> new PublicAnatomyContributionView(structure.code(), structure.displayName(),
                                 structure.type().name(), item.role.name(), item.loadChannel.name(),
-                                item.contributionBand.name(), item.confidenceClass, item.evidenceGrade,
+                                item.contributionBand.name(), item.coefficientLow, item.coefficientHigh,
+                                item.confidenceClass, item.evidenceGrade, optionalPublicText(item.variantCondition),
+                                item.sideRule == ContributionSideRule.AS_PRESCRIBED ? null : item.sideRule.name(),
                                 linked.getOrDefault(item.id, List.of()).stream()
                                         .sorted(Comparator.comparing(value -> value.citation))
-                                        .map(CatalogService::evidenceView).toList()))
+                                        .map(CatalogService::publicEvidenceView).toList()))
                         .orElseThrow(() -> new IllegalStateException("published contribution references missing anatomy")))
-                .sorted(Comparator.comparing(AnatomyContributionView::displayName)
-                        .thenComparing(AnatomyContributionView::code)).toList();
-        List<LoadCharacteristicView> characteristics = loadCharacteristics.findByExerciseVersionIdOrderById(versionId)
-                .stream().map(CatalogService::characteristicView)
-                .sorted(Comparator.comparing((LoadCharacteristicView item) -> item.characteristicType().name())
-                        .thenComparing(item -> item.movementPlane().name())
-                        .thenComparing(item -> item.contractionType().name())).toList();
-        List<EvidenceView> evidence = sources.values().stream().sorted(Comparator.comparing(item -> item.citation))
-                .map(CatalogService::evidenceView).toList();
+                .sorted(Comparator.comparing(PublicAnatomyContributionView::displayName)
+                        .thenComparing(PublicAnatomyContributionView::code)).toList();
+        List<PublicLoadCharacteristicView> characteristics = loadCharacteristics.findByExerciseVersionIdOrderById(versionId)
+                .stream().map(CatalogService::publicCharacteristicView)
+                .sorted(Comparator.comparing(PublicLoadCharacteristicView::characteristicType)
+                        .thenComparing(PublicLoadCharacteristicView::movementPlane)
+                        .thenComparing(PublicLoadCharacteristicView::contractionType)).toList();
+        List<PublicEvidenceView> evidence = sources.values().stream().sorted(Comparator.comparing(item -> item.citation))
+                .map(CatalogService::publicEvidenceView).toList();
         return new ExerciseCatalogDetailView(exercise.id, version.id, version.versionNumber, exercise.canonicalName,
                 version.instruction, version.movementPatterns.stream().sorted().map(Enum::name).toList(),
                 version.stimulusType.name(), version.fatigueProfile.name(), version.technicalLevel.name(),
@@ -524,6 +526,21 @@ public class CatalogService implements ExerciseCatalogQueryPort {
                 LoadCharacteristicValue.valueOf(item.characteristicType.name()));
     }
 
+    private static PublicLoadCharacteristicView publicCharacteristicView(ExerciseLoadCharacteristic item) {
+        return new PublicLoadCharacteristicView(item.movementPlane.name(), item.contractionType.name(),
+                item.rangeOfMotion.name(), item.characteristicType.name());
+    }
+
+    private static PublicEvidenceView publicEvidenceView(EvidenceSource item) {
+        String uri = item.sourceUri != null && (item.sourceUri.startsWith("https://") || item.sourceUri.startsWith("http://"))
+                ? item.sourceUri : null;
+        return new PublicEvidenceView(item.citation, item.evidenceGrade, uri);
+    }
+
+    private static String optionalPublicText(String value) {
+        return value == null || value.isBlank() ? null : value;
+    }
+
     private static VersionView view(Exercise exercise, ExerciseVersion version) {
         return new VersionView(exercise.id, exercise.canonicalName, version.id, version.versionNumber,
                 version.status, Set.copyOf(version.movementPatterns), version.instruction,
@@ -694,21 +711,28 @@ public class CatalogService implements ExerciseCatalogQueryPort {
                                             List<String> movementPatterns, String stimulusType,
                                             String fatigueProfile, String technicalLevel, String environment,
                                             List<String> requiredEquipment,
-                                            List<LoadCharacteristicView> loadCharacteristics,
-                                            List<AnatomyContributionView> anatomyContributions,
-                                            List<EvidenceView> evidence) {
+                                            List<PublicLoadCharacteristicView> loadCharacteristics,
+                                            List<PublicAnatomyContributionView> anatomyContributions,
+                                            List<PublicEvidenceView> evidence) {
         public ExerciseCatalogDetailView {
             movementPatterns = List.copyOf(movementPatterns); requiredEquipment = List.copyOf(requiredEquipment);
             loadCharacteristics = List.copyOf(loadCharacteristics); anatomyContributions = List.copyOf(anatomyContributions);
             evidence = List.copyOf(evidence);
         }
     }
-    public record AnatomyContributionView(String code, String displayName, String structureType,
-                                          String role, String loadChannel, String contributionBand,
-                                          String confidenceClass, String evidenceGrade,
-                                          List<EvidenceView> evidence) {
-        public AnatomyContributionView { evidence = List.copyOf(evidence); }
+    public record PublicAnatomyContributionView(String code, String displayName, String structureType,
+                                                String role, String loadChannel, String contributionBand,
+                                                BigDecimal coefficientLow, BigDecimal coefficientHigh,
+                                                String confidenceClass, String evidenceGrade,
+                                                String variantCondition, String sideRule,
+                                                List<PublicEvidenceView> evidence) {
+        public PublicAnatomyContributionView { evidence = List.copyOf(evidence); }
     }
+
+    public record PublicLoadCharacteristicView(String movementPlane, String contractionType,
+                                               String rangeOfMotion, String characteristicType) {}
+
+    public record PublicEvidenceView(String citation, String evidenceGrade, String sourceUri) {}
 
     public record EditorView(VersionView version, List<LoadCharacteristicView> loadCharacteristics,
                              List<EvidenceView> evidence, List<ContributionView> contributions,
