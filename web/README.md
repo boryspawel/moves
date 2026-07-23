@@ -44,15 +44,51 @@ To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use th
 ng test
 ```
 
-## Running end-to-end tests
+## End-to-end tests
 
-For end-to-end (e2e) testing, run:
+The Playwright suite exercises the deployed frontend, Keycloak Authorization Code + PKCE login and the real backend. It never intercepts API calls or supplies test identities in source control. Screenshots, traces and videos are written under `test-results/` and are ignored by Git.
+
+Set a base URL and existing participant credentials before running it:
 
 ```bash
-ng e2e
+export E2E_BASE_URL=http://localhost:4200
+export E2E_PARTICIPANT_USERNAME='existing-participant'
+export E2E_PARTICIPANT_PASSWORD='existing-participant-password'
+npx playwright install chromium
+npm run test:e2e
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+`E2E_BASE_URL` defaults to `http://localhost:4200`. The participant must already be at onboarding stage `READY`; the suite verifies that state, refreshes the authenticated browser session, checks navigation to Sessions, keyboard operation, axe accessibility, 390 px and 320 px layouts, and a real backend error/retry path using an invalid catalog version identifier.
+
+Optional independent accounts are supported and are the only scenarios that intentionally skip when absent:
+
+```bash
+# Existing specialist account for the worklist navigation check.
+export E2E_SPECIALIST_USERNAME='existing-specialist'
+export E2E_SPECIALIST_PASSWORD='existing-specialist-password'
+
+# Separate participant that has a planned session that can be started normally.
+export E2E_RESUME_PARTICIPANT_USERNAME='participant-with-startable-session'
+export E2E_RESUME_PARTICIPANT_PASSWORD='participant-with-startable-session-password'
+```
+
+The resume account must be separate because the test starts, pauses and refreshes an attempt through the normal UI and must not depend on mutable shared participant data. No plan, session or legal state is created by the suite.
+
+### Running against Compose
+
+Start the stack from the repository root, then run the suite from this directory. Use credentials from your local `.env`/Keycloak setup; do not copy them into this README or CI logs.
+
+```bash
+docker compose up --build
+cd web
+export E2E_BASE_URL=http://localhost:4200
+export E2E_PARTICIPANT_USERNAME='your-local-participant'
+export E2E_PARTICIPANT_PASSWORD='your-local-password'
+npx playwright install chromium
+npm run test:e2e
+```
+
+For a different Compose frontend port, set `E2E_BASE_URL` to its public origin and ensure that origin is configured in the Keycloak client's redirect URIs before the realm is imported.
 
 ## Additional Resources
 
