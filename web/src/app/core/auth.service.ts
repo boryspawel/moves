@@ -4,6 +4,7 @@ import { environment } from '../../environments/environment';
 
 interface RealmToken extends KeycloakTokenParsed {
   realm_access?: { roles: string[] };
+  resource_access?: Record<string, { roles: string[] }>;
   preferred_username?: string;
   given_name?: string;
 }
@@ -66,6 +67,7 @@ export class AuthService {
 
   hasRole(role: string): boolean {
     const token = this.client.tokenParsed as RealmToken | undefined;
-    return token?.realm_access?.roles?.includes(role) ?? false;
+    return token?.realm_access?.roles?.includes(role) === true
+      || token?.resource_access?.[environment.keycloak.clientId]?.roles?.includes(role) === true;
   }
 }
