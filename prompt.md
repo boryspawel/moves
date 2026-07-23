@@ -1,612 +1,1219 @@
-Prompt 1 — kontrakt i maszyna stanów
-ROLA
+Poniżej dwa osobne prompty. Najpierw należy wykonać backend, następnie frontend na wygenerowanym kontrakcie OpenAPI.
 
-Działaj jako senior full-stack engineer projektu moves. Twoim zadaniem jest
-ustabilizowanie kontraktu i modelu stanu onboardingu przed przebudową wizualną.
+Prompt 1 — backend kartoteki klienta i timeline
+# Zadanie: backend kartoteki klienta i longitudinalnego timeline’u
 
-Nie wykonuj jeszcze finalnego redesignu.
+## Rola
 
-ZASADY PRACY
+Działaj jako senior backend engineer i architekt domenowy projektu `moves`.
 
-1. Przeczytaj AGENTS.md, instrukcje repozytorium i właściwe skillsy.
-2. Sprawdź branch, HEAD oraz początkowy git status.
-3. Zachowaj wszystkie zastane zmiany użytkownika.
-4. Korzystaj przede wszystkim z MCP IntelliJ i dostępnych skillsów.
-5. Przed każdym Mavenem lub Javą uruchamianą na hoście aktywuj Java 25 przez
-   SDKMAN w tej samej powłoce.
-6. Nie wykonuj commita ani push.
-7. Nie edytuj ręcznie plików wygenerowanego klienta OpenAPI.
-8. Odświeżaj OpenAPI i klienta tylko istniejącym workflow repozytorium.
+Zaimplementuj backendowy pion kartoteki klienta/pacjenta dla specjalisty:
 
-KONTEKST AS-IS
+- podsumowanie współpracy;
+- aktywny plan;
+- cele;
+- zlecone ćwiczenia i zestawy;
+- planowane i wykonane sesje;
+- postępy i pomiary;
+- progresję;
+- problemy i alerty;
+- longitudinalny timeline.
 
-Obecny web/src/app/features/onboarding.page.ts:
+Pracuj zgodnie z instrukcjami repozytorium. Nie wykonuj commita ani push.
 
-- renderuje kilka niezależnych kart równocześnie;
-- używa jednego ogólnego signal failed/message dla ładowania i wszystkich akcji;
-- przy błędzie początkowego GET state pozostawia state=null, ale nadal renderuje
-  formularze;
-- pokazuje techniczne wartości stage i missingSteps;
-- participantProfile wysyła displayName bez timeZoneId;
-- dostępność pozwala wybrać tylko część dni tygodnia;
-- błędy są redukowane do jednego ogólnego komunikatu.
+## Główny cel
 
-Backendowy OnboardingService wyznacza kolejność:
+Frontend ma otrzymać stabilny, ograniczony i autoryzowany read model, który
+umożliwi zbudowanie jednego workspace’u klienta bez samodzielnego agregowania
+kilkunastu endpointów.
 
-1. PROFILE_TYPE_REQUIRED
-2. LEGAL_REQUIRED
-3. PROFILE_REQUIRED
-4. AVAILABILITY_REQUIRED
-5. READY
+Nie twórz nowej równoległej domeny planów, sesji, celów ani bezpieczeństwa.
+Najpierw wykorzystaj istniejące moduły i ich publiczne porty.
 
-Nie twórz drugiej, niezależnej maszyny prawdy po stronie Angulara. State zwracany
-przez backend ma pozostać źródłem prawdy.
+# ETAP 1 — audyt as-is
 
-CEL
+Sprawdź rzeczywisty kod i dokumentację dotyczącą:
 
-Przygotuj stabilny kontener onboardingu, na którym można bezpiecznie zbudować
-docelowy interfejs krokowy.
+- relacji specjalista–uczestnik;
+- profilu uczestnika;
+- zgód i capability authorization;
+- planów i rewizji planów;
+- celów;
+- przepisywania ćwiczeń;
+- planowanych sesji;
+- wykonania sesji;
+- prób wykonania i wyników;
+- postępu;
+- RPE;
+- bólu i trudności;
+- odpowiedzi po 24 godzinach;
+- alertów bezpieczeństwa;
+- worklisty specjalisty;
+- spotkań kalendarzowych;
+- recovery episodes;
+- notatek;
+- dokumentów;
+- audytu i provenance.
 
-ZAKRES
+uzupdłnij dokumentację projektu, nie twórz nowych plików jeżeli to nie jest konieczne
 
-1. Audyt kontraktu
+Nie odczytuj bezpośrednio tabel obcego modułu, jeżeli istnieje publiczny port.
+Jeżeli portu brakuje, dodaj minimalny port read-only po stronie właściciela
+danych.
 
-Sprawdź:
+# ETAP 2 — granice pojęciowe
 
-- OnboardingController;
-- OnboardingService;
-- API State i wszystkie request DTO;
-- OnboardingControllerApi;
-- AuthService i routing;
-- istniejące testy;
-- rzeczywiste zachowanie runtime.
+Zachowaj rozróżnienie:
 
-Ustal, czy profile type może zostać później zmieniony. Nie dodawaj komunikatu
-„wybór jest nieodwracalny”, jeśli kod domenowy tego nie gwarantuje.
+- `Appointment` — zaplanowane spotkanie ze specjalistą;
+- `PlannedSession` — samodzielna albo prowadzona sesja zapisana w planie;
+- `SessionExecution` — rzeczywiste wykonanie;
+- `PlanRevision` — wersjonowany plan;
+- `Goal` — osobny cel;
+- `ProgressMeasurement` — pomiar lub obserwacja;
+- `Problem/Alert` — sygnał wymagający działania;
+- `Note` — dokumentacja specjalisty.
 
-2. Jawny model stanu UI
+Nie utożsamiaj:
 
-Rozdziel co najmniej:
+- zaplanowanej sesji z wykonaniem;
+- spotkania z planem ćwiczeń;
+- bólu z obciążeniem;
+- trudności z RPE;
+- szablonu zestawu z przypisanym planem klienta;
+- globalnego „progresu” z jednym wynikiem liczbowym.
 
-- initial loading;
-- initial load error;
-- loaded;
-- stage submission;
-- stage submission error;
-- ready.
+# ETAP 3 — przypadki użycia
+
+Dodaj dwa jawne przypadki użycia:
+
+```text
+GetSpecialistParticipantWorkspace
+GetSpecialistParticipantTimeline
+
+Preferowane endpointy:
+
+GET /api/v1/specialist/participants/{participantId}/workspace
+GET /api/v1/specialist/participants/{participantId}/timeline
+
+Parametry timeline:
+
+from
+to
+types
+granularity
+cursor
+limit
+
+granularity:
+
+DETAIL
+WEEK
+MONTH
+
+Domyślny zakres:
+
+DETAIL: ostatnie 14 dni;
+WEEK: ostatnie 3 miesiące;
+MONTH: ostatnie 12 miesięcy.
+
+Nie pozwalaj pobierać nieograniczonej historii jednym requestem.
+
+ETAP 4 — ParticipantWorkspaceView
+
+Zaprojektuj projekcję, np.:
+
+SpecialistParticipantWorkspaceView
+  generatedAt
+  participant
+  relationship
+  capabilities
+  nextAppointment?
+  activePlan?
+  goals[]
+  adherenceSummary?
+  recentProgress?
+  activeProblems[]
+  attentionItems[]
+  quickActions[]
+Participant summary
+
+Tylko dane potrzebne do operacyjnej pracy:
+
+participantId;
+displayName;
+opcjonalny avatar reference;
+status współpracy;
+data rozpoczęcia współpracy;
+etykieta kontekstu: klient/pacjent/zawodnik;
+strefa czasowa;
+dozwolone akcje.
+
+Nie zwracaj pełnego profilu, wywiadu ani danych klinicznych, jeżeli nie są
+potrzebne na nagłówku kartoteki.
+
+Active plan
+
+Minimalnie:
+
+planId;
+activeRevisionId;
+nazwa;
+status;
+data aktywacji;
+okres obowiązywania;
+liczba aktywnych zaleceń;
+najbliższa planowana sesja;
+ostatnia wykonana sesja;
+availableActions.
+Goals
+
+Dla każdego celu:
+
+goalId;
+nazwa;
+typ;
+status;
+wartość początkowa;
+wartość docelowa;
+ostatnia wartość;
+jednostka;
+termin;
+kierunek poprawy;
+confidence/data quality, jeżeli istnieje;
+availableActions.
+
+Nie obliczaj wspólnego procentu dla nieporównywalnych celów.
+
+Adherence summary
+
+Rozdziel:
+
+zaplanowane sesje;
+rozpoczęte;
+ukończone;
+pominięte;
+wykonanie zaleceń;
+pokrycie raportowania;
+zakres czasowy.
+
+Brak danych nie może być interpretowany jako brak wykonania.
+
+Active problems
+
+Minimalnie:
+
+problemId;
+typ;
+priorytet;
+status;
+krótki opis;
+effectiveAt;
+recordedAt;
+źródło;
+availableActions.
+
+Nie zwracaj pełnej notatki klinicznej w podsumowaniu.
+
+ETAP 5 — wspólny model zdarzenia timeline
+
+Zaprojektuj stabilną projekcję:
+
+ParticipantTimelineEvent
+  eventId
+  eventType
+  category
+  status
+  effectiveFrom
+  effectiveTo?
+  recordedAt
+  title
+  summary
+  importance
+  sensitivity
+  actor?
+  source
+  relatedGoalIds[]
+  relatedPlanRevisionId?
+  plannedExecutionComparison?
+  measurement?
+  problem?
+  availableActions[]
+Czas
+
+Rozdziel:
+
+effectiveFrom/effectiveTo — kiedy zdarzenie faktycznie wystąpiło;
+recordedAt — kiedy zostało zapisane;
+updatedAt — kiedy je zmodyfikowano, jeżeli dotyczy.
+
+Nie sortuj historii wyłącznie według czasu zapisu.
+
+Sortowanie:
+
+effectiveFrom DESC;
+recordedAt DESC;
+stabilny eventId.
+Kategorie
+
+Minimalne kategorie:
+
+GOAL
+PLAN
+PRESCRIPTION
+APPOINTMENT
+SESSION
+EXECUTION
+PROGRESS
+PROBLEM
+NOTE
+DOCUMENT
+
+Dodawaj wyłącznie typy posiadające rzeczywiste źródło domenowe.
+
+Przykładowe typy:
+
+GOAL_CREATED
+GOAL_UPDATED
+GOAL_MILESTONE_REACHED
+GOAL_COMPLETED
+
+PLAN_REVISION_ACTIVATED
+PLAN_REVISION_REPLACED
+PROGRESSION_APPLIED
+
+EXERCISE_ASSIGNED
+EXERCISE_SET_ASSIGNED
+PRESCRIPTION_CHANGED
+
+APPOINTMENT_SCHEDULED
+APPOINTMENT_COMPLETED
+APPOINTMENT_CANCELLED
+APPOINTMENT_NO_SHOW
+
+SESSION_PLANNED
+SESSION_STARTED
+SESSION_COMPLETED
+SESSION_SKIPPED
+SESSION_ABANDONED
+
+PROGRESS_MEASUREMENT_RECORDED
+
+PAIN_REPORTED
+DIFFICULTY_REPORTED
+POST_24H_RESPONSE_RECORDED
+SAFETY_ALERT_RAISED
+SAFETY_ALERT_RESOLVED
+
+NOTE_ADDED
+DOCUMENT_ADDED
+
+Zweryfikuj rzeczywiste statusy i nazwy domenowe. Nie wymyślaj zdarzeń, których
+nie da się deterministycznie wyprowadzić.
+
+ETAP 6 — planowane kontra wykonane
+
+Dla wykonanej sesji lub ćwiczenia udostępnij prezentacyjny model:
+
+PlannedExecutionComparison
+  planned
+  performed
+  completionState
+  deviations[]
+
+Przykładowe dane:
+
+serie;
+powtórzenia;
+czas;
+ciężar;
+dystans;
+tempo;
+odpoczynek;
+wersja ćwiczenia;
+pominięte elementy;
+zamieniony wariant.
+
+Nie normalizuj różnych jednostek do jednej arbitralnej liczby.
+
+ETAP 7 — progresja i postępy
+
+Rozdziel następujące dane:
+
+GoalProgress
+DoseProgression
+PerformanceMeasurement
+Adherence
+InternalResponse
+Symptoms
+SafetySignal
+
+Nie twórz globalnego progressScore.
+
+Dla decyzji progresyjnej pokaż:
+
+co zmieniono;
+wartość przed;
+wartość po;
+powód;
+źródło decyzji;
+specjalistę lub politykę;
+datę wejścia w życie;
+powiązaną rewizję planu.
+
+Jeżeli decyzja była automatyczną sugestią, odróżnij sugestię od decyzji
+zatwierdzonej przez człowieka.
+
+ETAP 8 — agregacja zależna od skali
+DETAIL
+
+Zwracaj pojedyncze zdarzenia:
+
+sesje;
+wykonania;
+zmiany zaleceń;
+problemy;
+pomiary;
+notatki.
+WEEK
+
+Agreguj powtarzalne wykonania w tygodniowe podsumowania, ale zachowuj osobno:
+
+problemy;
+alerty;
+kamienie milowe;
+zmiany planu;
+ważne pomiary;
+decyzje progresyjne.
+MONTH
+
+Agreguj:
+
+liczbę zaplanowanych i wykonanych sesji;
+wykonanie zaleceń;
+pokrycie raportowania;
+zakresy pomiarów;
+liczbę problemów.
+
+Nie ukrywaj przez agregację zdarzeń istotnych klinicznie lub bezpieczeństwa.
+
+Agregaty muszą być deterministyczne i zawierać zakres czasu oraz liczbę
+zdarzeń źródłowych.
+
+ETAP 9 — paginacja i wydajność
+
+Użyj paginacji kursorem, nie offsetu dla długiej historii.
+
+Cursor powinien opierać się na:
+
+effectiveFrom;
+recordedAt;
+stabilnym identyfikatorze.
 
 Wymagania:
 
-- podczas initial loading nie renderuj formularzy;
-- podczas initial load error pokaż tylko kontrolowany komunikat i „Spróbuj ponownie”;
-- nie pokazuj wtedy „Brakujące kroki: brak”;
-- akcja jednego kroku nie może blokować lub zerować pozostałego stanu;
-- zachowuj wpisane wartości po błędzie;
-- po sukcesie wykorzystuj State zwrócony przez API;
-- zabezpiecz się przed wielokrotnym wysłaniem formularza;
-- nie pokazuj surowego body błędu ani wyjątku backendu.
+bounded limit, np. 20–100;
+brak N+1;
+brak pobierania pełnych agregatów;
+brak ładowania dokumentów i pełnych notatek w timeline;
+indeksy dla kluczowych zakresów czasowych;
+stabilne wyniki przy równoległym dopisywaniu nowych zdarzeń.
 
-Nie używaj MatStepper jako maszyny stanu. Backendowy stage jest źródłem prawdy.
+Jeżeli kompozycja wielu portów staje się zbyt kosztowna, zaproponuj dedykowany
+read model. Nie wprowadzaj event store wyłącznie dla UI bez uzasadnienia.
 
-3. Mapowanie etapu
+ETAP 10 — szczegóły zdarzenia
 
-Dodaj jedno centralne, typowane mapowanie:
+Podstawowy event powinien wystarczyć do wyświetlenia panelu kontekstowego.
 
-- PROFILE_TYPE_REQUIRED -> profile type;
-- LEGAL_REQUIRED -> legal;
-- PROFILE_REQUIRED -> basic profile;
-- AVAILABILITY_REQUIRED -> availability;
-- READY -> complete.
+Nie zwracaj pełnych:
 
-Usuń prezentowanie surowych enumów backendowych użytkownikowi.
+dokumentów;
+wywiadów;
+notatek klinicznych;
+dużych struktur planu.
 
-4. Strefa czasowa
+Dla danych wymagających rozwinięcia zwróć:
 
-Napraw kontrakt uczestnika:
+detailKind
+detailResourceId
+availableActions
 
-- participantProfile ma wysyłać timeZoneId;
-- użyj Intl.DateTimeFormat().resolvedOptions().timeZone jako bezpiecznej wartości
-  początkowej;
-- nie hardcoduj Europe/Warsaw jako wartości dla wszystkich użytkowników;
-- przygotuj typowany helper lub service możliwy do ponownego użycia;
-- dodaj test dla braku i poprawnego wykrycia strefy;
-- nie edytuj klienta OpenAPI ręcznie.
+Frontend może wtedy użyć istniejącego endpointu właściciela zasobu.
 
-Zweryfikuj również, czy backend powinien wymagać niepustego timeZoneId w request
-validation. Nie zmieniaj kontraktu bez testów kompatybilności.
+Nie twórz jednego uniwersalnego endpointu edycji wszystkich typów zdarzeń.
 
-5. Dokumenty prawne
+ETAP 11 — szybkie akcje
 
-Sprawdź, czy repozytorium posiada rzeczywiste treści albo URL regulaminu i
-informacji o prywatności.
+workspace.quickActions i event.availableActions mają wynikać z backendowych
+capabilities.
 
-Nie twórz:
+Przykładowe akcje:
 
-- fikcyjnych treści;
-- pustych stron;
-- tymczasowych URL wyglądających jak produkcyjne;
-- linków do nieistniejących zasobów.
+ADD_NOTE
+SCHEDULE_APPOINTMENT
+START_APPOINTMENT
+OPEN_SESSION
+ASSIGN_EXERCISE
+ASSIGN_EXERCISE_SET
+CREATE_PLAN_REVISION
+ADD_MEASUREMENT
+ACKNOWLEDGE_PROBLEM
+RESOLVE_PROBLEM
+OPEN_DOCUMENT
 
-Jeśli źródło dokumentów nie istnieje, opisz to jako
-BLOCKED_LEGAL_DOCUMENT_CONTENT. Nie blokuj z tego powodu pozostałych prac.
+Nie zwracaj akcji, dla których nie istnieje przypadek użycia albo uprawnienie.
 
-Jeżeli istnieje prawdziwe źródło, zaprojektuj minimalną publiczną projekcję
-metadanych dokumentów: type, version, title, publicUrl. Nie wystawiaj ścieżek
-serwera.
+ETAP 12 — trener kontra fizjoterapeuta
 
-6. Testy
+Ten sam endpoint ma zwracać różny zakres danych zależnie od:
 
-Dodaj testy Angulara dla:
+roli;
+kwalifikacji;
+aktywnej relacji;
+organizacji;
+zakresu zgody;
+celu przetwarzania;
+sensitivity danych.
 
-- initial loading;
-- initial load error;
-- retry;
-- poprawnego mapowania każdego stage;
-- niepokazywania formularzy przy state=null;
-- niezależnego błędu akcji;
-- blokowania podwójnego submitu;
-- wysłania participant timeZoneId;
-- obsługi READY.
+Trener może widzieć między innymi:
 
-Dodaj lub popraw testy backendu, jeśli zmienisz walidację albo kontrakt.
+cele treningowe;
+plan;
+wykonanie;
+pomiary sportowe;
+trudność;
+dozwolone sygnały bezpieczeństwa.
 
-7. Walidacja
+Fizjoterapeuta może dodatkowo widzieć:
 
-Wykonaj:
+pomiary funkcjonalne;
+wywiad i dokumenty kliniczne;
+kliniczne notatki i problemy;
+tylko w zakresie relacji i zgód.
 
-- testy backendu związane z onboardingiem;
-- testy Angulara;
-- build Angulara;
-- weryfikację OpenAPI, jeżeli kontrakt został zmieniony.
+Nie ujawniaj trenerowi diagnozy ani pełnej dokumentacji klinicznej przez
+timeline.
 
-RAPORT
+ETAP 13 — audyt i provenance
 
-Podaj:
+Każde zdarzenie powinno mieć możliwość wskazania:
 
-1. branch, HEAD i początkowy working tree;
-2. diagnozę przyczyny błędnego ekranu;
-3. rozpoznany kontrakt kolejności kroków;
-4. decyzję dotyczącą timeZoneId;
-5. wynik audytu dokumentów prawnych;
-6. listę zmienionych plików;
-7. wykonane testy;
-8. końcowy git status --short;
-9. ocenę READY FOR VISUAL REDESIGN albo NOT READY.
+źródłowego agregatu;
+autora;
+czasu zapisu;
+wersji;
+statusu korekty lub unieważnienia.
 
-Nie wykonuj commita ani push.
-Prompt 2 — docelowy layout i flow
-ROLA
+Odczyt danych o podwyższonej wrażliwości musi zostać audytowany zgodnie z
+aktualną polityką projektu.
 
-Działaj jako senior Angular engineer i implementator zatwierdzonego projektu UX
-onboardingu w moves.
+Nie usuwaj historii przez nadpisywanie.
 
-Zakładamy, że zadanie stabilizacji kontraktu i stanu zostało wcześniej wykonane.
-Najpierw sprawdź stan as-is i potwierdź to założenie. Jeśli nie jest spełnione,
-uzupełnij brakujące elementy zgodnie z istniejącą architekturą, bez tworzenia
-obejść.
-
-ZASADY REPOZYTORIUM
-
-- przeczytaj AGENTS.md i właściwe skillsy;
-- sprawdź branch, HEAD i working tree;
-- zachowaj zastane zmiany;
-- używaj MCP IntelliJ i skillsów;
-- przed Mavenem/Javą aktywuj Java 25 przez SDKMAN;
-- nie wykonuj commita ani push;
-- nie edytuj ręcznie plików generowanych;
-- nie zmieniaj backendu bez rzeczywistej potrzeby kontraktowej.
-
-CEL
-
-Zastąp obecny dashboard kart jednym responsywnym onboardingiem prowadzonym przez
-backendowy State.
-
-KOLEJNOŚĆ
-
-1. Sposób korzystania
-2. Dokumenty
-3. Dane profilu
-4. Dostępność
-5. Gotowe
-
-Backendowy stage pozostaje źródłem prawdy.
-
-ARCHITEKTURA KOMPONENTÓW
-
-Preferowany podział:
-
-- OnboardingPage jako smart container;
-- OnboardingProgressComponent;
-- ProfileTypeStepComponent;
-- LegalStepComponent;
-- BasicProfileStepComponent;
-- AvailabilityStepComponent;
-- OnboardingCompleteComponent.
-
-Komponenty kroków:
-
-- standalone;
-- ChangeDetectionStrategy.OnPush;
-- otrzymują dane przez typed inputs;
-- emitują typed outputs;
-- nie wywołują API samodzielnie.
-
-Nie twórz nadmiernie ogólnego frameworka wizardów.
-
-LAYOUT DESKTOP
-
-Główna zawartość:
-
-- max-width około 1040px;
-- wyśrodkowana;
-- nagłówek „Skonfiguruj konto”;
-- opis „Jeszcze kilka informacji i możesz zacząć”;
-- dwie kolumny:
-   - progress rail około 260px;
-   - karta aktywnego kroku, maksymalnie około 640px.
-
-Progress rail pokazuje:
-
-- „Krok X z 4”;
-- cztery etykiety kroków;
-- status ukończony / bieżący / przyszły;
-- aria-current="step" dla bieżącego;
-- pasek lub tekstowy procent postępu;
-- informację „Zapisujemy postęp po każdym kroku”.
-
-Nie pozwalaj przechodzić bezpośrednio do przyszłych kroków. Ukończone elementy
-nie muszą być linkami.
-
-LAYOUT MOBILE
-
-Dla szerokości poniżej około 720px:
-
-- jedna kolumna;
-- bez pionowego raila;
-- „Krok X z 4” i poziomy pasek postępu nad kartą;
-- pola i przycisk na całą szerokość;
-- brak poziomego scrolla od 320px;
-- minimum 44px dla interaktywnych celów.
-
-SHELL
-
-Na trasie nieukończonego onboardingu zastosuj tryb skupiony:
-
-- logo;
-- nazwa użytkownika, jeśli mieści się;
-- wylogowanie;
-- bez Katalogu, Importu, Sesji, Planu, Alertów i Punktów.
-
-Po READY i przejściu do aplikacji przywróć normalną nawigację.
-
-Nie opieraj tego wyłącznie na CSS ukrywającym dostępne linki. Zastosuj jawny stan
-lub dane routingu.
-
-KROK 1 — SPOSÓB KORZYSTANIA
-
-Pokaż dwie wybieralne karty:
-
-Uczestnik
-„Chcę realizować treningi i korzystać z przygotowanych planów.”
-
-Specjalista
-„Chcę przygotowywać plany i pracować z uczestnikami.”
-
-Wymagania:
-
-- wybór dostępny klawiaturą;
-- semantyka radio group albo równoważna;
-- zaznaczenie nie wysyła od razu requestu;
-- zapis następuje po „Kontynuuj”;
-- wyraźny stan selected, hover, focus i disabled;
-- nie używaj ikon wymagających nowych zewnętrznych assetów.
-
-KROK 2 — DOKUMENTY
-
-Docelowo pokaż osobno:
-
-- „Akceptuję regulamin”;
-- „Zapoznałem się z informacją o prywatności”.
-
-Każda pozycja ma zawierać rzeczywisty link i wersję dokumentu, jeśli kontrakt je
-udostępnia.
-
-Nie wymyślaj treści ani URL. Jeśli nadal istnieje
-BLOCKED_LEGAL_DOCUMENT_CONTENT:
-
-- nie twórz fałszywych linków;
-- wyraźnie opisz blocker w raporcie;
-- nie oznaczaj tego kroku jako produkcyjnie akceptowalnego.
-
-Główny przycisk:
-„Akceptuję i kontynuuję”.
-
-KROK 3 — DANE PROFILU
-
-Uczestnik:
-
-- Nazwa wyświetlana;
-- Strefa czasowa.
-
-Specjalista:
-
-- Nazwa wyświetlana;
-- Specjalizacja;
-- dodatkowa strefa czasowa tylko wtedy, gdy aktualny kontrakt jej wymaga.
-
-Dla strefy:
-
-- wykryj wartość przez Intl;
-- pokaż etykietę „Strefa czasowa”;
-- pokaż helper „Wykryto automatycznie”;
-- nie używaj etykiety „Strefa IANA”;
-- nie pokazuj AM/PM w polskim interfejsie.
-
-Główny przycisk:
-„Zapisz i kontynuuj”.
-
-Dodaj błędy pod właściwymi polami. Nie używaj wyłącznie ogólnego komunikatu.
-
-KROK 4 — DOSTĘPNOŚĆ
-
-Nagłówek:
-„Ustaw typową dostępność”.
-
-Opis ma być neutralny, dopóki dokumentacja domenowa nie potwierdzi odrębnego
-znaczenia dla uczestnika i specjalisty.
-
-Zaprojektuj repeatable list:
-
-- dzień tygodnia;
-- godzina od;
-- godzina do;
-- usuń przedział;
-- „Dodaj kolejny przedział”.
-
-Obsłuż wszystkie siedem dni tygodnia.
-
-Wymagania:
-
-- format 24-godzinny;
-- co najmniej jeden przedział;
-- endTime musi być późniejsze niż startTime;
-- nie wysyłaj formularza z lokalnymi błędami;
-- strefa czasowa wykryta automatycznie;
-- na mobile każdy przedział może być pionową kartą;
-- przycisk usuwania ma dostępną nazwę zawierającą dzień i godziny.
-
-Nie dodawaj skomplikowanego wykrywania konfliktów, jeśli backend nie ma takiego
-kontraktu. Podstawową walidację nakładania dodaj tylko wtedy, gdy można ją
-zaimplementować deterministycznie i pokryć testami.
-
-Główny przycisk:
-„Zapisz dostępność”.
-
-READY
-
-Po uzyskaniu State.stage === READY pokaż osobny ekran:
-
-- nagłówek „Konto jest gotowe”;
-- krótkie podsumowanie profilu;
-- wszystkie kroki oznaczone jako ukończone;
-- przycisk „Przejdź do katalogu”.
-
-Nie wykonuj natychmiastowego redirectu bez pokazania użytkownikowi sukcesu.
-
-WIZUALNE WYMAGANIA
-
-- zachowaj istniejący dark theme;
-- używaj wyłącznie typografii bezszeryfowej;
-- mat-form-field appearance="outline";
-- jedna główna karta aktywnego kroku;
-- border-radius około 16px;
-- subtelne obramowanie;
-- bez dużych dekoracyjnych cieni;
-- bez przypadkowych wysokości kart;
-- logiczne odstępy oparte o skalę 8px;
-- główny przycisk wizualnie dominujący;
-- nie wykonuj globalnego redesignu katalogu ani pozostałych ekranów.
-
-STANY
-
-Obsłuż wizualnie:
-
-- initial loading — skeleton albo spokojny loader;
-- initial load error — karta błędu i retry;
-- stage loading;
-- stage validation error;
-- stage API error;
-- success;
-- READY;
-- unauthorized;
-- forbidden.
-
-Podczas błędu nie ukrywaj wprowadzonych danych.
-
-DOSTĘPNOŚĆ
-
-- lang="pl";
-- dokładnie jedno h1;
-- hierarchia h1/h2;
-- aria-live dla wyniku operacji;
-- aria-busy podczas zapisu;
-- aria-current dla bieżącego kroku;
-- focus na nagłówku nowego kroku po sukcesie;
-- pełna obsługa klawiaturą;
-- widoczny focus;
-- WCAG AA;
-- tytuł dokumentu „Konfiguracja konta | moves”;
-- bez automatycznego przesuwania fokusu podczas zwykłego pisania.
-
-TESTY
+ETAP 14 — testy backendu
 
 Dodaj testy dla:
 
-- renderowania tylko bieżącego kroku;
-- wszystkich mapowań stage;
-- wyboru typu profilu bez natychmiastowego requestu;
-- przejścia po kliknięciu Kontynuuj;
-- participant timeZoneId;
-- specjalizacji specjalisty;
-- wszystkich dni tygodnia;
-- dodania i usunięcia przedziału;
-- walidacji godzin;
-- widoku READY;
-- focusu po zmianie kroku;
-- mobilnego progress indicatora;
-- ukrycia nawigacji produktowej w trybie onboardingu.
+aktywnej relacji specjalista–uczestnik;
+braku relacji;
+cofniętej zgody;
+różnych zakresów danych trener/fizjoterapeuta;
+pustej kartoteki;
+aktywnego planu;
+celów;
+przypisanych ćwiczeń;
+planowanej sesji;
+wykonanej sesji;
+porównania plan–wykonanie;
+pominiętej sesji;
+pomiaru postępu;
+progresji;
+bólu i trudności jako osobnych sygnałów;
+problemu i alertu;
+effectiveAt kontra recordedAt;
+sortowania;
+kursora;
+DETAIL/WEEK/MONTH;
+zachowania ważnych zdarzeń podczas agregacji;
+limitów i braku N+1;
+minimalizacji danych;
+dostępnych akcji;
+audytu.
 
-WALIDACJA
+Preferuj integracyjne testy z rzeczywistym PostgreSQL.
 
-Uruchom:
+ETAP 15 — OpenAPI
 
-- testy Angulara;
-- build produkcyjny;
-- właściwe testy backendu, jeśli backend został zmieniony;
-- kontrolę budżetu stylów komponentu.
+Po implementacji:
 
-RAPORT
+odśwież snapshot OpenAPI;
+wygeneruj klienta Angular istniejącym workflow;
+nie edytuj plików generowanych ręcznie;
+zweryfikuj kompatybilność.
+Poza zakresem
+
+Nie implementuj teraz:
+
+pełnego wywiadu medycznego;
+edytora dokumentów klinicznych;
+storage dokumentów;
+automatycznego podsumowania AI;
+jednego syntetycznego wyniku postępu;
+pełnego systemu komunikacji;
+ogólnego event store;
+oddzielnej kopii danych planowania.
+Raport końcowy
 
 Podaj:
 
-1. branch, HEAD i początkowy stan;
-2. decyzje architektoniczne;
-3. listę zmienionych plików;
-4. opis każdego kroku;
-5. testy i wyniki;
-6. nierozwiązane blockery;
-7. końcowy git status;
-8. ocenę READY FOR BROWSER QA albo NOT READY.
+mapę wykorzystanych modułów i portów;
+wykryte braki;
+nowe lub rozszerzone porty;
+kontrakt workspace;
+kontrakt timeline;
+zasady agregacji;
+model autoryzacji i redakcji danych;
+wydajność;
+listę zmienionych plików;
+wyniki testów;
+końcowy git status;
+ocenę ACCEPTABLE / ACCEPTABLE WITH ISSUES / NOT ACCEPTABLE.
 
 Nie wykonuj commita ani push.
-Prompt 3 — kontrola runtime i poprawki
-ROLA
 
-Działaj jako senior frontend QA engineer z prawem do poprawiania kodu.
-Przeprowadź praktyczny audyt wdrożonego onboardingu moves i usuwaj znalezione
-problemy na bieżąco.
 
-Nie ograniczaj się do raportu.
+---
 
-ZASADY
+## Prompt 2 — frontend kartoteki i własnego timeline’u
 
-- przeczytaj instrukcje repozytorium i skillsy;
-- sprawdź branch, HEAD i working tree;
-- zachowaj zastane zmiany;
-- korzystaj z MCP IntelliJ oraz narzędzi przeglądarkowych;
-- przed Mavenem/Javą aktywuj Java 25 przez SDKMAN;
-- nie wykonuj commita ani push;
-- używaj istniejącego Compose;
-- testuj prawdziwy lokalny OIDC, bez atrap logowania.
+```text
+# Zadanie: kartoteka klienta z własnym hybrydowym timeline’em
 
-SCENARIUSZE
+## Rola
 
-Sprawdź co najmniej:
+Działaj jako senior Angular frontend engineer i UX implementer projektu
+`moves`.
 
-1. Pierwsze wejście nowego użytkownika.
-2. Odświeżenie na każdym kroku.
-3. Wylogowanie i ponowne zalogowanie.
-4. Przerwanie i wznowienie onboardingu.
-5. Profil uczestnika.
-6. Profil specjalisty.
-7. Niepoprawne pole profilu.
-8. Niepoprawny przedział godzin.
-9. Błąd początkowego GET state.
-10. Błąd zapisu każdego kroku.
-11. Podwójne szybkie kliknięcie głównego przycisku.
-12. Stan READY i przejście do katalogu.
-13. Bezpośrednie wejście na inne trasy przed ukończeniem onboardingu.
-14. Sesję po wygaśnięciu albo odświeżeniu tokenu.
+Zaimplementuj kartotekę klienta/pacjenta jako jeden spójny workspace z własnym
+komponentem timeline’u.
 
-PRZEGLĄDARKA
+Nie używaj gotowej biblioteki timeline, kalendarza ani wykresu Gantta.
+
+Pracuj zgodnie z:
+
+- `web/AGENTS.md`;
+- standardem frontendowym repozytorium;
+- globalnym systemem stylów;
+- wygenerowanym klientem OpenAPI.
+
+Nie wykonuj commita ani push.
+
+## Warunek rozpoczęcia
+
+Najpierw potwierdź dostępność stabilnych endpointów:
+
+```http
+GET /api/v1/specialist/participants/{participantId}/workspace
+GET /api/v1/specialist/participants/{participantId}/timeline
+
+Nie buduj produkcyjnego widoku na mockach ani na ręcznej agregacji wielu
+niezależnych endpointów.
+
+Główny cel UX
+
+Specjalista ma pracować z klientem bez przechodzenia przez wiele ekranów.
+
+Z jednego workspace’u powinien móc:
+
+zobaczyć aktywny plan;
+ocenić cele i postępy;
+zobaczyć planowane i wykonane sesje;
+porównać plan z wykonaniem;
+zobaczyć zlecone ćwiczenia i zestawy;
+zidentyfikować problemy;
+otworzyć szczegóły zdarzenia;
+dodać notatkę;
+zaplanować spotkanie;
+zlecić ćwiczenia;
+utworzyć rewizję planu;
+dodać pomiar;
+rozpocząć bieżącą sesję.
+
+Proste operacje mają odbywać się w panelach lub dialogach bez opuszczania
+kartoteki.
+
+ETAP 1 — routing
+
+Dodaj lazy-loaded route:
+
+/specialist/clients/:participantId
+
+Preferowana nazwa w interfejsie:
+
+Klienci
+
+Nie używaj terminu „pacjent” globalnie, ponieważ zależy on od relacji i roli.
+Nagłówek może pokazywać etykietę kontekstową zwróconą przez backend.
+
+Query parameters:
+
+range=2w|3m|12m|all
+types=...
+eventId=...
+view=timeline|list
+
+URL ma zachowywać:
+
+zakres czasu;
+filtry;
+wybrane zdarzenie;
+tryb widoku;
+back/forward;
+direct URL.
+ETAP 2 — architektura komponentów
+
+Preferowany podział:
+
+SpecialistParticipantWorkspacePage
+  ParticipantWorkspaceHeaderComponent
+  ParticipantSummaryStripComponent
+  ParticipantQuickActionsComponent
+  PatientTimelineOverviewComponent
+  PatientTimelineFiltersComponent
+  PatientTimelineComponent
+    TimelinePeriodGroupComponent
+    TimelineEventComponent
+    TimelineAggregateEventComponent
+  PatientTimelineEventPanelComponent
+  PatientTimelineListViewComponent
+
+Smart container odpowiada za:
+
+API;
+routing;
+query parameters;
+loading/error;
+cursor pagination;
+otwieranie panelu zdarzenia;
+unieważnianie danych po operacjach.
+
+Komponenty prezentacyjne:
+
+OnPush;
+typed inputs;
+typed outputs;
+bez bezpośrednich requestów;
+bez logiki domenowej w szablonie.
+ETAP 3 — układ strony
+Desktop
+┌────────────────────────────────────────────────────────────────────┐
+│ Anna Kowalska · aktywna współpraca · następna sesja: jutro 10:00  │
+│ [Rozpocznij] [Notatka] [Zleć ćwiczenia] [Zmień plan] [Pomiar]     │
+├────────────────────────────────────────────────────────────────────┤
+│ Aktywny plan │ Cele │ Wykonanie │ Problemy wymagające reakcji     │
+├────────────────────────────────────────────────────────────────────┤
+│ [2 tyg.] [3 mies.] [12 mies.] [Całość] [Filtry]                   │
+│                                                                    │
+│ OVERVIEW STRIP                                                     │
+├──────────────────────────────────────────┬─────────────────────────┤
+│ SZCZEGÓŁOWY TIMELINE                    │ PANEL ZDARZENIA          │
+│                                          │                         │
+│ grupy dni/tygodni/miesięcy               │ szczegóły               │
+│                                          │ szybkie akcje           │
+└──────────────────────────────────────────┴─────────────────────────┘
+
+Proporcje:
+
+timeline około 65–70%;
+panel około 30–35%;
+panel może być sticky;
+zamknięcie panelu nie może zmieniać filtrów ani pozycji scrolla.
+Tablet
+panel zdarzenia jako drawer;
+overview i timeline na pełną szerokość.
+Mobile
+jedna kolumna;
+szybkie akcje w kontrolowanym menu lub przewijanym pasku;
+panel zdarzenia jako pełnoekranowy drawer/bottom sheet;
+bez poziomego przewijania;
+zachowana pionowa oś zdarzeń.
+ETAP 4 — nagłówek kartoteki
+
+Pokaż:
+
+display name;
+kontekst relacji;
+status współpracy;
+najbliższe spotkanie;
+aktywny plan;
+problemy wymagające uwagi;
+dostępne akcje.
+
+Nie pokazuj:
+
+technicznych UUID;
+diagnozy;
+pełnego wywiadu;
+pełnej notatki klinicznej.
+
+Szybkie akcje wynikają wyłącznie z workspace.quickActions.
+
+Nie wyświetlaj niedziałających przycisków.
+
+ETAP 5 — summary strip
+
+Zaprojektuj zwarte podsumowanie, bez dużych dashboardowych kart.
+
+Minimalne moduły:
+
+aktywny plan;
+cele;
+realizacja planu;
+ostatnia aktywność;
+problemy wymagające reakcji.
+
+Nie pokazuj globalnego „wyniku postępu”.
+
+Rozdziel:
+
+regularność;
+realizację dawki;
+cele;
+pomiary;
+objawy;
+jakość danych.
+
+Każdy moduł powinien być dostępny jako przycisk filtrujący timeline albo
+otwierający odpowiedni kontekst, bez przechodzenia na osobną stronę.
+
+ETAP 6 — własny overview strip
+
+Zbuduj własny lekki komponent przeglądu okresu.
+
+Technologia:
+
+semantyczny HTML;
+SVG dla osi czasu i znaczników;
+czyste funkcje TypeScript do skali czasu;
+bez pełnego D3;
+bez vis-timeline;
+bez Highcharts;
+bez Gantta.
+
+Tory:
+
+Cele
+Plany
+Sesje
+Problemy
+
+Opcjonalnie dodaj tor pomiarów, jeżeli dane są wystarczająco czytelne.
+
+Overview pokazuje:
+
+okresy obowiązywania planów;
+kamienie milowe celów;
+zagęszczenie sesji;
+ważne problemy;
+wybrany zakres.
+
+Nie pokazuj wszystkich zdarzeń jako osobnych etykiet.
+
+Interakcje:
+
+kliknięcie znacznika przewija szczegółowy timeline;
+wybór okresu aktualizuje range/from/to;
+focus jest widoczny;
+overview nie jest jedynym sposobem dostępu do zdarzeń.
+ETAP 7 — szczegółowy pionowy timeline
+
+Timeline ma być semantyczną listą chronologiczną, nie canvasem.
+
+DOM:
+
+section
+  h2 okres
+  ol
+    li timeline event
+
+Grupowanie zależne od granularity:
+
+DETAIL — dzień;
+WEEK — tydzień;
+MONTH — miesiąc.
+
+Każdy event pokazuje:
+
+ikonę lub kształt;
+kategorię;
+datę i godzinę;
+tytuł;
+krótkie podsumowanie;
+status;
+najważniejszą wartość;
+źródło danych;
+jedną główną akcję.
+
+Nie pokazuj surowych enumów.
+
+Planowane i wykonane sesje
+
+Wyraźnie odróżnij:
+
+zaplanowaną;
+rozpoczętą;
+ukończoną;
+pominiętą;
+odwołaną;
+nieobecność.
+
+Dla wykonanej sesji pokaż kompaktowo:
+
+Plan: 7 ćwiczeń
+Wykonanie: 6 ćwiczeń
+RPE: 6/10
+Ból: 2/10
+
+Nie ukrywaj brakujących raportów jako zera.
+
+Progresja
+
+Pokaż:
+
+Zmieniono obciążenie
+30 kg → 32,5 kg
+Powód: wykonanie zgodne przez 3 sesje
+
+Rozróżnij sugestię i zatwierdzoną decyzję.
+
+Cele
+
+Pokaż:
+
+nazwę celu;
+poprzednią wartość;
+aktualną wartość;
+wartość docelową;
+status;
+jednostkę.
+
+Nie przeliczaj nieporównywalnych celów do wspólnego procentu.
+
+Problemy
+
+Pokaż:
+
+typ;
+priorytet;
+czas;
+status;
+neutralne podsumowanie;
+dozwoloną akcję.
+
+Kolor nie może być jedynym wyróżnikiem.
+
+ETAP 8 — panel kontekstowy
+
+Kliknięcie zdarzenia:
+
+nie opuszcza kartoteki;
+zapisuje eventId w URL;
+otwiera panel;
+zachowuje scroll timeline’u.
+
+Panel pokazuje:
+
+pełniejszy opis;
+effective time;
+recorded time;
+autora;
+powiązany plan;
+powiązany cel;
+porównanie plan–wykonanie;
+problemy;
+provenance;
+dostępne akcje.
+
+Pełne dokumenty i notatki pobieraj dopiero po jawnej akcji.
+
+Po zamknięciu:
+
+focus wraca do zdarzenia;
+eventId znika z URL;
+scroll pozostaje bez zmian.
+ETAP 9 — szybkie operacje bez zmiany ekranu
+
+Użyj Material Dialog/CDK Overlay/Drawer zgodnie ze standardem repozytorium.
+
+Obsłuż tylko operacje posiadające backendowy przypadek użycia:
+
+dodaj notatkę;
+zaplanuj spotkanie;
+zleć ćwiczenie;
+zleć zestaw;
+dodaj pomiar;
+potwierdź problem;
+rozwiąż problem;
+rozpocznij sesję;
+utwórz rewizję planu.
+
+Po sukcesie:
+
+nie przeładowuj całej aplikacji;
+odśwież workspace i odpowiedni zakres timeline’u;
+zachowaj filtry i scroll;
+pokaż komunikat przy zmienionym obszarze.
+
+Nie implementuj edycji aktywnej rewizji planu w miejscu. Zmiana ma tworzyć
+nową rewizję zgodnie z backendem.
+
+ETAP 10 — filtry
+
+Filtry kategorii:
+
+Cele;
+Plany i zalecenia;
+Sesje;
+Wykonanie;
+Postępy;
+Problemy;
+Notatki;
+Dokumenty.
+
+Wymagania:
+
+multi-select;
+zapis w URL;
+szybkie „Wszystkie”;
+liczba aktywnych filtrów;
+wyczyść filtry;
+nie pobieraj niepotrzebnych kategorii;
+nie filtruj dużej historii wyłącznie w pamięci.
+ETAP 11 — zakres czasu i agregacja
+
+Kontrolki:
+
+2 tygodnie
+3 miesiące
+12 miesięcy
+Całość
+
+Mapowanie:
+
+2 tygodnie → DETAIL;
+3 miesiące → WEEK;
+12 miesięcy → MONTH;
+Całość → MONTH z paginacją wstecz.
+
+Dla „Całość” nie pobieraj pełnej historii jednym requestem.
+
+Wyraźnie oznacz agregaty:
+
+Podsumowanie tygodnia
+Podsumowanie miesiąca
+
+Umożliw rozwinięcie agregatu do szczegółów przez zmianę zakresu, bez tworzenia
+osobnego ekranu.
+
+ETAP 12 — ładowanie historii
+
+Użyj kursora zwracanego przez backend.
+
+Nie stosuj CDK Virtual Scroll dla kart o silnie zmiennej wysokości, chyba że
+agent wykona spike i potwierdzi poprawność.
+
+Preferuj:
+
+przycisk „Pokaż wcześniejsze”;
+albo kontrolowany IntersectionObserver;
+zachowanie pozycji scrolla;
+deduplikację zdarzeń;
+anulowanie nieaktualnych requestów.
+
+Nowe zdarzenia dopisane w tle nie mogą przestawiać użytkownikowi historii bez
+jawnego odświeżenia.
+
+ETAP 13 — dostępność
+
+Wymagania:
+
+dokładnie jedno h1;
+chronologiczna kolejność zdarzeń w DOM;
+nagłówki okresów;
+pełna obsługa klawiaturą;
+Enter/Space otwiera panel;
+Escape zamyka panel;
+focus wraca do zdarzenia;
+jawne etykiety kategorii i statusów;
+aria-live dla zapisów;
+minimum 44 px dla działań;
+widoczny focus;
+WCAG 2.2 AA;
+prefers-reduced-motion;
+alternatywa Widok listy.
+
+Nie używaj ARIA grid bez pełnego zachowania gridu.
+
+Overview SVG:
+
+posiada tekstowy opis zakresu;
+nie jest jedynym źródłem informacji;
+znaczniki mają dostępne nazwy;
+dekoracyjne linie są aria-hidden.
+ETAP 14 — prywatność
+
+UI może renderować wyłącznie dane zwrócone przez backend.
+
+Nie próbuj odgadywać uprawnień na podstawie samej roli.
+
+Dane oznaczone jako podwyższonej wrażliwości:
+
+nie pojawiają się w nagłówku;
+nie pojawiają się w tooltipach;
+są otwierane jawnie;
+nie pozostają w title/aria-label po cofnięciu dostępu;
+nie są logowane w konsoli.
+ETAP 15 — responsywność
 
 Sprawdź:
 
-- 1440x900;
-- 1024x768;
-- 768x1024;
-- 390x844;
-- 320x700.
+1440×900;
+1024×768;
+768×1024;
+390×844;
+320×700.
 
-Dla każdej szerokości zweryfikuj:
+Na mobile:
 
-- brak poziomego scrolla;
-- brak uciętych przycisków;
-- czytelne pola;
-- prawidłową kolejność treści;
-- minimalne cele dotykowe;
-- brak nachodzenia toolbara;
-- poprawny scroll do błędnego pola.
+summary jest zwarte;
+quick actions nie przepełniają nagłówka;
+timeline pozostaje pionowy;
+panel jest pełnoekranowy;
+filtry otwierają drawer;
+brak poziomego scrolla;
+overview może być uproszczony, ale nie usunięty bez alternatywy.
+ETAP 16 — wydajność
 
-DOSTĘPNOŚĆ
+Widok jest lazy-loaded.
 
-Wykonaj:
-
-- przejście całego flow samą klawiaturą;
-- kontrolę kolejności tabulatora;
-- sprawdzenie focusu po zmianie kroku;
-- axe;
-- kontrolę nazw przycisków;
-- kontrolę aria-live;
-- kontrolę aria-current;
-- kontrolę kontrastu;
-- kontrolę reduced motion, jeśli wprowadzono animacje.
-
-RUNTIME
+Nie dodawaj biblioteki timeline.
 
 Sprawdź:
 
-- konsolę przeglądarki;
-- requesty i statusy API;
-- brak podwójnych requestów;
-- payload participantProfile zawierający timeZoneId;
-- payload availability;
-- format godzin;
-- brak surowych wyjątków w interfejsie;
-- zachowanie po 401, 403, 404 i 5xx;
-- zachowanie Keycloak.
+rozmiar lazy chunka;
+brak wpływu na initial bundle;
+stabilne track;
+brak obliczeń skali w szablonie;
+brak ponownego renderowania wszystkich zdarzeń po otwarciu panelu;
+zachowanie dla 500 agregatów i 100 szczegółowych zdarzeń;
+brak wycieków timerów i observerów.
+ETAP 17 — testy
 
-E2E
+Dodaj testy dla:
 
-Dodaj albo popraw Playwright E2E:
+workspace loading/error/empty;
+nagłówka klienta;
+capability-based actions;
+zakresów czasu;
+filtrów w URL;
+cursor pagination;
+sortowania zdarzeń;
+grupowania okresów;
+overview scale;
+markerów celów;
+zakresów planu;
+planowanych sesji;
+wykonanych sesji;
+porównania plan–wykonanie;
+progresji;
+pomiarów;
+problemów;
+agregatów tygodniowych i miesięcznych;
+otwierania panelu;
+eventId w URL;
+zachowania scrolla;
+focusu po zamknięciu;
+szybkiej akcji i odświeżenia danych;
+trenera bez dostępu klinicznego;
+fizjoterapeuty z odpowiednią zgodą;
+mobile;
+klawiatury;
+widoku listy;
+braku UUID i surowych enumów;
+race conditions po zmianie zakresu i filtrów.
+ETAP 18 — runtime QA
 
-- prawdziwe logowanie OIDC;
-- pełny flow uczestnika;
-- pełny flow specjalisty, jeśli dostępne jest niezależne konto testowe;
-- wznowienie po refreshu;
-- retry po kontrolowanym błędzie API;
-- mobile viewport;
-- axe dla każdego kroku.
+Na realnych danych sprawdź klienta posiadającego:
 
-ZDJĘCIA
+aktywny plan;
+kilka celów;
+zaplanowane sesje;
+wykonane sesje;
+pominięcie;
+zmianę progresji;
+pomiar;
+problem;
+alert;
+notatkę.
+
+Zweryfikuj pełny flow:
+
+wejście z listy klientów;
+filtrowanie;
+zmiana zakresu;
+otwarcie zdarzenia;
+szybka akcja;
+zachowanie scrolla;
+direct URL z eventId;
+back/forward;
+cofnięcie dostępu;
+mobile.
 
 Wykonaj zrzuty:
 
-- każdy krok desktop;
-- każdy krok mobile;
-- loading;
-- initial load error;
-- validation error;
-- API error;
-- READY;
-- focus klawiaturowy;
-- rozwinięty formularz kilku przedziałów dostępności.
+desktop 2 tygodnie;
+desktop 3 miesiące;
+wybrany event;
+plan kontra wykonanie;
+problem;
+pusty stan;
+error;
+mobile 390;
+mobile 320;
+widoczny focus.
+Poza zakresem
 
-POPRAWKI
+Nie implementuj teraz:
 
-Napraw znalezione problemy w tej samej turze. Po każdej istotnej poprawce uruchom
-najwęższy właściwy zestaw testów, a na końcu pełną walidację frontendu.
-
-RAPORT
+gotowej biblioteki timeline;
+pełnego edytora planu w timeline;
+pełnego wywiadu klinicznego;
+edytora dokumentów;
+AI summary;
+jednego globalnego wyniku postępu;
+drag-and-drop zdarzeń;
+bezpośredniej edycji historycznych zdarzeń.
+Raport końcowy
 
 Podaj:
 
-1. środowisko i uruchomione usługi;
-2. testowane konta i role bez ujawniania sekretów;
-3. listę scenariuszy z wynikiem;
-4. znalezione problemy i wykonane poprawki;
-5. wyniki testów i axe;
-6. ścieżki do zrzutów;
-7. nierozwiązane blockery;
-8. końcowy git status;
-9. ocenę ACCEPTABLE, ACCEPTABLE WITH ISSUES albo NOT ACCEPTABLE.
+wykorzystany kontrakt backendowy;
+strukturę komponentów;
+algorytm overview;
+model timeline;
+działanie panelu;
+szybkie akcje;
+dostępność;
+responsywność;
+listę zmienionych plików;
+wyniki testów;
+rozmiar lazy chunka;
+wyniki runtime;
+ścieżki do zrzutów;
+końcowy git status;
+ocenę ACCEPTABLE / ACCEPTABLE WITH ISSUES / NOT ACCEPTABLE.
+
+Nie wykonuj commita ani push.
+
+
+**Kolejność:** backend → OpenAPI i klient Angular → frontend → kontrola runtime.

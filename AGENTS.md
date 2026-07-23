@@ -22,3 +22,9 @@
 ## Validation
 
 - Before declaring an implementation complete, run the relevant tests, `git diff --check`, and the project-prescribed validation suite.
+
+do not use jdbc. Jdbc template is strictly forbidden.
+
+Use jpa hibernate
+
+Use solid rules, clean code.
