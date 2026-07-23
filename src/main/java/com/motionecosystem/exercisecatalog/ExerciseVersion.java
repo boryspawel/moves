@@ -79,6 +79,8 @@ class ExerciseVersion {
     Instant reviewedAt;
     @Version
     long version;
+    @Column(name = "content_revision", nullable = false)
+    long contentRevision;
 
     protected ExerciseVersion() {
     }
@@ -96,6 +98,14 @@ class ExerciseVersion {
     void update(CatalogService.VersionCommand command) {
         requireEditable();
         apply(command);
+        contentRevision++;
+    }
+
+    long contentRevision() { return contentRevision; }
+
+    void contentChanged() {
+        requireEditable();
+        contentRevision++;
     }
 
     void submitForReview() {

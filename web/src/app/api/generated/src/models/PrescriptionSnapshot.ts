@@ -19,198 +19,202 @@ import { mapValues } from '../runtime';
  * @interface PrescriptionSnapshot
  */
 export interface PrescriptionSnapshot {
-    /**
-     *
-     * @type {string}
-     * @memberof PrescriptionSnapshot
-     */
-    id?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof PrescriptionSnapshot
-     */
-    exerciseVersionId?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof PrescriptionSnapshot
-     */
-    position?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof PrescriptionSnapshot
-     */
-    side?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof PrescriptionSnapshot
-     */
-    doseType?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof PrescriptionSnapshot
-     */
-    sets?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof PrescriptionSnapshot
-     */
-    repetitions?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof PrescriptionSnapshot
-     */
-    durationSeconds?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof PrescriptionSnapshot
-     */
-    distanceMeters?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof PrescriptionSnapshot
-     */
-    contacts?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof PrescriptionSnapshot
-     */
-    externalLoadValue?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof PrescriptionSnapshot
-     */
-    externalLoadUnit?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof PrescriptionSnapshot
-     */
-    intensityType?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof PrescriptionSnapshot
-     */
-    intensityValue?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof PrescriptionSnapshot
-     */
-    intensityZone?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof PrescriptionSnapshot
-     */
-    tempo?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof PrescriptionSnapshot
-     */
-    rangeOfMotion?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof PrescriptionSnapshot
-     */
-    restSeconds?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof PrescriptionSnapshot
-     */
-    substituteGroup?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof PrescriptionSnapshot
-     */
-    notes?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PrescriptionSnapshot
+   */
+  id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PrescriptionSnapshot
+   */
+  exerciseVersionId?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof PrescriptionSnapshot
+   */
+  position?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof PrescriptionSnapshot
+   */
+  side?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PrescriptionSnapshot
+   */
+  doseType?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof PrescriptionSnapshot
+   */
+  sets?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof PrescriptionSnapshot
+   */
+  repetitions?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof PrescriptionSnapshot
+   */
+  durationSeconds?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof PrescriptionSnapshot
+   */
+  distanceMeters?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof PrescriptionSnapshot
+   */
+  contacts?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof PrescriptionSnapshot
+   */
+  externalLoadValue?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof PrescriptionSnapshot
+   */
+  externalLoadUnit?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PrescriptionSnapshot
+   */
+  intensityType?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof PrescriptionSnapshot
+   */
+  intensityValue?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof PrescriptionSnapshot
+   */
+  intensityZone?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PrescriptionSnapshot
+   */
+  tempo?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PrescriptionSnapshot
+   */
+  rangeOfMotion?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof PrescriptionSnapshot
+   */
+  restSeconds?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof PrescriptionSnapshot
+   */
+  substituteGroup?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PrescriptionSnapshot
+   */
+  notes?: string;
 }
 
 /**
  * Check if a given object implements the PrescriptionSnapshot interface.
  */
 export function instanceOfPrescriptionSnapshot(value: object): value is PrescriptionSnapshot {
-    return true;
+  return true;
 }
 
 export function PrescriptionSnapshotFromJSON(json: any): PrescriptionSnapshot {
-    return PrescriptionSnapshotFromJSONTyped(json, false);
+  return PrescriptionSnapshotFromJSONTyped(json, false);
 }
 
-export function PrescriptionSnapshotFromJSONTyped(json: any, ignoreDiscriminator: boolean): PrescriptionSnapshot {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'id': json['id'] == null ? undefined : json['id'],
-        'exerciseVersionId': json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
-        'position': json['position'] == null ? undefined : json['position'],
-        'side': json['side'] == null ? undefined : json['side'],
-        'doseType': json['doseType'] == null ? undefined : json['doseType'],
-        'sets': json['sets'] == null ? undefined : json['sets'],
-        'repetitions': json['repetitions'] == null ? undefined : json['repetitions'],
-        'durationSeconds': json['durationSeconds'] == null ? undefined : json['durationSeconds'],
-        'distanceMeters': json['distanceMeters'] == null ? undefined : json['distanceMeters'],
-        'contacts': json['contacts'] == null ? undefined : json['contacts'],
-        'externalLoadValue': json['externalLoadValue'] == null ? undefined : json['externalLoadValue'],
-        'externalLoadUnit': json['externalLoadUnit'] == null ? undefined : json['externalLoadUnit'],
-        'intensityType': json['intensityType'] == null ? undefined : json['intensityType'],
-        'intensityValue': json['intensityValue'] == null ? undefined : json['intensityValue'],
-        'intensityZone': json['intensityZone'] == null ? undefined : json['intensityZone'],
-        'tempo': json['tempo'] == null ? undefined : json['tempo'],
-        'rangeOfMotion': json['rangeOfMotion'] == null ? undefined : json['rangeOfMotion'],
-        'restSeconds': json['restSeconds'] == null ? undefined : json['restSeconds'],
-        'substituteGroup': json['substituteGroup'] == null ? undefined : json['substituteGroup'],
-        'notes': json['notes'] == null ? undefined : json['notes'],
-    };
+export function PrescriptionSnapshotFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): PrescriptionSnapshot {
+  if (json == null) {
+    return json;
+  }
+  return {
+    id: json['id'] == null ? undefined : json['id'],
+    exerciseVersionId: json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
+    position: json['position'] == null ? undefined : json['position'],
+    side: json['side'] == null ? undefined : json['side'],
+    doseType: json['doseType'] == null ? undefined : json['doseType'],
+    sets: json['sets'] == null ? undefined : json['sets'],
+    repetitions: json['repetitions'] == null ? undefined : json['repetitions'],
+    durationSeconds: json['durationSeconds'] == null ? undefined : json['durationSeconds'],
+    distanceMeters: json['distanceMeters'] == null ? undefined : json['distanceMeters'],
+    contacts: json['contacts'] == null ? undefined : json['contacts'],
+    externalLoadValue: json['externalLoadValue'] == null ? undefined : json['externalLoadValue'],
+    externalLoadUnit: json['externalLoadUnit'] == null ? undefined : json['externalLoadUnit'],
+    intensityType: json['intensityType'] == null ? undefined : json['intensityType'],
+    intensityValue: json['intensityValue'] == null ? undefined : json['intensityValue'],
+    intensityZone: json['intensityZone'] == null ? undefined : json['intensityZone'],
+    tempo: json['tempo'] == null ? undefined : json['tempo'],
+    rangeOfMotion: json['rangeOfMotion'] == null ? undefined : json['rangeOfMotion'],
+    restSeconds: json['restSeconds'] == null ? undefined : json['restSeconds'],
+    substituteGroup: json['substituteGroup'] == null ? undefined : json['substituteGroup'],
+    notes: json['notes'] == null ? undefined : json['notes'],
+  };
 }
 
 export function PrescriptionSnapshotToJSON(json: any): PrescriptionSnapshot {
-    return PrescriptionSnapshotToJSONTyped(json, false);
+  return PrescriptionSnapshotToJSONTyped(json, false);
 }
 
-export function PrescriptionSnapshotToJSONTyped(value?: PrescriptionSnapshot | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function PrescriptionSnapshotToJSONTyped(
+  value?: PrescriptionSnapshot | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'id': value['id'],
-        'exerciseVersionId': value['exerciseVersionId'],
-        'position': value['position'],
-        'side': value['side'],
-        'doseType': value['doseType'],
-        'sets': value['sets'],
-        'repetitions': value['repetitions'],
-        'durationSeconds': value['durationSeconds'],
-        'distanceMeters': value['distanceMeters'],
-        'contacts': value['contacts'],
-        'externalLoadValue': value['externalLoadValue'],
-        'externalLoadUnit': value['externalLoadUnit'],
-        'intensityType': value['intensityType'],
-        'intensityValue': value['intensityValue'],
-        'intensityZone': value['intensityZone'],
-        'tempo': value['tempo'],
-        'rangeOfMotion': value['rangeOfMotion'],
-        'restSeconds': value['restSeconds'],
-        'substituteGroup': value['substituteGroup'],
-        'notes': value['notes'],
-    };
+  return {
+    id: value['id'],
+    exerciseVersionId: value['exerciseVersionId'],
+    position: value['position'],
+    side: value['side'],
+    doseType: value['doseType'],
+    sets: value['sets'],
+    repetitions: value['repetitions'],
+    durationSeconds: value['durationSeconds'],
+    distanceMeters: value['distanceMeters'],
+    contacts: value['contacts'],
+    externalLoadValue: value['externalLoadValue'],
+    externalLoadUnit: value['externalLoadUnit'],
+    intensityType: value['intensityType'],
+    intensityValue: value['intensityValue'],
+    intensityZone: value['intensityZone'],
+    tempo: value['tempo'],
+    rangeOfMotion: value['rangeOfMotion'],
+    restSeconds: value['restSeconds'],
+    substituteGroup: value['substituteGroup'],
+    notes: value['notes'],
+  };
 }

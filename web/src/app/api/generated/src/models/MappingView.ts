@@ -19,110 +19,111 @@ import { mapValues } from '../runtime';
  * @interface MappingView
  */
 export interface MappingView {
-    /**
-     *
-     * @type {string}
-     * @memberof MappingView
-     */
-    id?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof MappingView
-     */
-    sourceId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof MappingView
-     */
-    dictionaryType?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof MappingView
-     */
-    sourceValue?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof MappingView
-     */
-    canonicalValue?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof MappingView
-     */
-    status?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof MappingView
-     */
-    decidedBySubject?: string;
-    /**
-     *
-     * @type {Date}
-     * @memberof MappingView
-     */
-    decidedAt?: Date;
-    /**
-     *
-     * @type {number}
-     * @memberof MappingView
-     */
-    version?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof MappingView
+   */
+  id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof MappingView
+   */
+  sourceId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof MappingView
+   */
+  dictionaryType?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof MappingView
+   */
+  sourceValue?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof MappingView
+   */
+  canonicalValue?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof MappingView
+   */
+  status?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof MappingView
+   */
+  decidedBySubject?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof MappingView
+   */
+  decidedAt?: Date;
+  /**
+   *
+   * @type {number}
+   * @memberof MappingView
+   */
+  version?: number;
 }
 
 /**
  * Check if a given object implements the MappingView interface.
  */
 export function instanceOfMappingView(value: object): value is MappingView {
-    return true;
+  return true;
 }
 
 export function MappingViewFromJSON(json: any): MappingView {
-    return MappingViewFromJSONTyped(json, false);
+  return MappingViewFromJSONTyped(json, false);
 }
 
 export function MappingViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): MappingView {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'id': json['id'] == null ? undefined : json['id'],
-        'sourceId': json['sourceId'] == null ? undefined : json['sourceId'],
-        'dictionaryType': json['dictionaryType'] == null ? undefined : json['dictionaryType'],
-        'sourceValue': json['sourceValue'] == null ? undefined : json['sourceValue'],
-        'canonicalValue': json['canonicalValue'] == null ? undefined : json['canonicalValue'],
-        'status': json['status'] == null ? undefined : json['status'],
-        'decidedBySubject': json['decidedBySubject'] == null ? undefined : json['decidedBySubject'],
-        'decidedAt': json['decidedAt'] == null ? undefined : (new Date(json['decidedAt'])),
-        'version': json['version'] == null ? undefined : json['version'],
-    };
+  if (json == null) {
+    return json;
+  }
+  return {
+    id: json['id'] == null ? undefined : json['id'],
+    sourceId: json['sourceId'] == null ? undefined : json['sourceId'],
+    dictionaryType: json['dictionaryType'] == null ? undefined : json['dictionaryType'],
+    sourceValue: json['sourceValue'] == null ? undefined : json['sourceValue'],
+    canonicalValue: json['canonicalValue'] == null ? undefined : json['canonicalValue'],
+    status: json['status'] == null ? undefined : json['status'],
+    decidedBySubject: json['decidedBySubject'] == null ? undefined : json['decidedBySubject'],
+    decidedAt: json['decidedAt'] == null ? undefined : new Date(json['decidedAt']),
+    version: json['version'] == null ? undefined : json['version'],
+  };
 }
 
 export function MappingViewToJSON(json: any): MappingView {
-    return MappingViewToJSONTyped(json, false);
+  return MappingViewToJSONTyped(json, false);
 }
 
-export function MappingViewToJSONTyped(value?: MappingView | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function MappingViewToJSONTyped(
+  value?: MappingView | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'id': value['id'],
-        'sourceId': value['sourceId'],
-        'dictionaryType': value['dictionaryType'],
-        'sourceValue': value['sourceValue'],
-        'canonicalValue': value['canonicalValue'],
-        'status': value['status'],
-        'decidedBySubject': value['decidedBySubject'],
-        'decidedAt': value['decidedAt'] == null ? value['decidedAt'] : value['decidedAt'].toISOString(),
-        'version': value['version'],
-    };
+  return {
+    id: value['id'],
+    sourceId: value['sourceId'],
+    dictionaryType: value['dictionaryType'],
+    sourceValue: value['sourceValue'],
+    canonicalValue: value['canonicalValue'],
+    status: value['status'],
+    decidedBySubject: value['decidedBySubject'],
+    decidedAt: value['decidedAt'] == null ? value['decidedAt'] : value['decidedAt'].toISOString(),
+    version: value['version'],
+  };
 }

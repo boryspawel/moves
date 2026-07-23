@@ -19,102 +19,107 @@ import { mapValues } from '../runtime';
  * @interface PrescriptionView
  */
 export interface PrescriptionView {
-    /**
-     *
-     * @type {string}
-     * @memberof PrescriptionView
-     */
-    id?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof PrescriptionView
-     */
-    exerciseVersionId?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof PrescriptionView
-     */
-    position?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof PrescriptionView
-     */
-    targetSets?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof PrescriptionView
-     */
-    targetRepetitions?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof PrescriptionView
-     */
-    targetDurationSeconds?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof PrescriptionView
-     */
-    targetLoadKg?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof PrescriptionView
-     */
-    notes?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PrescriptionView
+   */
+  id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PrescriptionView
+   */
+  exerciseVersionId?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof PrescriptionView
+   */
+  position?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof PrescriptionView
+   */
+  targetSets?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof PrescriptionView
+   */
+  targetRepetitions?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof PrescriptionView
+   */
+  targetDurationSeconds?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof PrescriptionView
+   */
+  targetLoadKg?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof PrescriptionView
+   */
+  notes?: string;
 }
 
 /**
  * Check if a given object implements the PrescriptionView interface.
  */
 export function instanceOfPrescriptionView(value: object): value is PrescriptionView {
-    return true;
+  return true;
 }
 
 export function PrescriptionViewFromJSON(json: any): PrescriptionView {
-    return PrescriptionViewFromJSONTyped(json, false);
+  return PrescriptionViewFromJSONTyped(json, false);
 }
 
-export function PrescriptionViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): PrescriptionView {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'id': json['id'] == null ? undefined : json['id'],
-        'exerciseVersionId': json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
-        'position': json['position'] == null ? undefined : json['position'],
-        'targetSets': json['targetSets'] == null ? undefined : json['targetSets'],
-        'targetRepetitions': json['targetRepetitions'] == null ? undefined : json['targetRepetitions'],
-        'targetDurationSeconds': json['targetDurationSeconds'] == null ? undefined : json['targetDurationSeconds'],
-        'targetLoadKg': json['targetLoadKg'] == null ? undefined : json['targetLoadKg'],
-        'notes': json['notes'] == null ? undefined : json['notes'],
-    };
+export function PrescriptionViewFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): PrescriptionView {
+  if (json == null) {
+    return json;
+  }
+  return {
+    id: json['id'] == null ? undefined : json['id'],
+    exerciseVersionId: json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
+    position: json['position'] == null ? undefined : json['position'],
+    targetSets: json['targetSets'] == null ? undefined : json['targetSets'],
+    targetRepetitions: json['targetRepetitions'] == null ? undefined : json['targetRepetitions'],
+    targetDurationSeconds:
+      json['targetDurationSeconds'] == null ? undefined : json['targetDurationSeconds'],
+    targetLoadKg: json['targetLoadKg'] == null ? undefined : json['targetLoadKg'],
+    notes: json['notes'] == null ? undefined : json['notes'],
+  };
 }
 
 export function PrescriptionViewToJSON(json: any): PrescriptionView {
-    return PrescriptionViewToJSONTyped(json, false);
+  return PrescriptionViewToJSONTyped(json, false);
 }
 
-export function PrescriptionViewToJSONTyped(value?: PrescriptionView | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function PrescriptionViewToJSONTyped(
+  value?: PrescriptionView | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'id': value['id'],
-        'exerciseVersionId': value['exerciseVersionId'],
-        'position': value['position'],
-        'targetSets': value['targetSets'],
-        'targetRepetitions': value['targetRepetitions'],
-        'targetDurationSeconds': value['targetDurationSeconds'],
-        'targetLoadKg': value['targetLoadKg'],
-        'notes': value['notes'],
-    };
+  return {
+    id: value['id'],
+    exerciseVersionId: value['exerciseVersionId'],
+    position: value['position'],
+    targetSets: value['targetSets'],
+    targetRepetitions: value['targetRepetitions'],
+    targetDurationSeconds: value['targetDurationSeconds'],
+    targetLoadKg: value['targetLoadKg'],
+    notes: value['notes'],
+  };
 }

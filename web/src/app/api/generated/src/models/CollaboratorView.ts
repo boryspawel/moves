@@ -19,115 +19,120 @@ import { mapValues } from '../runtime';
  * @interface CollaboratorView
  */
 export interface CollaboratorView {
-    /**
-     *
-     * @type {string}
-     * @memberof CollaboratorView
-     */
-    id?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof CollaboratorView
-     */
-    planId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof CollaboratorView
-     */
-    specialistAccountId?: string;
-    /**
-     *
-     * @type {CollaboratorViewActingRoleEnum}
-     * @memberof CollaboratorView
-     */
-    actingRole?: CollaboratorViewActingRoleEnum;
-    /**
-     *
-     * @type {Set<CollaboratorViewScopesEnum>}
-     * @memberof CollaboratorView
-     */
-    scopes?: Set<CollaboratorViewScopesEnum>;
-    /**
-     *
-     * @type {string}
-     * @memberof CollaboratorView
-     */
-    status?: string;
-    /**
-     *
-     * @type {Date}
-     * @memberof CollaboratorView
-     */
-    addedAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof CollaboratorView
+   */
+  id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof CollaboratorView
+   */
+  planId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof CollaboratorView
+   */
+  specialistAccountId?: string;
+  /**
+   *
+   * @type {CollaboratorViewActingRoleEnum}
+   * @memberof CollaboratorView
+   */
+  actingRole?: CollaboratorViewActingRoleEnum;
+  /**
+   *
+   * @type {Set<CollaboratorViewScopesEnum>}
+   * @memberof CollaboratorView
+   */
+  scopes?: Set<CollaboratorViewScopesEnum>;
+  /**
+   *
+   * @type {string}
+   * @memberof CollaboratorView
+   */
+  status?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof CollaboratorView
+   */
+  addedAt?: Date;
 }
-
 
 /**
  * @export
  */
 export const CollaboratorViewActingRoleEnum = {
-    Trainer: 'TRAINER',
-    Physiotherapist: 'PHYSIOTHERAPIST'
+  Trainer: 'TRAINER',
+  Physiotherapist: 'PHYSIOTHERAPIST',
 } as const;
-export type CollaboratorViewActingRoleEnum = typeof CollaboratorViewActingRoleEnum[keyof typeof CollaboratorViewActingRoleEnum];
+export type CollaboratorViewActingRoleEnum =
+  (typeof CollaboratorViewActingRoleEnum)[keyof typeof CollaboratorViewActingRoleEnum];
 
 /**
  * @export
  */
 export const CollaboratorViewScopesEnum = {
-    ViewPlan: 'VIEW_PLAN',
-    EditDraft: 'EDIT_DRAFT',
-    ReviewSafety: 'REVIEW_SAFETY'
+  ViewPlan: 'VIEW_PLAN',
+  EditDraft: 'EDIT_DRAFT',
+  ReviewSafety: 'REVIEW_SAFETY',
 } as const;
-export type CollaboratorViewScopesEnum = typeof CollaboratorViewScopesEnum[keyof typeof CollaboratorViewScopesEnum];
-
+export type CollaboratorViewScopesEnum =
+  (typeof CollaboratorViewScopesEnum)[keyof typeof CollaboratorViewScopesEnum];
 
 /**
  * Check if a given object implements the CollaboratorView interface.
  */
 export function instanceOfCollaboratorView(value: object): value is CollaboratorView {
-    return true;
+  return true;
 }
 
 export function CollaboratorViewFromJSON(json: any): CollaboratorView {
-    return CollaboratorViewFromJSONTyped(json, false);
+  return CollaboratorViewFromJSONTyped(json, false);
 }
 
-export function CollaboratorViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): CollaboratorView {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'id': json['id'] == null ? undefined : json['id'],
-        'planId': json['planId'] == null ? undefined : json['planId'],
-        'specialistAccountId': json['specialistAccountId'] == null ? undefined : json['specialistAccountId'],
-        'actingRole': json['actingRole'] == null ? undefined : json['actingRole'],
-        'scopes': json['scopes'] == null ? undefined : new Set(json['scopes']),
-        'status': json['status'] == null ? undefined : json['status'],
-        'addedAt': json['addedAt'] == null ? undefined : (new Date(json['addedAt'])),
-    };
+export function CollaboratorViewFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): CollaboratorView {
+  if (json == null) {
+    return json;
+  }
+  return {
+    id: json['id'] == null ? undefined : json['id'],
+    planId: json['planId'] == null ? undefined : json['planId'],
+    specialistAccountId:
+      json['specialistAccountId'] == null ? undefined : json['specialistAccountId'],
+    actingRole: json['actingRole'] == null ? undefined : json['actingRole'],
+    scopes: json['scopes'] == null ? undefined : new Set(json['scopes']),
+    status: json['status'] == null ? undefined : json['status'],
+    addedAt: json['addedAt'] == null ? undefined : new Date(json['addedAt']),
+  };
 }
 
 export function CollaboratorViewToJSON(json: any): CollaboratorView {
-    return CollaboratorViewToJSONTyped(json, false);
+  return CollaboratorViewToJSONTyped(json, false);
 }
 
-export function CollaboratorViewToJSONTyped(value?: CollaboratorView | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function CollaboratorViewToJSONTyped(
+  value?: CollaboratorView | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'id': value['id'],
-        'planId': value['planId'],
-        'specialistAccountId': value['specialistAccountId'],
-        'actingRole': value['actingRole'],
-        'scopes': value['scopes'] == null ? undefined : Array.from(value['scopes'] as Set<any>),
-        'status': value['status'],
-        'addedAt': value['addedAt'] == null ? value['addedAt'] : value['addedAt'].toISOString(),
-    };
+  return {
+    id: value['id'],
+    planId: value['planId'],
+    specialistAccountId: value['specialistAccountId'],
+    actingRole: value['actingRole'],
+    scopes: value['scopes'] == null ? undefined : Array.from(value['scopes'] as Set<any>),
+    status: value['status'],
+    addedAt: value['addedAt'] == null ? value['addedAt'] : value['addedAt'].toISOString(),
+  };
 }

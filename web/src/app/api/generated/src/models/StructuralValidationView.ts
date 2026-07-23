@@ -19,89 +19,94 @@ import { mapValues } from '../runtime';
  * @interface StructuralValidationView
  */
 export interface StructuralValidationView {
-    /**
-     *
-     * @type {string}
-     * @memberof StructuralValidationView
-     */
-    revisionId?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof StructuralValidationView
-     */
-    draftVersion?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof StructuralValidationView
-     */
-    inputChecksum?: string;
-    /**
-     *
-     * @type {StructuralValidationViewResultEnum}
-     * @memberof StructuralValidationView
-     */
-    result?: StructuralValidationViewResultEnum;
-    /**
-     *
-     * @type {Array<string>}
-     * @memberof StructuralValidationView
-     */
-    violations?: Array<string>;
+  /**
+   *
+   * @type {string}
+   * @memberof StructuralValidationView
+   */
+  revisionId?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof StructuralValidationView
+   */
+  draftVersion?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof StructuralValidationView
+   */
+  inputChecksum?: string;
+  /**
+   *
+   * @type {StructuralValidationViewResultEnum}
+   * @memberof StructuralValidationView
+   */
+  result?: StructuralValidationViewResultEnum;
+  /**
+   *
+   * @type {Array<string>}
+   * @memberof StructuralValidationView
+   */
+  violations?: Array<string>;
 }
-
 
 /**
  * @export
  */
 export const StructuralValidationViewResultEnum = {
-    Pass: 'PASS',
-    Fail: 'FAIL'
+  Pass: 'PASS',
+  Fail: 'FAIL',
 } as const;
-export type StructuralValidationViewResultEnum = typeof StructuralValidationViewResultEnum[keyof typeof StructuralValidationViewResultEnum];
-
+export type StructuralValidationViewResultEnum =
+  (typeof StructuralValidationViewResultEnum)[keyof typeof StructuralValidationViewResultEnum];
 
 /**
  * Check if a given object implements the StructuralValidationView interface.
  */
-export function instanceOfStructuralValidationView(value: object): value is StructuralValidationView {
-    return true;
+export function instanceOfStructuralValidationView(
+  value: object,
+): value is StructuralValidationView {
+  return true;
 }
 
 export function StructuralValidationViewFromJSON(json: any): StructuralValidationView {
-    return StructuralValidationViewFromJSONTyped(json, false);
+  return StructuralValidationViewFromJSONTyped(json, false);
 }
 
-export function StructuralValidationViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): StructuralValidationView {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'revisionId': json['revisionId'] == null ? undefined : json['revisionId'],
-        'draftVersion': json['draftVersion'] == null ? undefined : json['draftVersion'],
-        'inputChecksum': json['inputChecksum'] == null ? undefined : json['inputChecksum'],
-        'result': json['result'] == null ? undefined : json['result'],
-        'violations': json['violations'] == null ? undefined : json['violations'],
-    };
+export function StructuralValidationViewFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): StructuralValidationView {
+  if (json == null) {
+    return json;
+  }
+  return {
+    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
+    draftVersion: json['draftVersion'] == null ? undefined : json['draftVersion'],
+    inputChecksum: json['inputChecksum'] == null ? undefined : json['inputChecksum'],
+    result: json['result'] == null ? undefined : json['result'],
+    violations: json['violations'] == null ? undefined : json['violations'],
+  };
 }
 
 export function StructuralValidationViewToJSON(json: any): StructuralValidationView {
-    return StructuralValidationViewToJSONTyped(json, false);
+  return StructuralValidationViewToJSONTyped(json, false);
 }
 
-export function StructuralValidationViewToJSONTyped(value?: StructuralValidationView | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function StructuralValidationViewToJSONTyped(
+  value?: StructuralValidationView | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'revisionId': value['revisionId'],
-        'draftVersion': value['draftVersion'],
-        'inputChecksum': value['inputChecksum'],
-        'result': value['result'],
-        'violations': value['violations'],
-    };
+  return {
+    revisionId: value['revisionId'],
+    draftVersion: value['draftVersion'],
+    inputChecksum: value['inputChecksum'],
+    result: value['result'],
+    violations: value['violations'],
+  };
 }

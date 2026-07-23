@@ -19,62 +19,66 @@ import { mapValues } from '../runtime';
  * @interface EvidenceCommand
  */
 export interface EvidenceCommand {
-    /**
-     *
-     * @type {string}
-     * @memberof EvidenceCommand
-     */
-    citation?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof EvidenceCommand
-     */
-    sourceUri?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof EvidenceCommand
-     */
-    evidenceGrade?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof EvidenceCommand
+   */
+  citation?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof EvidenceCommand
+   */
+  sourceUri?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof EvidenceCommand
+   */
+  evidenceGrade?: string;
 }
 
 /**
  * Check if a given object implements the EvidenceCommand interface.
  */
 export function instanceOfEvidenceCommand(value: object): value is EvidenceCommand {
-    return true;
+  return true;
 }
 
 export function EvidenceCommandFromJSON(json: any): EvidenceCommand {
-    return EvidenceCommandFromJSONTyped(json, false);
+  return EvidenceCommandFromJSONTyped(json, false);
 }
 
-export function EvidenceCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): EvidenceCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'citation': json['citation'] == null ? undefined : json['citation'],
-        'sourceUri': json['sourceUri'] == null ? undefined : json['sourceUri'],
-        'evidenceGrade': json['evidenceGrade'] == null ? undefined : json['evidenceGrade'],
-    };
+export function EvidenceCommandFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): EvidenceCommand {
+  if (json == null) {
+    return json;
+  }
+  return {
+    citation: json['citation'] == null ? undefined : json['citation'],
+    sourceUri: json['sourceUri'] == null ? undefined : json['sourceUri'],
+    evidenceGrade: json['evidenceGrade'] == null ? undefined : json['evidenceGrade'],
+  };
 }
 
 export function EvidenceCommandToJSON(json: any): EvidenceCommand {
-    return EvidenceCommandToJSONTyped(json, false);
+  return EvidenceCommandToJSONTyped(json, false);
 }
 
-export function EvidenceCommandToJSONTyped(value?: EvidenceCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function EvidenceCommandToJSONTyped(
+  value?: EvidenceCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'citation': value['citation'],
-        'sourceUri': value['sourceUri'],
-        'evidenceGrade': value['evidenceGrade'],
-    };
+  return {
+    citation: value['citation'],
+    sourceUri: value['sourceUri'],
+    evidenceGrade: value['evidenceGrade'],
+  };
 }

@@ -14,664 +14,757 @@
 
 import * as runtime from '../runtime';
 import {
-    type ClinicalRestrictionView,
-    ClinicalRestrictionViewFromJSON,
-    ClinicalRestrictionViewToJSON,
+  type ClinicalRestrictionView,
+  ClinicalRestrictionViewFromJSON,
+  ClinicalRestrictionViewToJSON,
 } from '../models/ClinicalRestrictionView';
 import {
-    type EffectiveRestrictionView,
-    EffectiveRestrictionViewFromJSON,
-    EffectiveRestrictionViewToJSON,
+  type EffectiveRestrictionView,
+  EffectiveRestrictionViewFromJSON,
+  EffectiveRestrictionViewToJSON,
 } from '../models/EffectiveRestrictionView';
 import {
-    type LegacyReport,
-    LegacyReportFromJSON,
-    LegacyReportToJSON,
+  type LegacyReport,
+  LegacyReportFromJSON,
+  LegacyReportToJSON,
 } from '../models/LegacyReport';
 import {
-    type OverrideCommand,
-    OverrideCommandFromJSON,
-    OverrideCommandToJSON,
+  type OverrideCommand,
+  OverrideCommandFromJSON,
+  OverrideCommandToJSON,
 } from '../models/OverrideCommand';
 import {
-    type OverrideView,
-    OverrideViewFromJSON,
-    OverrideViewToJSON,
+  type OverrideView,
+  OverrideViewFromJSON,
+  OverrideViewToJSON,
 } from '../models/OverrideView';
 import {
-    type RestrictionCommand,
-    RestrictionCommandFromJSON,
-    RestrictionCommandToJSON,
+  type RestrictionCommand,
+  RestrictionCommandFromJSON,
+  RestrictionCommandToJSON,
 } from '../models/RestrictionCommand';
 import {
-    type RestrictionView,
-    RestrictionViewFromJSON,
-    RestrictionViewToJSON,
+  type RestrictionView,
+  RestrictionViewFromJSON,
+  RestrictionViewToJSON,
 } from '../models/RestrictionView';
 
 export interface ClinicalRestrictionRequest {
-    participantId: string;
-    actingContext: ClinicalRestrictionActingContextEnum;
-    restrictionCommand: RestrictionCommand;
+  participantId: string;
+  actingContext: ClinicalRestrictionActingContextEnum;
+  restrictionCommand: RestrictionCommand;
 }
 
 export interface ClinicalRestrictionsRequest {
-    participantId: string;
-    actingContext: ClinicalRestrictionsActingContextEnum;
+  participantId: string;
+  actingContext: ClinicalRestrictionsActingContextEnum;
 }
 
 export interface DeclareRequest {
-    restrictionCommand: RestrictionCommand;
+  restrictionCommand: RestrictionCommand;
 }
 
 export interface EffectiveRestrictionsRequest {
-    participantId: string;
-    actingContext: EffectiveRestrictionsActingContextEnum;
+  participantId: string;
+  actingContext: EffectiveRestrictionsActingContextEnum;
 }
 
 export interface OverrideRequest {
-    participantId: string;
-    assessmentId: string;
-    factorId: string;
-    actingContext: OverrideActingContextEnum;
-    overrideCommand: OverrideCommand;
+  participantId: string;
+  assessmentId: string;
+  factorId: string;
+  actingContext: OverrideActingContextEnum;
+  overrideCommand: OverrideCommand;
 }
 
 export interface ReviseRequest {
-    restrictionId: string;
-    restrictionCommand: RestrictionCommand;
+  restrictionId: string;
+  restrictionCommand: RestrictionCommand;
 }
 
 export interface ReviseClinicalRestrictionRequest {
-    participantId: string;
-    restrictionId: string;
-    actingContext: ReviseClinicalRestrictionActingContextEnum;
-    restrictionCommand: RestrictionCommand;
+  participantId: string;
+  restrictionId: string;
+  actingContext: ReviseClinicalRestrictionActingContextEnum;
+  restrictionCommand: RestrictionCommand;
 }
 
 export interface Withdraw2Request {
-    restrictionId: string;
+  restrictionId: string;
 }
 
 /**
  *
  */
 export class SafetyV2ControllerApi extends runtime.BaseAPI {
-
-    /**
-     * Creates request options for clinicalRestriction without sending the request
-     */
-    async clinicalRestrictionRequestOpts(requestParameters: ClinicalRestrictionRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['participantId'] == null) {
-            throw new runtime.RequiredError(
-                'participantId',
-                'Required parameter "participantId" was null or undefined when calling clinicalRestriction().'
-            );
-        }
-
-        if (requestParameters['actingContext'] == null) {
-            throw new runtime.RequiredError(
-                'actingContext',
-                'Required parameter "actingContext" was null or undefined when calling clinicalRestriction().'
-            );
-        }
-
-        if (requestParameters['restrictionCommand'] == null) {
-            throw new runtime.RequiredError(
-                'restrictionCommand',
-                'Required parameter "restrictionCommand" was null or undefined when calling clinicalRestriction().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        if (requestParameters['actingContext'] != null) {
-            queryParameters['actingContext'] = requestParameters['actingContext'];
-        }
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/v2/safety/participants/{participantId}/restrictions`;
-        urlPath = urlPath.replace('{participantId}', encodeURIComponent(String(requestParameters['participantId'])));
-
-        return {
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: RestrictionCommandToJSON(requestParameters['restrictionCommand']),
-        };
+  /**
+   * Creates request options for clinicalRestriction without sending the request
+   */
+  async clinicalRestrictionRequestOpts(
+    requestParameters: ClinicalRestrictionRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['participantId'] == null) {
+      throw new runtime.RequiredError(
+        'participantId',
+        'Required parameter "participantId" was null or undefined when calling clinicalRestriction().',
+      );
     }
 
-    /**
-     */
-    async clinicalRestrictionRaw(requestParameters: ClinicalRestrictionRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<RestrictionView>> {
-        const requestOptions = await this.clinicalRestrictionRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => RestrictionViewFromJSON(jsonValue));
+    if (requestParameters['actingContext'] == null) {
+      throw new runtime.RequiredError(
+        'actingContext',
+        'Required parameter "actingContext" was null or undefined when calling clinicalRestriction().',
+      );
     }
 
-    /**
-     */
-    async clinicalRestriction(requestParameters: ClinicalRestrictionRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<RestrictionView> {
-        const response = await this.clinicalRestrictionRaw(requestParameters, initOverrides);
-        return await response.value();
+    if (requestParameters['restrictionCommand'] == null) {
+      throw new runtime.RequiredError(
+        'restrictionCommand',
+        'Required parameter "restrictionCommand" was null or undefined when calling clinicalRestriction().',
+      );
     }
 
-    /**
-     * Creates request options for clinicalRestrictions without sending the request
-     */
-    async clinicalRestrictionsRequestOpts(requestParameters: ClinicalRestrictionsRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['participantId'] == null) {
-            throw new runtime.RequiredError(
-                'participantId',
-                'Required parameter "participantId" was null or undefined when calling clinicalRestrictions().'
-            );
-        }
+    const queryParameters: any = {};
 
-        if (requestParameters['actingContext'] == null) {
-            throw new runtime.RequiredError(
-                'actingContext',
-                'Required parameter "actingContext" was null or undefined when calling clinicalRestrictions().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        if (requestParameters['actingContext'] != null) {
-            queryParameters['actingContext'] = requestParameters['actingContext'];
-        }
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-
-        let urlPath = `/api/v2/safety/participants/{participantId}/clinical-restrictions`;
-        urlPath = urlPath.replace('{participantId}', encodeURIComponent(String(requestParameters['participantId'])));
-
-        return {
-            path: urlPath,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        };
+    if (requestParameters['actingContext'] != null) {
+      queryParameters['actingContext'] = requestParameters['actingContext'];
     }
 
-    /**
-     */
-    async clinicalRestrictionsRaw(requestParameters: ClinicalRestrictionsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<ClinicalRestrictionView>>> {
-        const requestOptions = await this.clinicalRestrictionsRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
+    const headerParameters: runtime.HTTPHeaders = {};
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ClinicalRestrictionViewFromJSON));
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v2/safety/participants/{participantId}/restrictions`;
+    urlPath = urlPath.replace(
+      '{participantId}',
+      encodeURIComponent(String(requestParameters['participantId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+      body: RestrictionCommandToJSON(requestParameters['restrictionCommand']),
+    };
+  }
+
+  /**
+   */
+  async clinicalRestrictionRaw(
+    requestParameters: ClinicalRestrictionRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<RestrictionView>> {
+    const requestOptions = await this.clinicalRestrictionRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => RestrictionViewFromJSON(jsonValue));
+  }
+
+  /**
+   */
+  async clinicalRestriction(
+    requestParameters: ClinicalRestrictionRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<RestrictionView> {
+    const response = await this.clinicalRestrictionRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for clinicalRestrictions without sending the request
+   */
+  async clinicalRestrictionsRequestOpts(
+    requestParameters: ClinicalRestrictionsRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['participantId'] == null) {
+      throw new runtime.RequiredError(
+        'participantId',
+        'Required parameter "participantId" was null or undefined when calling clinicalRestrictions().',
+      );
     }
 
-    /**
-     */
-    async clinicalRestrictions(requestParameters: ClinicalRestrictionsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<ClinicalRestrictionView>> {
-        const response = await this.clinicalRestrictionsRaw(requestParameters, initOverrides);
-        return await response.value();
+    if (requestParameters['actingContext'] == null) {
+      throw new runtime.RequiredError(
+        'actingContext',
+        'Required parameter "actingContext" was null or undefined when calling clinicalRestrictions().',
+      );
     }
 
-    /**
-     * Creates request options for declare without sending the request
-     */
-    async declareRequestOpts(requestParameters: DeclareRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['restrictionCommand'] == null) {
-            throw new runtime.RequiredError(
-                'restrictionCommand',
-                'Required parameter "restrictionCommand" was null or undefined when calling declare().'
-            );
-        }
+    const queryParameters: any = {};
 
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/v2/safety/me/restrictions`;
-
-        return {
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: RestrictionCommandToJSON(requestParameters['restrictionCommand']),
-        };
+    if (requestParameters['actingContext'] != null) {
+      queryParameters['actingContext'] = requestParameters['actingContext'];
     }
 
-    /**
-     */
-    async declareRaw(requestParameters: DeclareRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<RestrictionView>> {
-        const requestOptions = await this.declareRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
+    const headerParameters: runtime.HTTPHeaders = {};
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => RestrictionViewFromJSON(jsonValue));
+    let urlPath = `/api/v2/safety/participants/{participantId}/clinical-restrictions`;
+    urlPath = urlPath.replace(
+      '{participantId}',
+      encodeURIComponent(String(requestParameters['participantId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   */
+  async clinicalRestrictionsRaw(
+    requestParameters: ClinicalRestrictionsRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<ClinicalRestrictionView>>> {
+    const requestOptions = await this.clinicalRestrictionsRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(ClinicalRestrictionViewFromJSON),
+    );
+  }
+
+  /**
+   */
+  async clinicalRestrictions(
+    requestParameters: ClinicalRestrictionsRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<ClinicalRestrictionView>> {
+    const response = await this.clinicalRestrictionsRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for declare without sending the request
+   */
+  async declareRequestOpts(requestParameters: DeclareRequest): Promise<runtime.RequestOpts> {
+    if (requestParameters['restrictionCommand'] == null) {
+      throw new runtime.RequiredError(
+        'restrictionCommand',
+        'Required parameter "restrictionCommand" was null or undefined when calling declare().',
+      );
     }
 
-    /**
-     */
-    async declare(requestParameters: DeclareRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<RestrictionView> {
-        const response = await this.declareRaw(requestParameters, initOverrides);
-        return await response.value();
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v2/safety/me/restrictions`;
+
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+      body: RestrictionCommandToJSON(requestParameters['restrictionCommand']),
+    };
+  }
+
+  /**
+   */
+  async declareRaw(
+    requestParameters: DeclareRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<RestrictionView>> {
+    const requestOptions = await this.declareRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => RestrictionViewFromJSON(jsonValue));
+  }
+
+  /**
+   */
+  async declare(
+    requestParameters: DeclareRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<RestrictionView> {
+    const response = await this.declareRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for effectiveRestrictions without sending the request
+   */
+  async effectiveRestrictionsRequestOpts(
+    requestParameters: EffectiveRestrictionsRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['participantId'] == null) {
+      throw new runtime.RequiredError(
+        'participantId',
+        'Required parameter "participantId" was null or undefined when calling effectiveRestrictions().',
+      );
     }
 
-    /**
-     * Creates request options for effectiveRestrictions without sending the request
-     */
-    async effectiveRestrictionsRequestOpts(requestParameters: EffectiveRestrictionsRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['participantId'] == null) {
-            throw new runtime.RequiredError(
-                'participantId',
-                'Required parameter "participantId" was null or undefined when calling effectiveRestrictions().'
-            );
-        }
-
-        if (requestParameters['actingContext'] == null) {
-            throw new runtime.RequiredError(
-                'actingContext',
-                'Required parameter "actingContext" was null or undefined when calling effectiveRestrictions().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        if (requestParameters['actingContext'] != null) {
-            queryParameters['actingContext'] = requestParameters['actingContext'];
-        }
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-
-        let urlPath = `/api/v2/safety/participants/{participantId}/effective-restrictions`;
-        urlPath = urlPath.replace('{participantId}', encodeURIComponent(String(requestParameters['participantId'])));
-
-        return {
-            path: urlPath,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        };
+    if (requestParameters['actingContext'] == null) {
+      throw new runtime.RequiredError(
+        'actingContext',
+        'Required parameter "actingContext" was null or undefined when calling effectiveRestrictions().',
+      );
     }
 
-    /**
-     */
-    async effectiveRestrictionsRaw(requestParameters: EffectiveRestrictionsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<EffectiveRestrictionView>>> {
-        const requestOptions = await this.effectiveRestrictionsRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
+    const queryParameters: any = {};
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(EffectiveRestrictionViewFromJSON));
+    if (requestParameters['actingContext'] != null) {
+      queryParameters['actingContext'] = requestParameters['actingContext'];
     }
 
-    /**
-     */
-    async effectiveRestrictions(requestParameters: EffectiveRestrictionsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<EffectiveRestrictionView>> {
-        const response = await this.effectiveRestrictionsRaw(requestParameters, initOverrides);
-        return await response.value();
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v2/safety/participants/{participantId}/effective-restrictions`;
+    urlPath = urlPath.replace(
+      '{participantId}',
+      encodeURIComponent(String(requestParameters['participantId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   */
+  async effectiveRestrictionsRaw(
+    requestParameters: EffectiveRestrictionsRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<EffectiveRestrictionView>>> {
+    const requestOptions = await this.effectiveRestrictionsRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(EffectiveRestrictionViewFromJSON),
+    );
+  }
+
+  /**
+   */
+  async effectiveRestrictions(
+    requestParameters: EffectiveRestrictionsRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<EffectiveRestrictionView>> {
+    const response = await this.effectiveRestrictionsRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for history1 without sending the request
+   */
+  async history1RequestOpts(): Promise<runtime.RequestOpts> {
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v2/safety/me/restrictions/history`;
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   */
+  async history1Raw(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<RestrictionView>>> {
+    const requestOptions = await this.history1RequestOpts();
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(RestrictionViewFromJSON),
+    );
+  }
+
+  /**
+   */
+  async history1(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<RestrictionView>> {
+    const response = await this.history1Raw(initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for legacyReport without sending the request
+   */
+  async legacyReportRequestOpts(): Promise<runtime.RequestOpts> {
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v2/safety/admin/legacy/participant-restrictions`;
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   */
+  async legacyReportRaw(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<LegacyReport>> {
+    const requestOptions = await this.legacyReportRequestOpts();
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => LegacyReportFromJSON(jsonValue));
+  }
+
+  /**
+   */
+  async legacyReport(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<LegacyReport> {
+    const response = await this.legacyReportRaw(initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for override without sending the request
+   */
+  async overrideRequestOpts(requestParameters: OverrideRequest): Promise<runtime.RequestOpts> {
+    if (requestParameters['participantId'] == null) {
+      throw new runtime.RequiredError(
+        'participantId',
+        'Required parameter "participantId" was null or undefined when calling override().',
+      );
     }
 
-    /**
-     * Creates request options for history1 without sending the request
-     */
-    async history1RequestOpts(): Promise<runtime.RequestOpts> {
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-
-        let urlPath = `/api/v2/safety/me/restrictions/history`;
-
-        return {
-            path: urlPath,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        };
+    if (requestParameters['assessmentId'] == null) {
+      throw new runtime.RequiredError(
+        'assessmentId',
+        'Required parameter "assessmentId" was null or undefined when calling override().',
+      );
     }
 
-    /**
-     */
-    async history1Raw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<RestrictionView>>> {
-        const requestOptions = await this.history1RequestOpts();
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(RestrictionViewFromJSON));
+    if (requestParameters['factorId'] == null) {
+      throw new runtime.RequiredError(
+        'factorId',
+        'Required parameter "factorId" was null or undefined when calling override().',
+      );
     }
 
-    /**
-     */
-    async history1(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<RestrictionView>> {
-        const response = await this.history1Raw(initOverrides);
-        return await response.value();
+    if (requestParameters['actingContext'] == null) {
+      throw new runtime.RequiredError(
+        'actingContext',
+        'Required parameter "actingContext" was null or undefined when calling override().',
+      );
     }
 
-    /**
-     * Creates request options for legacyReport without sending the request
-     */
-    async legacyReportRequestOpts(): Promise<runtime.RequestOpts> {
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-
-        let urlPath = `/api/v2/safety/admin/legacy/participant-restrictions`;
-
-        return {
-            path: urlPath,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        };
+    if (requestParameters['overrideCommand'] == null) {
+      throw new runtime.RequiredError(
+        'overrideCommand',
+        'Required parameter "overrideCommand" was null or undefined when calling override().',
+      );
     }
 
-    /**
-     */
-    async legacyReportRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<LegacyReport>> {
-        const requestOptions = await this.legacyReportRequestOpts();
-        const response = await this.request(requestOptions, initOverrides);
+    const queryParameters: any = {};
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => LegacyReportFromJSON(jsonValue));
+    if (requestParameters['actingContext'] != null) {
+      queryParameters['actingContext'] = requestParameters['actingContext'];
     }
 
-    /**
-     */
-    async legacyReport(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<LegacyReport> {
-        const response = await this.legacyReportRaw(initOverrides);
-        return await response.value();
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v2/safety/participants/{participantId}/assessments/{assessmentId}/factors/{factorId}/overrides`;
+    urlPath = urlPath.replace(
+      '{participantId}',
+      encodeURIComponent(String(requestParameters['participantId'])),
+    );
+    urlPath = urlPath.replace(
+      '{assessmentId}',
+      encodeURIComponent(String(requestParameters['assessmentId'])),
+    );
+    urlPath = urlPath.replace(
+      '{factorId}',
+      encodeURIComponent(String(requestParameters['factorId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+      body: OverrideCommandToJSON(requestParameters['overrideCommand']),
+    };
+  }
+
+  /**
+   */
+  async overrideRaw(
+    requestParameters: OverrideRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<OverrideView>> {
+    const requestOptions = await this.overrideRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => OverrideViewFromJSON(jsonValue));
+  }
+
+  /**
+   */
+  async override(
+    requestParameters: OverrideRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<OverrideView> {
+    const response = await this.overrideRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for revise without sending the request
+   */
+  async reviseRequestOpts(requestParameters: ReviseRequest): Promise<runtime.RequestOpts> {
+    if (requestParameters['restrictionId'] == null) {
+      throw new runtime.RequiredError(
+        'restrictionId',
+        'Required parameter "restrictionId" was null or undefined when calling revise().',
+      );
     }
 
-    /**
-     * Creates request options for override without sending the request
-     */
-    async overrideRequestOpts(requestParameters: OverrideRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['participantId'] == null) {
-            throw new runtime.RequiredError(
-                'participantId',
-                'Required parameter "participantId" was null or undefined when calling override().'
-            );
-        }
-
-        if (requestParameters['assessmentId'] == null) {
-            throw new runtime.RequiredError(
-                'assessmentId',
-                'Required parameter "assessmentId" was null or undefined when calling override().'
-            );
-        }
-
-        if (requestParameters['factorId'] == null) {
-            throw new runtime.RequiredError(
-                'factorId',
-                'Required parameter "factorId" was null or undefined when calling override().'
-            );
-        }
-
-        if (requestParameters['actingContext'] == null) {
-            throw new runtime.RequiredError(
-                'actingContext',
-                'Required parameter "actingContext" was null or undefined when calling override().'
-            );
-        }
-
-        if (requestParameters['overrideCommand'] == null) {
-            throw new runtime.RequiredError(
-                'overrideCommand',
-                'Required parameter "overrideCommand" was null or undefined when calling override().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        if (requestParameters['actingContext'] != null) {
-            queryParameters['actingContext'] = requestParameters['actingContext'];
-        }
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/v2/safety/participants/{participantId}/assessments/{assessmentId}/factors/{factorId}/overrides`;
-        urlPath = urlPath.replace('{participantId}', encodeURIComponent(String(requestParameters['participantId'])));
-        urlPath = urlPath.replace('{assessmentId}', encodeURIComponent(String(requestParameters['assessmentId'])));
-        urlPath = urlPath.replace('{factorId}', encodeURIComponent(String(requestParameters['factorId'])));
-
-        return {
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: OverrideCommandToJSON(requestParameters['overrideCommand']),
-        };
+    if (requestParameters['restrictionCommand'] == null) {
+      throw new runtime.RequiredError(
+        'restrictionCommand',
+        'Required parameter "restrictionCommand" was null or undefined when calling revise().',
+      );
     }
 
-    /**
-     */
-    async overrideRaw(requestParameters: OverrideRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<OverrideView>> {
-        const requestOptions = await this.overrideRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
+    const queryParameters: any = {};
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => OverrideViewFromJSON(jsonValue));
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v2/safety/me/restrictions/{restrictionId}`;
+    urlPath = urlPath.replace(
+      '{restrictionId}',
+      encodeURIComponent(String(requestParameters['restrictionId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'PATCH',
+      headers: headerParameters,
+      query: queryParameters,
+      body: RestrictionCommandToJSON(requestParameters['restrictionCommand']),
+    };
+  }
+
+  /**
+   */
+  async reviseRaw(
+    requestParameters: ReviseRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<RestrictionView>> {
+    const requestOptions = await this.reviseRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => RestrictionViewFromJSON(jsonValue));
+  }
+
+  /**
+   */
+  async revise(
+    requestParameters: ReviseRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<RestrictionView> {
+    const response = await this.reviseRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for reviseClinicalRestriction without sending the request
+   */
+  async reviseClinicalRestrictionRequestOpts(
+    requestParameters: ReviseClinicalRestrictionRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['participantId'] == null) {
+      throw new runtime.RequiredError(
+        'participantId',
+        'Required parameter "participantId" was null or undefined when calling reviseClinicalRestriction().',
+      );
     }
 
-    /**
-     */
-    async override(requestParameters: OverrideRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<OverrideView> {
-        const response = await this.overrideRaw(requestParameters, initOverrides);
-        return await response.value();
+    if (requestParameters['restrictionId'] == null) {
+      throw new runtime.RequiredError(
+        'restrictionId',
+        'Required parameter "restrictionId" was null or undefined when calling reviseClinicalRestriction().',
+      );
     }
 
-    /**
-     * Creates request options for revise without sending the request
-     */
-    async reviseRequestOpts(requestParameters: ReviseRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['restrictionId'] == null) {
-            throw new runtime.RequiredError(
-                'restrictionId',
-                'Required parameter "restrictionId" was null or undefined when calling revise().'
-            );
-        }
-
-        if (requestParameters['restrictionCommand'] == null) {
-            throw new runtime.RequiredError(
-                'restrictionCommand',
-                'Required parameter "restrictionCommand" was null or undefined when calling revise().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/v2/safety/me/restrictions/{restrictionId}`;
-        urlPath = urlPath.replace('{restrictionId}', encodeURIComponent(String(requestParameters['restrictionId'])));
-
-        return {
-            path: urlPath,
-            method: 'PATCH',
-            headers: headerParameters,
-            query: queryParameters,
-            body: RestrictionCommandToJSON(requestParameters['restrictionCommand']),
-        };
+    if (requestParameters['actingContext'] == null) {
+      throw new runtime.RequiredError(
+        'actingContext',
+        'Required parameter "actingContext" was null or undefined when calling reviseClinicalRestriction().',
+      );
     }
 
-    /**
-     */
-    async reviseRaw(requestParameters: ReviseRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<RestrictionView>> {
-        const requestOptions = await this.reviseRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => RestrictionViewFromJSON(jsonValue));
+    if (requestParameters['restrictionCommand'] == null) {
+      throw new runtime.RequiredError(
+        'restrictionCommand',
+        'Required parameter "restrictionCommand" was null or undefined when calling reviseClinicalRestriction().',
+      );
     }
 
-    /**
-     */
-    async revise(requestParameters: ReviseRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<RestrictionView> {
-        const response = await this.reviseRaw(requestParameters, initOverrides);
-        return await response.value();
+    const queryParameters: any = {};
+
+    if (requestParameters['actingContext'] != null) {
+      queryParameters['actingContext'] = requestParameters['actingContext'];
     }
 
-    /**
-     * Creates request options for reviseClinicalRestriction without sending the request
-     */
-    async reviseClinicalRestrictionRequestOpts(requestParameters: ReviseClinicalRestrictionRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['participantId'] == null) {
-            throw new runtime.RequiredError(
-                'participantId',
-                'Required parameter "participantId" was null or undefined when calling reviseClinicalRestriction().'
-            );
-        }
+    const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['restrictionId'] == null) {
-            throw new runtime.RequiredError(
-                'restrictionId',
-                'Required parameter "restrictionId" was null or undefined when calling reviseClinicalRestriction().'
-            );
-        }
+    headerParameters['Content-Type'] = 'application/json';
 
-        if (requestParameters['actingContext'] == null) {
-            throw new runtime.RequiredError(
-                'actingContext',
-                'Required parameter "actingContext" was null or undefined when calling reviseClinicalRestriction().'
-            );
-        }
+    let urlPath = `/api/v2/safety/participants/{participantId}/restrictions/{restrictionId}`;
+    urlPath = urlPath.replace(
+      '{participantId}',
+      encodeURIComponent(String(requestParameters['participantId'])),
+    );
+    urlPath = urlPath.replace(
+      '{restrictionId}',
+      encodeURIComponent(String(requestParameters['restrictionId'])),
+    );
 
-        if (requestParameters['restrictionCommand'] == null) {
-            throw new runtime.RequiredError(
-                'restrictionCommand',
-                'Required parameter "restrictionCommand" was null or undefined when calling reviseClinicalRestriction().'
-            );
-        }
+    return {
+      path: urlPath,
+      method: 'PATCH',
+      headers: headerParameters,
+      query: queryParameters,
+      body: RestrictionCommandToJSON(requestParameters['restrictionCommand']),
+    };
+  }
 
-        const queryParameters: any = {};
+  /**
+   */
+  async reviseClinicalRestrictionRaw(
+    requestParameters: ReviseClinicalRestrictionRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<RestrictionView>> {
+    const requestOptions = await this.reviseClinicalRestrictionRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
 
-        if (requestParameters['actingContext'] != null) {
-            queryParameters['actingContext'] = requestParameters['actingContext'];
-        }
+    return new runtime.JSONApiResponse(response, (jsonValue) => RestrictionViewFromJSON(jsonValue));
+  }
 
-        const headerParameters: runtime.HTTPHeaders = {};
+  /**
+   */
+  async reviseClinicalRestriction(
+    requestParameters: ReviseClinicalRestrictionRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<RestrictionView> {
+    const response = await this.reviseClinicalRestrictionRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
 
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/v2/safety/participants/{participantId}/restrictions/{restrictionId}`;
-        urlPath = urlPath.replace('{participantId}', encodeURIComponent(String(requestParameters['participantId'])));
-        urlPath = urlPath.replace('{restrictionId}', encodeURIComponent(String(requestParameters['restrictionId'])));
-
-        return {
-            path: urlPath,
-            method: 'PATCH',
-            headers: headerParameters,
-            query: queryParameters,
-            body: RestrictionCommandToJSON(requestParameters['restrictionCommand']),
-        };
+  /**
+   * Creates request options for withdraw2 without sending the request
+   */
+  async withdraw2RequestOpts(requestParameters: Withdraw2Request): Promise<runtime.RequestOpts> {
+    if (requestParameters['restrictionId'] == null) {
+      throw new runtime.RequiredError(
+        'restrictionId',
+        'Required parameter "restrictionId" was null or undefined when calling withdraw2().',
+      );
     }
 
-    /**
-     */
-    async reviseClinicalRestrictionRaw(requestParameters: ReviseClinicalRestrictionRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<RestrictionView>> {
-        const requestOptions = await this.reviseClinicalRestrictionRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
+    const queryParameters: any = {};
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => RestrictionViewFromJSON(jsonValue));
-    }
+    const headerParameters: runtime.HTTPHeaders = {};
 
-    /**
-     */
-    async reviseClinicalRestriction(requestParameters: ReviseClinicalRestrictionRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<RestrictionView> {
-        const response = await this.reviseClinicalRestrictionRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+    let urlPath = `/api/v2/safety/me/restrictions/{restrictionId}`;
+    urlPath = urlPath.replace(
+      '{restrictionId}',
+      encodeURIComponent(String(requestParameters['restrictionId'])),
+    );
 
-    /**
-     * Creates request options for withdraw2 without sending the request
-     */
-    async withdraw2RequestOpts(requestParameters: Withdraw2Request): Promise<runtime.RequestOpts> {
-        if (requestParameters['restrictionId'] == null) {
-            throw new runtime.RequiredError(
-                'restrictionId',
-                'Required parameter "restrictionId" was null or undefined when calling withdraw2().'
-            );
-        }
+    return {
+      path: urlPath,
+      method: 'DELETE',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
 
-        const queryParameters: any = {};
+  /**
+   */
+  async withdraw2Raw(
+    requestParameters: Withdraw2Request,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<RestrictionView>> {
+    const requestOptions = await this.withdraw2RequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
 
-        const headerParameters: runtime.HTTPHeaders = {};
+    return new runtime.JSONApiResponse(response, (jsonValue) => RestrictionViewFromJSON(jsonValue));
+  }
 
-
-        let urlPath = `/api/v2/safety/me/restrictions/{restrictionId}`;
-        urlPath = urlPath.replace('{restrictionId}', encodeURIComponent(String(requestParameters['restrictionId'])));
-
-        return {
-            path: urlPath,
-            method: 'DELETE',
-            headers: headerParameters,
-            query: queryParameters,
-        };
-    }
-
-    /**
-     */
-    async withdraw2Raw(requestParameters: Withdraw2Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<RestrictionView>> {
-        const requestOptions = await this.withdraw2RequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => RestrictionViewFromJSON(jsonValue));
-    }
-
-    /**
-     */
-    async withdraw2(requestParameters: Withdraw2Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<RestrictionView> {
-        const response = await this.withdraw2Raw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
+  /**
+   */
+  async withdraw2(
+    requestParameters: Withdraw2Request,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<RestrictionView> {
+    const response = await this.withdraw2Raw(requestParameters, initOverrides);
+    return await response.value();
+  }
 }
 
 /**
  * @export
  */
 export const ClinicalRestrictionActingContextEnum = {
-    Trainer: 'TRAINER',
-    Physiotherapist: 'PHYSIOTHERAPIST'
+  Trainer: 'TRAINER',
+  Physiotherapist: 'PHYSIOTHERAPIST',
 } as const;
-export type ClinicalRestrictionActingContextEnum = typeof ClinicalRestrictionActingContextEnum[keyof typeof ClinicalRestrictionActingContextEnum];
+export type ClinicalRestrictionActingContextEnum =
+  (typeof ClinicalRestrictionActingContextEnum)[keyof typeof ClinicalRestrictionActingContextEnum];
 /**
  * @export
  */
 export const ClinicalRestrictionsActingContextEnum = {
-    Trainer: 'TRAINER',
-    Physiotherapist: 'PHYSIOTHERAPIST'
+  Trainer: 'TRAINER',
+  Physiotherapist: 'PHYSIOTHERAPIST',
 } as const;
-export type ClinicalRestrictionsActingContextEnum = typeof ClinicalRestrictionsActingContextEnum[keyof typeof ClinicalRestrictionsActingContextEnum];
+export type ClinicalRestrictionsActingContextEnum =
+  (typeof ClinicalRestrictionsActingContextEnum)[keyof typeof ClinicalRestrictionsActingContextEnum];
 /**
  * @export
  */
 export const EffectiveRestrictionsActingContextEnum = {
-    Trainer: 'TRAINER',
-    Physiotherapist: 'PHYSIOTHERAPIST'
+  Trainer: 'TRAINER',
+  Physiotherapist: 'PHYSIOTHERAPIST',
 } as const;
-export type EffectiveRestrictionsActingContextEnum = typeof EffectiveRestrictionsActingContextEnum[keyof typeof EffectiveRestrictionsActingContextEnum];
+export type EffectiveRestrictionsActingContextEnum =
+  (typeof EffectiveRestrictionsActingContextEnum)[keyof typeof EffectiveRestrictionsActingContextEnum];
 /**
  * @export
  */
 export const OverrideActingContextEnum = {
-    Trainer: 'TRAINER',
-    Physiotherapist: 'PHYSIOTHERAPIST'
+  Trainer: 'TRAINER',
+  Physiotherapist: 'PHYSIOTHERAPIST',
 } as const;
-export type OverrideActingContextEnum = typeof OverrideActingContextEnum[keyof typeof OverrideActingContextEnum];
+export type OverrideActingContextEnum =
+  (typeof OverrideActingContextEnum)[keyof typeof OverrideActingContextEnum];
 /**
  * @export
  */
 export const ReviseClinicalRestrictionActingContextEnum = {
-    Trainer: 'TRAINER',
-    Physiotherapist: 'PHYSIOTHERAPIST'
+  Trainer: 'TRAINER',
+  Physiotherapist: 'PHYSIOTHERAPIST',
 } as const;
-export type ReviseClinicalRestrictionActingContextEnum = typeof ReviseClinicalRestrictionActingContextEnum[keyof typeof ReviseClinicalRestrictionActingContextEnum];
+export type ReviseClinicalRestrictionActingContextEnum =
+  (typeof ReviseClinicalRestrictionActingContextEnum)[keyof typeof ReviseClinicalRestrictionActingContextEnum];

@@ -19,62 +19,63 @@ import { mapValues } from '../runtime';
  * @interface ReplyView
  */
 export interface ReplyView {
-    /**
-     *
-     * @type {string}
-     * @memberof ReplyView
-     */
-    id?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof ReplyView
-     */
-    shortText?: string;
-    /**
-     *
-     * @type {Date}
-     * @memberof ReplyView
-     */
-    createdAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof ReplyView
+   */
+  id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ReplyView
+   */
+  shortText?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof ReplyView
+   */
+  createdAt?: Date;
 }
 
 /**
  * Check if a given object implements the ReplyView interface.
  */
 export function instanceOfReplyView(value: object): value is ReplyView {
-    return true;
+  return true;
 }
 
 export function ReplyViewFromJSON(json: any): ReplyView {
-    return ReplyViewFromJSONTyped(json, false);
+  return ReplyViewFromJSONTyped(json, false);
 }
 
 export function ReplyViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): ReplyView {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'id': json['id'] == null ? undefined : json['id'],
-        'shortText': json['shortText'] == null ? undefined : json['shortText'],
-        'createdAt': json['createdAt'] == null ? undefined : (new Date(json['createdAt'])),
-    };
+  if (json == null) {
+    return json;
+  }
+  return {
+    id: json['id'] == null ? undefined : json['id'],
+    shortText: json['shortText'] == null ? undefined : json['shortText'],
+    createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
+  };
 }
 
 export function ReplyViewToJSON(json: any): ReplyView {
-    return ReplyViewToJSONTyped(json, false);
+  return ReplyViewToJSONTyped(json, false);
 }
 
-export function ReplyViewToJSONTyped(value?: ReplyView | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ReplyViewToJSONTyped(
+  value?: ReplyView | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'id': value['id'],
-        'shortText': value['shortText'],
-        'createdAt': value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
-    };
+  return {
+    id: value['id'],
+    shortText: value['shortText'],
+    createdAt: value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
+  };
 }

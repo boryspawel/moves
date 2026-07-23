@@ -19,70 +19,71 @@ import { mapValues } from '../runtime';
  * @interface ReviewCommand
  */
 export interface ReviewCommand {
-    /**
-     *
-     * @type {string}
-     * @memberof ReviewCommand
-     */
-    area?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof ReviewCommand
-     */
-    decision?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof ReviewCommand
-     */
-    comment?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof ReviewCommand
-     */
-    expectedVersion?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof ReviewCommand
+   */
+  area?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ReviewCommand
+   */
+  decision?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ReviewCommand
+   */
+  comment?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof ReviewCommand
+   */
+  expectedVersion?: number;
 }
 
 /**
  * Check if a given object implements the ReviewCommand interface.
  */
 export function instanceOfReviewCommand(value: object): value is ReviewCommand {
-    return true;
+  return true;
 }
 
 export function ReviewCommandFromJSON(json: any): ReviewCommand {
-    return ReviewCommandFromJSONTyped(json, false);
+  return ReviewCommandFromJSONTyped(json, false);
 }
 
 export function ReviewCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): ReviewCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'area': json['area'] == null ? undefined : json['area'],
-        'decision': json['decision'] == null ? undefined : json['decision'],
-        'comment': json['comment'] == null ? undefined : json['comment'],
-        'expectedVersion': json['expectedVersion'] == null ? undefined : json['expectedVersion'],
-    };
+  if (json == null) {
+    return json;
+  }
+  return {
+    area: json['area'] == null ? undefined : json['area'],
+    decision: json['decision'] == null ? undefined : json['decision'],
+    comment: json['comment'] == null ? undefined : json['comment'],
+    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
+  };
 }
 
 export function ReviewCommandToJSON(json: any): ReviewCommand {
-    return ReviewCommandToJSONTyped(json, false);
+  return ReviewCommandToJSONTyped(json, false);
 }
 
-export function ReviewCommandToJSONTyped(value?: ReviewCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ReviewCommandToJSONTyped(
+  value?: ReviewCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'area': value['area'],
-        'decision': value['decision'],
-        'comment': value['comment'],
-        'expectedVersion': value['expectedVersion'],
-    };
+  return {
+    area: value['area'],
+    decision: value['decision'],
+    comment: value['comment'],
+    expectedVersion: value['expectedVersion'],
+  };
 }

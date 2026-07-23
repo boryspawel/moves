@@ -19,166 +19,176 @@ import { mapValues } from '../runtime';
  * @interface CorrectionView
  */
 export interface CorrectionView {
-    /**
-     *
-     * @type {string}
-     * @memberof CorrectionView
-     */
-    id?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof CorrectionView
-     */
-    reason?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof CorrectionView
-     */
-    correctedPainLevel?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof CorrectionView
-     */
-    correctedDifficultyLevel?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof CorrectionView
-     */
-    correctedResultId?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof CorrectionView
-     */
-    correctedSets?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof CorrectionView
-     */
-    correctedRepetitions?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof CorrectionView
-     */
-    correctedDurationSeconds?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof CorrectionView
-     */
-    correctedContacts?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof CorrectionView
-     */
-    correctedExternalLoadValue?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof CorrectionView
-     */
-    correctedExternalLoadUnit?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof CorrectionView
-     */
-    correctedSide?: string;
-    /**
-     *
-     * @type {boolean}
-     * @memberof CorrectionView
-     */
-    correctedModified?: boolean;
-    /**
-     *
-     * @type {boolean}
-     * @memberof CorrectionView
-     */
-    correctedSkipped?: boolean;
-    /**
-     *
-     * @type {string}
-     * @memberof CorrectionView
-     */
-    observationMode?: string;
-    /**
-     *
-     * @type {Date}
-     * @memberof CorrectionView
-     */
-    correctedAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof CorrectionView
+   */
+  id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof CorrectionView
+   */
+  reason?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof CorrectionView
+   */
+  correctedPainLevel?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof CorrectionView
+   */
+  correctedDifficultyLevel?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof CorrectionView
+   */
+  correctedResultId?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof CorrectionView
+   */
+  correctedSets?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof CorrectionView
+   */
+  correctedRepetitions?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof CorrectionView
+   */
+  correctedDurationSeconds?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof CorrectionView
+   */
+  correctedContacts?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof CorrectionView
+   */
+  correctedExternalLoadValue?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof CorrectionView
+   */
+  correctedExternalLoadUnit?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof CorrectionView
+   */
+  correctedSide?: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof CorrectionView
+   */
+  correctedModified?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof CorrectionView
+   */
+  correctedSkipped?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof CorrectionView
+   */
+  observationMode?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof CorrectionView
+   */
+  correctedAt?: Date;
 }
 
 /**
  * Check if a given object implements the CorrectionView interface.
  */
 export function instanceOfCorrectionView(value: object): value is CorrectionView {
-    return true;
+  return true;
 }
 
 export function CorrectionViewFromJSON(json: any): CorrectionView {
-    return CorrectionViewFromJSONTyped(json, false);
+  return CorrectionViewFromJSONTyped(json, false);
 }
 
-export function CorrectionViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): CorrectionView {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'id': json['id'] == null ? undefined : json['id'],
-        'reason': json['reason'] == null ? undefined : json['reason'],
-        'correctedPainLevel': json['correctedPainLevel'] == null ? undefined : json['correctedPainLevel'],
-        'correctedDifficultyLevel': json['correctedDifficultyLevel'] == null ? undefined : json['correctedDifficultyLevel'],
-        'correctedResultId': json['correctedResultId'] == null ? undefined : json['correctedResultId'],
-        'correctedSets': json['correctedSets'] == null ? undefined : json['correctedSets'],
-        'correctedRepetitions': json['correctedRepetitions'] == null ? undefined : json['correctedRepetitions'],
-        'correctedDurationSeconds': json['correctedDurationSeconds'] == null ? undefined : json['correctedDurationSeconds'],
-        'correctedContacts': json['correctedContacts'] == null ? undefined : json['correctedContacts'],
-        'correctedExternalLoadValue': json['correctedExternalLoadValue'] == null ? undefined : json['correctedExternalLoadValue'],
-        'correctedExternalLoadUnit': json['correctedExternalLoadUnit'] == null ? undefined : json['correctedExternalLoadUnit'],
-        'correctedSide': json['correctedSide'] == null ? undefined : json['correctedSide'],
-        'correctedModified': json['correctedModified'] == null ? undefined : json['correctedModified'],
-        'correctedSkipped': json['correctedSkipped'] == null ? undefined : json['correctedSkipped'],
-        'observationMode': json['observationMode'] == null ? undefined : json['observationMode'],
-        'correctedAt': json['correctedAt'] == null ? undefined : (new Date(json['correctedAt'])),
-    };
+export function CorrectionViewFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): CorrectionView {
+  if (json == null) {
+    return json;
+  }
+  return {
+    id: json['id'] == null ? undefined : json['id'],
+    reason: json['reason'] == null ? undefined : json['reason'],
+    correctedPainLevel: json['correctedPainLevel'] == null ? undefined : json['correctedPainLevel'],
+    correctedDifficultyLevel:
+      json['correctedDifficultyLevel'] == null ? undefined : json['correctedDifficultyLevel'],
+    correctedResultId: json['correctedResultId'] == null ? undefined : json['correctedResultId'],
+    correctedSets: json['correctedSets'] == null ? undefined : json['correctedSets'],
+    correctedRepetitions:
+      json['correctedRepetitions'] == null ? undefined : json['correctedRepetitions'],
+    correctedDurationSeconds:
+      json['correctedDurationSeconds'] == null ? undefined : json['correctedDurationSeconds'],
+    correctedContacts: json['correctedContacts'] == null ? undefined : json['correctedContacts'],
+    correctedExternalLoadValue:
+      json['correctedExternalLoadValue'] == null ? undefined : json['correctedExternalLoadValue'],
+    correctedExternalLoadUnit:
+      json['correctedExternalLoadUnit'] == null ? undefined : json['correctedExternalLoadUnit'],
+    correctedSide: json['correctedSide'] == null ? undefined : json['correctedSide'],
+    correctedModified: json['correctedModified'] == null ? undefined : json['correctedModified'],
+    correctedSkipped: json['correctedSkipped'] == null ? undefined : json['correctedSkipped'],
+    observationMode: json['observationMode'] == null ? undefined : json['observationMode'],
+    correctedAt: json['correctedAt'] == null ? undefined : new Date(json['correctedAt']),
+  };
 }
 
 export function CorrectionViewToJSON(json: any): CorrectionView {
-    return CorrectionViewToJSONTyped(json, false);
+  return CorrectionViewToJSONTyped(json, false);
 }
 
-export function CorrectionViewToJSONTyped(value?: CorrectionView | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function CorrectionViewToJSONTyped(
+  value?: CorrectionView | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'id': value['id'],
-        'reason': value['reason'],
-        'correctedPainLevel': value['correctedPainLevel'],
-        'correctedDifficultyLevel': value['correctedDifficultyLevel'],
-        'correctedResultId': value['correctedResultId'],
-        'correctedSets': value['correctedSets'],
-        'correctedRepetitions': value['correctedRepetitions'],
-        'correctedDurationSeconds': value['correctedDurationSeconds'],
-        'correctedContacts': value['correctedContacts'],
-        'correctedExternalLoadValue': value['correctedExternalLoadValue'],
-        'correctedExternalLoadUnit': value['correctedExternalLoadUnit'],
-        'correctedSide': value['correctedSide'],
-        'correctedModified': value['correctedModified'],
-        'correctedSkipped': value['correctedSkipped'],
-        'observationMode': value['observationMode'],
-        'correctedAt': value['correctedAt'] == null ? value['correctedAt'] : value['correctedAt'].toISOString(),
-    };
+  return {
+    id: value['id'],
+    reason: value['reason'],
+    correctedPainLevel: value['correctedPainLevel'],
+    correctedDifficultyLevel: value['correctedDifficultyLevel'],
+    correctedResultId: value['correctedResultId'],
+    correctedSets: value['correctedSets'],
+    correctedRepetitions: value['correctedRepetitions'],
+    correctedDurationSeconds: value['correctedDurationSeconds'],
+    correctedContacts: value['correctedContacts'],
+    correctedExternalLoadValue: value['correctedExternalLoadValue'],
+    correctedExternalLoadUnit: value['correctedExternalLoadUnit'],
+    correctedSide: value['correctedSide'],
+    correctedModified: value['correctedModified'],
+    correctedSkipped: value['correctedSkipped'],
+    observationMode: value['observationMode'],
+    correctedAt:
+      value['correctedAt'] == null ? value['correctedAt'] : value['correctedAt'].toISOString(),
+  };
 }

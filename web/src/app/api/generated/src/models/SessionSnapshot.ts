@@ -15,17 +15,17 @@
 import { mapValues } from '../runtime';
 import type { PrescriptionSnapshot } from './PrescriptionSnapshot';
 import {
-    PrescriptionSnapshotFromJSON,
-    PrescriptionSnapshotFromJSONTyped,
-    PrescriptionSnapshotToJSON,
-    PrescriptionSnapshotToJSONTyped,
+  PrescriptionSnapshotFromJSON,
+  PrescriptionSnapshotFromJSONTyped,
+  PrescriptionSnapshotToJSON,
+  PrescriptionSnapshotToJSONTyped,
 } from './PrescriptionSnapshot';
 import type { SessionVariantSnapshot } from './SessionVariantSnapshot';
 import {
-    SessionVariantSnapshotFromJSON,
-    SessionVariantSnapshotFromJSONTyped,
-    SessionVariantSnapshotToJSON,
-    SessionVariantSnapshotToJSONTyped,
+  SessionVariantSnapshotFromJSON,
+  SessionVariantSnapshotFromJSONTyped,
+  SessionVariantSnapshotToJSON,
+  SessionVariantSnapshotToJSONTyped,
 } from './SessionVariantSnapshot';
 
 /**
@@ -34,110 +34,134 @@ import {
  * @interface SessionSnapshot
  */
 export interface SessionSnapshot {
-    /**
-     *
-     * @type {string}
-     * @memberof SessionSnapshot
-     */
-    id?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof SessionSnapshot
-     */
-    title?: string;
-    /**
-     *
-     * @type {Date}
-     * @memberof SessionSnapshot
-     */
-    scheduledDate?: Date;
-    /**
-     *
-     * @type {Date}
-     * @memberof SessionSnapshot
-     */
-    availableFrom?: Date;
-    /**
-     *
-     * @type {Date}
-     * @memberof SessionSnapshot
-     */
-    availableTo?: Date;
-    /**
-     *
-     * @type {number}
-     * @memberof SessionSnapshot
-     */
-    expectedDurationMinutes?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof SessionSnapshot
-     */
-    status?: string;
-    /**
-     *
-     * @type {Array<PrescriptionSnapshot>}
-     * @memberof SessionSnapshot
-     */
-    prescriptions?: Array<PrescriptionSnapshot>;
-    /**
-     *
-     * @type {Array<SessionVariantSnapshot>}
-     * @memberof SessionSnapshot
-     */
-    variants?: Array<SessionVariantSnapshot>;
+  /**
+   *
+   * @type {string}
+   * @memberof SessionSnapshot
+   */
+  id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof SessionSnapshot
+   */
+  title?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof SessionSnapshot
+   */
+  scheduledDate?: Date;
+  /**
+   *
+   * @type {Date}
+   * @memberof SessionSnapshot
+   */
+  availableFrom?: Date;
+  /**
+   *
+   * @type {Date}
+   * @memberof SessionSnapshot
+   */
+  availableTo?: Date;
+  /**
+   *
+   * @type {number}
+   * @memberof SessionSnapshot
+   */
+  expectedDurationMinutes?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof SessionSnapshot
+   */
+  status?: string;
+  /**
+   *
+   * @type {Array<PrescriptionSnapshot>}
+   * @memberof SessionSnapshot
+   */
+  prescriptions?: Array<PrescriptionSnapshot>;
+  /**
+   *
+   * @type {Array<SessionVariantSnapshot>}
+   * @memberof SessionSnapshot
+   */
+  variants?: Array<SessionVariantSnapshot>;
 }
 
 /**
  * Check if a given object implements the SessionSnapshot interface.
  */
 export function instanceOfSessionSnapshot(value: object): value is SessionSnapshot {
-    return true;
+  return true;
 }
 
 export function SessionSnapshotFromJSON(json: any): SessionSnapshot {
-    return SessionSnapshotFromJSONTyped(json, false);
+  return SessionSnapshotFromJSONTyped(json, false);
 }
 
-export function SessionSnapshotFromJSONTyped(json: any, ignoreDiscriminator: boolean): SessionSnapshot {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'id': json['id'] == null ? undefined : json['id'],
-        'title': json['title'] == null ? undefined : json['title'],
-        'scheduledDate': json['scheduledDate'] == null ? undefined : (new Date(json['scheduledDate'])),
-        'availableFrom': json['availableFrom'] == null ? undefined : (new Date(json['availableFrom'])),
-        'availableTo': json['availableTo'] == null ? undefined : (new Date(json['availableTo'])),
-        'expectedDurationMinutes': json['expectedDurationMinutes'] == null ? undefined : json['expectedDurationMinutes'],
-        'status': json['status'] == null ? undefined : json['status'],
-        'prescriptions': json['prescriptions'] == null ? undefined : ((json['prescriptions'] as Array<any>).map(PrescriptionSnapshotFromJSON)),
-        'variants': json['variants'] == null ? undefined : ((json['variants'] as Array<any>).map(SessionVariantSnapshotFromJSON)),
-    };
+export function SessionSnapshotFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): SessionSnapshot {
+  if (json == null) {
+    return json;
+  }
+  return {
+    id: json['id'] == null ? undefined : json['id'],
+    title: json['title'] == null ? undefined : json['title'],
+    scheduledDate: json['scheduledDate'] == null ? undefined : new Date(json['scheduledDate']),
+    availableFrom: json['availableFrom'] == null ? undefined : new Date(json['availableFrom']),
+    availableTo: json['availableTo'] == null ? undefined : new Date(json['availableTo']),
+    expectedDurationMinutes:
+      json['expectedDurationMinutes'] == null ? undefined : json['expectedDurationMinutes'],
+    status: json['status'] == null ? undefined : json['status'],
+    prescriptions:
+      json['prescriptions'] == null
+        ? undefined
+        : (json['prescriptions'] as Array<any>).map(PrescriptionSnapshotFromJSON),
+    variants:
+      json['variants'] == null
+        ? undefined
+        : (json['variants'] as Array<any>).map(SessionVariantSnapshotFromJSON),
+  };
 }
 
 export function SessionSnapshotToJSON(json: any): SessionSnapshot {
-    return SessionSnapshotToJSONTyped(json, false);
+  return SessionSnapshotToJSONTyped(json, false);
 }
 
-export function SessionSnapshotToJSONTyped(value?: SessionSnapshot | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function SessionSnapshotToJSONTyped(
+  value?: SessionSnapshot | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'id': value['id'],
-        'title': value['title'],
-        'scheduledDate': value['scheduledDate'] == null ? value['scheduledDate'] : value['scheduledDate'].toISOString().substring(0,10),
-        'availableFrom': value['availableFrom'] == null ? value['availableFrom'] : value['availableFrom'].toISOString(),
-        'availableTo': value['availableTo'] == null ? value['availableTo'] : value['availableTo'].toISOString(),
-        'expectedDurationMinutes': value['expectedDurationMinutes'],
-        'status': value['status'],
-        'prescriptions': value['prescriptions'] == null ? undefined : ((value['prescriptions'] as Array<any>).map(PrescriptionSnapshotToJSON)),
-        'variants': value['variants'] == null ? undefined : ((value['variants'] as Array<any>).map(SessionVariantSnapshotToJSON)),
-    };
+  return {
+    id: value['id'],
+    title: value['title'],
+    scheduledDate:
+      value['scheduledDate'] == null
+        ? value['scheduledDate']
+        : value['scheduledDate'].toISOString().substring(0, 10),
+    availableFrom:
+      value['availableFrom'] == null
+        ? value['availableFrom']
+        : value['availableFrom'].toISOString(),
+    availableTo:
+      value['availableTo'] == null ? value['availableTo'] : value['availableTo'].toISOString(),
+    expectedDurationMinutes: value['expectedDurationMinutes'],
+    status: value['status'],
+    prescriptions:
+      value['prescriptions'] == null
+        ? undefined
+        : (value['prescriptions'] as Array<any>).map(PrescriptionSnapshotToJSON),
+    variants:
+      value['variants'] == null
+        ? undefined
+        : (value['variants'] as Array<any>).map(SessionVariantSnapshotToJSON),
+  };
 }

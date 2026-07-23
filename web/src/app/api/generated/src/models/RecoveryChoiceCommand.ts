@@ -19,62 +19,66 @@ import { mapValues } from '../runtime';
  * @interface RecoveryChoiceCommand
  */
 export interface RecoveryChoiceCommand {
-    /**
-     *
-     * @type {string}
-     * @memberof RecoveryChoiceCommand
-     */
-    offerId?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof RecoveryChoiceCommand
-     */
-    aggregateVersion?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof RecoveryChoiceCommand
-     */
-    path?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RecoveryChoiceCommand
+   */
+  offerId?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof RecoveryChoiceCommand
+   */
+  aggregateVersion?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof RecoveryChoiceCommand
+   */
+  path?: string;
 }
 
 /**
  * Check if a given object implements the RecoveryChoiceCommand interface.
  */
 export function instanceOfRecoveryChoiceCommand(value: object): value is RecoveryChoiceCommand {
-    return true;
+  return true;
 }
 
 export function RecoveryChoiceCommandFromJSON(json: any): RecoveryChoiceCommand {
-    return RecoveryChoiceCommandFromJSONTyped(json, false);
+  return RecoveryChoiceCommandFromJSONTyped(json, false);
 }
 
-export function RecoveryChoiceCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): RecoveryChoiceCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'offerId': json['offerId'] == null ? undefined : json['offerId'],
-        'aggregateVersion': json['aggregateVersion'] == null ? undefined : json['aggregateVersion'],
-        'path': json['path'] == null ? undefined : json['path'],
-    };
+export function RecoveryChoiceCommandFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): RecoveryChoiceCommand {
+  if (json == null) {
+    return json;
+  }
+  return {
+    offerId: json['offerId'] == null ? undefined : json['offerId'],
+    aggregateVersion: json['aggregateVersion'] == null ? undefined : json['aggregateVersion'],
+    path: json['path'] == null ? undefined : json['path'],
+  };
 }
 
 export function RecoveryChoiceCommandToJSON(json: any): RecoveryChoiceCommand {
-    return RecoveryChoiceCommandToJSONTyped(json, false);
+  return RecoveryChoiceCommandToJSONTyped(json, false);
 }
 
-export function RecoveryChoiceCommandToJSONTyped(value?: RecoveryChoiceCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function RecoveryChoiceCommandToJSONTyped(
+  value?: RecoveryChoiceCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'offerId': value['offerId'],
-        'aggregateVersion': value['aggregateVersion'],
-        'path': value['path'],
-    };
+  return {
+    offerId: value['offerId'],
+    aggregateVersion: value['aggregateVersion'],
+    path: value['path'],
+  };
 }

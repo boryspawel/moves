@@ -30,4 +30,8 @@ class Exercise {
         this.createdBySubject = createdBySubject;
         createdAt = now;
     }
+
+    void rename(String canonicalName) {
+        this.canonicalName = canonicalName;
+    }
 }

@@ -19,46 +19,47 @@ import { mapValues } from '../runtime';
  * @interface ReplyCommand
  */
 export interface ReplyCommand {
-    /**
-     *
-     * @type {string}
-     * @memberof ReplyCommand
-     */
-    shortText?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ReplyCommand
+   */
+  shortText?: string;
 }
 
 /**
  * Check if a given object implements the ReplyCommand interface.
  */
 export function instanceOfReplyCommand(value: object): value is ReplyCommand {
-    return true;
+  return true;
 }
 
 export function ReplyCommandFromJSON(json: any): ReplyCommand {
-    return ReplyCommandFromJSONTyped(json, false);
+  return ReplyCommandFromJSONTyped(json, false);
 }
 
 export function ReplyCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): ReplyCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'shortText': json['shortText'] == null ? undefined : json['shortText'],
-    };
+  if (json == null) {
+    return json;
+  }
+  return {
+    shortText: json['shortText'] == null ? undefined : json['shortText'],
+  };
 }
 
 export function ReplyCommandToJSON(json: any): ReplyCommand {
-    return ReplyCommandToJSONTyped(json, false);
+  return ReplyCommandToJSONTyped(json, false);
 }
 
-export function ReplyCommandToJSONTyped(value?: ReplyCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ReplyCommandToJSONTyped(
+  value?: ReplyCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'shortText': value['shortText'],
-    };
+  return {
+    shortText: value['shortText'],
+  };
 }

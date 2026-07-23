@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { ReplyView } from './ReplyView';
 import {
-    ReplyViewFromJSON,
-    ReplyViewFromJSONTyped,
-    ReplyViewToJSON,
-    ReplyViewToJSONTyped,
+  ReplyViewFromJSON,
+  ReplyViewFromJSONTyped,
+  ReplyViewToJSON,
+  ReplyViewToJSONTyped,
 } from './ReplyView';
 
 /**
@@ -27,134 +27,142 @@ import {
  * @interface WorklistItemView
  */
 export interface WorklistItemView {
-    /**
-     *
-     * @type {string}
-     * @memberof WorklistItemView
-     */
-    id?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof WorklistItemView
-     */
-    participantAccountId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof WorklistItemView
-     */
-    planRevisionId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof WorklistItemView
-     */
-    category?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof WorklistItemView
-     */
-    priority?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof WorklistItemView
-     */
-    reasonCode?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof WorklistItemView
-     */
-    minimalData?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof WorklistItemView
-     */
-    policyVersion?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof WorklistItemView
-     */
-    status?: string;
-    /**
-     *
-     * @type {Date}
-     * @memberof WorklistItemView
-     */
-    snoozedUntil?: Date;
-    /**
-     *
-     * @type {string}
-     * @memberof WorklistItemView
-     */
-    issueText?: string;
-    /**
-     *
-     * @type {Array<ReplyView>}
-     * @memberof WorklistItemView
-     */
-    replies?: Array<ReplyView>;
+  /**
+   *
+   * @type {string}
+   * @memberof WorklistItemView
+   */
+  id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof WorklistItemView
+   */
+  participantAccountId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof WorklistItemView
+   */
+  planRevisionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof WorklistItemView
+   */
+  category?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof WorklistItemView
+   */
+  priority?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof WorklistItemView
+   */
+  reasonCode?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof WorklistItemView
+   */
+  minimalData?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof WorklistItemView
+   */
+  policyVersion?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof WorklistItemView
+   */
+  status?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof WorklistItemView
+   */
+  snoozedUntil?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof WorklistItemView
+   */
+  issueText?: string;
+  /**
+   *
+   * @type {Array<ReplyView>}
+   * @memberof WorklistItemView
+   */
+  replies?: Array<ReplyView>;
 }
 
 /**
  * Check if a given object implements the WorklistItemView interface.
  */
 export function instanceOfWorklistItemView(value: object): value is WorklistItemView {
-    return true;
+  return true;
 }
 
 export function WorklistItemViewFromJSON(json: any): WorklistItemView {
-    return WorklistItemViewFromJSONTyped(json, false);
+  return WorklistItemViewFromJSONTyped(json, false);
 }
 
-export function WorklistItemViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): WorklistItemView {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'id': json['id'] == null ? undefined : json['id'],
-        'participantAccountId': json['participantAccountId'] == null ? undefined : json['participantAccountId'],
-        'planRevisionId': json['planRevisionId'] == null ? undefined : json['planRevisionId'],
-        'category': json['category'] == null ? undefined : json['category'],
-        'priority': json['priority'] == null ? undefined : json['priority'],
-        'reasonCode': json['reasonCode'] == null ? undefined : json['reasonCode'],
-        'minimalData': json['minimalData'] == null ? undefined : json['minimalData'],
-        'policyVersion': json['policyVersion'] == null ? undefined : json['policyVersion'],
-        'status': json['status'] == null ? undefined : json['status'],
-        'snoozedUntil': json['snoozedUntil'] == null ? undefined : (new Date(json['snoozedUntil'])),
-        'issueText': json['issueText'] == null ? undefined : json['issueText'],
-        'replies': json['replies'] == null ? undefined : ((json['replies'] as Array<any>).map(ReplyViewFromJSON)),
-    };
+export function WorklistItemViewFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): WorklistItemView {
+  if (json == null) {
+    return json;
+  }
+  return {
+    id: json['id'] == null ? undefined : json['id'],
+    participantAccountId:
+      json['participantAccountId'] == null ? undefined : json['participantAccountId'],
+    planRevisionId: json['planRevisionId'] == null ? undefined : json['planRevisionId'],
+    category: json['category'] == null ? undefined : json['category'],
+    priority: json['priority'] == null ? undefined : json['priority'],
+    reasonCode: json['reasonCode'] == null ? undefined : json['reasonCode'],
+    minimalData: json['minimalData'] == null ? undefined : json['minimalData'],
+    policyVersion: json['policyVersion'] == null ? undefined : json['policyVersion'],
+    status: json['status'] == null ? undefined : json['status'],
+    snoozedUntil: json['snoozedUntil'] == null ? undefined : new Date(json['snoozedUntil']),
+    issueText: json['issueText'] == null ? undefined : json['issueText'],
+    replies:
+      json['replies'] == null ? undefined : (json['replies'] as Array<any>).map(ReplyViewFromJSON),
+  };
 }
 
 export function WorklistItemViewToJSON(json: any): WorklistItemView {
-    return WorklistItemViewToJSONTyped(json, false);
+  return WorklistItemViewToJSONTyped(json, false);
 }
 
-export function WorklistItemViewToJSONTyped(value?: WorklistItemView | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function WorklistItemViewToJSONTyped(
+  value?: WorklistItemView | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'id': value['id'],
-        'participantAccountId': value['participantAccountId'],
-        'planRevisionId': value['planRevisionId'],
-        'category': value['category'],
-        'priority': value['priority'],
-        'reasonCode': value['reasonCode'],
-        'minimalData': value['minimalData'],
-        'policyVersion': value['policyVersion'],
-        'status': value['status'],
-        'snoozedUntil': value['snoozedUntil'] == null ? value['snoozedUntil'] : value['snoozedUntil'].toISOString(),
-        'issueText': value['issueText'],
-        'replies': value['replies'] == null ? undefined : ((value['replies'] as Array<any>).map(ReplyViewToJSON)),
-    };
+  return {
+    id: value['id'],
+    participantAccountId: value['participantAccountId'],
+    planRevisionId: value['planRevisionId'],
+    category: value['category'],
+    priority: value['priority'],
+    reasonCode: value['reasonCode'],
+    minimalData: value['minimalData'],
+    policyVersion: value['policyVersion'],
+    status: value['status'],
+    snoozedUntil:
+      value['snoozedUntil'] == null ? value['snoozedUntil'] : value['snoozedUntil'].toISOString(),
+    issueText: value['issueText'],
+    replies:
+      value['replies'] == null ? undefined : (value['replies'] as Array<any>).map(ReplyViewToJSON),
+  };
 }

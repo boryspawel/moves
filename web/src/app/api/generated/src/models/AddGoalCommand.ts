@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { OutcomeCommand } from './OutcomeCommand';
 import {
-    OutcomeCommandFromJSON,
-    OutcomeCommandFromJSONTyped,
-    OutcomeCommandToJSON,
-    OutcomeCommandToJSONTyped,
+  OutcomeCommandFromJSON,
+  OutcomeCommandFromJSONTyped,
+  OutcomeCommandToJSON,
+  OutcomeCommandToJSONTyped,
 } from './OutcomeCommand';
 
 /**
@@ -27,132 +27,145 @@ import {
  * @interface AddGoalCommand
  */
 export interface AddGoalCommand {
-    /**
-     *
-     * @type {number}
-     * @memberof AddGoalCommand
-     */
-    expectedVersion?: number;
-    /**
-     *
-     * @type {AddGoalCommandPerspectiveEnum}
-     * @memberof AddGoalCommand
-     */
-    perspective?: AddGoalCommandPerspectiveEnum;
-    /**
-     *
-     * @type {string}
-     * @memberof AddGoalCommand
-     */
-    category?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof AddGoalCommand
-     */
-    title?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof AddGoalCommand
-     */
-    description?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof AddGoalCommand
-     */
-    priority?: number;
-    /**
-     *
-     * @type {AddGoalCommandStatusEnum}
-     * @memberof AddGoalCommand
-     */
-    status?: AddGoalCommandStatusEnum;
-    /**
-     *
-     * @type {Date}
-     * @memberof AddGoalCommand
-     */
-    targetDate?: Date;
-    /**
-     *
-     * @type {Array<OutcomeCommand>}
-     * @memberof AddGoalCommand
-     */
-    outcomes?: Array<OutcomeCommand>;
+  /**
+   *
+   * @type {number}
+   * @memberof AddGoalCommand
+   */
+  expectedVersion?: number;
+  /**
+   *
+   * @type {AddGoalCommandPerspectiveEnum}
+   * @memberof AddGoalCommand
+   */
+  perspective?: AddGoalCommandPerspectiveEnum;
+  /**
+   *
+   * @type {string}
+   * @memberof AddGoalCommand
+   */
+  category?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AddGoalCommand
+   */
+  title?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AddGoalCommand
+   */
+  description?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof AddGoalCommand
+   */
+  priority?: number;
+  /**
+   *
+   * @type {AddGoalCommandStatusEnum}
+   * @memberof AddGoalCommand
+   */
+  status?: AddGoalCommandStatusEnum;
+  /**
+   *
+   * @type {Date}
+   * @memberof AddGoalCommand
+   */
+  targetDate?: Date;
+  /**
+   *
+   * @type {Array<OutcomeCommand>}
+   * @memberof AddGoalCommand
+   */
+  outcomes?: Array<OutcomeCommand>;
 }
-
 
 /**
  * @export
  */
 export const AddGoalCommandPerspectiveEnum = {
-    Performance: 'PERFORMANCE',
-    FunctionalRecovery: 'FUNCTIONAL_RECOVERY',
-    GeneralFitness: 'GENERAL_FITNESS'
+  Performance: 'PERFORMANCE',
+  FunctionalRecovery: 'FUNCTIONAL_RECOVERY',
+  GeneralFitness: 'GENERAL_FITNESS',
 } as const;
-export type AddGoalCommandPerspectiveEnum = typeof AddGoalCommandPerspectiveEnum[keyof typeof AddGoalCommandPerspectiveEnum];
+export type AddGoalCommandPerspectiveEnum =
+  (typeof AddGoalCommandPerspectiveEnum)[keyof typeof AddGoalCommandPerspectiveEnum];
 
 /**
  * @export
  */
 export const AddGoalCommandStatusEnum = {
-    Active: 'ACTIVE',
-    Achieved: 'ACHIEVED',
-    Cancelled: 'CANCELLED'
+  Active: 'ACTIVE',
+  Achieved: 'ACHIEVED',
+  Cancelled: 'CANCELLED',
 } as const;
-export type AddGoalCommandStatusEnum = typeof AddGoalCommandStatusEnum[keyof typeof AddGoalCommandStatusEnum];
-
+export type AddGoalCommandStatusEnum =
+  (typeof AddGoalCommandStatusEnum)[keyof typeof AddGoalCommandStatusEnum];
 
 /**
  * Check if a given object implements the AddGoalCommand interface.
  */
 export function instanceOfAddGoalCommand(value: object): value is AddGoalCommand {
-    return true;
+  return true;
 }
 
 export function AddGoalCommandFromJSON(json: any): AddGoalCommand {
-    return AddGoalCommandFromJSONTyped(json, false);
+  return AddGoalCommandFromJSONTyped(json, false);
 }
 
-export function AddGoalCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): AddGoalCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'expectedVersion': json['expectedVersion'] == null ? undefined : json['expectedVersion'],
-        'perspective': json['perspective'] == null ? undefined : json['perspective'],
-        'category': json['category'] == null ? undefined : json['category'],
-        'title': json['title'] == null ? undefined : json['title'],
-        'description': json['description'] == null ? undefined : json['description'],
-        'priority': json['priority'] == null ? undefined : json['priority'],
-        'status': json['status'] == null ? undefined : json['status'],
-        'targetDate': json['targetDate'] == null ? undefined : (new Date(json['targetDate'])),
-        'outcomes': json['outcomes'] == null ? undefined : ((json['outcomes'] as Array<any>).map(OutcomeCommandFromJSON)),
-    };
+export function AddGoalCommandFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): AddGoalCommand {
+  if (json == null) {
+    return json;
+  }
+  return {
+    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
+    perspective: json['perspective'] == null ? undefined : json['perspective'],
+    category: json['category'] == null ? undefined : json['category'],
+    title: json['title'] == null ? undefined : json['title'],
+    description: json['description'] == null ? undefined : json['description'],
+    priority: json['priority'] == null ? undefined : json['priority'],
+    status: json['status'] == null ? undefined : json['status'],
+    targetDate: json['targetDate'] == null ? undefined : new Date(json['targetDate']),
+    outcomes:
+      json['outcomes'] == null
+        ? undefined
+        : (json['outcomes'] as Array<any>).map(OutcomeCommandFromJSON),
+  };
 }
 
 export function AddGoalCommandToJSON(json: any): AddGoalCommand {
-    return AddGoalCommandToJSONTyped(json, false);
+  return AddGoalCommandToJSONTyped(json, false);
 }
 
-export function AddGoalCommandToJSONTyped(value?: AddGoalCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function AddGoalCommandToJSONTyped(
+  value?: AddGoalCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'expectedVersion': value['expectedVersion'],
-        'perspective': value['perspective'],
-        'category': value['category'],
-        'title': value['title'],
-        'description': value['description'],
-        'priority': value['priority'],
-        'status': value['status'],
-        'targetDate': value['targetDate'] == null ? value['targetDate'] : value['targetDate'].toISOString().substring(0,10),
-        'outcomes': value['outcomes'] == null ? undefined : ((value['outcomes'] as Array<any>).map(OutcomeCommandToJSON)),
-    };
+  return {
+    expectedVersion: value['expectedVersion'],
+    perspective: value['perspective'],
+    category: value['category'],
+    title: value['title'],
+    description: value['description'],
+    priority: value['priority'],
+    status: value['status'],
+    targetDate:
+      value['targetDate'] == null
+        ? value['targetDate']
+        : value['targetDate'].toISOString().substring(0, 10),
+    outcomes:
+      value['outcomes'] == null
+        ? undefined
+        : (value['outcomes'] as Array<any>).map(OutcomeCommandToJSON),
+  };
 }

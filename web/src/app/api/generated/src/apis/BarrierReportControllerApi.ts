@@ -14,82 +14,87 @@
 
 import * as runtime from '../runtime';
 import {
-    type BarrierReportCommand,
-    BarrierReportCommandFromJSON,
-    BarrierReportCommandToJSON,
+  type BarrierReportCommand,
+  BarrierReportCommandFromJSON,
+  BarrierReportCommandToJSON,
 } from '../models/BarrierReportCommand';
 import {
-    type BarrierReportView,
-    BarrierReportViewFromJSON,
-    BarrierReportViewToJSON,
+  type BarrierReportView,
+  BarrierReportViewFromJSON,
+  BarrierReportViewToJSON,
 } from '../models/BarrierReportView';
 
 export interface ReportRequest {
-    idempotencyKey: string;
-    barrierReportCommand: BarrierReportCommand;
+  idempotencyKey: string;
+  barrierReportCommand: BarrierReportCommand;
 }
 
 /**
  *
  */
 export class BarrierReportControllerApi extends runtime.BaseAPI {
-
-    /**
-     * Creates request options for report without sending the request
-     */
-    async reportRequestOpts(requestParameters: ReportRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['idempotencyKey'] == null) {
-            throw new runtime.RequiredError(
-                'idempotencyKey',
-                'Required parameter "idempotencyKey" was null or undefined when calling report().'
-            );
-        }
-
-        if (requestParameters['barrierReportCommand'] == null) {
-            throw new runtime.RequiredError(
-                'barrierReportCommand',
-                'Required parameter "barrierReportCommand" was null or undefined when calling report().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-        if (requestParameters['idempotencyKey'] != null) {
-            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
-        }
-
-
-        let urlPath = `/api/v1/participant/barrier-reports`;
-
-        return {
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: BarrierReportCommandToJSON(requestParameters['barrierReportCommand']),
-        };
+  /**
+   * Creates request options for report without sending the request
+   */
+  async reportRequestOpts(requestParameters: ReportRequest): Promise<runtime.RequestOpts> {
+    if (requestParameters['idempotencyKey'] == null) {
+      throw new runtime.RequiredError(
+        'idempotencyKey',
+        'Required parameter "idempotencyKey" was null or undefined when calling report().',
+      );
     }
 
-    /**
-     * Report a session barrier and receive deterministic, safe options
-     */
-    async reportRaw(requestParameters: ReportRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BarrierReportView>> {
-        const requestOptions = await this.reportRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => BarrierReportViewFromJSON(jsonValue));
+    if (requestParameters['barrierReportCommand'] == null) {
+      throw new runtime.RequiredError(
+        'barrierReportCommand',
+        'Required parameter "barrierReportCommand" was null or undefined when calling report().',
+      );
     }
 
-    /**
-     * Report a session barrier and receive deterministic, safe options
-     */
-    async report(requestParameters: ReportRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BarrierReportView> {
-        const response = await this.reportRaw(requestParameters, initOverrides);
-        return await response.value();
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    if (requestParameters['idempotencyKey'] != null) {
+      headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
     }
 
+    let urlPath = `/api/v1/participant/barrier-reports`;
+
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+      body: BarrierReportCommandToJSON(requestParameters['barrierReportCommand']),
+    };
+  }
+
+  /**
+   * Report a session barrier and receive deterministic, safe options
+   */
+  async reportRaw(
+    requestParameters: ReportRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<BarrierReportView>> {
+    const requestOptions = await this.reportRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      BarrierReportViewFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   * Report a session barrier and receive deterministic, safe options
+   */
+  async report(
+    requestParameters: ReportRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<BarrierReportView> {
+    const response = await this.reportRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
 }

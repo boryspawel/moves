@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { ActingContext } from './ActingContext';
 import {
-    ActingContextFromJSON,
-    ActingContextFromJSONTyped,
-    ActingContextToJSON,
-    ActingContextToJSONTyped,
+  ActingContextFromJSON,
+  ActingContextFromJSONTyped,
+  ActingContextToJSON,
+  ActingContextToJSONTyped,
 } from './ActingContext';
 
 /**
@@ -27,46 +27,51 @@ import {
  * @interface ActivateWorkflowCommand
  */
 export interface ActivateWorkflowCommand {
-    /**
-     *
-     * @type {ActingContext}
-     * @memberof ActivateWorkflowCommand
-     */
-    actingContext?: ActingContext;
+  /**
+   *
+   * @type {ActingContext}
+   * @memberof ActivateWorkflowCommand
+   */
+  actingContext?: ActingContext;
 }
 
 /**
  * Check if a given object implements the ActivateWorkflowCommand interface.
  */
 export function instanceOfActivateWorkflowCommand(value: object): value is ActivateWorkflowCommand {
-    return true;
+  return true;
 }
 
 export function ActivateWorkflowCommandFromJSON(json: any): ActivateWorkflowCommand {
-    return ActivateWorkflowCommandFromJSONTyped(json, false);
+  return ActivateWorkflowCommandFromJSONTyped(json, false);
 }
 
-export function ActivateWorkflowCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): ActivateWorkflowCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'actingContext': json['actingContext'] == null ? undefined : ActingContextFromJSON(json['actingContext']),
-    };
+export function ActivateWorkflowCommandFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): ActivateWorkflowCommand {
+  if (json == null) {
+    return json;
+  }
+  return {
+    actingContext:
+      json['actingContext'] == null ? undefined : ActingContextFromJSON(json['actingContext']),
+  };
 }
 
 export function ActivateWorkflowCommandToJSON(json: any): ActivateWorkflowCommand {
-    return ActivateWorkflowCommandToJSONTyped(json, false);
+  return ActivateWorkflowCommandToJSONTyped(json, false);
 }
 
-export function ActivateWorkflowCommandToJSONTyped(value?: ActivateWorkflowCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ActivateWorkflowCommandToJSONTyped(
+  value?: ActivateWorkflowCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'actingContext': ActingContextToJSON(value['actingContext']),
-    };
+  return {
+    actingContext: ActingContextToJSON(value['actingContext']),
+  };
 }

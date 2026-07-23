@@ -19,94 +19,102 @@ import { mapValues } from '../runtime';
  * @interface AddCycleCommand
  */
 export interface AddCycleCommand {
-    /**
-     *
-     * @type {number}
-     * @memberof AddCycleCommand
-     */
-    expectedVersion?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof AddCycleCommand
-     */
-    sequenceNumber?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof AddCycleCommand
-     */
-    name?: string;
-    /**
-     *
-     * @type {Date}
-     * @memberof AddCycleCommand
-     */
-    startDate?: Date;
-    /**
-     *
-     * @type {Date}
-     * @memberof AddCycleCommand
-     */
-    endDate?: Date;
-    /**
-     *
-     * @type {string}
-     * @memberof AddCycleCommand
-     */
-    phaseIntent?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof AddCycleCommand
-     */
-    phaseGoal?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof AddCycleCommand
+   */
+  expectedVersion?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof AddCycleCommand
+   */
+  sequenceNumber?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof AddCycleCommand
+   */
+  name?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof AddCycleCommand
+   */
+  startDate?: Date;
+  /**
+   *
+   * @type {Date}
+   * @memberof AddCycleCommand
+   */
+  endDate?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof AddCycleCommand
+   */
+  phaseIntent?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AddCycleCommand
+   */
+  phaseGoal?: string;
 }
 
 /**
  * Check if a given object implements the AddCycleCommand interface.
  */
 export function instanceOfAddCycleCommand(value: object): value is AddCycleCommand {
-    return true;
+  return true;
 }
 
 export function AddCycleCommandFromJSON(json: any): AddCycleCommand {
-    return AddCycleCommandFromJSONTyped(json, false);
+  return AddCycleCommandFromJSONTyped(json, false);
 }
 
-export function AddCycleCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): AddCycleCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'expectedVersion': json['expectedVersion'] == null ? undefined : json['expectedVersion'],
-        'sequenceNumber': json['sequenceNumber'] == null ? undefined : json['sequenceNumber'],
-        'name': json['name'] == null ? undefined : json['name'],
-        'startDate': json['startDate'] == null ? undefined : (new Date(json['startDate'])),
-        'endDate': json['endDate'] == null ? undefined : (new Date(json['endDate'])),
-        'phaseIntent': json['phaseIntent'] == null ? undefined : json['phaseIntent'],
-        'phaseGoal': json['phaseGoal'] == null ? undefined : json['phaseGoal'],
-    };
+export function AddCycleCommandFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): AddCycleCommand {
+  if (json == null) {
+    return json;
+  }
+  return {
+    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
+    sequenceNumber: json['sequenceNumber'] == null ? undefined : json['sequenceNumber'],
+    name: json['name'] == null ? undefined : json['name'],
+    startDate: json['startDate'] == null ? undefined : new Date(json['startDate']),
+    endDate: json['endDate'] == null ? undefined : new Date(json['endDate']),
+    phaseIntent: json['phaseIntent'] == null ? undefined : json['phaseIntent'],
+    phaseGoal: json['phaseGoal'] == null ? undefined : json['phaseGoal'],
+  };
 }
 
 export function AddCycleCommandToJSON(json: any): AddCycleCommand {
-    return AddCycleCommandToJSONTyped(json, false);
+  return AddCycleCommandToJSONTyped(json, false);
 }
 
-export function AddCycleCommandToJSONTyped(value?: AddCycleCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function AddCycleCommandToJSONTyped(
+  value?: AddCycleCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'expectedVersion': value['expectedVersion'],
-        'sequenceNumber': value['sequenceNumber'],
-        'name': value['name'],
-        'startDate': value['startDate'] == null ? value['startDate'] : value['startDate'].toISOString().substring(0,10),
-        'endDate': value['endDate'] == null ? value['endDate'] : value['endDate'].toISOString().substring(0,10),
-        'phaseIntent': value['phaseIntent'],
-        'phaseGoal': value['phaseGoal'],
-    };
+  return {
+    expectedVersion: value['expectedVersion'],
+    sequenceNumber: value['sequenceNumber'],
+    name: value['name'],
+    startDate:
+      value['startDate'] == null
+        ? value['startDate']
+        : value['startDate'].toISOString().substring(0, 10),
+    endDate:
+      value['endDate'] == null ? value['endDate'] : value['endDate'].toISOString().substring(0, 10),
+    phaseIntent: value['phaseIntent'],
+    phaseGoal: value['phaseGoal'],
+  };
 }

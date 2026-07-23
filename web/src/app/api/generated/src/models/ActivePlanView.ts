@@ -19,62 +19,66 @@ import { mapValues } from '../runtime';
  * @interface ActivePlanView
  */
 export interface ActivePlanView {
-    /**
-     *
-     * @type {string}
-     * @memberof ActivePlanView
-     */
-    planId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof ActivePlanView
-     */
-    revisionId?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof ActivePlanView
-     */
-    revisionNumber?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof ActivePlanView
+   */
+  planId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ActivePlanView
+   */
+  revisionId?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof ActivePlanView
+   */
+  revisionNumber?: number;
 }
 
 /**
  * Check if a given object implements the ActivePlanView interface.
  */
 export function instanceOfActivePlanView(value: object): value is ActivePlanView {
-    return true;
+  return true;
 }
 
 export function ActivePlanViewFromJSON(json: any): ActivePlanView {
-    return ActivePlanViewFromJSONTyped(json, false);
+  return ActivePlanViewFromJSONTyped(json, false);
 }
 
-export function ActivePlanViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): ActivePlanView {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'planId': json['planId'] == null ? undefined : json['planId'],
-        'revisionId': json['revisionId'] == null ? undefined : json['revisionId'],
-        'revisionNumber': json['revisionNumber'] == null ? undefined : json['revisionNumber'],
-    };
+export function ActivePlanViewFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): ActivePlanView {
+  if (json == null) {
+    return json;
+  }
+  return {
+    planId: json['planId'] == null ? undefined : json['planId'],
+    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
+    revisionNumber: json['revisionNumber'] == null ? undefined : json['revisionNumber'],
+  };
 }
 
 export function ActivePlanViewToJSON(json: any): ActivePlanView {
-    return ActivePlanViewToJSONTyped(json, false);
+  return ActivePlanViewToJSONTyped(json, false);
 }
 
-export function ActivePlanViewToJSONTyped(value?: ActivePlanView | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ActivePlanViewToJSONTyped(
+  value?: ActivePlanView | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'planId': value['planId'],
-        'revisionId': value['revisionId'],
-        'revisionNumber': value['revisionNumber'],
-    };
+  return {
+    planId: value['planId'],
+    revisionId: value['revisionId'],
+    revisionNumber: value['revisionNumber'],
+  };
 }

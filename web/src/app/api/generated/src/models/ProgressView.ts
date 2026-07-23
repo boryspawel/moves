@@ -19,62 +19,64 @@ import { mapValues } from '../runtime';
  * @interface ProgressView
  */
 export interface ProgressView {
-    /**
-     *
-     * @type {string}
-     * @memberof ProgressView
-     */
-    exercisePrescriptionId?: string;
-    /**
-     *
-     * @type {boolean}
-     * @memberof ProgressView
-     */
-    completed?: boolean;
-    /**
-     *
-     * @type {Date}
-     * @memberof ProgressView
-     */
-    updatedAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof ProgressView
+   */
+  exercisePrescriptionId?: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof ProgressView
+   */
+  completed?: boolean;
+  /**
+   *
+   * @type {Date}
+   * @memberof ProgressView
+   */
+  updatedAt?: Date;
 }
 
 /**
  * Check if a given object implements the ProgressView interface.
  */
 export function instanceOfProgressView(value: object): value is ProgressView {
-    return true;
+  return true;
 }
 
 export function ProgressViewFromJSON(json: any): ProgressView {
-    return ProgressViewFromJSONTyped(json, false);
+  return ProgressViewFromJSONTyped(json, false);
 }
 
 export function ProgressViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): ProgressView {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'exercisePrescriptionId': json['exercisePrescriptionId'] == null ? undefined : json['exercisePrescriptionId'],
-        'completed': json['completed'] == null ? undefined : json['completed'],
-        'updatedAt': json['updatedAt'] == null ? undefined : (new Date(json['updatedAt'])),
-    };
+  if (json == null) {
+    return json;
+  }
+  return {
+    exercisePrescriptionId:
+      json['exercisePrescriptionId'] == null ? undefined : json['exercisePrescriptionId'],
+    completed: json['completed'] == null ? undefined : json['completed'],
+    updatedAt: json['updatedAt'] == null ? undefined : new Date(json['updatedAt']),
+  };
 }
 
 export function ProgressViewToJSON(json: any): ProgressView {
-    return ProgressViewToJSONTyped(json, false);
+  return ProgressViewToJSONTyped(json, false);
 }
 
-export function ProgressViewToJSONTyped(value?: ProgressView | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ProgressViewToJSONTyped(
+  value?: ProgressView | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'exercisePrescriptionId': value['exercisePrescriptionId'],
-        'completed': value['completed'],
-        'updatedAt': value['updatedAt'] == null ? value['updatedAt'] : value['updatedAt'].toISOString(),
-    };
+  return {
+    exercisePrescriptionId: value['exercisePrescriptionId'],
+    completed: value['completed'],
+    updatedAt: value['updatedAt'] == null ? value['updatedAt'] : value['updatedAt'].toISOString(),
+  };
 }

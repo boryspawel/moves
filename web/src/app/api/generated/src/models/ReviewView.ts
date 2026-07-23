@@ -19,102 +19,104 @@ import { mapValues } from '../runtime';
  * @interface ReviewView
  */
 export interface ReviewView {
-    /**
-     *
-     * @type {string}
-     * @memberof ReviewView
-     */
-    id?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof ReviewView
-     */
-    revisionId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof ReviewView
-     */
-    reviewerAccountId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof ReviewView
-     */
-    status?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof ReviewView
-     */
-    requestReference?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof ReviewView
-     */
-    decisionReference?: string;
-    /**
-     *
-     * @type {Date}
-     * @memberof ReviewView
-     */
-    requestedAt?: Date;
-    /**
-     *
-     * @type {Date}
-     * @memberof ReviewView
-     */
-    decidedAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof ReviewView
+   */
+  id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ReviewView
+   */
+  revisionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ReviewView
+   */
+  reviewerAccountId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ReviewView
+   */
+  status?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ReviewView
+   */
+  requestReference?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ReviewView
+   */
+  decisionReference?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof ReviewView
+   */
+  requestedAt?: Date;
+  /**
+   *
+   * @type {Date}
+   * @memberof ReviewView
+   */
+  decidedAt?: Date;
 }
 
 /**
  * Check if a given object implements the ReviewView interface.
  */
 export function instanceOfReviewView(value: object): value is ReviewView {
-    return true;
+  return true;
 }
 
 export function ReviewViewFromJSON(json: any): ReviewView {
-    return ReviewViewFromJSONTyped(json, false);
+  return ReviewViewFromJSONTyped(json, false);
 }
 
 export function ReviewViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): ReviewView {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'id': json['id'] == null ? undefined : json['id'],
-        'revisionId': json['revisionId'] == null ? undefined : json['revisionId'],
-        'reviewerAccountId': json['reviewerAccountId'] == null ? undefined : json['reviewerAccountId'],
-        'status': json['status'] == null ? undefined : json['status'],
-        'requestReference': json['requestReference'] == null ? undefined : json['requestReference'],
-        'decisionReference': json['decisionReference'] == null ? undefined : json['decisionReference'],
-        'requestedAt': json['requestedAt'] == null ? undefined : (new Date(json['requestedAt'])),
-        'decidedAt': json['decidedAt'] == null ? undefined : (new Date(json['decidedAt'])),
-    };
+  if (json == null) {
+    return json;
+  }
+  return {
+    id: json['id'] == null ? undefined : json['id'],
+    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
+    reviewerAccountId: json['reviewerAccountId'] == null ? undefined : json['reviewerAccountId'],
+    status: json['status'] == null ? undefined : json['status'],
+    requestReference: json['requestReference'] == null ? undefined : json['requestReference'],
+    decisionReference: json['decisionReference'] == null ? undefined : json['decisionReference'],
+    requestedAt: json['requestedAt'] == null ? undefined : new Date(json['requestedAt']),
+    decidedAt: json['decidedAt'] == null ? undefined : new Date(json['decidedAt']),
+  };
 }
 
 export function ReviewViewToJSON(json: any): ReviewView {
-    return ReviewViewToJSONTyped(json, false);
+  return ReviewViewToJSONTyped(json, false);
 }
 
-export function ReviewViewToJSONTyped(value?: ReviewView | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ReviewViewToJSONTyped(
+  value?: ReviewView | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'id': value['id'],
-        'revisionId': value['revisionId'],
-        'reviewerAccountId': value['reviewerAccountId'],
-        'status': value['status'],
-        'requestReference': value['requestReference'],
-        'decisionReference': value['decisionReference'],
-        'requestedAt': value['requestedAt'] == null ? value['requestedAt'] : value['requestedAt'].toISOString(),
-        'decidedAt': value['decidedAt'] == null ? value['decidedAt'] : value['decidedAt'].toISOString(),
-    };
+  return {
+    id: value['id'],
+    revisionId: value['revisionId'],
+    reviewerAccountId: value['reviewerAccountId'],
+    status: value['status'],
+    requestReference: value['requestReference'],
+    decisionReference: value['decisionReference'],
+    requestedAt:
+      value['requestedAt'] == null ? value['requestedAt'] : value['requestedAt'].toISOString(),
+    decidedAt: value['decidedAt'] == null ? value['decidedAt'] : value['decidedAt'].toISOString(),
+  };
 }

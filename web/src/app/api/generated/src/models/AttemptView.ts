@@ -19,94 +19,99 @@ import { mapValues } from '../runtime';
  * @interface AttemptView
  */
 export interface AttemptView {
-    /**
-     *
-     * @type {string}
-     * @memberof AttemptView
-     */
-    attemptId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof AttemptView
-     */
-    plannedSessionId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof AttemptView
-     */
-    planRevisionId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof AttemptView
-     */
-    selectedVariantType?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof AttemptView
-     */
-    state?: string;
-    /**
-     *
-     * @type {Date}
-     * @memberof AttemptView
-     */
-    lastActivityAt?: Date;
-    /**
-     *
-     * @type {Date}
-     * @memberof AttemptView
-     */
-    updatedAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof AttemptView
+   */
+  attemptId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AttemptView
+   */
+  plannedSessionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AttemptView
+   */
+  planRevisionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AttemptView
+   */
+  selectedVariantType?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AttemptView
+   */
+  state?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof AttemptView
+   */
+  lastActivityAt?: Date;
+  /**
+   *
+   * @type {Date}
+   * @memberof AttemptView
+   */
+  updatedAt?: Date;
 }
 
 /**
  * Check if a given object implements the AttemptView interface.
  */
 export function instanceOfAttemptView(value: object): value is AttemptView {
-    return true;
+  return true;
 }
 
 export function AttemptViewFromJSON(json: any): AttemptView {
-    return AttemptViewFromJSONTyped(json, false);
+  return AttemptViewFromJSONTyped(json, false);
 }
 
 export function AttemptViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): AttemptView {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'attemptId': json['attemptId'] == null ? undefined : json['attemptId'],
-        'plannedSessionId': json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
-        'planRevisionId': json['planRevisionId'] == null ? undefined : json['planRevisionId'],
-        'selectedVariantType': json['selectedVariantType'] == null ? undefined : json['selectedVariantType'],
-        'state': json['state'] == null ? undefined : json['state'],
-        'lastActivityAt': json['lastActivityAt'] == null ? undefined : (new Date(json['lastActivityAt'])),
-        'updatedAt': json['updatedAt'] == null ? undefined : (new Date(json['updatedAt'])),
-    };
+  if (json == null) {
+    return json;
+  }
+  return {
+    attemptId: json['attemptId'] == null ? undefined : json['attemptId'],
+    plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
+    planRevisionId: json['planRevisionId'] == null ? undefined : json['planRevisionId'],
+    selectedVariantType:
+      json['selectedVariantType'] == null ? undefined : json['selectedVariantType'],
+    state: json['state'] == null ? undefined : json['state'],
+    lastActivityAt: json['lastActivityAt'] == null ? undefined : new Date(json['lastActivityAt']),
+    updatedAt: json['updatedAt'] == null ? undefined : new Date(json['updatedAt']),
+  };
 }
 
 export function AttemptViewToJSON(json: any): AttemptView {
-    return AttemptViewToJSONTyped(json, false);
+  return AttemptViewToJSONTyped(json, false);
 }
 
-export function AttemptViewToJSONTyped(value?: AttemptView | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function AttemptViewToJSONTyped(
+  value?: AttemptView | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'attemptId': value['attemptId'],
-        'plannedSessionId': value['plannedSessionId'],
-        'planRevisionId': value['planRevisionId'],
-        'selectedVariantType': value['selectedVariantType'],
-        'state': value['state'],
-        'lastActivityAt': value['lastActivityAt'] == null ? value['lastActivityAt'] : value['lastActivityAt'].toISOString(),
-        'updatedAt': value['updatedAt'] == null ? value['updatedAt'] : value['updatedAt'].toISOString(),
-    };
+  return {
+    attemptId: value['attemptId'],
+    plannedSessionId: value['plannedSessionId'],
+    planRevisionId: value['planRevisionId'],
+    selectedVariantType: value['selectedVariantType'],
+    state: value['state'],
+    lastActivityAt:
+      value['lastActivityAt'] == null
+        ? value['lastActivityAt']
+        : value['lastActivityAt'].toISOString(),
+    updatedAt: value['updatedAt'] == null ? value['updatedAt'] : value['updatedAt'].toISOString(),
+  };
 }

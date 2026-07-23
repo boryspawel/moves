@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { CatalogItem } from './CatalogItem';
 import {
-    CatalogItemFromJSON,
-    CatalogItemFromJSONTyped,
-    CatalogItemToJSON,
-    CatalogItemToJSONTyped,
+  CatalogItemFromJSON,
+  CatalogItemFromJSONTyped,
+  CatalogItemToJSON,
+  CatalogItemToJSONTyped,
 } from './CatalogItem';
 
 /**
@@ -27,78 +27,85 @@ import {
  * @interface CatalogPage
  */
 export interface CatalogPage {
-    /**
-     *
-     * @type {Array<CatalogItem>}
-     * @memberof CatalogPage
-     */
-    content?: Array<CatalogItem>;
-    /**
-     *
-     * @type {number}
-     * @memberof CatalogPage
-     */
-    page?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof CatalogPage
-     */
-    size?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof CatalogPage
-     */
-    totalElements?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof CatalogPage
-     */
-    totalPages?: number;
+  /**
+   *
+   * @type {Array<CatalogItem>}
+   * @memberof CatalogPage
+   */
+  content?: Array<CatalogItem>;
+  /**
+   *
+   * @type {number}
+   * @memberof CatalogPage
+   */
+  page?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof CatalogPage
+   */
+  size?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof CatalogPage
+   */
+  totalElements?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof CatalogPage
+   */
+  totalPages?: number;
 }
 
 /**
  * Check if a given object implements the CatalogPage interface.
  */
 export function instanceOfCatalogPage(value: object): value is CatalogPage {
-    return true;
+  return true;
 }
 
 export function CatalogPageFromJSON(json: any): CatalogPage {
-    return CatalogPageFromJSONTyped(json, false);
+  return CatalogPageFromJSONTyped(json, false);
 }
 
 export function CatalogPageFromJSONTyped(json: any, ignoreDiscriminator: boolean): CatalogPage {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'content': json['content'] == null ? undefined : ((json['content'] as Array<any>).map(CatalogItemFromJSON)),
-        'page': json['page'] == null ? undefined : json['page'],
-        'size': json['size'] == null ? undefined : json['size'],
-        'totalElements': json['totalElements'] == null ? undefined : json['totalElements'],
-        'totalPages': json['totalPages'] == null ? undefined : json['totalPages'],
-    };
+  if (json == null) {
+    return json;
+  }
+  return {
+    content:
+      json['content'] == null
+        ? undefined
+        : (json['content'] as Array<any>).map(CatalogItemFromJSON),
+    page: json['page'] == null ? undefined : json['page'],
+    size: json['size'] == null ? undefined : json['size'],
+    totalElements: json['totalElements'] == null ? undefined : json['totalElements'],
+    totalPages: json['totalPages'] == null ? undefined : json['totalPages'],
+  };
 }
 
 export function CatalogPageToJSON(json: any): CatalogPage {
-    return CatalogPageToJSONTyped(json, false);
+  return CatalogPageToJSONTyped(json, false);
 }
 
-export function CatalogPageToJSONTyped(value?: CatalogPage | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function CatalogPageToJSONTyped(
+  value?: CatalogPage | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'content': value['content'] == null ? undefined : ((value['content'] as Array<any>).map(CatalogItemToJSON)),
-        'page': value['page'],
-        'size': value['size'],
-        'totalElements': value['totalElements'],
-        'totalPages': value['totalPages'],
-    };
+  return {
+    content:
+      value['content'] == null
+        ? undefined
+        : (value['content'] as Array<any>).map(CatalogItemToJSON),
+    page: value['page'],
+    size: value['size'],
+    totalElements: value['totalElements'],
+    totalPages: value['totalPages'],
+  };
 }

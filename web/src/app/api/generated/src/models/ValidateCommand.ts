@@ -19,46 +19,50 @@ import { mapValues } from '../runtime';
  * @interface ValidateCommand
  */
 export interface ValidateCommand {
-    /**
-     *
-     * @type {number}
-     * @memberof ValidateCommand
-     */
-    expectedVersion?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof ValidateCommand
+   */
+  expectedVersion?: number;
 }
 
 /**
  * Check if a given object implements the ValidateCommand interface.
  */
 export function instanceOfValidateCommand(value: object): value is ValidateCommand {
-    return true;
+  return true;
 }
 
 export function ValidateCommandFromJSON(json: any): ValidateCommand {
-    return ValidateCommandFromJSONTyped(json, false);
+  return ValidateCommandFromJSONTyped(json, false);
 }
 
-export function ValidateCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): ValidateCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'expectedVersion': json['expectedVersion'] == null ? undefined : json['expectedVersion'],
-    };
+export function ValidateCommandFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): ValidateCommand {
+  if (json == null) {
+    return json;
+  }
+  return {
+    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
+  };
 }
 
 export function ValidateCommandToJSON(json: any): ValidateCommand {
-    return ValidateCommandToJSONTyped(json, false);
+  return ValidateCommandToJSONTyped(json, false);
 }
 
-export function ValidateCommandToJSONTyped(value?: ValidateCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ValidateCommandToJSONTyped(
+  value?: ValidateCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'expectedVersion': value['expectedVersion'],
-    };
+  return {
+    expectedVersion: value['expectedVersion'],
+  };
 }

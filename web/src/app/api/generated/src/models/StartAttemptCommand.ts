@@ -19,62 +19,67 @@ import { mapValues } from '../runtime';
  * @interface StartAttemptCommand
  */
 export interface StartAttemptCommand {
-    /**
-     *
-     * @type {string}
-     * @memberof StartAttemptCommand
-     */
-    plannedSessionId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof StartAttemptCommand
-     */
-    planRevisionId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof StartAttemptCommand
-     */
-    selectedVariantType?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof StartAttemptCommand
+   */
+  plannedSessionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof StartAttemptCommand
+   */
+  planRevisionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof StartAttemptCommand
+   */
+  selectedVariantType?: string;
 }
 
 /**
  * Check if a given object implements the StartAttemptCommand interface.
  */
 export function instanceOfStartAttemptCommand(value: object): value is StartAttemptCommand {
-    return true;
+  return true;
 }
 
 export function StartAttemptCommandFromJSON(json: any): StartAttemptCommand {
-    return StartAttemptCommandFromJSONTyped(json, false);
+  return StartAttemptCommandFromJSONTyped(json, false);
 }
 
-export function StartAttemptCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): StartAttemptCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'plannedSessionId': json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
-        'planRevisionId': json['planRevisionId'] == null ? undefined : json['planRevisionId'],
-        'selectedVariantType': json['selectedVariantType'] == null ? undefined : json['selectedVariantType'],
-    };
+export function StartAttemptCommandFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): StartAttemptCommand {
+  if (json == null) {
+    return json;
+  }
+  return {
+    plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
+    planRevisionId: json['planRevisionId'] == null ? undefined : json['planRevisionId'],
+    selectedVariantType:
+      json['selectedVariantType'] == null ? undefined : json['selectedVariantType'],
+  };
 }
 
 export function StartAttemptCommandToJSON(json: any): StartAttemptCommand {
-    return StartAttemptCommandToJSONTyped(json, false);
+  return StartAttemptCommandToJSONTyped(json, false);
 }
 
-export function StartAttemptCommandToJSONTyped(value?: StartAttemptCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function StartAttemptCommandToJSONTyped(
+  value?: StartAttemptCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'plannedSessionId': value['plannedSessionId'],
-        'planRevisionId': value['planRevisionId'],
-        'selectedVariantType': value['selectedVariantType'],
-    };
+  return {
+    plannedSessionId: value['plannedSessionId'],
+    planRevisionId: value['planRevisionId'],
+    selectedVariantType: value['selectedVariantType'],
+  };
 }

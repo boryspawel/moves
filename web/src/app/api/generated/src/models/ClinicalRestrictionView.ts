@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { RestrictionView } from './RestrictionView';
 import {
-    RestrictionViewFromJSON,
-    RestrictionViewFromJSONTyped,
-    RestrictionViewToJSON,
-    RestrictionViewToJSONTyped,
+  RestrictionViewFromJSON,
+  RestrictionViewFromJSONTyped,
+  RestrictionViewToJSON,
+  RestrictionViewToJSONTyped,
 } from './RestrictionView';
 
 /**
@@ -27,54 +27,60 @@ import {
  * @interface ClinicalRestrictionView
  */
 export interface ClinicalRestrictionView {
-    /**
-     *
-     * @type {RestrictionView}
-     * @memberof ClinicalRestrictionView
-     */
-    restriction?: RestrictionView;
-    /**
-     *
-     * @type {string}
-     * @memberof ClinicalRestrictionView
-     */
-    clinicalRationaleRef?: string;
+  /**
+   *
+   * @type {RestrictionView}
+   * @memberof ClinicalRestrictionView
+   */
+  restriction?: RestrictionView;
+  /**
+   *
+   * @type {string}
+   * @memberof ClinicalRestrictionView
+   */
+  clinicalRationaleRef?: string;
 }
 
 /**
  * Check if a given object implements the ClinicalRestrictionView interface.
  */
 export function instanceOfClinicalRestrictionView(value: object): value is ClinicalRestrictionView {
-    return true;
+  return true;
 }
 
 export function ClinicalRestrictionViewFromJSON(json: any): ClinicalRestrictionView {
-    return ClinicalRestrictionViewFromJSONTyped(json, false);
+  return ClinicalRestrictionViewFromJSONTyped(json, false);
 }
 
-export function ClinicalRestrictionViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): ClinicalRestrictionView {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'restriction': json['restriction'] == null ? undefined : RestrictionViewFromJSON(json['restriction']),
-        'clinicalRationaleRef': json['clinicalRationaleRef'] == null ? undefined : json['clinicalRationaleRef'],
-    };
+export function ClinicalRestrictionViewFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): ClinicalRestrictionView {
+  if (json == null) {
+    return json;
+  }
+  return {
+    restriction:
+      json['restriction'] == null ? undefined : RestrictionViewFromJSON(json['restriction']),
+    clinicalRationaleRef:
+      json['clinicalRationaleRef'] == null ? undefined : json['clinicalRationaleRef'],
+  };
 }
 
 export function ClinicalRestrictionViewToJSON(json: any): ClinicalRestrictionView {
-    return ClinicalRestrictionViewToJSONTyped(json, false);
+  return ClinicalRestrictionViewToJSONTyped(json, false);
 }
 
-export function ClinicalRestrictionViewToJSONTyped(value?: ClinicalRestrictionView | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ClinicalRestrictionViewToJSONTyped(
+  value?: ClinicalRestrictionView | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'restriction': RestrictionViewToJSON(value['restriction']),
-        'clinicalRationaleRef': value['clinicalRationaleRef'],
-    };
+  return {
+    restriction: RestrictionViewToJSON(value['restriction']),
+    clinicalRationaleRef: value['clinicalRationaleRef'],
+  };
 }

@@ -19,46 +19,53 @@ import { mapValues } from '../runtime';
  * @interface ExerciseVersionPublishRequest
  */
 export interface ExerciseVersionPublishRequest {
-    /**
-     *
-     * @type {number}
-     * @memberof ExerciseVersionPublishRequest
-     */
-    expectedVersion?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof ExerciseVersionPublishRequest
+   */
+  expectedVersion: number;
 }
 
 /**
  * Check if a given object implements the ExerciseVersionPublishRequest interface.
  */
-export function instanceOfExerciseVersionPublishRequest(value: object): value is ExerciseVersionPublishRequest {
-    return true;
+export function instanceOfExerciseVersionPublishRequest(
+  value: object,
+): value is ExerciseVersionPublishRequest {
+  if (!('expectedVersion' in value) || value['expectedVersion'] === undefined) return false;
+  return true;
 }
 
 export function ExerciseVersionPublishRequestFromJSON(json: any): ExerciseVersionPublishRequest {
-    return ExerciseVersionPublishRequestFromJSONTyped(json, false);
+  return ExerciseVersionPublishRequestFromJSONTyped(json, false);
 }
 
-export function ExerciseVersionPublishRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): ExerciseVersionPublishRequest {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'expectedVersion': json['expectedVersion'] == null ? undefined : json['expectedVersion'],
-    };
+export function ExerciseVersionPublishRequestFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): ExerciseVersionPublishRequest {
+  if (json == null) {
+    return json;
+  }
+  return {
+    expectedVersion: json['expectedVersion'],
+  };
 }
 
 export function ExerciseVersionPublishRequestToJSON(json: any): ExerciseVersionPublishRequest {
-    return ExerciseVersionPublishRequestToJSONTyped(json, false);
+  return ExerciseVersionPublishRequestToJSONTyped(json, false);
 }
 
-export function ExerciseVersionPublishRequestToJSONTyped(value?: ExerciseVersionPublishRequest | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ExerciseVersionPublishRequestToJSONTyped(
+  value?: ExerciseVersionPublishRequest | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'expectedVersion': value['expectedVersion'],
-    };
+  return {
+    expectedVersion: value['expectedVersion'],
+  };
 }

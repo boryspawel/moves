@@ -14,311 +14,349 @@
 
 import * as runtime from '../runtime';
 import {
-    type CollaboratorCommand,
-    CollaboratorCommandFromJSON,
-    CollaboratorCommandToJSON,
+  type CollaboratorCommand,
+  CollaboratorCommandFromJSON,
+  CollaboratorCommandToJSON,
 } from '../models/CollaboratorCommand';
 import {
-    type CollaboratorView,
-    CollaboratorViewFromJSON,
-    CollaboratorViewToJSON,
+  type CollaboratorView,
+  CollaboratorViewFromJSON,
+  CollaboratorViewToJSON,
 } from '../models/CollaboratorView';
 import {
-    type ReviewDecisionCommand,
-    ReviewDecisionCommandFromJSON,
-    ReviewDecisionCommandToJSON,
+  type ReviewDecisionCommand,
+  ReviewDecisionCommandFromJSON,
+  ReviewDecisionCommandToJSON,
 } from '../models/ReviewDecisionCommand';
 import {
-    type ReviewRequestCommand,
-    ReviewRequestCommandFromJSON,
-    ReviewRequestCommandToJSON,
+  type ReviewRequestCommand,
+  ReviewRequestCommandFromJSON,
+  ReviewRequestCommandToJSON,
 } from '../models/ReviewRequestCommand';
-import {
-    type ReviewView,
-    ReviewViewFromJSON,
-    ReviewViewToJSON,
-} from '../models/ReviewView';
+import { type ReviewView, ReviewViewFromJSON, ReviewViewToJSON } from '../models/ReviewView';
 
 export interface AddPlanCollaboratorRequest {
-    planId: string;
-    collaboratorCommand: CollaboratorCommand;
-    actingContext?: AddPlanCollaboratorActingContextEnum;
+  planId: string;
+  collaboratorCommand: CollaboratorCommand;
+  actingContext?: AddPlanCollaboratorActingContextEnum;
 }
 
 export interface DecidePlanReviewRequest {
-    reviewId: string;
-    actingContext: DecidePlanReviewActingContextEnum;
-    reviewDecisionCommand: ReviewDecisionCommand;
+  reviewId: string;
+  actingContext: DecidePlanReviewActingContextEnum;
+  reviewDecisionCommand: ReviewDecisionCommand;
 }
 
 export interface EndPlanCollaborationRequest {
-    planId: string;
-    collaboratorId: string;
-    actingContext?: EndPlanCollaborationActingContextEnum;
+  planId: string;
+  collaboratorId: string;
+  actingContext?: EndPlanCollaborationActingContextEnum;
 }
 
 export interface RequestPlanReviewRequest {
-    revisionId: string;
-    reviewRequestCommand: ReviewRequestCommand;
+  revisionId: string;
+  reviewRequestCommand: ReviewRequestCommand;
 }
 
 /**
  *
  */
 export class PlanCollaborationControllerApi extends runtime.BaseAPI {
-
-    /**
-     * Creates request options for addPlanCollaborator without sending the request
-     */
-    async addPlanCollaboratorRequestOpts(requestParameters: AddPlanCollaboratorRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['planId'] == null) {
-            throw new runtime.RequiredError(
-                'planId',
-                'Required parameter "planId" was null or undefined when calling addPlanCollaborator().'
-            );
-        }
-
-        if (requestParameters['collaboratorCommand'] == null) {
-            throw new runtime.RequiredError(
-                'collaboratorCommand',
-                'Required parameter "collaboratorCommand" was null or undefined when calling addPlanCollaborator().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        if (requestParameters['actingContext'] != null) {
-            queryParameters['actingContext'] = requestParameters['actingContext'];
-        }
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/v2/training-plans/{planId}/collaborators`;
-        urlPath = urlPath.replace('{planId}', encodeURIComponent(String(requestParameters['planId'])));
-
-        return {
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: CollaboratorCommandToJSON(requestParameters['collaboratorCommand']),
-        };
+  /**
+   * Creates request options for addPlanCollaborator without sending the request
+   */
+  async addPlanCollaboratorRequestOpts(
+    requestParameters: AddPlanCollaboratorRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['planId'] == null) {
+      throw new runtime.RequiredError(
+        'planId',
+        'Required parameter "planId" was null or undefined when calling addPlanCollaborator().',
+      );
     }
 
-    /**
-     */
-    async addPlanCollaboratorRaw(requestParameters: AddPlanCollaboratorRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CollaboratorView>> {
-        const requestOptions = await this.addPlanCollaboratorRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => CollaboratorViewFromJSON(jsonValue));
+    if (requestParameters['collaboratorCommand'] == null) {
+      throw new runtime.RequiredError(
+        'collaboratorCommand',
+        'Required parameter "collaboratorCommand" was null or undefined when calling addPlanCollaborator().',
+      );
     }
 
-    /**
-     */
-    async addPlanCollaborator(requestParameters: AddPlanCollaboratorRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CollaboratorView> {
-        const response = await this.addPlanCollaboratorRaw(requestParameters, initOverrides);
-        return await response.value();
+    const queryParameters: any = {};
+
+    if (requestParameters['actingContext'] != null) {
+      queryParameters['actingContext'] = requestParameters['actingContext'];
     }
 
-    /**
-     * Creates request options for decidePlanReview without sending the request
-     */
-    async decidePlanReviewRequestOpts(requestParameters: DecidePlanReviewRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['reviewId'] == null) {
-            throw new runtime.RequiredError(
-                'reviewId',
-                'Required parameter "reviewId" was null or undefined when calling decidePlanReview().'
-            );
-        }
+    const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['actingContext'] == null) {
-            throw new runtime.RequiredError(
-                'actingContext',
-                'Required parameter "actingContext" was null or undefined when calling decidePlanReview().'
-            );
-        }
+    headerParameters['Content-Type'] = 'application/json';
 
-        if (requestParameters['reviewDecisionCommand'] == null) {
-            throw new runtime.RequiredError(
-                'reviewDecisionCommand',
-                'Required parameter "reviewDecisionCommand" was null or undefined when calling decidePlanReview().'
-            );
-        }
+    let urlPath = `/api/v2/training-plans/{planId}/collaborators`;
+    urlPath = urlPath.replace('{planId}', encodeURIComponent(String(requestParameters['planId'])));
 
-        const queryParameters: any = {};
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+      body: CollaboratorCommandToJSON(requestParameters['collaboratorCommand']),
+    };
+  }
 
-        if (requestParameters['actingContext'] != null) {
-            queryParameters['actingContext'] = requestParameters['actingContext'];
-        }
+  /**
+   */
+  async addPlanCollaboratorRaw(
+    requestParameters: AddPlanCollaboratorRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<CollaboratorView>> {
+    const requestOptions = await this.addPlanCollaboratorRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
 
-        const headerParameters: runtime.HTTPHeaders = {};
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      CollaboratorViewFromJSON(jsonValue),
+    );
+  }
 
-        headerParameters['Content-Type'] = 'application/json';
+  /**
+   */
+  async addPlanCollaborator(
+    requestParameters: AddPlanCollaboratorRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<CollaboratorView> {
+    const response = await this.addPlanCollaboratorRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
 
-
-        let urlPath = `/api/v2/training-plans/reviews/{reviewId}/decision`;
-        urlPath = urlPath.replace('{reviewId}', encodeURIComponent(String(requestParameters['reviewId'])));
-
-        return {
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: ReviewDecisionCommandToJSON(requestParameters['reviewDecisionCommand']),
-        };
+  /**
+   * Creates request options for decidePlanReview without sending the request
+   */
+  async decidePlanReviewRequestOpts(
+    requestParameters: DecidePlanReviewRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['reviewId'] == null) {
+      throw new runtime.RequiredError(
+        'reviewId',
+        'Required parameter "reviewId" was null or undefined when calling decidePlanReview().',
+      );
     }
 
-    /**
-     */
-    async decidePlanReviewRaw(requestParameters: DecidePlanReviewRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ReviewView>> {
-        const requestOptions = await this.decidePlanReviewRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => ReviewViewFromJSON(jsonValue));
+    if (requestParameters['actingContext'] == null) {
+      throw new runtime.RequiredError(
+        'actingContext',
+        'Required parameter "actingContext" was null or undefined when calling decidePlanReview().',
+      );
     }
 
-    /**
-     */
-    async decidePlanReview(requestParameters: DecidePlanReviewRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ReviewView> {
-        const response = await this.decidePlanReviewRaw(requestParameters, initOverrides);
-        return await response.value();
+    if (requestParameters['reviewDecisionCommand'] == null) {
+      throw new runtime.RequiredError(
+        'reviewDecisionCommand',
+        'Required parameter "reviewDecisionCommand" was null or undefined when calling decidePlanReview().',
+      );
     }
 
-    /**
-     * Creates request options for endPlanCollaboration without sending the request
-     */
-    async endPlanCollaborationRequestOpts(requestParameters: EndPlanCollaborationRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['planId'] == null) {
-            throw new runtime.RequiredError(
-                'planId',
-                'Required parameter "planId" was null or undefined when calling endPlanCollaboration().'
-            );
-        }
+    const queryParameters: any = {};
 
-        if (requestParameters['collaboratorId'] == null) {
-            throw new runtime.RequiredError(
-                'collaboratorId',
-                'Required parameter "collaboratorId" was null or undefined when calling endPlanCollaboration().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        if (requestParameters['actingContext'] != null) {
-            queryParameters['actingContext'] = requestParameters['actingContext'];
-        }
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-
-        let urlPath = `/api/v2/training-plans/{planId}/collaborators/{collaboratorId}`;
-        urlPath = urlPath.replace('{planId}', encodeURIComponent(String(requestParameters['planId'])));
-        urlPath = urlPath.replace('{collaboratorId}', encodeURIComponent(String(requestParameters['collaboratorId'])));
-
-        return {
-            path: urlPath,
-            method: 'DELETE',
-            headers: headerParameters,
-            query: queryParameters,
-        };
+    if (requestParameters['actingContext'] != null) {
+      queryParameters['actingContext'] = requestParameters['actingContext'];
     }
 
-    /**
-     */
-    async endPlanCollaborationRaw(requestParameters: EndPlanCollaborationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CollaboratorView>> {
-        const requestOptions = await this.endPlanCollaborationRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
+    const headerParameters: runtime.HTTPHeaders = {};
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => CollaboratorViewFromJSON(jsonValue));
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v2/training-plans/reviews/{reviewId}/decision`;
+    urlPath = urlPath.replace(
+      '{reviewId}',
+      encodeURIComponent(String(requestParameters['reviewId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+      body: ReviewDecisionCommandToJSON(requestParameters['reviewDecisionCommand']),
+    };
+  }
+
+  /**
+   */
+  async decidePlanReviewRaw(
+    requestParameters: DecidePlanReviewRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<ReviewView>> {
+    const requestOptions = await this.decidePlanReviewRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => ReviewViewFromJSON(jsonValue));
+  }
+
+  /**
+   */
+  async decidePlanReview(
+    requestParameters: DecidePlanReviewRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<ReviewView> {
+    const response = await this.decidePlanReviewRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for endPlanCollaboration without sending the request
+   */
+  async endPlanCollaborationRequestOpts(
+    requestParameters: EndPlanCollaborationRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['planId'] == null) {
+      throw new runtime.RequiredError(
+        'planId',
+        'Required parameter "planId" was null or undefined when calling endPlanCollaboration().',
+      );
     }
 
-    /**
-     */
-    async endPlanCollaboration(requestParameters: EndPlanCollaborationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CollaboratorView> {
-        const response = await this.endPlanCollaborationRaw(requestParameters, initOverrides);
-        return await response.value();
+    if (requestParameters['collaboratorId'] == null) {
+      throw new runtime.RequiredError(
+        'collaboratorId',
+        'Required parameter "collaboratorId" was null or undefined when calling endPlanCollaboration().',
+      );
     }
 
-    /**
-     * Creates request options for requestPlanReview without sending the request
-     */
-    async requestPlanReviewRequestOpts(requestParameters: RequestPlanReviewRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['revisionId'] == null) {
-            throw new runtime.RequiredError(
-                'revisionId',
-                'Required parameter "revisionId" was null or undefined when calling requestPlanReview().'
-            );
-        }
+    const queryParameters: any = {};
 
-        if (requestParameters['reviewRequestCommand'] == null) {
-            throw new runtime.RequiredError(
-                'reviewRequestCommand',
-                'Required parameter "reviewRequestCommand" was null or undefined when calling requestPlanReview().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/v2/training-plans/revisions/{revisionId}/reviews`;
-        urlPath = urlPath.replace('{revisionId}', encodeURIComponent(String(requestParameters['revisionId'])));
-
-        return {
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: ReviewRequestCommandToJSON(requestParameters['reviewRequestCommand']),
-        };
+    if (requestParameters['actingContext'] != null) {
+      queryParameters['actingContext'] = requestParameters['actingContext'];
     }
 
-    /**
-     */
-    async requestPlanReviewRaw(requestParameters: RequestPlanReviewRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ReviewView>> {
-        const requestOptions = await this.requestPlanReviewRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
+    const headerParameters: runtime.HTTPHeaders = {};
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => ReviewViewFromJSON(jsonValue));
+    let urlPath = `/api/v2/training-plans/{planId}/collaborators/{collaboratorId}`;
+    urlPath = urlPath.replace('{planId}', encodeURIComponent(String(requestParameters['planId'])));
+    urlPath = urlPath.replace(
+      '{collaboratorId}',
+      encodeURIComponent(String(requestParameters['collaboratorId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'DELETE',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   */
+  async endPlanCollaborationRaw(
+    requestParameters: EndPlanCollaborationRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<CollaboratorView>> {
+    const requestOptions = await this.endPlanCollaborationRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      CollaboratorViewFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async endPlanCollaboration(
+    requestParameters: EndPlanCollaborationRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<CollaboratorView> {
+    const response = await this.endPlanCollaborationRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for requestPlanReview without sending the request
+   */
+  async requestPlanReviewRequestOpts(
+    requestParameters: RequestPlanReviewRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['revisionId'] == null) {
+      throw new runtime.RequiredError(
+        'revisionId',
+        'Required parameter "revisionId" was null or undefined when calling requestPlanReview().',
+      );
     }
 
-    /**
-     */
-    async requestPlanReview(requestParameters: RequestPlanReviewRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ReviewView> {
-        const response = await this.requestPlanReviewRaw(requestParameters, initOverrides);
-        return await response.value();
+    if (requestParameters['reviewRequestCommand'] == null) {
+      throw new runtime.RequiredError(
+        'reviewRequestCommand',
+        'Required parameter "reviewRequestCommand" was null or undefined when calling requestPlanReview().',
+      );
     }
 
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v2/training-plans/revisions/{revisionId}/reviews`;
+    urlPath = urlPath.replace(
+      '{revisionId}',
+      encodeURIComponent(String(requestParameters['revisionId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+      body: ReviewRequestCommandToJSON(requestParameters['reviewRequestCommand']),
+    };
+  }
+
+  /**
+   */
+  async requestPlanReviewRaw(
+    requestParameters: RequestPlanReviewRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<ReviewView>> {
+    const requestOptions = await this.requestPlanReviewRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => ReviewViewFromJSON(jsonValue));
+  }
+
+  /**
+   */
+  async requestPlanReview(
+    requestParameters: RequestPlanReviewRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<ReviewView> {
+    const response = await this.requestPlanReviewRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
 }
 
 /**
  * @export
  */
 export const AddPlanCollaboratorActingContextEnum = {
-    Trainer: 'TRAINER',
-    Physiotherapist: 'PHYSIOTHERAPIST'
+  Trainer: 'TRAINER',
+  Physiotherapist: 'PHYSIOTHERAPIST',
 } as const;
-export type AddPlanCollaboratorActingContextEnum = typeof AddPlanCollaboratorActingContextEnum[keyof typeof AddPlanCollaboratorActingContextEnum];
+export type AddPlanCollaboratorActingContextEnum =
+  (typeof AddPlanCollaboratorActingContextEnum)[keyof typeof AddPlanCollaboratorActingContextEnum];
 /**
  * @export
  */
 export const DecidePlanReviewActingContextEnum = {
-    Trainer: 'TRAINER',
-    Physiotherapist: 'PHYSIOTHERAPIST'
+  Trainer: 'TRAINER',
+  Physiotherapist: 'PHYSIOTHERAPIST',
 } as const;
-export type DecidePlanReviewActingContextEnum = typeof DecidePlanReviewActingContextEnum[keyof typeof DecidePlanReviewActingContextEnum];
+export type DecidePlanReviewActingContextEnum =
+  (typeof DecidePlanReviewActingContextEnum)[keyof typeof DecidePlanReviewActingContextEnum];
 /**
  * @export
  */
 export const EndPlanCollaborationActingContextEnum = {
-    Trainer: 'TRAINER',
-    Physiotherapist: 'PHYSIOTHERAPIST'
+  Trainer: 'TRAINER',
+  Physiotherapist: 'PHYSIOTHERAPIST',
 } as const;
-export type EndPlanCollaborationActingContextEnum = typeof EndPlanCollaborationActingContextEnum[keyof typeof EndPlanCollaborationActingContextEnum];
+export type EndPlanCollaborationActingContextEnum =
+  (typeof EndPlanCollaborationActingContextEnum)[keyof typeof EndPlanCollaborationActingContextEnum];

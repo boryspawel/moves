@@ -19,70 +19,76 @@ import { mapValues } from '../runtime';
  * @interface PublicLoadCharacteristicView
  */
 export interface PublicLoadCharacteristicView {
-    /**
-     *
-     * @type {string}
-     * @memberof PublicLoadCharacteristicView
-     */
-    movementPlane?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof PublicLoadCharacteristicView
-     */
-    contractionType?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof PublicLoadCharacteristicView
-     */
-    rangeOfMotion?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof PublicLoadCharacteristicView
-     */
-    characteristicType?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicLoadCharacteristicView
+   */
+  movementPlane?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicLoadCharacteristicView
+   */
+  contractionType?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicLoadCharacteristicView
+   */
+  rangeOfMotion?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicLoadCharacteristicView
+   */
+  characteristicType?: string;
 }
 
 /**
  * Check if a given object implements the PublicLoadCharacteristicView interface.
  */
-export function instanceOfPublicLoadCharacteristicView(value: object): value is PublicLoadCharacteristicView {
-    return true;
+export function instanceOfPublicLoadCharacteristicView(
+  value: object,
+): value is PublicLoadCharacteristicView {
+  return true;
 }
 
 export function PublicLoadCharacteristicViewFromJSON(json: any): PublicLoadCharacteristicView {
-    return PublicLoadCharacteristicViewFromJSONTyped(json, false);
+  return PublicLoadCharacteristicViewFromJSONTyped(json, false);
 }
 
-export function PublicLoadCharacteristicViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): PublicLoadCharacteristicView {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'movementPlane': json['movementPlane'] == null ? undefined : json['movementPlane'],
-        'contractionType': json['contractionType'] == null ? undefined : json['contractionType'],
-        'rangeOfMotion': json['rangeOfMotion'] == null ? undefined : json['rangeOfMotion'],
-        'characteristicType': json['characteristicType'] == null ? undefined : json['characteristicType'],
-    };
+export function PublicLoadCharacteristicViewFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): PublicLoadCharacteristicView {
+  if (json == null) {
+    return json;
+  }
+  return {
+    movementPlane: json['movementPlane'] == null ? undefined : json['movementPlane'],
+    contractionType: json['contractionType'] == null ? undefined : json['contractionType'],
+    rangeOfMotion: json['rangeOfMotion'] == null ? undefined : json['rangeOfMotion'],
+    characteristicType: json['characteristicType'] == null ? undefined : json['characteristicType'],
+  };
 }
 
 export function PublicLoadCharacteristicViewToJSON(json: any): PublicLoadCharacteristicView {
-    return PublicLoadCharacteristicViewToJSONTyped(json, false);
+  return PublicLoadCharacteristicViewToJSONTyped(json, false);
 }
 
-export function PublicLoadCharacteristicViewToJSONTyped(value?: PublicLoadCharacteristicView | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function PublicLoadCharacteristicViewToJSONTyped(
+  value?: PublicLoadCharacteristicView | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'movementPlane': value['movementPlane'],
-        'contractionType': value['contractionType'],
-        'rangeOfMotion': value['rangeOfMotion'],
-        'characteristicType': value['characteristicType'],
-    };
+  return {
+    movementPlane: value['movementPlane'],
+    contractionType: value['contractionType'],
+    rangeOfMotion: value['rangeOfMotion'],
+    characteristicType: value['characteristicType'],
+  };
 }

@@ -19,242 +19,247 @@ import { mapValues } from '../runtime';
  * @interface AddPrescriptionCommand
  */
 export interface AddPrescriptionCommand {
-    /**
-     *
-     * @type {number}
-     * @memberof AddPrescriptionCommand
-     */
-    expectedVersion?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof AddPrescriptionCommand
-     */
-    sessionId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof AddPrescriptionCommand
-     */
-    exerciseVersionId?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof AddPrescriptionCommand
-     */
-    position?: number;
-    /**
-     *
-     * @type {AddPrescriptionCommandSideEnum}
-     * @memberof AddPrescriptionCommand
-     */
-    side?: AddPrescriptionCommandSideEnum;
-    /**
-     *
-     * @type {AddPrescriptionCommandDoseTypeEnum}
-     * @memberof AddPrescriptionCommand
-     */
-    doseType?: AddPrescriptionCommandDoseTypeEnum;
-    /**
-     *
-     * @type {number}
-     * @memberof AddPrescriptionCommand
-     */
-    sets?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof AddPrescriptionCommand
-     */
-    repetitions?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof AddPrescriptionCommand
-     */
-    durationSeconds?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof AddPrescriptionCommand
-     */
-    distanceMeters?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof AddPrescriptionCommand
-     */
-    contacts?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof AddPrescriptionCommand
-     */
-    externalLoadValue?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof AddPrescriptionCommand
-     */
-    externalLoadUnit?: string;
-    /**
-     *
-     * @type {AddPrescriptionCommandIntensityTypeEnum}
-     * @memberof AddPrescriptionCommand
-     */
-    intensityType?: AddPrescriptionCommandIntensityTypeEnum;
-    /**
-     *
-     * @type {number}
-     * @memberof AddPrescriptionCommand
-     */
-    intensityValue?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof AddPrescriptionCommand
-     */
-    intensityZone?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof AddPrescriptionCommand
-     */
-    tempo?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof AddPrescriptionCommand
-     */
-    rangeOfMotion?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof AddPrescriptionCommand
-     */
-    restSeconds?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof AddPrescriptionCommand
-     */
-    substituteGroup?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof AddPrescriptionCommand
-     */
-    notes?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof AddPrescriptionCommand
+   */
+  expectedVersion?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof AddPrescriptionCommand
+   */
+  sessionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AddPrescriptionCommand
+   */
+  exerciseVersionId?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof AddPrescriptionCommand
+   */
+  position?: number;
+  /**
+   *
+   * @type {AddPrescriptionCommandSideEnum}
+   * @memberof AddPrescriptionCommand
+   */
+  side?: AddPrescriptionCommandSideEnum;
+  /**
+   *
+   * @type {AddPrescriptionCommandDoseTypeEnum}
+   * @memberof AddPrescriptionCommand
+   */
+  doseType?: AddPrescriptionCommandDoseTypeEnum;
+  /**
+   *
+   * @type {number}
+   * @memberof AddPrescriptionCommand
+   */
+  sets?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof AddPrescriptionCommand
+   */
+  repetitions?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof AddPrescriptionCommand
+   */
+  durationSeconds?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof AddPrescriptionCommand
+   */
+  distanceMeters?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof AddPrescriptionCommand
+   */
+  contacts?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof AddPrescriptionCommand
+   */
+  externalLoadValue?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof AddPrescriptionCommand
+   */
+  externalLoadUnit?: string;
+  /**
+   *
+   * @type {AddPrescriptionCommandIntensityTypeEnum}
+   * @memberof AddPrescriptionCommand
+   */
+  intensityType?: AddPrescriptionCommandIntensityTypeEnum;
+  /**
+   *
+   * @type {number}
+   * @memberof AddPrescriptionCommand
+   */
+  intensityValue?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof AddPrescriptionCommand
+   */
+  intensityZone?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AddPrescriptionCommand
+   */
+  tempo?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AddPrescriptionCommand
+   */
+  rangeOfMotion?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof AddPrescriptionCommand
+   */
+  restSeconds?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof AddPrescriptionCommand
+   */
+  substituteGroup?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AddPrescriptionCommand
+   */
+  notes?: string;
 }
-
 
 /**
  * @export
  */
 export const AddPrescriptionCommandSideEnum = {
-    Left: 'LEFT',
-    Right: 'RIGHT',
-    Bilateral: 'BILATERAL',
-    NotApplicable: 'NOT_APPLICABLE'
+  Left: 'LEFT',
+  Right: 'RIGHT',
+  Bilateral: 'BILATERAL',
+  NotApplicable: 'NOT_APPLICABLE',
 } as const;
-export type AddPrescriptionCommandSideEnum = typeof AddPrescriptionCommandSideEnum[keyof typeof AddPrescriptionCommandSideEnum];
+export type AddPrescriptionCommandSideEnum =
+  (typeof AddPrescriptionCommandSideEnum)[keyof typeof AddPrescriptionCommandSideEnum];
 
 /**
  * @export
  */
 export const AddPrescriptionCommandDoseTypeEnum = {
-    DynamicResistance: 'DYNAMIC_RESISTANCE',
-    Isometric: 'ISOMETRIC',
-    Impact: 'IMPACT',
-    Endurance: 'ENDURANCE',
-    MobilityControl: 'MOBILITY_CONTROL'
+  DynamicResistance: 'DYNAMIC_RESISTANCE',
+  Isometric: 'ISOMETRIC',
+  Impact: 'IMPACT',
+  Endurance: 'ENDURANCE',
+  MobilityControl: 'MOBILITY_CONTROL',
 } as const;
-export type AddPrescriptionCommandDoseTypeEnum = typeof AddPrescriptionCommandDoseTypeEnum[keyof typeof AddPrescriptionCommandDoseTypeEnum];
+export type AddPrescriptionCommandDoseTypeEnum =
+  (typeof AddPrescriptionCommandDoseTypeEnum)[keyof typeof AddPrescriptionCommandDoseTypeEnum];
 
 /**
  * @export
  */
 export const AddPrescriptionCommandIntensityTypeEnum = {
-    Rpe: 'RPE',
-    Rir: 'RIR',
-    Percent1Rm: 'PERCENT_1RM',
-    Zone: 'ZONE'
+  Rpe: 'RPE',
+  Rir: 'RIR',
+  Percent1Rm: 'PERCENT_1RM',
+  Zone: 'ZONE',
 } as const;
-export type AddPrescriptionCommandIntensityTypeEnum = typeof AddPrescriptionCommandIntensityTypeEnum[keyof typeof AddPrescriptionCommandIntensityTypeEnum];
-
+export type AddPrescriptionCommandIntensityTypeEnum =
+  (typeof AddPrescriptionCommandIntensityTypeEnum)[keyof typeof AddPrescriptionCommandIntensityTypeEnum];
 
 /**
  * Check if a given object implements the AddPrescriptionCommand interface.
  */
 export function instanceOfAddPrescriptionCommand(value: object): value is AddPrescriptionCommand {
-    return true;
+  return true;
 }
 
 export function AddPrescriptionCommandFromJSON(json: any): AddPrescriptionCommand {
-    return AddPrescriptionCommandFromJSONTyped(json, false);
+  return AddPrescriptionCommandFromJSONTyped(json, false);
 }
 
-export function AddPrescriptionCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): AddPrescriptionCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'expectedVersion': json['expectedVersion'] == null ? undefined : json['expectedVersion'],
-        'sessionId': json['sessionId'] == null ? undefined : json['sessionId'],
-        'exerciseVersionId': json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
-        'position': json['position'] == null ? undefined : json['position'],
-        'side': json['side'] == null ? undefined : json['side'],
-        'doseType': json['doseType'] == null ? undefined : json['doseType'],
-        'sets': json['sets'] == null ? undefined : json['sets'],
-        'repetitions': json['repetitions'] == null ? undefined : json['repetitions'],
-        'durationSeconds': json['durationSeconds'] == null ? undefined : json['durationSeconds'],
-        'distanceMeters': json['distanceMeters'] == null ? undefined : json['distanceMeters'],
-        'contacts': json['contacts'] == null ? undefined : json['contacts'],
-        'externalLoadValue': json['externalLoadValue'] == null ? undefined : json['externalLoadValue'],
-        'externalLoadUnit': json['externalLoadUnit'] == null ? undefined : json['externalLoadUnit'],
-        'intensityType': json['intensityType'] == null ? undefined : json['intensityType'],
-        'intensityValue': json['intensityValue'] == null ? undefined : json['intensityValue'],
-        'intensityZone': json['intensityZone'] == null ? undefined : json['intensityZone'],
-        'tempo': json['tempo'] == null ? undefined : json['tempo'],
-        'rangeOfMotion': json['rangeOfMotion'] == null ? undefined : json['rangeOfMotion'],
-        'restSeconds': json['restSeconds'] == null ? undefined : json['restSeconds'],
-        'substituteGroup': json['substituteGroup'] == null ? undefined : json['substituteGroup'],
-        'notes': json['notes'] == null ? undefined : json['notes'],
-    };
+export function AddPrescriptionCommandFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): AddPrescriptionCommand {
+  if (json == null) {
+    return json;
+  }
+  return {
+    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
+    sessionId: json['sessionId'] == null ? undefined : json['sessionId'],
+    exerciseVersionId: json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
+    position: json['position'] == null ? undefined : json['position'],
+    side: json['side'] == null ? undefined : json['side'],
+    doseType: json['doseType'] == null ? undefined : json['doseType'],
+    sets: json['sets'] == null ? undefined : json['sets'],
+    repetitions: json['repetitions'] == null ? undefined : json['repetitions'],
+    durationSeconds: json['durationSeconds'] == null ? undefined : json['durationSeconds'],
+    distanceMeters: json['distanceMeters'] == null ? undefined : json['distanceMeters'],
+    contacts: json['contacts'] == null ? undefined : json['contacts'],
+    externalLoadValue: json['externalLoadValue'] == null ? undefined : json['externalLoadValue'],
+    externalLoadUnit: json['externalLoadUnit'] == null ? undefined : json['externalLoadUnit'],
+    intensityType: json['intensityType'] == null ? undefined : json['intensityType'],
+    intensityValue: json['intensityValue'] == null ? undefined : json['intensityValue'],
+    intensityZone: json['intensityZone'] == null ? undefined : json['intensityZone'],
+    tempo: json['tempo'] == null ? undefined : json['tempo'],
+    rangeOfMotion: json['rangeOfMotion'] == null ? undefined : json['rangeOfMotion'],
+    restSeconds: json['restSeconds'] == null ? undefined : json['restSeconds'],
+    substituteGroup: json['substituteGroup'] == null ? undefined : json['substituteGroup'],
+    notes: json['notes'] == null ? undefined : json['notes'],
+  };
 }
 
 export function AddPrescriptionCommandToJSON(json: any): AddPrescriptionCommand {
-    return AddPrescriptionCommandToJSONTyped(json, false);
+  return AddPrescriptionCommandToJSONTyped(json, false);
 }
 
-export function AddPrescriptionCommandToJSONTyped(value?: AddPrescriptionCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function AddPrescriptionCommandToJSONTyped(
+  value?: AddPrescriptionCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'expectedVersion': value['expectedVersion'],
-        'sessionId': value['sessionId'],
-        'exerciseVersionId': value['exerciseVersionId'],
-        'position': value['position'],
-        'side': value['side'],
-        'doseType': value['doseType'],
-        'sets': value['sets'],
-        'repetitions': value['repetitions'],
-        'durationSeconds': value['durationSeconds'],
-        'distanceMeters': value['distanceMeters'],
-        'contacts': value['contacts'],
-        'externalLoadValue': value['externalLoadValue'],
-        'externalLoadUnit': value['externalLoadUnit'],
-        'intensityType': value['intensityType'],
-        'intensityValue': value['intensityValue'],
-        'intensityZone': value['intensityZone'],
-        'tempo': value['tempo'],
-        'rangeOfMotion': value['rangeOfMotion'],
-        'restSeconds': value['restSeconds'],
-        'substituteGroup': value['substituteGroup'],
-        'notes': value['notes'],
-    };
+  return {
+    expectedVersion: value['expectedVersion'],
+    sessionId: value['sessionId'],
+    exerciseVersionId: value['exerciseVersionId'],
+    position: value['position'],
+    side: value['side'],
+    doseType: value['doseType'],
+    sets: value['sets'],
+    repetitions: value['repetitions'],
+    durationSeconds: value['durationSeconds'],
+    distanceMeters: value['distanceMeters'],
+    contacts: value['contacts'],
+    externalLoadValue: value['externalLoadValue'],
+    externalLoadUnit: value['externalLoadUnit'],
+    intensityType: value['intensityType'],
+    intensityValue: value['intensityValue'],
+    intensityZone: value['intensityZone'],
+    tempo: value['tempo'],
+    rangeOfMotion: value['rangeOfMotion'],
+    restSeconds: value['restSeconds'],
+    substituteGroup: value['substituteGroup'],
+    notes: value['notes'],
+  };
 }

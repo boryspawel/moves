@@ -19,62 +19,66 @@ import { mapValues } from '../runtime';
  * @interface PublicEvidenceView
  */
 export interface PublicEvidenceView {
-    /**
-     *
-     * @type {string}
-     * @memberof PublicEvidenceView
-     */
-    citation?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof PublicEvidenceView
-     */
-    sourceUri?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof PublicEvidenceView
-     */
-    evidenceGrade?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicEvidenceView
+   */
+  citation?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicEvidenceView
+   */
+  sourceUri?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicEvidenceView
+   */
+  evidenceGrade?: string;
 }
 
 /**
  * Check if a given object implements the PublicEvidenceView interface.
  */
 export function instanceOfPublicEvidenceView(value: object): value is PublicEvidenceView {
-    return true;
+  return true;
 }
 
 export function PublicEvidenceViewFromJSON(json: any): PublicEvidenceView {
-    return PublicEvidenceViewFromJSONTyped(json, false);
+  return PublicEvidenceViewFromJSONTyped(json, false);
 }
 
-export function PublicEvidenceViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): PublicEvidenceView {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'citation': json['citation'] == null ? undefined : json['citation'],
-        'sourceUri': json['sourceUri'] == null ? undefined : json['sourceUri'],
-        'evidenceGrade': json['evidenceGrade'] == null ? undefined : json['evidenceGrade'],
-    };
+export function PublicEvidenceViewFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): PublicEvidenceView {
+  if (json == null) {
+    return json;
+  }
+  return {
+    citation: json['citation'] == null ? undefined : json['citation'],
+    sourceUri: json['sourceUri'] == null ? undefined : json['sourceUri'],
+    evidenceGrade: json['evidenceGrade'] == null ? undefined : json['evidenceGrade'],
+  };
 }
 
 export function PublicEvidenceViewToJSON(json: any): PublicEvidenceView {
-    return PublicEvidenceViewToJSONTyped(json, false);
+  return PublicEvidenceViewToJSONTyped(json, false);
 }
 
-export function PublicEvidenceViewToJSONTyped(value?: PublicEvidenceView | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function PublicEvidenceViewToJSONTyped(
+  value?: PublicEvidenceView | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'citation': value['citation'],
-        'sourceUri': value['sourceUri'],
-        'evidenceGrade': value['evidenceGrade'],
-    };
+  return {
+    citation: value['citation'],
+    sourceUri: value['sourceUri'],
+    evidenceGrade: value['evidenceGrade'],
+  };
 }

@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { CheckInView } from './CheckInView';
 import {
-    CheckInViewFromJSON,
-    CheckInViewFromJSONTyped,
-    CheckInViewToJSON,
-    CheckInViewToJSONTyped,
+  CheckInViewFromJSON,
+  CheckInViewFromJSONTyped,
+  CheckInViewToJSON,
+  CheckInViewToJSONTyped,
 } from './CheckInView';
 
 /**
@@ -27,62 +27,65 @@ import {
  * @interface SafetyView
  */
 export interface SafetyView {
-    /**
-     *
-     * @type {Array<string>}
-     * @memberof SafetyView
-     */
-    contraindicationTags?: Array<string>;
-    /**
-     *
-     * @type {CheckInView}
-     * @memberof SafetyView
-     */
-    latestCheckIn?: CheckInView;
-    /**
-     *
-     * @type {string}
-     * @memberof SafetyView
-     */
-    notice?: string;
+  /**
+   *
+   * @type {Array<string>}
+   * @memberof SafetyView
+   */
+  contraindicationTags?: Array<string>;
+  /**
+   *
+   * @type {CheckInView}
+   * @memberof SafetyView
+   */
+  latestCheckIn?: CheckInView;
+  /**
+   *
+   * @type {string}
+   * @memberof SafetyView
+   */
+  notice?: string;
 }
 
 /**
  * Check if a given object implements the SafetyView interface.
  */
 export function instanceOfSafetyView(value: object): value is SafetyView {
-    return true;
+  return true;
 }
 
 export function SafetyViewFromJSON(json: any): SafetyView {
-    return SafetyViewFromJSONTyped(json, false);
+  return SafetyViewFromJSONTyped(json, false);
 }
 
 export function SafetyViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): SafetyView {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'contraindicationTags': json['contraindicationTags'] == null ? undefined : json['contraindicationTags'],
-        'latestCheckIn': json['latestCheckIn'] == null ? undefined : CheckInViewFromJSON(json['latestCheckIn']),
-        'notice': json['notice'] == null ? undefined : json['notice'],
-    };
+  if (json == null) {
+    return json;
+  }
+  return {
+    contraindicationTags:
+      json['contraindicationTags'] == null ? undefined : json['contraindicationTags'],
+    latestCheckIn:
+      json['latestCheckIn'] == null ? undefined : CheckInViewFromJSON(json['latestCheckIn']),
+    notice: json['notice'] == null ? undefined : json['notice'],
+  };
 }
 
 export function SafetyViewToJSON(json: any): SafetyView {
-    return SafetyViewToJSONTyped(json, false);
+  return SafetyViewToJSONTyped(json, false);
 }
 
-export function SafetyViewToJSONTyped(value?: SafetyView | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function SafetyViewToJSONTyped(
+  value?: SafetyView | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'contraindicationTags': value['contraindicationTags'],
-        'latestCheckIn': CheckInViewToJSON(value['latestCheckIn']),
-        'notice': value['notice'],
-    };
+  return {
+    contraindicationTags: value['contraindicationTags'],
+    latestCheckIn: CheckInViewToJSON(value['latestCheckIn']),
+    notice: value['notice'],
+  };
 }

@@ -7,6 +7,7 @@ export * from './CurrentIdentityControllerApi';
 export * from './ExerciseCatalogAdminControllerApi';
 export * from './ExerciseCatalogControllerApi';
 export * from './ExerciseImportAdminControllerApi';
+export * from './ExerciseReviewQueueControllerApi';
 export * from './ExerciseVersionReviewControllerApi';
 export * from './GamificationControllerApi';
 export * from './LoadAnalysisControllerApi';

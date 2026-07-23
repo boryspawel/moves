@@ -19,110 +19,115 @@ import { mapValues } from '../runtime';
  * @interface BarrierReportView
  */
 export interface BarrierReportView {
-    /**
-     *
-     * @type {string}
-     * @memberof BarrierReportView
-     */
-    id?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof BarrierReportView
-     */
-    plannedSessionId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof BarrierReportView
-     */
-    sessionAttemptId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof BarrierReportView
-     */
-    category?: string;
-    /**
-     *
-     * @type {Array<string>}
-     * @memberof BarrierReportView
-     */
-    proposedOptions?: Array<string>;
-    /**
-     *
-     * @type {string}
-     * @memberof BarrierReportView
-     */
-    selectedAction?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof BarrierReportView
-     */
-    actionOutcome?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof BarrierReportView
-     */
-    ruleVersion?: string;
-    /**
-     *
-     * @type {Date}
-     * @memberof BarrierReportView
-     */
-    reportedAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof BarrierReportView
+   */
+  id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BarrierReportView
+   */
+  plannedSessionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BarrierReportView
+   */
+  sessionAttemptId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BarrierReportView
+   */
+  category?: string;
+  /**
+   *
+   * @type {Array<string>}
+   * @memberof BarrierReportView
+   */
+  proposedOptions?: Array<string>;
+  /**
+   *
+   * @type {string}
+   * @memberof BarrierReportView
+   */
+  selectedAction?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BarrierReportView
+   */
+  actionOutcome?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BarrierReportView
+   */
+  ruleVersion?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof BarrierReportView
+   */
+  reportedAt?: Date;
 }
 
 /**
  * Check if a given object implements the BarrierReportView interface.
  */
 export function instanceOfBarrierReportView(value: object): value is BarrierReportView {
-    return true;
+  return true;
 }
 
 export function BarrierReportViewFromJSON(json: any): BarrierReportView {
-    return BarrierReportViewFromJSONTyped(json, false);
+  return BarrierReportViewFromJSONTyped(json, false);
 }
 
-export function BarrierReportViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): BarrierReportView {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'id': json['id'] == null ? undefined : json['id'],
-        'plannedSessionId': json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
-        'sessionAttemptId': json['sessionAttemptId'] == null ? undefined : json['sessionAttemptId'],
-        'category': json['category'] == null ? undefined : json['category'],
-        'proposedOptions': json['proposedOptions'] == null ? undefined : json['proposedOptions'],
-        'selectedAction': json['selectedAction'] == null ? undefined : json['selectedAction'],
-        'actionOutcome': json['actionOutcome'] == null ? undefined : json['actionOutcome'],
-        'ruleVersion': json['ruleVersion'] == null ? undefined : json['ruleVersion'],
-        'reportedAt': json['reportedAt'] == null ? undefined : (new Date(json['reportedAt'])),
-    };
+export function BarrierReportViewFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): BarrierReportView {
+  if (json == null) {
+    return json;
+  }
+  return {
+    id: json['id'] == null ? undefined : json['id'],
+    plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
+    sessionAttemptId: json['sessionAttemptId'] == null ? undefined : json['sessionAttemptId'],
+    category: json['category'] == null ? undefined : json['category'],
+    proposedOptions: json['proposedOptions'] == null ? undefined : json['proposedOptions'],
+    selectedAction: json['selectedAction'] == null ? undefined : json['selectedAction'],
+    actionOutcome: json['actionOutcome'] == null ? undefined : json['actionOutcome'],
+    ruleVersion: json['ruleVersion'] == null ? undefined : json['ruleVersion'],
+    reportedAt: json['reportedAt'] == null ? undefined : new Date(json['reportedAt']),
+  };
 }
 
 export function BarrierReportViewToJSON(json: any): BarrierReportView {
-    return BarrierReportViewToJSONTyped(json, false);
+  return BarrierReportViewToJSONTyped(json, false);
 }
 
-export function BarrierReportViewToJSONTyped(value?: BarrierReportView | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function BarrierReportViewToJSONTyped(
+  value?: BarrierReportView | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'id': value['id'],
-        'plannedSessionId': value['plannedSessionId'],
-        'sessionAttemptId': value['sessionAttemptId'],
-        'category': value['category'],
-        'proposedOptions': value['proposedOptions'],
-        'selectedAction': value['selectedAction'],
-        'actionOutcome': value['actionOutcome'],
-        'ruleVersion': value['ruleVersion'],
-        'reportedAt': value['reportedAt'] == null ? value['reportedAt'] : value['reportedAt'].toISOString(),
-    };
+  return {
+    id: value['id'],
+    plannedSessionId: value['plannedSessionId'],
+    sessionAttemptId: value['sessionAttemptId'],
+    category: value['category'],
+    proposedOptions: value['proposedOptions'],
+    selectedAction: value['selectedAction'],
+    actionOutcome: value['actionOutcome'],
+    ruleVersion: value['ruleVersion'],
+    reportedAt:
+      value['reportedAt'] == null ? value['reportedAt'] : value['reportedAt'].toISOString(),
+  };
 }

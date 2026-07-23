@@ -14,321 +14,349 @@
 
 import * as runtime from '../runtime';
 import {
-    type AvailabilityRequest,
-    AvailabilityRequestFromJSON,
-    AvailabilityRequestToJSON,
+  type AvailabilityRequest,
+  AvailabilityRequestFromJSON,
+  AvailabilityRequestToJSON,
 } from '../models/AvailabilityRequest';
 import {
-    type LegalRequest,
-    LegalRequestFromJSON,
-    LegalRequestToJSON,
+  type LegalRequest,
+  LegalRequestFromJSON,
+  LegalRequestToJSON,
 } from '../models/LegalRequest';
 import {
-    type ParticipantProfileRequest,
-    ParticipantProfileRequestFromJSON,
-    ParticipantProfileRequestToJSON,
+  type ParticipantProfileRequest,
+  ParticipantProfileRequestFromJSON,
+  ParticipantProfileRequestToJSON,
 } from '../models/ParticipantProfileRequest';
 import {
-    type ProfileTypeRequest,
-    ProfileTypeRequestFromJSON,
-    ProfileTypeRequestToJSON,
+  type ProfileTypeRequest,
+  ProfileTypeRequestFromJSON,
+  ProfileTypeRequestToJSON,
 } from '../models/ProfileTypeRequest';
 import {
-    type SpecialistProfileRequest,
-    SpecialistProfileRequestFromJSON,
-    SpecialistProfileRequestToJSON,
+  type SpecialistProfileRequest,
+  SpecialistProfileRequestFromJSON,
+  SpecialistProfileRequestToJSON,
 } from '../models/SpecialistProfileRequest';
-import {
-    type State,
-    StateFromJSON,
-    StateToJSON,
-} from '../models/State';
+import { type State, StateFromJSON, StateToJSON } from '../models/State';
 
 export interface AvailabilityOperationRequest {
-    availabilityRequest: AvailabilityRequest;
+  availabilityRequest: AvailabilityRequest;
 }
 
 export interface LegalOperationRequest {
-    legalRequest: LegalRequest;
+  legalRequest: LegalRequest;
 }
 
 export interface ParticipantProfileOperationRequest {
-    participantProfileRequest: ParticipantProfileRequest;
+  participantProfileRequest: ParticipantProfileRequest;
 }
 
 export interface SelectProfileTypeRequest {
-    profileTypeRequest: ProfileTypeRequest;
+  profileTypeRequest: ProfileTypeRequest;
 }
 
 export interface SpecialistProfileOperationRequest {
-    specialistProfileRequest: SpecialistProfileRequest;
+  specialistProfileRequest: SpecialistProfileRequest;
 }
 
 /**
  *
  */
 export class OnboardingControllerApi extends runtime.BaseAPI {
-
-    /**
-     * Creates request options for availability without sending the request
-     */
-    async availabilityRequestOpts(requestParameters: AvailabilityOperationRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['availabilityRequest'] == null) {
-            throw new runtime.RequiredError(
-                'availabilityRequest',
-                'Required parameter "availabilityRequest" was null or undefined when calling availability().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/v1/onboarding/availability`;
-
-        return {
-            path: urlPath,
-            method: 'PUT',
-            headers: headerParameters,
-            query: queryParameters,
-            body: AvailabilityRequestToJSON(requestParameters['availabilityRequest']),
-        };
+  /**
+   * Creates request options for availability without sending the request
+   */
+  async availabilityRequestOpts(
+    requestParameters: AvailabilityOperationRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['availabilityRequest'] == null) {
+      throw new runtime.RequiredError(
+        'availabilityRequest',
+        'Required parameter "availabilityRequest" was null or undefined when calling availability().',
+      );
     }
 
-    /**
-     */
-    async availabilityRaw(requestParameters: AvailabilityOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<State>> {
-        const requestOptions = await this.availabilityRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
+    const queryParameters: any = {};
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => StateFromJSON(jsonValue));
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v1/onboarding/availability`;
+
+    return {
+      path: urlPath,
+      method: 'PUT',
+      headers: headerParameters,
+      query: queryParameters,
+      body: AvailabilityRequestToJSON(requestParameters['availabilityRequest']),
+    };
+  }
+
+  /**
+   */
+  async availabilityRaw(
+    requestParameters: AvailabilityOperationRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<State>> {
+    const requestOptions = await this.availabilityRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => StateFromJSON(jsonValue));
+  }
+
+  /**
+   */
+  async availability(
+    requestParameters: AvailabilityOperationRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<State> {
+    const response = await this.availabilityRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for legal without sending the request
+   */
+  async legalRequestOpts(requestParameters: LegalOperationRequest): Promise<runtime.RequestOpts> {
+    if (requestParameters['legalRequest'] == null) {
+      throw new runtime.RequiredError(
+        'legalRequest',
+        'Required parameter "legalRequest" was null or undefined when calling legal().',
+      );
     }
 
-    /**
-     */
-    async availability(requestParameters: AvailabilityOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<State> {
-        const response = await this.availabilityRaw(requestParameters, initOverrides);
-        return await response.value();
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v1/onboarding/legal-acknowledgements`;
+
+    return {
+      path: urlPath,
+      method: 'PUT',
+      headers: headerParameters,
+      query: queryParameters,
+      body: LegalRequestToJSON(requestParameters['legalRequest']),
+    };
+  }
+
+  /**
+   */
+  async legalRaw(
+    requestParameters: LegalOperationRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<State>> {
+    const requestOptions = await this.legalRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => StateFromJSON(jsonValue));
+  }
+
+  /**
+   */
+  async legal(
+    requestParameters: LegalOperationRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<State> {
+    const response = await this.legalRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for participantProfile without sending the request
+   */
+  async participantProfileRequestOpts(
+    requestParameters: ParticipantProfileOperationRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['participantProfileRequest'] == null) {
+      throw new runtime.RequiredError(
+        'participantProfileRequest',
+        'Required parameter "participantProfileRequest" was null or undefined when calling participantProfile().',
+      );
     }
 
-    /**
-     * Creates request options for legal without sending the request
-     */
-    async legalRequestOpts(requestParameters: LegalOperationRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['legalRequest'] == null) {
-            throw new runtime.RequiredError(
-                'legalRequest',
-                'Required parameter "legalRequest" was null or undefined when calling legal().'
-            );
-        }
+    const queryParameters: any = {};
 
-        const queryParameters: any = {};
+    const headerParameters: runtime.HTTPHeaders = {};
 
-        const headerParameters: runtime.HTTPHeaders = {};
+    headerParameters['Content-Type'] = 'application/json';
 
-        headerParameters['Content-Type'] = 'application/json';
+    let urlPath = `/api/v1/onboarding/participant-profile`;
 
+    return {
+      path: urlPath,
+      method: 'PUT',
+      headers: headerParameters,
+      query: queryParameters,
+      body: ParticipantProfileRequestToJSON(requestParameters['participantProfileRequest']),
+    };
+  }
 
-        let urlPath = `/api/v1/onboarding/legal-acknowledgements`;
+  /**
+   */
+  async participantProfileRaw(
+    requestParameters: ParticipantProfileOperationRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<State>> {
+    const requestOptions = await this.participantProfileRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
 
-        return {
-            path: urlPath,
-            method: 'PUT',
-            headers: headerParameters,
-            query: queryParameters,
-            body: LegalRequestToJSON(requestParameters['legalRequest']),
-        };
+    return new runtime.JSONApiResponse(response, (jsonValue) => StateFromJSON(jsonValue));
+  }
+
+  /**
+   */
+  async participantProfile(
+    requestParameters: ParticipantProfileOperationRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<State> {
+    const response = await this.participantProfileRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for selectProfileType without sending the request
+   */
+  async selectProfileTypeRequestOpts(
+    requestParameters: SelectProfileTypeRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['profileTypeRequest'] == null) {
+      throw new runtime.RequiredError(
+        'profileTypeRequest',
+        'Required parameter "profileTypeRequest" was null or undefined when calling selectProfileType().',
+      );
     }
 
-    /**
-     */
-    async legalRaw(requestParameters: LegalOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<State>> {
-        const requestOptions = await this.legalRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
+    const queryParameters: any = {};
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => StateFromJSON(jsonValue));
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v1/onboarding/profile-type`;
+
+    return {
+      path: urlPath,
+      method: 'PUT',
+      headers: headerParameters,
+      query: queryParameters,
+      body: ProfileTypeRequestToJSON(requestParameters['profileTypeRequest']),
+    };
+  }
+
+  /**
+   */
+  async selectProfileTypeRaw(
+    requestParameters: SelectProfileTypeRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<State>> {
+    const requestOptions = await this.selectProfileTypeRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => StateFromJSON(jsonValue));
+  }
+
+  /**
+   */
+  async selectProfileType(
+    requestParameters: SelectProfileTypeRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<State> {
+    const response = await this.selectProfileTypeRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for specialistProfile without sending the request
+   */
+  async specialistProfileRequestOpts(
+    requestParameters: SpecialistProfileOperationRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['specialistProfileRequest'] == null) {
+      throw new runtime.RequiredError(
+        'specialistProfileRequest',
+        'Required parameter "specialistProfileRequest" was null or undefined when calling specialistProfile().',
+      );
     }
 
-    /**
-     */
-    async legal(requestParameters: LegalOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<State> {
-        const response = await this.legalRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+    const queryParameters: any = {};
 
-    /**
-     * Creates request options for participantProfile without sending the request
-     */
-    async participantProfileRequestOpts(requestParameters: ParticipantProfileOperationRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['participantProfileRequest'] == null) {
-            throw new runtime.RequiredError(
-                'participantProfileRequest',
-                'Required parameter "participantProfileRequest" was null or undefined when calling participantProfile().'
-            );
-        }
+    const headerParameters: runtime.HTTPHeaders = {};
 
-        const queryParameters: any = {};
+    headerParameters['Content-Type'] = 'application/json';
 
-        const headerParameters: runtime.HTTPHeaders = {};
+    let urlPath = `/api/v1/onboarding/specialist-profile`;
 
-        headerParameters['Content-Type'] = 'application/json';
+    return {
+      path: urlPath,
+      method: 'PUT',
+      headers: headerParameters,
+      query: queryParameters,
+      body: SpecialistProfileRequestToJSON(requestParameters['specialistProfileRequest']),
+    };
+  }
 
+  /**
+   */
+  async specialistProfileRaw(
+    requestParameters: SpecialistProfileOperationRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<State>> {
+    const requestOptions = await this.specialistProfileRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
 
-        let urlPath = `/api/v1/onboarding/participant-profile`;
+    return new runtime.JSONApiResponse(response, (jsonValue) => StateFromJSON(jsonValue));
+  }
 
-        return {
-            path: urlPath,
-            method: 'PUT',
-            headers: headerParameters,
-            query: queryParameters,
-            body: ParticipantProfileRequestToJSON(requestParameters['participantProfileRequest']),
-        };
-    }
+  /**
+   */
+  async specialistProfile(
+    requestParameters: SpecialistProfileOperationRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<State> {
+    const response = await this.specialistProfileRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
 
-    /**
-     */
-    async participantProfileRaw(requestParameters: ParticipantProfileOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<State>> {
-        const requestOptions = await this.participantProfileRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
+  /**
+   * Creates request options for state without sending the request
+   */
+  async stateRequestOpts(): Promise<runtime.RequestOpts> {
+    const queryParameters: any = {};
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => StateFromJSON(jsonValue));
-    }
+    const headerParameters: runtime.HTTPHeaders = {};
 
-    /**
-     */
-    async participantProfile(requestParameters: ParticipantProfileOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<State> {
-        const response = await this.participantProfileRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+    let urlPath = `/api/v1/onboarding`;
 
-    /**
-     * Creates request options for selectProfileType without sending the request
-     */
-    async selectProfileTypeRequestOpts(requestParameters: SelectProfileTypeRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['profileTypeRequest'] == null) {
-            throw new runtime.RequiredError(
-                'profileTypeRequest',
-                'Required parameter "profileTypeRequest" was null or undefined when calling selectProfileType().'
-            );
-        }
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
 
-        const queryParameters: any = {};
+  /**
+   * Return role-aware onboarding state
+   */
+  async stateRaw(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<State>> {
+    const requestOptions = await this.stateRequestOpts();
+    const response = await this.request(requestOptions, initOverrides);
 
-        const headerParameters: runtime.HTTPHeaders = {};
+    return new runtime.JSONApiResponse(response, (jsonValue) => StateFromJSON(jsonValue));
+  }
 
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/v1/onboarding/profile-type`;
-
-        return {
-            path: urlPath,
-            method: 'PUT',
-            headers: headerParameters,
-            query: queryParameters,
-            body: ProfileTypeRequestToJSON(requestParameters['profileTypeRequest']),
-        };
-    }
-
-    /**
-     */
-    async selectProfileTypeRaw(requestParameters: SelectProfileTypeRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<State>> {
-        const requestOptions = await this.selectProfileTypeRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => StateFromJSON(jsonValue));
-    }
-
-    /**
-     */
-    async selectProfileType(requestParameters: SelectProfileTypeRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<State> {
-        const response = await this.selectProfileTypeRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
-    /**
-     * Creates request options for specialistProfile without sending the request
-     */
-    async specialistProfileRequestOpts(requestParameters: SpecialistProfileOperationRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['specialistProfileRequest'] == null) {
-            throw new runtime.RequiredError(
-                'specialistProfileRequest',
-                'Required parameter "specialistProfileRequest" was null or undefined when calling specialistProfile().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/v1/onboarding/specialist-profile`;
-
-        return {
-            path: urlPath,
-            method: 'PUT',
-            headers: headerParameters,
-            query: queryParameters,
-            body: SpecialistProfileRequestToJSON(requestParameters['specialistProfileRequest']),
-        };
-    }
-
-    /**
-     */
-    async specialistProfileRaw(requestParameters: SpecialistProfileOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<State>> {
-        const requestOptions = await this.specialistProfileRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => StateFromJSON(jsonValue));
-    }
-
-    /**
-     */
-    async specialistProfile(requestParameters: SpecialistProfileOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<State> {
-        const response = await this.specialistProfileRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
-    /**
-     * Creates request options for state without sending the request
-     */
-    async stateRequestOpts(): Promise<runtime.RequestOpts> {
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-
-        let urlPath = `/api/v1/onboarding`;
-
-        return {
-            path: urlPath,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        };
-    }
-
-    /**
-     * Return role-aware onboarding state
-     */
-    async stateRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<State>> {
-        const requestOptions = await this.stateRequestOpts();
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => StateFromJSON(jsonValue));
-    }
-
-    /**
-     * Return role-aware onboarding state
-     */
-    async state(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<State> {
-        const response = await this.stateRaw(initOverrides);
-        return await response.value();
-    }
-
+  /**
+   * Return role-aware onboarding state
+   */
+  async state(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<State> {
+    const response = await this.stateRaw(initOverrides);
+    return await response.value();
+  }
 }

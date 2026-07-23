@@ -19,54 +19,58 @@ import { mapValues } from '../runtime';
  * @interface ReviewRequestCommand
  */
 export interface ReviewRequestCommand {
-    /**
-     *
-     * @type {string}
-     * @memberof ReviewRequestCommand
-     */
-    reviewerAccountId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof ReviewRequestCommand
-     */
-    requestReference?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ReviewRequestCommand
+   */
+  reviewerAccountId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ReviewRequestCommand
+   */
+  requestReference?: string;
 }
 
 /**
  * Check if a given object implements the ReviewRequestCommand interface.
  */
 export function instanceOfReviewRequestCommand(value: object): value is ReviewRequestCommand {
-    return true;
+  return true;
 }
 
 export function ReviewRequestCommandFromJSON(json: any): ReviewRequestCommand {
-    return ReviewRequestCommandFromJSONTyped(json, false);
+  return ReviewRequestCommandFromJSONTyped(json, false);
 }
 
-export function ReviewRequestCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): ReviewRequestCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'reviewerAccountId': json['reviewerAccountId'] == null ? undefined : json['reviewerAccountId'],
-        'requestReference': json['requestReference'] == null ? undefined : json['requestReference'],
-    };
+export function ReviewRequestCommandFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): ReviewRequestCommand {
+  if (json == null) {
+    return json;
+  }
+  return {
+    reviewerAccountId: json['reviewerAccountId'] == null ? undefined : json['reviewerAccountId'],
+    requestReference: json['requestReference'] == null ? undefined : json['requestReference'],
+  };
 }
 
 export function ReviewRequestCommandToJSON(json: any): ReviewRequestCommand {
-    return ReviewRequestCommandToJSONTyped(json, false);
+  return ReviewRequestCommandToJSONTyped(json, false);
 }
 
-export function ReviewRequestCommandToJSONTyped(value?: ReviewRequestCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ReviewRequestCommandToJSONTyped(
+  value?: ReviewRequestCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'reviewerAccountId': value['reviewerAccountId'],
-        'requestReference': value['requestReference'],
-    };
+  return {
+    reviewerAccountId: value['reviewerAccountId'],
+    requestReference: value['requestReference'],
+  };
 }

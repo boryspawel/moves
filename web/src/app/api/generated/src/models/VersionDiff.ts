@@ -19,94 +19,99 @@ import { mapValues } from '../runtime';
  * @interface VersionDiff
  */
 export interface VersionDiff {
-    /**
-     *
-     * @type {string}
-     * @memberof VersionDiff
-     */
-    versionId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof VersionDiff
-     */
-    exerciseId?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof VersionDiff
-     */
-    versionNumber?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof VersionDiff
-     */
-    status?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof VersionDiff
-     */
-    draftSemanticSha256?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof VersionDiff
-     */
-    normalizedSource?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof VersionDiff
-     */
-    currentPublishedSemanticSha256?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof VersionDiff
+   */
+  versionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof VersionDiff
+   */
+  exerciseId?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof VersionDiff
+   */
+  versionNumber?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof VersionDiff
+   */
+  status?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof VersionDiff
+   */
+  draftSemanticSha256?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof VersionDiff
+   */
+  normalizedSource?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof VersionDiff
+   */
+  currentPublishedSemanticSha256?: string;
 }
 
 /**
  * Check if a given object implements the VersionDiff interface.
  */
 export function instanceOfVersionDiff(value: object): value is VersionDiff {
-    return true;
+  return true;
 }
 
 export function VersionDiffFromJSON(json: any): VersionDiff {
-    return VersionDiffFromJSONTyped(json, false);
+  return VersionDiffFromJSONTyped(json, false);
 }
 
 export function VersionDiffFromJSONTyped(json: any, ignoreDiscriminator: boolean): VersionDiff {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'versionId': json['versionId'] == null ? undefined : json['versionId'],
-        'exerciseId': json['exerciseId'] == null ? undefined : json['exerciseId'],
-        'versionNumber': json['versionNumber'] == null ? undefined : json['versionNumber'],
-        'status': json['status'] == null ? undefined : json['status'],
-        'draftSemanticSha256': json['draftSemanticSha256'] == null ? undefined : json['draftSemanticSha256'],
-        'normalizedSource': json['normalizedSource'] == null ? undefined : json['normalizedSource'],
-        'currentPublishedSemanticSha256': json['currentPublishedSemanticSha256'] == null ? undefined : json['currentPublishedSemanticSha256'],
-    };
+  if (json == null) {
+    return json;
+  }
+  return {
+    versionId: json['versionId'] == null ? undefined : json['versionId'],
+    exerciseId: json['exerciseId'] == null ? undefined : json['exerciseId'],
+    versionNumber: json['versionNumber'] == null ? undefined : json['versionNumber'],
+    status: json['status'] == null ? undefined : json['status'],
+    draftSemanticSha256:
+      json['draftSemanticSha256'] == null ? undefined : json['draftSemanticSha256'],
+    normalizedSource: json['normalizedSource'] == null ? undefined : json['normalizedSource'],
+    currentPublishedSemanticSha256:
+      json['currentPublishedSemanticSha256'] == null
+        ? undefined
+        : json['currentPublishedSemanticSha256'],
+  };
 }
 
 export function VersionDiffToJSON(json: any): VersionDiff {
-    return VersionDiffToJSONTyped(json, false);
+  return VersionDiffToJSONTyped(json, false);
 }
 
-export function VersionDiffToJSONTyped(value?: VersionDiff | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function VersionDiffToJSONTyped(
+  value?: VersionDiff | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'versionId': value['versionId'],
-        'exerciseId': value['exerciseId'],
-        'versionNumber': value['versionNumber'],
-        'status': value['status'],
-        'draftSemanticSha256': value['draftSemanticSha256'],
-        'normalizedSource': value['normalizedSource'],
-        'currentPublishedSemanticSha256': value['currentPublishedSemanticSha256'],
-    };
+  return {
+    versionId: value['versionId'],
+    exerciseId: value['exerciseId'],
+    versionNumber: value['versionNumber'],
+    status: value['status'],
+    draftSemanticSha256: value['draftSemanticSha256'],
+    normalizedSource: value['normalizedSource'],
+    currentPublishedSemanticSha256: value['currentPublishedSemanticSha256'],
+  };
 }

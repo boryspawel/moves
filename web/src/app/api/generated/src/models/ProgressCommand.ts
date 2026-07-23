@@ -19,54 +19,59 @@ import { mapValues } from '../runtime';
  * @interface ProgressCommand
  */
 export interface ProgressCommand {
-    /**
-     *
-     * @type {string}
-     * @memberof ProgressCommand
-     */
-    exercisePrescriptionId?: string;
-    /**
-     *
-     * @type {boolean}
-     * @memberof ProgressCommand
-     */
-    completed?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof ProgressCommand
+   */
+  exercisePrescriptionId?: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof ProgressCommand
+   */
+  completed?: boolean;
 }
 
 /**
  * Check if a given object implements the ProgressCommand interface.
  */
 export function instanceOfProgressCommand(value: object): value is ProgressCommand {
-    return true;
+  return true;
 }
 
 export function ProgressCommandFromJSON(json: any): ProgressCommand {
-    return ProgressCommandFromJSONTyped(json, false);
+  return ProgressCommandFromJSONTyped(json, false);
 }
 
-export function ProgressCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): ProgressCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'exercisePrescriptionId': json['exercisePrescriptionId'] == null ? undefined : json['exercisePrescriptionId'],
-        'completed': json['completed'] == null ? undefined : json['completed'],
-    };
+export function ProgressCommandFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): ProgressCommand {
+  if (json == null) {
+    return json;
+  }
+  return {
+    exercisePrescriptionId:
+      json['exercisePrescriptionId'] == null ? undefined : json['exercisePrescriptionId'],
+    completed: json['completed'] == null ? undefined : json['completed'],
+  };
 }
 
 export function ProgressCommandToJSON(json: any): ProgressCommand {
-    return ProgressCommandToJSONTyped(json, false);
+  return ProgressCommandToJSONTyped(json, false);
 }
 
-export function ProgressCommandToJSONTyped(value?: ProgressCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ProgressCommandToJSONTyped(
+  value?: ProgressCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'exercisePrescriptionId': value['exercisePrescriptionId'],
-        'completed': value['completed'],
-    };
+  return {
+    exercisePrescriptionId: value['exercisePrescriptionId'],
+    completed: value['completed'],
+  };
 }

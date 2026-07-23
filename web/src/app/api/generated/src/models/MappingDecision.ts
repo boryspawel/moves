@@ -19,54 +19,58 @@ import { mapValues } from '../runtime';
  * @interface MappingDecision
  */
 export interface MappingDecision {
-    /**
-     *
-     * @type {string}
-     * @memberof MappingDecision
-     */
-    decision?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof MappingDecision
-     */
-    canonicalValue?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof MappingDecision
+   */
+  decision?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof MappingDecision
+   */
+  canonicalValue?: string;
 }
 
 /**
  * Check if a given object implements the MappingDecision interface.
  */
 export function instanceOfMappingDecision(value: object): value is MappingDecision {
-    return true;
+  return true;
 }
 
 export function MappingDecisionFromJSON(json: any): MappingDecision {
-    return MappingDecisionFromJSONTyped(json, false);
+  return MappingDecisionFromJSONTyped(json, false);
 }
 
-export function MappingDecisionFromJSONTyped(json: any, ignoreDiscriminator: boolean): MappingDecision {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'decision': json['decision'] == null ? undefined : json['decision'],
-        'canonicalValue': json['canonicalValue'] == null ? undefined : json['canonicalValue'],
-    };
+export function MappingDecisionFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): MappingDecision {
+  if (json == null) {
+    return json;
+  }
+  return {
+    decision: json['decision'] == null ? undefined : json['decision'],
+    canonicalValue: json['canonicalValue'] == null ? undefined : json['canonicalValue'],
+  };
 }
 
 export function MappingDecisionToJSON(json: any): MappingDecision {
-    return MappingDecisionToJSONTyped(json, false);
+  return MappingDecisionToJSONTyped(json, false);
 }
 
-export function MappingDecisionToJSONTyped(value?: MappingDecision | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function MappingDecisionToJSONTyped(
+  value?: MappingDecision | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'decision': value['decision'],
-        'canonicalValue': value['canonicalValue'],
-    };
+  return {
+    decision: value['decision'],
+    canonicalValue: value['canonicalValue'],
+  };
 }

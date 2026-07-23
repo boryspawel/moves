@@ -83,7 +83,8 @@ class CatalogAndSafetyIntegrationTest {
 
         mvc.perform(post("/api/v1/admin/exercises/versions/{id}/publish", versionId)
                         .with(contentAdmin()))
-                .andExpect(status().isConflict());
+                .andExpect(status().isBadRequest());
+        publish(versionId).andExpect(status().isConflict());
         addLoadCharacteristics(versionId);
         UUID evidenceId = addEvidence(versionId);
 
@@ -100,9 +101,7 @@ class CatalogAndSafetyIntegrationTest {
         addContribution(versionId, child, evidenceId, "ALLOCATION", "STANDARD", "RIGHT", "0.300000")
                 .andExpect(status().isOk());
 
-        mvc.perform(post("/api/v1/admin/exercises/versions/{id}/publish", versionId)
-                        .with(contentAdmin()))
-                .andExpect(status().isConflict());
+        publish(versionId).andExpect(status().isConflict());
 
         mvc.perform(post("/api/v1/admin/exercises/versions/{id}/submit-review", versionId)
                         .with(contentAdmin()))
@@ -125,8 +124,7 @@ class CatalogAndSafetyIntegrationTest {
                         .with(contentAdmin()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("APPROVED"));
-        mvc.perform(post("/api/v1/admin/exercises/versions/{id}/publish", versionId)
-                        .with(contentAdmin()))
+        publish(versionId)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PUBLISHED"));
         assertThat(jdbc.queryForObject("""
@@ -310,8 +308,7 @@ class CatalogAndSafetyIntegrationTest {
                         .with(contentAdmin())).andExpect(status().isOk());
         mvc.perform(post("/api/v1/admin/exercises/versions/{id}/approve", versionId)
                         .with(contentAdmin())).andExpect(status().isOk());
-        mvc.perform(post("/api/v1/admin/exercises/versions/{id}/publish", versionId)
-                        .with(contentAdmin())).andExpect(status().isOk());
+        publish(versionId).andExpect(status().isOk());
     }
 
     private void addLoadCharacteristics(UUID versionId) throws Exception {
@@ -321,6 +318,14 @@ class CatalogAndSafetyIntegrationTest {
                                   "rangeOfMotion":"FULL","characteristicType":"DYNAMIC"}]
                                 """))
                 .andExpect(status().isOk());
+    }
+
+    private org.springframework.test.web.servlet.ResultActions publish(UUID versionId) throws Exception {
+        long expectedVersion = jdbc.queryForObject(
+                "SELECT version FROM exercise_catalog.exercise_version WHERE id = ?", Long.class, versionId);
+        return mvc.perform(post("/api/v1/admin/exercises/versions/{id}/publish", versionId)
+                .with(contentAdmin()).contentType("application/json")
+                .content("{\"expectedVersion\":" + expectedVersion + "}"));
     }
 
     private UUID addEvidence(UUID versionId) throws Exception {

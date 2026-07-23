@@ -15,24 +15,24 @@
 import { mapValues } from '../runtime';
 import type { GoalSnapshot } from './GoalSnapshot';
 import {
-    GoalSnapshotFromJSON,
-    GoalSnapshotFromJSONTyped,
-    GoalSnapshotToJSON,
-    GoalSnapshotToJSONTyped,
+  GoalSnapshotFromJSON,
+  GoalSnapshotFromJSONTyped,
+  GoalSnapshotToJSON,
+  GoalSnapshotToJSONTyped,
 } from './GoalSnapshot';
 import type { LoadBudgetSnapshot } from './LoadBudgetSnapshot';
 import {
-    LoadBudgetSnapshotFromJSON,
-    LoadBudgetSnapshotFromJSONTyped,
-    LoadBudgetSnapshotToJSON,
-    LoadBudgetSnapshotToJSONTyped,
+  LoadBudgetSnapshotFromJSON,
+  LoadBudgetSnapshotFromJSONTyped,
+  LoadBudgetSnapshotToJSON,
+  LoadBudgetSnapshotToJSONTyped,
 } from './LoadBudgetSnapshot';
 import type { CycleSnapshot } from './CycleSnapshot';
 import {
-    CycleSnapshotFromJSON,
-    CycleSnapshotFromJSONTyped,
-    CycleSnapshotToJSON,
-    CycleSnapshotToJSONTyped,
+  CycleSnapshotFromJSON,
+  CycleSnapshotFromJSONTyped,
+  CycleSnapshotToJSON,
+  CycleSnapshotToJSONTyped,
 } from './CycleSnapshot';
 
 /**
@@ -41,182 +41,205 @@ import {
  * @interface PlanRevisionSnapshot
  */
 export interface PlanRevisionSnapshot {
-    /**
-     *
-     * @type {string}
-     * @memberof PlanRevisionSnapshot
-     */
-    revisionId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof PlanRevisionSnapshot
-     */
-    planId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof PlanRevisionSnapshot
-     */
-    participantAccountId?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof PlanRevisionSnapshot
-     */
-    revisionNumber?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof PlanRevisionSnapshot
-     */
-    basedOnRevisionId?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof PlanRevisionSnapshot
-     */
-    revisionVersion?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof PlanRevisionSnapshot
-     */
-    status?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof PlanRevisionSnapshot
-     */
-    authorAccountId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof PlanRevisionSnapshot
-     */
-    authorCapability?: string;
-    /**
-     *
-     * @type {Date}
-     * @memberof PlanRevisionSnapshot
-     */
-    createdAt?: Date;
-    /**
-     *
-     * @type {string}
-     * @memberof PlanRevisionSnapshot
-     */
-    migrationOrigin?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof PlanRevisionSnapshot
-     */
-    assessmentStatus?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof PlanRevisionSnapshot
-     */
-    phaseIntent?: string;
-    /**
-     *
-     * @type {Date}
-     * @memberof PlanRevisionSnapshot
-     */
-    validFrom?: Date;
-    /**
-     *
-     * @type {Date}
-     * @memberof PlanRevisionSnapshot
-     */
-    validTo?: Date;
-    /**
-     *
-     * @type {Array<GoalSnapshot>}
-     * @memberof PlanRevisionSnapshot
-     */
-    goals?: Array<GoalSnapshot>;
-    /**
-     *
-     * @type {Array<CycleSnapshot>}
-     * @memberof PlanRevisionSnapshot
-     */
-    cycles?: Array<CycleSnapshot>;
-    /**
-     *
-     * @type {Array<LoadBudgetSnapshot>}
-     * @memberof PlanRevisionSnapshot
-     */
-    loadBudgets?: Array<LoadBudgetSnapshot>;
+  /**
+   *
+   * @type {string}
+   * @memberof PlanRevisionSnapshot
+   */
+  revisionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PlanRevisionSnapshot
+   */
+  planId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PlanRevisionSnapshot
+   */
+  participantAccountId?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof PlanRevisionSnapshot
+   */
+  revisionNumber?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof PlanRevisionSnapshot
+   */
+  basedOnRevisionId?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof PlanRevisionSnapshot
+   */
+  revisionVersion?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof PlanRevisionSnapshot
+   */
+  status?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PlanRevisionSnapshot
+   */
+  authorAccountId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PlanRevisionSnapshot
+   */
+  authorCapability?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof PlanRevisionSnapshot
+   */
+  createdAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof PlanRevisionSnapshot
+   */
+  migrationOrigin?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PlanRevisionSnapshot
+   */
+  assessmentStatus?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PlanRevisionSnapshot
+   */
+  phaseIntent?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof PlanRevisionSnapshot
+   */
+  validFrom?: Date;
+  /**
+   *
+   * @type {Date}
+   * @memberof PlanRevisionSnapshot
+   */
+  validTo?: Date;
+  /**
+   *
+   * @type {Array<GoalSnapshot>}
+   * @memberof PlanRevisionSnapshot
+   */
+  goals?: Array<GoalSnapshot>;
+  /**
+   *
+   * @type {Array<CycleSnapshot>}
+   * @memberof PlanRevisionSnapshot
+   */
+  cycles?: Array<CycleSnapshot>;
+  /**
+   *
+   * @type {Array<LoadBudgetSnapshot>}
+   * @memberof PlanRevisionSnapshot
+   */
+  loadBudgets?: Array<LoadBudgetSnapshot>;
 }
 
 /**
  * Check if a given object implements the PlanRevisionSnapshot interface.
  */
 export function instanceOfPlanRevisionSnapshot(value: object): value is PlanRevisionSnapshot {
-    return true;
+  return true;
 }
 
 export function PlanRevisionSnapshotFromJSON(json: any): PlanRevisionSnapshot {
-    return PlanRevisionSnapshotFromJSONTyped(json, false);
+  return PlanRevisionSnapshotFromJSONTyped(json, false);
 }
 
-export function PlanRevisionSnapshotFromJSONTyped(json: any, ignoreDiscriminator: boolean): PlanRevisionSnapshot {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'revisionId': json['revisionId'] == null ? undefined : json['revisionId'],
-        'planId': json['planId'] == null ? undefined : json['planId'],
-        'participantAccountId': json['participantAccountId'] == null ? undefined : json['participantAccountId'],
-        'revisionNumber': json['revisionNumber'] == null ? undefined : json['revisionNumber'],
-        'basedOnRevisionId': json['basedOnRevisionId'] == null ? undefined : json['basedOnRevisionId'],
-        'revisionVersion': json['revisionVersion'] == null ? undefined : json['revisionVersion'],
-        'status': json['status'] == null ? undefined : json['status'],
-        'authorAccountId': json['authorAccountId'] == null ? undefined : json['authorAccountId'],
-        'authorCapability': json['authorCapability'] == null ? undefined : json['authorCapability'],
-        'createdAt': json['createdAt'] == null ? undefined : (new Date(json['createdAt'])),
-        'migrationOrigin': json['migrationOrigin'] == null ? undefined : json['migrationOrigin'],
-        'assessmentStatus': json['assessmentStatus'] == null ? undefined : json['assessmentStatus'],
-        'phaseIntent': json['phaseIntent'] == null ? undefined : json['phaseIntent'],
-        'validFrom': json['validFrom'] == null ? undefined : (new Date(json['validFrom'])),
-        'validTo': json['validTo'] == null ? undefined : (new Date(json['validTo'])),
-        'goals': json['goals'] == null ? undefined : ((json['goals'] as Array<any>).map(GoalSnapshotFromJSON)),
-        'cycles': json['cycles'] == null ? undefined : ((json['cycles'] as Array<any>).map(CycleSnapshotFromJSON)),
-        'loadBudgets': json['loadBudgets'] == null ? undefined : ((json['loadBudgets'] as Array<any>).map(LoadBudgetSnapshotFromJSON)),
-    };
+export function PlanRevisionSnapshotFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): PlanRevisionSnapshot {
+  if (json == null) {
+    return json;
+  }
+  return {
+    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
+    planId: json['planId'] == null ? undefined : json['planId'],
+    participantAccountId:
+      json['participantAccountId'] == null ? undefined : json['participantAccountId'],
+    revisionNumber: json['revisionNumber'] == null ? undefined : json['revisionNumber'],
+    basedOnRevisionId: json['basedOnRevisionId'] == null ? undefined : json['basedOnRevisionId'],
+    revisionVersion: json['revisionVersion'] == null ? undefined : json['revisionVersion'],
+    status: json['status'] == null ? undefined : json['status'],
+    authorAccountId: json['authorAccountId'] == null ? undefined : json['authorAccountId'],
+    authorCapability: json['authorCapability'] == null ? undefined : json['authorCapability'],
+    createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
+    migrationOrigin: json['migrationOrigin'] == null ? undefined : json['migrationOrigin'],
+    assessmentStatus: json['assessmentStatus'] == null ? undefined : json['assessmentStatus'],
+    phaseIntent: json['phaseIntent'] == null ? undefined : json['phaseIntent'],
+    validFrom: json['validFrom'] == null ? undefined : new Date(json['validFrom']),
+    validTo: json['validTo'] == null ? undefined : new Date(json['validTo']),
+    goals:
+      json['goals'] == null ? undefined : (json['goals'] as Array<any>).map(GoalSnapshotFromJSON),
+    cycles:
+      json['cycles'] == null
+        ? undefined
+        : (json['cycles'] as Array<any>).map(CycleSnapshotFromJSON),
+    loadBudgets:
+      json['loadBudgets'] == null
+        ? undefined
+        : (json['loadBudgets'] as Array<any>).map(LoadBudgetSnapshotFromJSON),
+  };
 }
 
 export function PlanRevisionSnapshotToJSON(json: any): PlanRevisionSnapshot {
-    return PlanRevisionSnapshotToJSONTyped(json, false);
+  return PlanRevisionSnapshotToJSONTyped(json, false);
 }
 
-export function PlanRevisionSnapshotToJSONTyped(value?: PlanRevisionSnapshot | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function PlanRevisionSnapshotToJSONTyped(
+  value?: PlanRevisionSnapshot | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'revisionId': value['revisionId'],
-        'planId': value['planId'],
-        'participantAccountId': value['participantAccountId'],
-        'revisionNumber': value['revisionNumber'],
-        'basedOnRevisionId': value['basedOnRevisionId'],
-        'revisionVersion': value['revisionVersion'],
-        'status': value['status'],
-        'authorAccountId': value['authorAccountId'],
-        'authorCapability': value['authorCapability'],
-        'createdAt': value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
-        'migrationOrigin': value['migrationOrigin'],
-        'assessmentStatus': value['assessmentStatus'],
-        'phaseIntent': value['phaseIntent'],
-        'validFrom': value['validFrom'] == null ? value['validFrom'] : value['validFrom'].toISOString().substring(0,10),
-        'validTo': value['validTo'] == null ? value['validTo'] : value['validTo'].toISOString().substring(0,10),
-        'goals': value['goals'] == null ? undefined : ((value['goals'] as Array<any>).map(GoalSnapshotToJSON)),
-        'cycles': value['cycles'] == null ? undefined : ((value['cycles'] as Array<any>).map(CycleSnapshotToJSON)),
-        'loadBudgets': value['loadBudgets'] == null ? undefined : ((value['loadBudgets'] as Array<any>).map(LoadBudgetSnapshotToJSON)),
-    };
+  return {
+    revisionId: value['revisionId'],
+    planId: value['planId'],
+    participantAccountId: value['participantAccountId'],
+    revisionNumber: value['revisionNumber'],
+    basedOnRevisionId: value['basedOnRevisionId'],
+    revisionVersion: value['revisionVersion'],
+    status: value['status'],
+    authorAccountId: value['authorAccountId'],
+    authorCapability: value['authorCapability'],
+    createdAt: value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
+    migrationOrigin: value['migrationOrigin'],
+    assessmentStatus: value['assessmentStatus'],
+    phaseIntent: value['phaseIntent'],
+    validFrom:
+      value['validFrom'] == null
+        ? value['validFrom']
+        : value['validFrom'].toISOString().substring(0, 10),
+    validTo:
+      value['validTo'] == null ? value['validTo'] : value['validTo'].toISOString().substring(0, 10),
+    goals:
+      value['goals'] == null ? undefined : (value['goals'] as Array<any>).map(GoalSnapshotToJSON),
+    cycles:
+      value['cycles'] == null
+        ? undefined
+        : (value['cycles'] as Array<any>).map(CycleSnapshotToJSON),
+    loadBudgets:
+      value['loadBudgets'] == null
+        ? undefined
+        : (value['loadBudgets'] as Array<any>).map(LoadBudgetSnapshotToJSON),
+  };
 }

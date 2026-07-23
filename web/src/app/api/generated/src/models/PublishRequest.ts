@@ -24,13 +24,14 @@ export interface PublishRequest {
    * @type {number}
    * @memberof PublishRequest
    */
-  expectedVersion?: number;
+  expectedVersion: number;
 }
 
 /**
  * Check if a given object implements the PublishRequest interface.
  */
 export function instanceOfPublishRequest(value: object): value is PublishRequest {
+  if (!('expectedVersion' in value) || value['expectedVersion'] === undefined) return false;
   return true;
 }
 
@@ -46,7 +47,7 @@ export function PublishRequestFromJSONTyped(
     return json;
   }
   return {
-    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
+    expectedVersion: json['expectedVersion'],
   };
 }
 

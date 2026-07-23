@@ -19,46 +19,50 @@ import { mapValues } from '../runtime';
  * @interface AbandonAttemptCommand
  */
 export interface AbandonAttemptCommand {
-    /**
-     *
-     * @type {string}
-     * @memberof AbandonAttemptCommand
-     */
-    reasonCode?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AbandonAttemptCommand
+   */
+  reasonCode?: string;
 }
 
 /**
  * Check if a given object implements the AbandonAttemptCommand interface.
  */
 export function instanceOfAbandonAttemptCommand(value: object): value is AbandonAttemptCommand {
-    return true;
+  return true;
 }
 
 export function AbandonAttemptCommandFromJSON(json: any): AbandonAttemptCommand {
-    return AbandonAttemptCommandFromJSONTyped(json, false);
+  return AbandonAttemptCommandFromJSONTyped(json, false);
 }
 
-export function AbandonAttemptCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): AbandonAttemptCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'reasonCode': json['reasonCode'] == null ? undefined : json['reasonCode'],
-    };
+export function AbandonAttemptCommandFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): AbandonAttemptCommand {
+  if (json == null) {
+    return json;
+  }
+  return {
+    reasonCode: json['reasonCode'] == null ? undefined : json['reasonCode'],
+  };
 }
 
 export function AbandonAttemptCommandToJSON(json: any): AbandonAttemptCommand {
-    return AbandonAttemptCommandToJSONTyped(json, false);
+  return AbandonAttemptCommandToJSONTyped(json, false);
 }
 
-export function AbandonAttemptCommandToJSONTyped(value?: AbandonAttemptCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function AbandonAttemptCommandToJSONTyped(
+  value?: AbandonAttemptCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'reasonCode': value['reasonCode'],
-    };
+  return {
+    reasonCode: value['reasonCode'],
+  };
 }

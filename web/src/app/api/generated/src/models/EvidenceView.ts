@@ -19,70 +19,71 @@ import { mapValues } from '../runtime';
  * @interface EvidenceView
  */
 export interface EvidenceView {
-    /**
-     *
-     * @type {string}
-     * @memberof EvidenceView
-     */
-    id?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof EvidenceView
-     */
-    citation?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof EvidenceView
-     */
-    sourceUri?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof EvidenceView
-     */
-    evidenceGrade?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof EvidenceView
+   */
+  id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof EvidenceView
+   */
+  citation?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof EvidenceView
+   */
+  sourceUri?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof EvidenceView
+   */
+  evidenceGrade?: string;
 }
 
 /**
  * Check if a given object implements the EvidenceView interface.
  */
 export function instanceOfEvidenceView(value: object): value is EvidenceView {
-    return true;
+  return true;
 }
 
 export function EvidenceViewFromJSON(json: any): EvidenceView {
-    return EvidenceViewFromJSONTyped(json, false);
+  return EvidenceViewFromJSONTyped(json, false);
 }
 
 export function EvidenceViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): EvidenceView {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'id': json['id'] == null ? undefined : json['id'],
-        'citation': json['citation'] == null ? undefined : json['citation'],
-        'sourceUri': json['sourceUri'] == null ? undefined : json['sourceUri'],
-        'evidenceGrade': json['evidenceGrade'] == null ? undefined : json['evidenceGrade'],
-    };
+  if (json == null) {
+    return json;
+  }
+  return {
+    id: json['id'] == null ? undefined : json['id'],
+    citation: json['citation'] == null ? undefined : json['citation'],
+    sourceUri: json['sourceUri'] == null ? undefined : json['sourceUri'],
+    evidenceGrade: json['evidenceGrade'] == null ? undefined : json['evidenceGrade'],
+  };
 }
 
 export function EvidenceViewToJSON(json: any): EvidenceView {
-    return EvidenceViewToJSONTyped(json, false);
+  return EvidenceViewToJSONTyped(json, false);
 }
 
-export function EvidenceViewToJSONTyped(value?: EvidenceView | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function EvidenceViewToJSONTyped(
+  value?: EvidenceView | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'id': value['id'],
-        'citation': value['citation'],
-        'sourceUri': value['sourceUri'],
-        'evidenceGrade': value['evidenceGrade'],
-    };
+  return {
+    id: value['id'],
+    citation: value['citation'],
+    sourceUri: value['sourceUri'],
+    evidenceGrade: value['evidenceGrade'],
+  };
 }

@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { GoalOutcomeSnapshot } from './GoalOutcomeSnapshot';
 import {
-    GoalOutcomeSnapshotFromJSON,
-    GoalOutcomeSnapshotFromJSONTyped,
-    GoalOutcomeSnapshotToJSON,
-    GoalOutcomeSnapshotToJSONTyped,
+  GoalOutcomeSnapshotFromJSON,
+  GoalOutcomeSnapshotFromJSONTyped,
+  GoalOutcomeSnapshotToJSON,
+  GoalOutcomeSnapshotToJSONTyped,
 } from './GoalOutcomeSnapshot';
 
 /**
@@ -27,102 +27,112 @@ import {
  * @interface GoalSnapshot
  */
 export interface GoalSnapshot {
-    /**
-     *
-     * @type {string}
-     * @memberof GoalSnapshot
-     */
-    id?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof GoalSnapshot
-     */
-    perspective?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof GoalSnapshot
-     */
-    category?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof GoalSnapshot
-     */
-    title?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof GoalSnapshot
-     */
-    priority?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof GoalSnapshot
-     */
-    status?: string;
-    /**
-     *
-     * @type {Date}
-     * @memberof GoalSnapshot
-     */
-    targetDate?: Date;
-    /**
-     *
-     * @type {Array<GoalOutcomeSnapshot>}
-     * @memberof GoalSnapshot
-     */
-    outcomes?: Array<GoalOutcomeSnapshot>;
+  /**
+   *
+   * @type {string}
+   * @memberof GoalSnapshot
+   */
+  id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof GoalSnapshot
+   */
+  perspective?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof GoalSnapshot
+   */
+  category?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof GoalSnapshot
+   */
+  title?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof GoalSnapshot
+   */
+  priority?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof GoalSnapshot
+   */
+  status?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof GoalSnapshot
+   */
+  targetDate?: Date;
+  /**
+   *
+   * @type {Array<GoalOutcomeSnapshot>}
+   * @memberof GoalSnapshot
+   */
+  outcomes?: Array<GoalOutcomeSnapshot>;
 }
 
 /**
  * Check if a given object implements the GoalSnapshot interface.
  */
 export function instanceOfGoalSnapshot(value: object): value is GoalSnapshot {
-    return true;
+  return true;
 }
 
 export function GoalSnapshotFromJSON(json: any): GoalSnapshot {
-    return GoalSnapshotFromJSONTyped(json, false);
+  return GoalSnapshotFromJSONTyped(json, false);
 }
 
 export function GoalSnapshotFromJSONTyped(json: any, ignoreDiscriminator: boolean): GoalSnapshot {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'id': json['id'] == null ? undefined : json['id'],
-        'perspective': json['perspective'] == null ? undefined : json['perspective'],
-        'category': json['category'] == null ? undefined : json['category'],
-        'title': json['title'] == null ? undefined : json['title'],
-        'priority': json['priority'] == null ? undefined : json['priority'],
-        'status': json['status'] == null ? undefined : json['status'],
-        'targetDate': json['targetDate'] == null ? undefined : (new Date(json['targetDate'])),
-        'outcomes': json['outcomes'] == null ? undefined : ((json['outcomes'] as Array<any>).map(GoalOutcomeSnapshotFromJSON)),
-    };
+  if (json == null) {
+    return json;
+  }
+  return {
+    id: json['id'] == null ? undefined : json['id'],
+    perspective: json['perspective'] == null ? undefined : json['perspective'],
+    category: json['category'] == null ? undefined : json['category'],
+    title: json['title'] == null ? undefined : json['title'],
+    priority: json['priority'] == null ? undefined : json['priority'],
+    status: json['status'] == null ? undefined : json['status'],
+    targetDate: json['targetDate'] == null ? undefined : new Date(json['targetDate']),
+    outcomes:
+      json['outcomes'] == null
+        ? undefined
+        : (json['outcomes'] as Array<any>).map(GoalOutcomeSnapshotFromJSON),
+  };
 }
 
 export function GoalSnapshotToJSON(json: any): GoalSnapshot {
-    return GoalSnapshotToJSONTyped(json, false);
+  return GoalSnapshotToJSONTyped(json, false);
 }
 
-export function GoalSnapshotToJSONTyped(value?: GoalSnapshot | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function GoalSnapshotToJSONTyped(
+  value?: GoalSnapshot | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'id': value['id'],
-        'perspective': value['perspective'],
-        'category': value['category'],
-        'title': value['title'],
-        'priority': value['priority'],
-        'status': value['status'],
-        'targetDate': value['targetDate'] == null ? value['targetDate'] : value['targetDate'].toISOString().substring(0,10),
-        'outcomes': value['outcomes'] == null ? undefined : ((value['outcomes'] as Array<any>).map(GoalOutcomeSnapshotToJSON)),
-    };
+  return {
+    id: value['id'],
+    perspective: value['perspective'],
+    category: value['category'],
+    title: value['title'],
+    priority: value['priority'],
+    status: value['status'],
+    targetDate:
+      value['targetDate'] == null
+        ? value['targetDate']
+        : value['targetDate'].toISOString().substring(0, 10),
+    outcomes:
+      value['outcomes'] == null
+        ? undefined
+        : (value['outcomes'] as Array<any>).map(GoalOutcomeSnapshotToJSON),
+  };
 }

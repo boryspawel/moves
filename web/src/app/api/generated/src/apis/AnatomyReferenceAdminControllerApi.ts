@@ -14,328 +14,382 @@
 
 import * as runtime from '../runtime';
 import {
-    type AddRelationRequest,
-    AddRelationRequestFromJSON,
-    AddRelationRequestToJSON,
+  type AddRelationRequest,
+  AddRelationRequestFromJSON,
+  AddRelationRequestToJSON,
 } from '../models/AddRelationRequest';
 import {
-    type AnatomicalStructureSnapshot,
-    AnatomicalStructureSnapshotFromJSON,
-    AnatomicalStructureSnapshotToJSON,
+  type AnatomicalStructureSnapshot,
+  AnatomicalStructureSnapshotFromJSON,
+  AnatomicalStructureSnapshotToJSON,
 } from '../models/AnatomicalStructureSnapshot';
 import {
-    type AncestorPath,
-    AncestorPathFromJSON,
-    AncestorPathToJSON,
+  type AncestorPath,
+  AncestorPathFromJSON,
+  AncestorPathToJSON,
 } from '../models/AncestorPath';
 import {
-    type CreateStructureRequest,
-    CreateStructureRequestFromJSON,
-    CreateStructureRequestToJSON,
+  type CreateStructureRequest,
+  CreateStructureRequestFromJSON,
+  CreateStructureRequestToJSON,
 } from '../models/CreateStructureRequest';
 import {
-    type RelationSnapshot,
-    RelationSnapshotFromJSON,
-    RelationSnapshotToJSON,
+  type RelationSnapshot,
+  RelationSnapshotFromJSON,
+  RelationSnapshotToJSON,
 } from '../models/RelationSnapshot';
 
 export interface AddRelationOperationRequest {
-    addRelationRequest: AddRelationRequest;
+  addRelationRequest: AddRelationRequest;
 }
 
 export interface AncestorsRequest {
-    structureId: string;
+  structureId: string;
 }
 
 export interface Create1Request {
-    createStructureRequest: CreateStructureRequest;
+  createStructureRequest: CreateStructureRequest;
 }
 
 export interface Get2Request {
-    structureId: string;
+  structureId: string;
 }
 
 export interface Publish2Request {
-    structureId: string;
+  structureId: string;
 }
 
 export interface Withdraw1Request {
-    structureId: string;
+  structureId: string;
 }
 
 /**
  *
  */
 export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
-
-    /**
-     * Creates request options for addRelation without sending the request
-     */
-    async addRelationRequestOpts(requestParameters: AddRelationOperationRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['addRelationRequest'] == null) {
-            throw new runtime.RequiredError(
-                'addRelationRequest',
-                'Required parameter "addRelationRequest" was null or undefined when calling addRelation().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/v1/admin/anatomical-structures/relations`;
-
-        return {
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: AddRelationRequestToJSON(requestParameters['addRelationRequest']),
-        };
+  /**
+   * Creates request options for addRelation without sending the request
+   */
+  async addRelationRequestOpts(
+    requestParameters: AddRelationOperationRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['addRelationRequest'] == null) {
+      throw new runtime.RequiredError(
+        'addRelationRequest',
+        'Required parameter "addRelationRequest" was null or undefined when calling addRelation().',
+      );
     }
 
-    /**
-     * Add an acyclic parent-child relation between draft structures
-     */
-    async addRelationRaw(requestParameters: AddRelationOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<RelationSnapshot>> {
-        const requestOptions = await this.addRelationRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
+    const queryParameters: any = {};
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => RelationSnapshotFromJSON(jsonValue));
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v1/admin/anatomical-structures/relations`;
+
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+      body: AddRelationRequestToJSON(requestParameters['addRelationRequest']),
+    };
+  }
+
+  /**
+   * Add an acyclic parent-child relation between draft structures
+   */
+  async addRelationRaw(
+    requestParameters: AddRelationOperationRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<RelationSnapshot>> {
+    const requestOptions = await this.addRelationRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      RelationSnapshotFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   * Add an acyclic parent-child relation between draft structures
+   */
+  async addRelation(
+    requestParameters: AddRelationOperationRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<RelationSnapshot> {
+    const response = await this.addRelationRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for ancestors without sending the request
+   */
+  async ancestorsRequestOpts(requestParameters: AncestorsRequest): Promise<runtime.RequestOpts> {
+    if (requestParameters['structureId'] == null) {
+      throw new runtime.RequiredError(
+        'structureId',
+        'Required parameter "structureId" was null or undefined when calling ancestors().',
+      );
     }
 
-    /**
-     * Add an acyclic parent-child relation between draft structures
-     */
-    async addRelation(requestParameters: AddRelationOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<RelationSnapshot> {
-        const response = await this.addRelationRaw(requestParameters, initOverrides);
-        return await response.value();
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v1/admin/anatomical-structures/{structureId}/ancestors`;
+    urlPath = urlPath.replace(
+      '{structureId}',
+      encodeURIComponent(String(requestParameters['structureId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   */
+  async ancestorsRaw(
+    requestParameters: AncestorsRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<AncestorPath>>> {
+    const requestOptions = await this.ancestorsRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(AncestorPathFromJSON),
+    );
+  }
+
+  /**
+   */
+  async ancestors(
+    requestParameters: AncestorsRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<AncestorPath>> {
+    const response = await this.ancestorsRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for create1 without sending the request
+   */
+  async create1RequestOpts(requestParameters: Create1Request): Promise<runtime.RequestOpts> {
+    if (requestParameters['createStructureRequest'] == null) {
+      throw new runtime.RequiredError(
+        'createStructureRequest',
+        'Required parameter "createStructureRequest" was null or undefined when calling create1().',
+      );
     }
 
-    /**
-     * Creates request options for ancestors without sending the request
-     */
-    async ancestorsRequestOpts(requestParameters: AncestorsRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['structureId'] == null) {
-            throw new runtime.RequiredError(
-                'structureId',
-                'Required parameter "structureId" was null or undefined when calling ancestors().'
-            );
-        }
+    const queryParameters: any = {};
 
-        const queryParameters: any = {};
+    const headerParameters: runtime.HTTPHeaders = {};
 
-        const headerParameters: runtime.HTTPHeaders = {};
+    headerParameters['Content-Type'] = 'application/json';
 
+    let urlPath = `/api/v1/admin/anatomical-structures`;
 
-        let urlPath = `/api/v1/admin/anatomical-structures/{structureId}/ancestors`;
-        urlPath = urlPath.replace('{structureId}', encodeURIComponent(String(requestParameters['structureId'])));
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+      body: CreateStructureRequestToJSON(requestParameters['createStructureRequest']),
+    };
+  }
 
-        return {
-            path: urlPath,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        };
+  /**
+   * Create a draft anatomical structure
+   */
+  async create1Raw(
+    requestParameters: Create1Request,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AnatomicalStructureSnapshot>> {
+    const requestOptions = await this.create1RequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      AnatomicalStructureSnapshotFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   * Create a draft anatomical structure
+   */
+  async create1(
+    requestParameters: Create1Request,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AnatomicalStructureSnapshot> {
+    const response = await this.create1Raw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for get2 without sending the request
+   */
+  async get2RequestOpts(requestParameters: Get2Request): Promise<runtime.RequestOpts> {
+    if (requestParameters['structureId'] == null) {
+      throw new runtime.RequiredError(
+        'structureId',
+        'Required parameter "structureId" was null or undefined when calling get2().',
+      );
     }
 
-    /**
-     */
-    async ancestorsRaw(requestParameters: AncestorsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AncestorPath>>> {
-        const requestOptions = await this.ancestorsRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
+    const queryParameters: any = {};
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(AncestorPathFromJSON));
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v1/admin/anatomical-structures/{structureId}`;
+    urlPath = urlPath.replace(
+      '{structureId}',
+      encodeURIComponent(String(requestParameters['structureId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   */
+  async get2Raw(
+    requestParameters: Get2Request,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AnatomicalStructureSnapshot>> {
+    const requestOptions = await this.get2RequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      AnatomicalStructureSnapshotFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async get2(
+    requestParameters: Get2Request,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AnatomicalStructureSnapshot> {
+    const response = await this.get2Raw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for publish2 without sending the request
+   */
+  async publish2RequestOpts(requestParameters: Publish2Request): Promise<runtime.RequestOpts> {
+    if (requestParameters['structureId'] == null) {
+      throw new runtime.RequiredError(
+        'structureId',
+        'Required parameter "structureId" was null or undefined when calling publish2().',
+      );
     }
 
-    /**
-     */
-    async ancestors(requestParameters: AncestorsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AncestorPath>> {
-        const response = await this.ancestorsRaw(requestParameters, initOverrides);
-        return await response.value();
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v1/admin/anatomical-structures/{structureId}/publish`;
+    urlPath = urlPath.replace(
+      '{structureId}',
+      encodeURIComponent(String(requestParameters['structureId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   * Publish an immutable anatomical structure
+   */
+  async publish2Raw(
+    requestParameters: Publish2Request,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AnatomicalStructureSnapshot>> {
+    const requestOptions = await this.publish2RequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      AnatomicalStructureSnapshotFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   * Publish an immutable anatomical structure
+   */
+  async publish2(
+    requestParameters: Publish2Request,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AnatomicalStructureSnapshot> {
+    const response = await this.publish2Raw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for withdraw1 without sending the request
+   */
+  async withdraw1RequestOpts(requestParameters: Withdraw1Request): Promise<runtime.RequestOpts> {
+    if (requestParameters['structureId'] == null) {
+      throw new runtime.RequiredError(
+        'structureId',
+        'Required parameter "structureId" was null or undefined when calling withdraw1().',
+      );
     }
 
-    /**
-     * Creates request options for create1 without sending the request
-     */
-    async create1RequestOpts(requestParameters: Create1Request): Promise<runtime.RequestOpts> {
-        if (requestParameters['createStructureRequest'] == null) {
-            throw new runtime.RequiredError(
-                'createStructureRequest',
-                'Required parameter "createStructureRequest" was null or undefined when calling create1().'
-            );
-        }
+    const queryParameters: any = {};
 
-        const queryParameters: any = {};
+    const headerParameters: runtime.HTTPHeaders = {};
 
-        const headerParameters: runtime.HTTPHeaders = {};
+    let urlPath = `/api/v1/admin/anatomical-structures/{structureId}/withdraw`;
+    urlPath = urlPath.replace(
+      '{structureId}',
+      encodeURIComponent(String(requestParameters['structureId'])),
+    );
 
-        headerParameters['Content-Type'] = 'application/json';
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
 
+  /**
+   * Withdraw a published anatomical structure
+   */
+  async withdraw1Raw(
+    requestParameters: Withdraw1Request,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AnatomicalStructureSnapshot>> {
+    const requestOptions = await this.withdraw1RequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
 
-        let urlPath = `/api/v1/admin/anatomical-structures`;
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      AnatomicalStructureSnapshotFromJSON(jsonValue),
+    );
+  }
 
-        return {
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: CreateStructureRequestToJSON(requestParameters['createStructureRequest']),
-        };
-    }
-
-    /**
-     * Create a draft anatomical structure
-     */
-    async create1Raw(requestParameters: Create1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AnatomicalStructureSnapshot>> {
-        const requestOptions = await this.create1RequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => AnatomicalStructureSnapshotFromJSON(jsonValue));
-    }
-
-    /**
-     * Create a draft anatomical structure
-     */
-    async create1(requestParameters: Create1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AnatomicalStructureSnapshot> {
-        const response = await this.create1Raw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
-    /**
-     * Creates request options for get2 without sending the request
-     */
-    async get2RequestOpts(requestParameters: Get2Request): Promise<runtime.RequestOpts> {
-        if (requestParameters['structureId'] == null) {
-            throw new runtime.RequiredError(
-                'structureId',
-                'Required parameter "structureId" was null or undefined when calling get2().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-
-        let urlPath = `/api/v1/admin/anatomical-structures/{structureId}`;
-        urlPath = urlPath.replace('{structureId}', encodeURIComponent(String(requestParameters['structureId'])));
-
-        return {
-            path: urlPath,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        };
-    }
-
-    /**
-     */
-    async get2Raw(requestParameters: Get2Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AnatomicalStructureSnapshot>> {
-        const requestOptions = await this.get2RequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => AnatomicalStructureSnapshotFromJSON(jsonValue));
-    }
-
-    /**
-     */
-    async get2(requestParameters: Get2Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AnatomicalStructureSnapshot> {
-        const response = await this.get2Raw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
-    /**
-     * Creates request options for publish2 without sending the request
-     */
-    async publish2RequestOpts(requestParameters: Publish2Request): Promise<runtime.RequestOpts> {
-        if (requestParameters['structureId'] == null) {
-            throw new runtime.RequiredError(
-                'structureId',
-                'Required parameter "structureId" was null or undefined when calling publish2().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-
-        let urlPath = `/api/v1/admin/anatomical-structures/{structureId}/publish`;
-        urlPath = urlPath.replace('{structureId}', encodeURIComponent(String(requestParameters['structureId'])));
-
-        return {
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-        };
-    }
-
-    /**
-     * Publish an immutable anatomical structure
-     */
-    async publish2Raw(requestParameters: Publish2Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AnatomicalStructureSnapshot>> {
-        const requestOptions = await this.publish2RequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => AnatomicalStructureSnapshotFromJSON(jsonValue));
-    }
-
-    /**
-     * Publish an immutable anatomical structure
-     */
-    async publish2(requestParameters: Publish2Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AnatomicalStructureSnapshot> {
-        const response = await this.publish2Raw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
-    /**
-     * Creates request options for withdraw1 without sending the request
-     */
-    async withdraw1RequestOpts(requestParameters: Withdraw1Request): Promise<runtime.RequestOpts> {
-        if (requestParameters['structureId'] == null) {
-            throw new runtime.RequiredError(
-                'structureId',
-                'Required parameter "structureId" was null or undefined when calling withdraw1().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-
-        let urlPath = `/api/v1/admin/anatomical-structures/{structureId}/withdraw`;
-        urlPath = urlPath.replace('{structureId}', encodeURIComponent(String(requestParameters['structureId'])));
-
-        return {
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-        };
-    }
-
-    /**
-     * Withdraw a published anatomical structure
-     */
-    async withdraw1Raw(requestParameters: Withdraw1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AnatomicalStructureSnapshot>> {
-        const requestOptions = await this.withdraw1RequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => AnatomicalStructureSnapshotFromJSON(jsonValue));
-    }
-
-    /**
-     * Withdraw a published anatomical structure
-     */
-    async withdraw1(requestParameters: Withdraw1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AnatomicalStructureSnapshot> {
-        const response = await this.withdraw1Raw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
+  /**
+   * Withdraw a published anatomical structure
+   */
+  async withdraw1(
+    requestParameters: Withdraw1Request,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AnatomicalStructureSnapshot> {
+    const response = await this.withdraw1Raw(requestParameters, initOverrides);
+    return await response.value();
+  }
 }

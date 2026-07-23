@@ -19,54 +19,59 @@ import { mapValues } from '../runtime';
  * @interface ActiveParticipantView
  */
 export interface ActiveParticipantView {
-    /**
-     *
-     * @type {string}
-     * @memberof ActiveParticipantView
-     */
-    participantAccountId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof ActiveParticipantView
-     */
-    label?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ActiveParticipantView
+   */
+  participantAccountId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ActiveParticipantView
+   */
+  label?: string;
 }
 
 /**
  * Check if a given object implements the ActiveParticipantView interface.
  */
 export function instanceOfActiveParticipantView(value: object): value is ActiveParticipantView {
-    return true;
+  return true;
 }
 
 export function ActiveParticipantViewFromJSON(json: any): ActiveParticipantView {
-    return ActiveParticipantViewFromJSONTyped(json, false);
+  return ActiveParticipantViewFromJSONTyped(json, false);
 }
 
-export function ActiveParticipantViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): ActiveParticipantView {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'participantAccountId': json['participantAccountId'] == null ? undefined : json['participantAccountId'],
-        'label': json['label'] == null ? undefined : json['label'],
-    };
+export function ActiveParticipantViewFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): ActiveParticipantView {
+  if (json == null) {
+    return json;
+  }
+  return {
+    participantAccountId:
+      json['participantAccountId'] == null ? undefined : json['participantAccountId'],
+    label: json['label'] == null ? undefined : json['label'],
+  };
 }
 
 export function ActiveParticipantViewToJSON(json: any): ActiveParticipantView {
-    return ActiveParticipantViewToJSONTyped(json, false);
+  return ActiveParticipantViewToJSONTyped(json, false);
 }
 
-export function ActiveParticipantViewToJSONTyped(value?: ActiveParticipantView | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ActiveParticipantViewToJSONTyped(
+  value?: ActiveParticipantView | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'participantAccountId': value['participantAccountId'],
-        'label': value['label'],
-    };
+  return {
+    participantAccountId: value['participantAccountId'],
+    label: value['label'],
+  };
 }

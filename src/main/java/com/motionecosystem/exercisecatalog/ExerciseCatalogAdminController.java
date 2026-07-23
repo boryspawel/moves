@@ -9,6 +9,9 @@ import com.motionecosystem.exercisecatalog.CatalogService.ContributionCommand;
 import com.motionecosystem.exercisecatalog.CatalogService.EvidenceCommand;
 import com.motionecosystem.exercisecatalog.CatalogService.LoadCharacteristicCommand;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -51,6 +54,13 @@ class ExerciseCatalogAdminController {
                                       @PathVariable UUID versionId,
                                       @RequestBody CatalogService.VersionCommand request) {
         return catalog.updateDraft(jwt.getSubject(), versionId, request);
+    }
+
+    @PutMapping("/versions/{versionId}/editorial")
+    CatalogService.VersionView updateEditorialDraft(@AuthenticationPrincipal Jwt jwt,
+                                                    @PathVariable UUID versionId,
+                                                    @RequestBody CatalogService.DraftUpdateCommand request) {
+        return catalog.updateEditorialDraft(jwt.getSubject(), versionId, request);
     }
 
     @PutMapping("/versions/{versionId}/load-characteristics")
@@ -97,8 +107,9 @@ class ExerciseCatalogAdminController {
     }
 
     @PostMapping("/versions/{versionId}/publish")
-    PublishExerciseVersion.PublicationResult publish(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID versionId) {
-        return workflow.publish(versionId, jwt.getSubject(), null);
+    PublishExerciseVersion.PublicationResult publish(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID versionId,
+                                                     @Valid @RequestBody PublishRequest request) {
+        return workflow.publish(versionId, jwt.getSubject(), request.expectedVersion());
     }
 
     @PostMapping("/versions/{versionId}/withdraw")
@@ -122,5 +133,8 @@ class ExerciseCatalogAdminController {
     }
 
     record CreateRequest(String canonicalName, CatalogService.VersionCommand version) {
+    }
+
+    record PublishRequest(@NotNull @PositiveOrZero Long expectedVersion) {
     }
 }

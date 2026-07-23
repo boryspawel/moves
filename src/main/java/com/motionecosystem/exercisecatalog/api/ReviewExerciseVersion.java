@@ -10,9 +10,11 @@ public interface ReviewExerciseVersion {
     record ReviewCommand(String area, String decision, String comment, Long expectedVersion) {
     }
     record ReviewItem(UUID id, String area, String decision, String comment,
-                      String reviewerSubject, Instant reviewedAt, long version) {
+                      String reviewerSubject, Instant reviewedAt, long version,
+                      long contentRevision, Instant invalidatedAt, String invalidatedBySubject) {
     }
     record ReviewResult(UUID exerciseVersionId, String status, long version,
-                        List<ReviewItem> reviews, List<String> unmetRequirements) {
+                        List<ReviewItem> reviews, List<String> unmetRequirements,
+                        List<String> requiredAreas) {
     }
 }

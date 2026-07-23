@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { RecordSummary } from './RecordSummary';
 import {
-    RecordSummaryFromJSON,
-    RecordSummaryFromJSONTyped,
-    RecordSummaryToJSON,
-    RecordSummaryToJSONTyped,
+  RecordSummaryFromJSON,
+  RecordSummaryFromJSONTyped,
+  RecordSummaryToJSON,
+  RecordSummaryToJSONTyped,
 } from './RecordSummary';
 
 /**
@@ -27,70 +27,77 @@ import {
  * @interface RecordPage
  */
 export interface RecordPage {
-    /**
-     *
-     * @type {Array<RecordSummary>}
-     * @memberof RecordPage
-     */
-    content?: Array<RecordSummary>;
-    /**
-     *
-     * @type {number}
-     * @memberof RecordPage
-     */
-    page?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof RecordPage
-     */
-    size?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof RecordPage
-     */
-    totalElements?: number;
+  /**
+   *
+   * @type {Array<RecordSummary>}
+   * @memberof RecordPage
+   */
+  content?: Array<RecordSummary>;
+  /**
+   *
+   * @type {number}
+   * @memberof RecordPage
+   */
+  page?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof RecordPage
+   */
+  size?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof RecordPage
+   */
+  totalElements?: number;
 }
 
 /**
  * Check if a given object implements the RecordPage interface.
  */
 export function instanceOfRecordPage(value: object): value is RecordPage {
-    return true;
+  return true;
 }
 
 export function RecordPageFromJSON(json: any): RecordPage {
-    return RecordPageFromJSONTyped(json, false);
+  return RecordPageFromJSONTyped(json, false);
 }
 
 export function RecordPageFromJSONTyped(json: any, ignoreDiscriminator: boolean): RecordPage {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'content': json['content'] == null ? undefined : ((json['content'] as Array<any>).map(RecordSummaryFromJSON)),
-        'page': json['page'] == null ? undefined : json['page'],
-        'size': json['size'] == null ? undefined : json['size'],
-        'totalElements': json['totalElements'] == null ? undefined : json['totalElements'],
-    };
+  if (json == null) {
+    return json;
+  }
+  return {
+    content:
+      json['content'] == null
+        ? undefined
+        : (json['content'] as Array<any>).map(RecordSummaryFromJSON),
+    page: json['page'] == null ? undefined : json['page'],
+    size: json['size'] == null ? undefined : json['size'],
+    totalElements: json['totalElements'] == null ? undefined : json['totalElements'],
+  };
 }
 
 export function RecordPageToJSON(json: any): RecordPage {
-    return RecordPageToJSONTyped(json, false);
+  return RecordPageToJSONTyped(json, false);
 }
 
-export function RecordPageToJSONTyped(value?: RecordPage | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function RecordPageToJSONTyped(
+  value?: RecordPage | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'content': value['content'] == null ? undefined : ((value['content'] as Array<any>).map(RecordSummaryToJSON)),
-        'page': value['page'],
-        'size': value['size'],
-        'totalElements': value['totalElements'],
-    };
+  return {
+    content:
+      value['content'] == null
+        ? undefined
+        : (value['content'] as Array<any>).map(RecordSummaryToJSON),
+    page: value['page'],
+    size: value['size'],
+    totalElements: value['totalElements'],
+  };
 }

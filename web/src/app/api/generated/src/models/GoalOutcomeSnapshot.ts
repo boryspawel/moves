@@ -19,94 +19,98 @@ import { mapValues } from '../runtime';
  * @interface GoalOutcomeSnapshot
  */
 export interface GoalOutcomeSnapshot {
-    /**
-     *
-     * @type {string}
-     * @memberof GoalOutcomeSnapshot
-     */
-    id?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof GoalOutcomeSnapshot
-     */
-    metricCode?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof GoalOutcomeSnapshot
-     */
-    baseline?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof GoalOutcomeSnapshot
-     */
-    target?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof GoalOutcomeSnapshot
-     */
-    unit?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof GoalOutcomeSnapshot
-     */
-    measurementMethod?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof GoalOutcomeSnapshot
-     */
-    evidenceSource?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof GoalOutcomeSnapshot
+   */
+  id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof GoalOutcomeSnapshot
+   */
+  metricCode?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof GoalOutcomeSnapshot
+   */
+  baseline?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof GoalOutcomeSnapshot
+   */
+  target?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof GoalOutcomeSnapshot
+   */
+  unit?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof GoalOutcomeSnapshot
+   */
+  measurementMethod?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof GoalOutcomeSnapshot
+   */
+  evidenceSource?: string;
 }
 
 /**
  * Check if a given object implements the GoalOutcomeSnapshot interface.
  */
 export function instanceOfGoalOutcomeSnapshot(value: object): value is GoalOutcomeSnapshot {
-    return true;
+  return true;
 }
 
 export function GoalOutcomeSnapshotFromJSON(json: any): GoalOutcomeSnapshot {
-    return GoalOutcomeSnapshotFromJSONTyped(json, false);
+  return GoalOutcomeSnapshotFromJSONTyped(json, false);
 }
 
-export function GoalOutcomeSnapshotFromJSONTyped(json: any, ignoreDiscriminator: boolean): GoalOutcomeSnapshot {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'id': json['id'] == null ? undefined : json['id'],
-        'metricCode': json['metricCode'] == null ? undefined : json['metricCode'],
-        'baseline': json['baseline'] == null ? undefined : json['baseline'],
-        'target': json['target'] == null ? undefined : json['target'],
-        'unit': json['unit'] == null ? undefined : json['unit'],
-        'measurementMethod': json['measurementMethod'] == null ? undefined : json['measurementMethod'],
-        'evidenceSource': json['evidenceSource'] == null ? undefined : json['evidenceSource'],
-    };
+export function GoalOutcomeSnapshotFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): GoalOutcomeSnapshot {
+  if (json == null) {
+    return json;
+  }
+  return {
+    id: json['id'] == null ? undefined : json['id'],
+    metricCode: json['metricCode'] == null ? undefined : json['metricCode'],
+    baseline: json['baseline'] == null ? undefined : json['baseline'],
+    target: json['target'] == null ? undefined : json['target'],
+    unit: json['unit'] == null ? undefined : json['unit'],
+    measurementMethod: json['measurementMethod'] == null ? undefined : json['measurementMethod'],
+    evidenceSource: json['evidenceSource'] == null ? undefined : json['evidenceSource'],
+  };
 }
 
 export function GoalOutcomeSnapshotToJSON(json: any): GoalOutcomeSnapshot {
-    return GoalOutcomeSnapshotToJSONTyped(json, false);
+  return GoalOutcomeSnapshotToJSONTyped(json, false);
 }
 
-export function GoalOutcomeSnapshotToJSONTyped(value?: GoalOutcomeSnapshot | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function GoalOutcomeSnapshotToJSONTyped(
+  value?: GoalOutcomeSnapshot | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'id': value['id'],
-        'metricCode': value['metricCode'],
-        'baseline': value['baseline'],
-        'target': value['target'],
-        'unit': value['unit'],
-        'measurementMethod': value['measurementMethod'],
-        'evidenceSource': value['evidenceSource'],
-    };
+  return {
+    id: value['id'],
+    metricCode: value['metricCode'],
+    baseline: value['baseline'],
+    target: value['target'],
+    unit: value['unit'],
+    measurementMethod: value['measurementMethod'],
+    evidenceSource: value['evidenceSource'],
+  };
 }

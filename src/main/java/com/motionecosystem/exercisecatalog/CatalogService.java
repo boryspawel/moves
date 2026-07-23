@@ -28,6 +28,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -45,6 +46,7 @@ public class CatalogService implements ExerciseCatalogQueryPort {
     private final AnatomyReferenceQueryPort anatomy;
     private final AuditRecorder audit;
     private final Clock clock;
+    private final JdbcTemplate jdbc;
 
     @Transactional
     public VersionView create(String actorSubject, String canonicalName, VersionCommand requested) {
@@ -79,11 +81,45 @@ public class CatalogService implements ExerciseCatalogQueryPort {
         ExerciseVersion version = lockedVersion(versionId);
         try {
             version.update(validate(requested));
+            invalidateCurrentReviews(versionId, actorSubject);
         } catch (IllegalStateException immutable) {
             throw conflict(immutable.getMessage(), immutable);
         }
         audit.record(actorSubject, "EXERCISE_DRAFT_UPDATED", "ExerciseVersion", version.id);
         return view(exercise(version.exerciseId), version);
+    }
+
+    /** A UI-oriented, still aggregate-scoped command with an explicit optimistic-lock token. */
+    @Transactional
+    public VersionView updateEditorialDraft(String actorSubject, UUID versionId, DraftUpdateCommand requested) {
+        if (requested == null || requested.expectedVersion() == null) {
+            throw badRequest("expected version is required");
+        }
+        ExerciseVersion version = lockedVersion(versionId);
+        if (version.version != requested.expectedVersion()) {
+            throw conflict("exercise version was changed concurrently", null);
+        }
+        Exercise exercise = exercise(version.exerciseId);
+        try {
+            version.update(validate(requested.version()));
+            if (requested.canonicalName() != null) exercise.rename(requiredText(requested.canonicalName(), 160, "canonical name"));
+            invalidateCurrentReviews(versionId, actorSubject);
+        } catch (IllegalStateException immutable) {
+            throw conflict(immutable.getMessage(), immutable);
+        }
+        audit.record(actorSubject, "EXERCISE_EDITORIAL_DRAFT_UPDATED", "ExerciseVersion", version.id);
+        return view(exercise, version);
+    }
+
+    private void invalidateCurrentReviews(UUID versionId, String actorSubject) {
+        int invalidated = jdbc.update("""
+                UPDATE exercise_catalog.exercise_review
+                   SET invalidated_at=?, invalidated_by_subject=?
+                 WHERE exercise_version_id=? AND invalidated_at IS NULL
+                """, java.sql.Timestamp.from(clock.instant()), actorSubject, versionId);
+        if (invalidated > 0) {
+            audit.record(actorSubject, "EXERCISE_REVIEWS_INVALIDATED_BY_CONTENT_CHANGE", "ExerciseVersion", versionId);
+        }
     }
 
     @Transactional
@@ -98,13 +134,15 @@ public class CatalogService implements ExerciseCatalogQueryPort {
                         command.movementPlane(), command.contractionType(), command.rangeOfMotion(),
                         command.characteristicType(), actorSubject, now))
                 .forEach(loadCharacteristics::save);
+        version.contentChanged();
+        invalidateCurrentReviews(versionId, actorSubject);
         audit.record(actorSubject, "EXERCISE_LOAD_PROFILE_UPDATED", "ExerciseVersion", version.id);
         return editorView(exercise(version.exerciseId), version);
     }
 
     @Transactional
     public EvidenceView addEvidence(String actorSubject, UUID versionId, EvidenceCommand requested) {
-        editableVersion(versionId);
+        ExerciseVersion version = editableVersion(versionId);
         if (requested == null) {
             throw badRequest("evidence is required");
         }
@@ -113,6 +151,8 @@ public class CatalogService implements ExerciseCatalogQueryPort {
                 optionalText(requested.sourceUri(), 1_000, "source URI"),
                 normalizedCode(requested.evidenceGrade(), 80, "evidence grade"),
                 actorSubject, clock.instant()));
+        version.contentChanged();
+        invalidateCurrentReviews(versionId, actorSubject);
         audit.record(actorSubject, "EXERCISE_EVIDENCE_ADDED", "EvidenceSource", evidence.id);
         return evidenceView(evidence);
     }
@@ -120,7 +160,7 @@ public class CatalogService implements ExerciseCatalogQueryPort {
     @Transactional
     public ContributionView addContribution(String actorSubject, UUID versionId,
                                             ContributionCommand requested) {
-        editableVersion(versionId);
+        ExerciseVersion version = editableVersion(versionId);
         ValidatedContribution command = validateContribution(versionId, requested);
         List<ExerciseContribution> candidate = new ArrayList<>(
                 contributions.findByExerciseVersionIdOrderById(versionId));
@@ -131,6 +171,8 @@ public class CatalogService implements ExerciseCatalogQueryPort {
         command.evidenceIds().stream()
                 .map(evidenceId -> new ExerciseContributionEvidence(contribution.id, evidenceId))
                 .forEach(contributionEvidence::save);
+        version.contentChanged();
+        invalidateCurrentReviews(versionId, actorSubject);
         audit.record(actorSubject, "EXERCISE_CONTRIBUTION_ADDED", "ExerciseContribution", contribution.id);
         Map<UUID, EvidenceSource> evidence = evidenceSources.findByExerciseVersionIdAndIdIn(
                         versionId, command.evidenceIds()).stream()
@@ -655,6 +697,8 @@ public class CatalogService implements ExerciseCatalogQueryPort {
                                  FatigueProfile fatigueProfile, TechnicalLevel technicalLevel,
                                  ExerciseEnvironment environment, Set<String> requiredEquipment) {
     }
+
+    public record DraftUpdateCommand(String canonicalName, VersionCommand version, Long expectedVersion) {}
 
     public record LoadCharacteristicCommand(MovementPlane movementPlane, ContractionType contractionType,
                                             RangeOfMotion rangeOfMotion,

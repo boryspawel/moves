@@ -19,62 +19,66 @@ import { mapValues } from '../runtime';
  * @interface AcknowledgementView
  */
 export interface AcknowledgementView {
-    /**
-     *
-     * @type {string}
-     * @memberof AcknowledgementView
-     */
-    revisionId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof AcknowledgementView
-     */
-    assessmentId?: string;
-    /**
-     *
-     * @type {Set<string>}
-     * @memberof AcknowledgementView
-     */
-    factorIds?: Set<string>;
+  /**
+   *
+   * @type {string}
+   * @memberof AcknowledgementView
+   */
+  revisionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AcknowledgementView
+   */
+  assessmentId?: string;
+  /**
+   *
+   * @type {Set<string>}
+   * @memberof AcknowledgementView
+   */
+  factorIds?: Set<string>;
 }
 
 /**
  * Check if a given object implements the AcknowledgementView interface.
  */
 export function instanceOfAcknowledgementView(value: object): value is AcknowledgementView {
-    return true;
+  return true;
 }
 
 export function AcknowledgementViewFromJSON(json: any): AcknowledgementView {
-    return AcknowledgementViewFromJSONTyped(json, false);
+  return AcknowledgementViewFromJSONTyped(json, false);
 }
 
-export function AcknowledgementViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): AcknowledgementView {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'revisionId': json['revisionId'] == null ? undefined : json['revisionId'],
-        'assessmentId': json['assessmentId'] == null ? undefined : json['assessmentId'],
-        'factorIds': json['factorIds'] == null ? undefined : new Set(json['factorIds']),
-    };
+export function AcknowledgementViewFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): AcknowledgementView {
+  if (json == null) {
+    return json;
+  }
+  return {
+    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
+    assessmentId: json['assessmentId'] == null ? undefined : json['assessmentId'],
+    factorIds: json['factorIds'] == null ? undefined : new Set(json['factorIds']),
+  };
 }
 
 export function AcknowledgementViewToJSON(json: any): AcknowledgementView {
-    return AcknowledgementViewToJSONTyped(json, false);
+  return AcknowledgementViewToJSONTyped(json, false);
 }
 
-export function AcknowledgementViewToJSONTyped(value?: AcknowledgementView | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function AcknowledgementViewToJSONTyped(
+  value?: AcknowledgementView | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'revisionId': value['revisionId'],
-        'assessmentId': value['assessmentId'],
-        'factorIds': value['factorIds'] == null ? undefined : Array.from(value['factorIds'] as Set<any>),
-    };
+  return {
+    revisionId: value['revisionId'],
+    assessmentId: value['assessmentId'],
+    factorIds: value['factorIds'] == null ? undefined : Array.from(value['factorIds'] as Set<any>),
+  };
 }

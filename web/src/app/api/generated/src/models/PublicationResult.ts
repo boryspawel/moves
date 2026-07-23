@@ -19,78 +19,83 @@ import { mapValues } from '../runtime';
  * @interface PublicationResult
  */
 export interface PublicationResult {
-    /**
-     *
-     * @type {string}
-     * @memberof PublicationResult
-     */
-    exerciseVersionId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof PublicationResult
-     */
-    status?: string;
-    /**
-     *
-     * @type {Date}
-     * @memberof PublicationResult
-     */
-    publishedAt?: Date;
-    /**
-     *
-     * @type {number}
-     * @memberof PublicationResult
-     */
-    version?: number;
-    /**
-     *
-     * @type {Array<string>}
-     * @memberof PublicationResult
-     */
-    unmetRequirements?: Array<string>;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicationResult
+   */
+  exerciseVersionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicationResult
+   */
+  status?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof PublicationResult
+   */
+  publishedAt?: Date;
+  /**
+   *
+   * @type {number}
+   * @memberof PublicationResult
+   */
+  version?: number;
+  /**
+   *
+   * @type {Array<string>}
+   * @memberof PublicationResult
+   */
+  unmetRequirements?: Array<string>;
 }
 
 /**
  * Check if a given object implements the PublicationResult interface.
  */
 export function instanceOfPublicationResult(value: object): value is PublicationResult {
-    return true;
+  return true;
 }
 
 export function PublicationResultFromJSON(json: any): PublicationResult {
-    return PublicationResultFromJSONTyped(json, false);
+  return PublicationResultFromJSONTyped(json, false);
 }
 
-export function PublicationResultFromJSONTyped(json: any, ignoreDiscriminator: boolean): PublicationResult {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'exerciseVersionId': json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
-        'status': json['status'] == null ? undefined : json['status'],
-        'publishedAt': json['publishedAt'] == null ? undefined : (new Date(json['publishedAt'])),
-        'version': json['version'] == null ? undefined : json['version'],
-        'unmetRequirements': json['unmetRequirements'] == null ? undefined : json['unmetRequirements'],
-    };
+export function PublicationResultFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): PublicationResult {
+  if (json == null) {
+    return json;
+  }
+  return {
+    exerciseVersionId: json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
+    status: json['status'] == null ? undefined : json['status'],
+    publishedAt: json['publishedAt'] == null ? undefined : new Date(json['publishedAt']),
+    version: json['version'] == null ? undefined : json['version'],
+    unmetRequirements: json['unmetRequirements'] == null ? undefined : json['unmetRequirements'],
+  };
 }
 
 export function PublicationResultToJSON(json: any): PublicationResult {
-    return PublicationResultToJSONTyped(json, false);
+  return PublicationResultToJSONTyped(json, false);
 }
 
-export function PublicationResultToJSONTyped(value?: PublicationResult | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function PublicationResultToJSONTyped(
+  value?: PublicationResult | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'exerciseVersionId': value['exerciseVersionId'],
-        'status': value['status'],
-        'publishedAt': value['publishedAt'] == null ? value['publishedAt'] : value['publishedAt'].toISOString(),
-        'version': value['version'],
-        'unmetRequirements': value['unmetRequirements'],
-    };
+  return {
+    exerciseVersionId: value['exerciseVersionId'],
+    status: value['status'],
+    publishedAt:
+      value['publishedAt'] == null ? value['publishedAt'] : value['publishedAt'].toISOString(),
+    version: value['version'],
+    unmetRequirements: value['unmetRequirements'],
+  };
 }

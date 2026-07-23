@@ -14,361 +14,395 @@
 
 import * as runtime from '../runtime';
 import {
-    type ActionCommand,
-    ActionCommandFromJSON,
-    ActionCommandToJSON,
+  type ActionCommand,
+  ActionCommandFromJSON,
+  ActionCommandToJSON,
 } from '../models/ActionCommand';
 import {
-    type ParticipantIssueCommand,
-    ParticipantIssueCommandFromJSON,
-    ParticipantIssueCommandToJSON,
+  type ParticipantIssueCommand,
+  ParticipantIssueCommandFromJSON,
+  ParticipantIssueCommandToJSON,
 } from '../models/ParticipantIssueCommand';
 import {
-    type ReplyCommand,
-    ReplyCommandFromJSON,
-    ReplyCommandToJSON,
+  type ReplyCommand,
+  ReplyCommandFromJSON,
+  ReplyCommandToJSON,
 } from '../models/ReplyCommand';
+import { type ReplyView, ReplyViewFromJSON, ReplyViewToJSON } from '../models/ReplyView';
 import {
-    type ReplyView,
-    ReplyViewFromJSON,
-    ReplyViewToJSON,
-} from '../models/ReplyView';
-import {
-    type WorklistItemView,
-    WorklistItemViewFromJSON,
-    WorklistItemViewToJSON,
+  type WorklistItemView,
+  WorklistItemViewFromJSON,
+  WorklistItemViewToJSON,
 } from '../models/WorklistItemView';
 
 export interface ActOnWorklistRequest {
-    itemId: string;
-    actingContext: ActOnWorklistActingContextEnum;
-    purpose: ActOnWorklistPurposeEnum;
-    actionCommand: ActionCommand;
+  itemId: string;
+  actingContext: ActOnWorklistActingContextEnum;
+  purpose: ActOnWorklistPurposeEnum;
+  actionCommand: ActionCommand;
 }
 
 export interface ListWorklistRequest {
-    actingContext: ListWorklistActingContextEnum;
-    purpose: ListWorklistPurposeEnum;
+  actingContext: ListWorklistActingContextEnum;
+  purpose: ListWorklistPurposeEnum;
 }
 
 export interface ReplyToIssueRequest {
-    itemId: string;
-    actingContext: ReplyToIssueActingContextEnum;
-    purpose: ReplyToIssuePurposeEnum;
-    replyCommand: ReplyCommand;
+  itemId: string;
+  actingContext: ReplyToIssueActingContextEnum;
+  purpose: ReplyToIssuePurposeEnum;
+  replyCommand: ReplyCommand;
 }
 
 export interface ReportParticipantIssueRequest {
-    participantIssueCommand: ParticipantIssueCommand;
+  participantIssueCommand: ParticipantIssueCommand;
 }
 
 /**
  *
  */
 export class SpecialistWorklistControllerApi extends runtime.BaseAPI {
-
-    /**
-     * Creates request options for actOnWorklist without sending the request
-     */
-    async actOnWorklistRequestOpts(requestParameters: ActOnWorklistRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['itemId'] == null) {
-            throw new runtime.RequiredError(
-                'itemId',
-                'Required parameter "itemId" was null or undefined when calling actOnWorklist().'
-            );
-        }
-
-        if (requestParameters['actingContext'] == null) {
-            throw new runtime.RequiredError(
-                'actingContext',
-                'Required parameter "actingContext" was null or undefined when calling actOnWorklist().'
-            );
-        }
-
-        if (requestParameters['purpose'] == null) {
-            throw new runtime.RequiredError(
-                'purpose',
-                'Required parameter "purpose" was null or undefined when calling actOnWorklist().'
-            );
-        }
-
-        if (requestParameters['actionCommand'] == null) {
-            throw new runtime.RequiredError(
-                'actionCommand',
-                'Required parameter "actionCommand" was null or undefined when calling actOnWorklist().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        if (requestParameters['actingContext'] != null) {
-            queryParameters['actingContext'] = requestParameters['actingContext'];
-        }
-
-        if (requestParameters['purpose'] != null) {
-            queryParameters['purpose'] = requestParameters['purpose'];
-        }
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/v1/specialist/worklist/{itemId}/actions`;
-        urlPath = urlPath.replace('{itemId}', encodeURIComponent(String(requestParameters['itemId'])));
-
-        return {
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: ActionCommandToJSON(requestParameters['actionCommand']),
-        };
+  /**
+   * Creates request options for actOnWorklist without sending the request
+   */
+  async actOnWorklistRequestOpts(
+    requestParameters: ActOnWorklistRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['itemId'] == null) {
+      throw new runtime.RequiredError(
+        'itemId',
+        'Required parameter "itemId" was null or undefined when calling actOnWorklist().',
+      );
     }
 
-    /**
-     */
-    async actOnWorklistRaw(requestParameters: ActOnWorklistRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WorklistItemView>> {
-        const requestOptions = await this.actOnWorklistRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => WorklistItemViewFromJSON(jsonValue));
+    if (requestParameters['actingContext'] == null) {
+      throw new runtime.RequiredError(
+        'actingContext',
+        'Required parameter "actingContext" was null or undefined when calling actOnWorklist().',
+      );
     }
 
-    /**
-     */
-    async actOnWorklist(requestParameters: ActOnWorklistRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<WorklistItemView> {
-        const response = await this.actOnWorklistRaw(requestParameters, initOverrides);
-        return await response.value();
+    if (requestParameters['purpose'] == null) {
+      throw new runtime.RequiredError(
+        'purpose',
+        'Required parameter "purpose" was null or undefined when calling actOnWorklist().',
+      );
     }
 
-    /**
-     * Creates request options for listWorklist without sending the request
-     */
-    async listWorklistRequestOpts(requestParameters: ListWorklistRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['actingContext'] == null) {
-            throw new runtime.RequiredError(
-                'actingContext',
-                'Required parameter "actingContext" was null or undefined when calling listWorklist().'
-            );
-        }
-
-        if (requestParameters['purpose'] == null) {
-            throw new runtime.RequiredError(
-                'purpose',
-                'Required parameter "purpose" was null or undefined when calling listWorklist().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        if (requestParameters['actingContext'] != null) {
-            queryParameters['actingContext'] = requestParameters['actingContext'];
-        }
-
-        if (requestParameters['purpose'] != null) {
-            queryParameters['purpose'] = requestParameters['purpose'];
-        }
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-
-        let urlPath = `/api/v1/specialist/worklist`;
-
-        return {
-            path: urlPath,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        };
+    if (requestParameters['actionCommand'] == null) {
+      throw new runtime.RequiredError(
+        'actionCommand',
+        'Required parameter "actionCommand" was null or undefined when calling actOnWorklist().',
+      );
     }
 
-    /**
-     */
-    async listWorklistRaw(requestParameters: ListWorklistRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<WorklistItemView>>> {
-        const requestOptions = await this.listWorklistRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
+    const queryParameters: any = {};
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(WorklistItemViewFromJSON));
+    if (requestParameters['actingContext'] != null) {
+      queryParameters['actingContext'] = requestParameters['actingContext'];
     }
 
-    /**
-     */
-    async listWorklist(requestParameters: ListWorklistRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<WorklistItemView>> {
-        const response = await this.listWorklistRaw(requestParameters, initOverrides);
-        return await response.value();
+    if (requestParameters['purpose'] != null) {
+      queryParameters['purpose'] = requestParameters['purpose'];
     }
 
-    /**
-     * Creates request options for replyToIssue without sending the request
-     */
-    async replyToIssueRequestOpts(requestParameters: ReplyToIssueRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['itemId'] == null) {
-            throw new runtime.RequiredError(
-                'itemId',
-                'Required parameter "itemId" was null or undefined when calling replyToIssue().'
-            );
-        }
+    const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['actingContext'] == null) {
-            throw new runtime.RequiredError(
-                'actingContext',
-                'Required parameter "actingContext" was null or undefined when calling replyToIssue().'
-            );
-        }
+    headerParameters['Content-Type'] = 'application/json';
 
-        if (requestParameters['purpose'] == null) {
-            throw new runtime.RequiredError(
-                'purpose',
-                'Required parameter "purpose" was null or undefined when calling replyToIssue().'
-            );
-        }
+    let urlPath = `/api/v1/specialist/worklist/{itemId}/actions`;
+    urlPath = urlPath.replace('{itemId}', encodeURIComponent(String(requestParameters['itemId'])));
 
-        if (requestParameters['replyCommand'] == null) {
-            throw new runtime.RequiredError(
-                'replyCommand',
-                'Required parameter "replyCommand" was null or undefined when calling replyToIssue().'
-            );
-        }
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+      body: ActionCommandToJSON(requestParameters['actionCommand']),
+    };
+  }
 
-        const queryParameters: any = {};
+  /**
+   */
+  async actOnWorklistRaw(
+    requestParameters: ActOnWorklistRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<WorklistItemView>> {
+    const requestOptions = await this.actOnWorklistRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
 
-        if (requestParameters['actingContext'] != null) {
-            queryParameters['actingContext'] = requestParameters['actingContext'];
-        }
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      WorklistItemViewFromJSON(jsonValue),
+    );
+  }
 
-        if (requestParameters['purpose'] != null) {
-            queryParameters['purpose'] = requestParameters['purpose'];
-        }
+  /**
+   */
+  async actOnWorklist(
+    requestParameters: ActOnWorklistRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<WorklistItemView> {
+    const response = await this.actOnWorklistRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
 
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/v1/specialist/worklist/{itemId}/reply`;
-        urlPath = urlPath.replace('{itemId}', encodeURIComponent(String(requestParameters['itemId'])));
-
-        return {
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: ReplyCommandToJSON(requestParameters['replyCommand']),
-        };
+  /**
+   * Creates request options for listWorklist without sending the request
+   */
+  async listWorklistRequestOpts(
+    requestParameters: ListWorklistRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['actingContext'] == null) {
+      throw new runtime.RequiredError(
+        'actingContext',
+        'Required parameter "actingContext" was null or undefined when calling listWorklist().',
+      );
     }
 
-    /**
-     */
-    async replyToIssueRaw(requestParameters: ReplyToIssueRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ReplyView>> {
-        const requestOptions = await this.replyToIssueRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => ReplyViewFromJSON(jsonValue));
+    if (requestParameters['purpose'] == null) {
+      throw new runtime.RequiredError(
+        'purpose',
+        'Required parameter "purpose" was null or undefined when calling listWorklist().',
+      );
     }
 
-    /**
-     */
-    async replyToIssue(requestParameters: ReplyToIssueRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ReplyView> {
-        const response = await this.replyToIssueRaw(requestParameters, initOverrides);
-        return await response.value();
+    const queryParameters: any = {};
+
+    if (requestParameters['actingContext'] != null) {
+      queryParameters['actingContext'] = requestParameters['actingContext'];
     }
 
-    /**
-     * Creates request options for reportParticipantIssue without sending the request
-     */
-    async reportParticipantIssueRequestOpts(requestParameters: ReportParticipantIssueRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['participantIssueCommand'] == null) {
-            throw new runtime.RequiredError(
-                'participantIssueCommand',
-                'Required parameter "participantIssueCommand" was null or undefined when calling reportParticipantIssue().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/v1/participant/issues`;
-
-        return {
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: ParticipantIssueCommandToJSON(requestParameters['participantIssueCommand']),
-        };
+    if (requestParameters['purpose'] != null) {
+      queryParameters['purpose'] = requestParameters['purpose'];
     }
 
-    /**
-     */
-    async reportParticipantIssueRaw(requestParameters: ReportParticipantIssueRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WorklistItemView>> {
-        const requestOptions = await this.reportParticipantIssueRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
+    const headerParameters: runtime.HTTPHeaders = {};
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => WorklistItemViewFromJSON(jsonValue));
+    let urlPath = `/api/v1/specialist/worklist`;
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   */
+  async listWorklistRaw(
+    requestParameters: ListWorklistRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<WorklistItemView>>> {
+    const requestOptions = await this.listWorklistRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(WorklistItemViewFromJSON),
+    );
+  }
+
+  /**
+   */
+  async listWorklist(
+    requestParameters: ListWorklistRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<WorklistItemView>> {
+    const response = await this.listWorklistRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for replyToIssue without sending the request
+   */
+  async replyToIssueRequestOpts(
+    requestParameters: ReplyToIssueRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['itemId'] == null) {
+      throw new runtime.RequiredError(
+        'itemId',
+        'Required parameter "itemId" was null or undefined when calling replyToIssue().',
+      );
     }
 
-    /**
-     */
-    async reportParticipantIssue(requestParameters: ReportParticipantIssueRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<WorklistItemView> {
-        const response = await this.reportParticipantIssueRaw(requestParameters, initOverrides);
-        return await response.value();
+    if (requestParameters['actingContext'] == null) {
+      throw new runtime.RequiredError(
+        'actingContext',
+        'Required parameter "actingContext" was null or undefined when calling replyToIssue().',
+      );
     }
 
+    if (requestParameters['purpose'] == null) {
+      throw new runtime.RequiredError(
+        'purpose',
+        'Required parameter "purpose" was null or undefined when calling replyToIssue().',
+      );
+    }
+
+    if (requestParameters['replyCommand'] == null) {
+      throw new runtime.RequiredError(
+        'replyCommand',
+        'Required parameter "replyCommand" was null or undefined when calling replyToIssue().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters['actingContext'] != null) {
+      queryParameters['actingContext'] = requestParameters['actingContext'];
+    }
+
+    if (requestParameters['purpose'] != null) {
+      queryParameters['purpose'] = requestParameters['purpose'];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v1/specialist/worklist/{itemId}/reply`;
+    urlPath = urlPath.replace('{itemId}', encodeURIComponent(String(requestParameters['itemId'])));
+
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+      body: ReplyCommandToJSON(requestParameters['replyCommand']),
+    };
+  }
+
+  /**
+   */
+  async replyToIssueRaw(
+    requestParameters: ReplyToIssueRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<ReplyView>> {
+    const requestOptions = await this.replyToIssueRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => ReplyViewFromJSON(jsonValue));
+  }
+
+  /**
+   */
+  async replyToIssue(
+    requestParameters: ReplyToIssueRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<ReplyView> {
+    const response = await this.replyToIssueRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for reportParticipantIssue without sending the request
+   */
+  async reportParticipantIssueRequestOpts(
+    requestParameters: ReportParticipantIssueRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['participantIssueCommand'] == null) {
+      throw new runtime.RequiredError(
+        'participantIssueCommand',
+        'Required parameter "participantIssueCommand" was null or undefined when calling reportParticipantIssue().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v1/participant/issues`;
+
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+      body: ParticipantIssueCommandToJSON(requestParameters['participantIssueCommand']),
+    };
+  }
+
+  /**
+   */
+  async reportParticipantIssueRaw(
+    requestParameters: ReportParticipantIssueRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<WorklistItemView>> {
+    const requestOptions = await this.reportParticipantIssueRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      WorklistItemViewFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async reportParticipantIssue(
+    requestParameters: ReportParticipantIssueRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<WorklistItemView> {
+    const response = await this.reportParticipantIssueRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
 }
 
 /**
  * @export
  */
 export const ActOnWorklistActingContextEnum = {
-    Trainer: 'TRAINER',
-    Physiotherapist: 'PHYSIOTHERAPIST'
+  Trainer: 'TRAINER',
+  Physiotherapist: 'PHYSIOTHERAPIST',
 } as const;
-export type ActOnWorklistActingContextEnum = typeof ActOnWorklistActingContextEnum[keyof typeof ActOnWorklistActingContextEnum];
+export type ActOnWorklistActingContextEnum =
+  (typeof ActOnWorklistActingContextEnum)[keyof typeof ActOnWorklistActingContextEnum];
 /**
  * @export
  */
 export const ActOnWorklistPurposeEnum = {
-    PerformancePlanning: 'PERFORMANCE_PLANNING',
-    FunctionalRecovery: 'FUNCTIONAL_RECOVERY',
-    ClinicalReview: 'CLINICAL_REVIEW'
+  PerformancePlanning: 'PERFORMANCE_PLANNING',
+  FunctionalRecovery: 'FUNCTIONAL_RECOVERY',
+  ClinicalReview: 'CLINICAL_REVIEW',
 } as const;
-export type ActOnWorklistPurposeEnum = typeof ActOnWorklistPurposeEnum[keyof typeof ActOnWorklistPurposeEnum];
+export type ActOnWorklistPurposeEnum =
+  (typeof ActOnWorklistPurposeEnum)[keyof typeof ActOnWorklistPurposeEnum];
 /**
  * @export
  */
 export const ListWorklistActingContextEnum = {
-    Trainer: 'TRAINER',
-    Physiotherapist: 'PHYSIOTHERAPIST'
+  Trainer: 'TRAINER',
+  Physiotherapist: 'PHYSIOTHERAPIST',
 } as const;
-export type ListWorklistActingContextEnum = typeof ListWorklistActingContextEnum[keyof typeof ListWorklistActingContextEnum];
+export type ListWorklistActingContextEnum =
+  (typeof ListWorklistActingContextEnum)[keyof typeof ListWorklistActingContextEnum];
 /**
  * @export
  */
 export const ListWorklistPurposeEnum = {
-    PerformancePlanning: 'PERFORMANCE_PLANNING',
-    FunctionalRecovery: 'FUNCTIONAL_RECOVERY',
-    ClinicalReview: 'CLINICAL_REVIEW'
+  PerformancePlanning: 'PERFORMANCE_PLANNING',
+  FunctionalRecovery: 'FUNCTIONAL_RECOVERY',
+  ClinicalReview: 'CLINICAL_REVIEW',
 } as const;
-export type ListWorklistPurposeEnum = typeof ListWorklistPurposeEnum[keyof typeof ListWorklistPurposeEnum];
+export type ListWorklistPurposeEnum =
+  (typeof ListWorklistPurposeEnum)[keyof typeof ListWorklistPurposeEnum];
 /**
  * @export
  */
 export const ReplyToIssueActingContextEnum = {
-    Trainer: 'TRAINER',
-    Physiotherapist: 'PHYSIOTHERAPIST'
+  Trainer: 'TRAINER',
+  Physiotherapist: 'PHYSIOTHERAPIST',
 } as const;
-export type ReplyToIssueActingContextEnum = typeof ReplyToIssueActingContextEnum[keyof typeof ReplyToIssueActingContextEnum];
+export type ReplyToIssueActingContextEnum =
+  (typeof ReplyToIssueActingContextEnum)[keyof typeof ReplyToIssueActingContextEnum];
 /**
  * @export
  */
 export const ReplyToIssuePurposeEnum = {
-    PerformancePlanning: 'PERFORMANCE_PLANNING',
-    FunctionalRecovery: 'FUNCTIONAL_RECOVERY',
-    ClinicalReview: 'CLINICAL_REVIEW'
+  PerformancePlanning: 'PERFORMANCE_PLANNING',
+  FunctionalRecovery: 'FUNCTIONAL_RECOVERY',
+  ClinicalReview: 'CLINICAL_REVIEW',
 } as const;
-export type ReplyToIssuePurposeEnum = typeof ReplyToIssuePurposeEnum[keyof typeof ReplyToIssuePurposeEnum];
+export type ReplyToIssuePurposeEnum =
+  (typeof ReplyToIssuePurposeEnum)[keyof typeof ReplyToIssuePurposeEnum];

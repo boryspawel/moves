@@ -19,126 +19,128 @@ import { mapValues } from '../runtime';
  * @interface TargetCommand
  */
 export interface TargetCommand {
-    /**
-     *
-     * @type {string}
-     * @memberof TargetCommand
-     */
-    structureId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof TargetCommand
-     */
-    movementPattern?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof TargetCommand
-     */
-    channel?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof TargetCommand
-     */
-    loadCharacteristic?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof TargetCommand
-     */
-    side?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof TargetCommand
-     */
-    rangeOfMotion?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof TargetCommand
-     */
-    contractionType?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof TargetCommand
-     */
-    limitLow?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof TargetCommand
-     */
-    limitHigh?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof TargetCommand
-     */
-    unit?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof TargetCommand
-     */
-    minimumRecoveryHours?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof TargetCommand
+   */
+  structureId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof TargetCommand
+   */
+  movementPattern?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof TargetCommand
+   */
+  channel?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof TargetCommand
+   */
+  loadCharacteristic?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof TargetCommand
+   */
+  side?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof TargetCommand
+   */
+  rangeOfMotion?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof TargetCommand
+   */
+  contractionType?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof TargetCommand
+   */
+  limitLow?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof TargetCommand
+   */
+  limitHigh?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof TargetCommand
+   */
+  unit?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof TargetCommand
+   */
+  minimumRecoveryHours?: number;
 }
 
 /**
  * Check if a given object implements the TargetCommand interface.
  */
 export function instanceOfTargetCommand(value: object): value is TargetCommand {
-    return true;
+  return true;
 }
 
 export function TargetCommandFromJSON(json: any): TargetCommand {
-    return TargetCommandFromJSONTyped(json, false);
+  return TargetCommandFromJSONTyped(json, false);
 }
 
 export function TargetCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): TargetCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'structureId': json['structureId'] == null ? undefined : json['structureId'],
-        'movementPattern': json['movementPattern'] == null ? undefined : json['movementPattern'],
-        'channel': json['channel'] == null ? undefined : json['channel'],
-        'loadCharacteristic': json['loadCharacteristic'] == null ? undefined : json['loadCharacteristic'],
-        'side': json['side'] == null ? undefined : json['side'],
-        'rangeOfMotion': json['rangeOfMotion'] == null ? undefined : json['rangeOfMotion'],
-        'contractionType': json['contractionType'] == null ? undefined : json['contractionType'],
-        'limitLow': json['limitLow'] == null ? undefined : json['limitLow'],
-        'limitHigh': json['limitHigh'] == null ? undefined : json['limitHigh'],
-        'unit': json['unit'] == null ? undefined : json['unit'],
-        'minimumRecoveryHours': json['minimumRecoveryHours'] == null ? undefined : json['minimumRecoveryHours'],
-    };
+  if (json == null) {
+    return json;
+  }
+  return {
+    structureId: json['structureId'] == null ? undefined : json['structureId'],
+    movementPattern: json['movementPattern'] == null ? undefined : json['movementPattern'],
+    channel: json['channel'] == null ? undefined : json['channel'],
+    loadCharacteristic: json['loadCharacteristic'] == null ? undefined : json['loadCharacteristic'],
+    side: json['side'] == null ? undefined : json['side'],
+    rangeOfMotion: json['rangeOfMotion'] == null ? undefined : json['rangeOfMotion'],
+    contractionType: json['contractionType'] == null ? undefined : json['contractionType'],
+    limitLow: json['limitLow'] == null ? undefined : json['limitLow'],
+    limitHigh: json['limitHigh'] == null ? undefined : json['limitHigh'],
+    unit: json['unit'] == null ? undefined : json['unit'],
+    minimumRecoveryHours:
+      json['minimumRecoveryHours'] == null ? undefined : json['minimumRecoveryHours'],
+  };
 }
 
 export function TargetCommandToJSON(json: any): TargetCommand {
-    return TargetCommandToJSONTyped(json, false);
+  return TargetCommandToJSONTyped(json, false);
 }
 
-export function TargetCommandToJSONTyped(value?: TargetCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function TargetCommandToJSONTyped(
+  value?: TargetCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'structureId': value['structureId'],
-        'movementPattern': value['movementPattern'],
-        'channel': value['channel'],
-        'loadCharacteristic': value['loadCharacteristic'],
-        'side': value['side'],
-        'rangeOfMotion': value['rangeOfMotion'],
-        'contractionType': value['contractionType'],
-        'limitLow': value['limitLow'],
-        'limitHigh': value['limitHigh'],
-        'unit': value['unit'],
-        'minimumRecoveryHours': value['minimumRecoveryHours'],
-    };
+  return {
+    structureId: value['structureId'],
+    movementPattern: value['movementPattern'],
+    channel: value['channel'],
+    loadCharacteristic: value['loadCharacteristic'],
+    side: value['side'],
+    rangeOfMotion: value['rangeOfMotion'],
+    contractionType: value['contractionType'],
+    limitLow: value['limitLow'],
+    limitHigh: value['limitHigh'],
+    unit: value['unit'],
+    minimumRecoveryHours: value['minimumRecoveryHours'],
+  };
 }

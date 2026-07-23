@@ -19,70 +19,74 @@ import { mapValues } from '../runtime';
  * @interface BarrierReportCommand
  */
 export interface BarrierReportCommand {
-    /**
-     *
-     * @type {string}
-     * @memberof BarrierReportCommand
-     */
-    plannedSessionId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof BarrierReportCommand
-     */
-    sessionAttemptId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof BarrierReportCommand
-     */
-    category?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof BarrierReportCommand
-     */
-    selectedAction?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BarrierReportCommand
+   */
+  plannedSessionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BarrierReportCommand
+   */
+  sessionAttemptId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BarrierReportCommand
+   */
+  category?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BarrierReportCommand
+   */
+  selectedAction?: string;
 }
 
 /**
  * Check if a given object implements the BarrierReportCommand interface.
  */
 export function instanceOfBarrierReportCommand(value: object): value is BarrierReportCommand {
-    return true;
+  return true;
 }
 
 export function BarrierReportCommandFromJSON(json: any): BarrierReportCommand {
-    return BarrierReportCommandFromJSONTyped(json, false);
+  return BarrierReportCommandFromJSONTyped(json, false);
 }
 
-export function BarrierReportCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): BarrierReportCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'plannedSessionId': json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
-        'sessionAttemptId': json['sessionAttemptId'] == null ? undefined : json['sessionAttemptId'],
-        'category': json['category'] == null ? undefined : json['category'],
-        'selectedAction': json['selectedAction'] == null ? undefined : json['selectedAction'],
-    };
+export function BarrierReportCommandFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): BarrierReportCommand {
+  if (json == null) {
+    return json;
+  }
+  return {
+    plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
+    sessionAttemptId: json['sessionAttemptId'] == null ? undefined : json['sessionAttemptId'],
+    category: json['category'] == null ? undefined : json['category'],
+    selectedAction: json['selectedAction'] == null ? undefined : json['selectedAction'],
+  };
 }
 
 export function BarrierReportCommandToJSON(json: any): BarrierReportCommand {
-    return BarrierReportCommandToJSONTyped(json, false);
+  return BarrierReportCommandToJSONTyped(json, false);
 }
 
-export function BarrierReportCommandToJSONTyped(value?: BarrierReportCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function BarrierReportCommandToJSONTyped(
+  value?: BarrierReportCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'plannedSessionId': value['plannedSessionId'],
-        'sessionAttemptId': value['sessionAttemptId'],
-        'category': value['category'],
-        'selectedAction': value['selectedAction'],
-    };
+  return {
+    plannedSessionId: value['plannedSessionId'],
+    sessionAttemptId: value['sessionAttemptId'],
+    category: value['category'],
+    selectedAction: value['selectedAction'],
+  };
 }

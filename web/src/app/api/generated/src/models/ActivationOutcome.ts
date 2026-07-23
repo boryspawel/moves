@@ -19,78 +19,84 @@ import { mapValues } from '../runtime';
  * @interface ActivationOutcome
  */
 export interface ActivationOutcome {
-    /**
-     *
-     * @type {string}
-     * @memberof ActivationOutcome
-     */
-    revisionId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof ActivationOutcome
-     */
-    planId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof ActivationOutcome
-     */
-    supersededRevisionId?: string;
-    /**
-     *
-     * @type {boolean}
-     * @memberof ActivationOutcome
-     */
-    repeated?: boolean;
-    /**
-     *
-     * @type {Date}
-     * @memberof ActivationOutcome
-     */
-    activatedAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof ActivationOutcome
+   */
+  revisionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ActivationOutcome
+   */
+  planId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ActivationOutcome
+   */
+  supersededRevisionId?: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof ActivationOutcome
+   */
+  repeated?: boolean;
+  /**
+   *
+   * @type {Date}
+   * @memberof ActivationOutcome
+   */
+  activatedAt?: Date;
 }
 
 /**
  * Check if a given object implements the ActivationOutcome interface.
  */
 export function instanceOfActivationOutcome(value: object): value is ActivationOutcome {
-    return true;
+  return true;
 }
 
 export function ActivationOutcomeFromJSON(json: any): ActivationOutcome {
-    return ActivationOutcomeFromJSONTyped(json, false);
+  return ActivationOutcomeFromJSONTyped(json, false);
 }
 
-export function ActivationOutcomeFromJSONTyped(json: any, ignoreDiscriminator: boolean): ActivationOutcome {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'revisionId': json['revisionId'] == null ? undefined : json['revisionId'],
-        'planId': json['planId'] == null ? undefined : json['planId'],
-        'supersededRevisionId': json['supersededRevisionId'] == null ? undefined : json['supersededRevisionId'],
-        'repeated': json['repeated'] == null ? undefined : json['repeated'],
-        'activatedAt': json['activatedAt'] == null ? undefined : (new Date(json['activatedAt'])),
-    };
+export function ActivationOutcomeFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): ActivationOutcome {
+  if (json == null) {
+    return json;
+  }
+  return {
+    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
+    planId: json['planId'] == null ? undefined : json['planId'],
+    supersededRevisionId:
+      json['supersededRevisionId'] == null ? undefined : json['supersededRevisionId'],
+    repeated: json['repeated'] == null ? undefined : json['repeated'],
+    activatedAt: json['activatedAt'] == null ? undefined : new Date(json['activatedAt']),
+  };
 }
 
 export function ActivationOutcomeToJSON(json: any): ActivationOutcome {
-    return ActivationOutcomeToJSONTyped(json, false);
+  return ActivationOutcomeToJSONTyped(json, false);
 }
 
-export function ActivationOutcomeToJSONTyped(value?: ActivationOutcome | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ActivationOutcomeToJSONTyped(
+  value?: ActivationOutcome | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'revisionId': value['revisionId'],
-        'planId': value['planId'],
-        'supersededRevisionId': value['supersededRevisionId'],
-        'repeated': value['repeated'],
-        'activatedAt': value['activatedAt'] == null ? value['activatedAt'] : value['activatedAt'].toISOString(),
-    };
+  return {
+    revisionId: value['revisionId'],
+    planId: value['planId'],
+    supersededRevisionId: value['supersededRevisionId'],
+    repeated: value['repeated'],
+    activatedAt:
+      value['activatedAt'] == null ? value['activatedAt'] : value['activatedAt'].toISOString(),
+  };
 }

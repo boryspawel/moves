@@ -19,54 +19,58 @@ import { mapValues } from '../runtime';
  * @interface UploadAccepted
  */
 export interface UploadAccepted {
-    /**
-     *
-     * @type {string}
-     * @memberof UploadAccepted
-     */
-    batchId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof UploadAccepted
-     */
-    statusUrl?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof UploadAccepted
+   */
+  batchId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof UploadAccepted
+   */
+  statusUrl?: string;
 }
 
 /**
  * Check if a given object implements the UploadAccepted interface.
  */
 export function instanceOfUploadAccepted(value: object): value is UploadAccepted {
-    return true;
+  return true;
 }
 
 export function UploadAcceptedFromJSON(json: any): UploadAccepted {
-    return UploadAcceptedFromJSONTyped(json, false);
+  return UploadAcceptedFromJSONTyped(json, false);
 }
 
-export function UploadAcceptedFromJSONTyped(json: any, ignoreDiscriminator: boolean): UploadAccepted {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'batchId': json['batchId'] == null ? undefined : json['batchId'],
-        'statusUrl': json['statusUrl'] == null ? undefined : json['statusUrl'],
-    };
+export function UploadAcceptedFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): UploadAccepted {
+  if (json == null) {
+    return json;
+  }
+  return {
+    batchId: json['batchId'] == null ? undefined : json['batchId'],
+    statusUrl: json['statusUrl'] == null ? undefined : json['statusUrl'],
+  };
 }
 
 export function UploadAcceptedToJSON(json: any): UploadAccepted {
-    return UploadAcceptedToJSONTyped(json, false);
+  return UploadAcceptedToJSONTyped(json, false);
 }
 
-export function UploadAcceptedToJSONTyped(value?: UploadAccepted | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function UploadAcceptedToJSONTyped(
+  value?: UploadAccepted | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'batchId': value['batchId'],
-        'statusUrl': value['statusUrl'],
-    };
+  return {
+    batchId: value['batchId'],
+    statusUrl: value['statusUrl'],
+  };
 }

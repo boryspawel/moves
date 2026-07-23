@@ -19,82 +19,85 @@ import { mapValues } from '../runtime';
  * @interface RelationSnapshot
  */
 export interface RelationSnapshot {
-    /**
-     *
-     * @type {string}
-     * @memberof RelationSnapshot
-     */
-    id?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof RelationSnapshot
-     */
-    parentId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof RelationSnapshot
-     */
-    childId?: string;
-    /**
-     *
-     * @type {RelationSnapshotRelationTypeEnum}
-     * @memberof RelationSnapshot
-     */
-    relationType?: RelationSnapshotRelationTypeEnum;
+  /**
+   *
+   * @type {string}
+   * @memberof RelationSnapshot
+   */
+  id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RelationSnapshot
+   */
+  parentId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RelationSnapshot
+   */
+  childId?: string;
+  /**
+   *
+   * @type {RelationSnapshotRelationTypeEnum}
+   * @memberof RelationSnapshot
+   */
+  relationType?: RelationSnapshotRelationTypeEnum;
 }
-
 
 /**
  * @export
  */
 export const RelationSnapshotRelationTypeEnum = {
-    PartOf: 'PART_OF',
-    MemberOf: 'MEMBER_OF',
-    FunctionallyGroupedAs: 'FUNCTIONALLY_GROUPED_AS'
+  PartOf: 'PART_OF',
+  MemberOf: 'MEMBER_OF',
+  FunctionallyGroupedAs: 'FUNCTIONALLY_GROUPED_AS',
 } as const;
-export type RelationSnapshotRelationTypeEnum = typeof RelationSnapshotRelationTypeEnum[keyof typeof RelationSnapshotRelationTypeEnum];
-
+export type RelationSnapshotRelationTypeEnum =
+  (typeof RelationSnapshotRelationTypeEnum)[keyof typeof RelationSnapshotRelationTypeEnum];
 
 /**
  * Check if a given object implements the RelationSnapshot interface.
  */
 export function instanceOfRelationSnapshot(value: object): value is RelationSnapshot {
-    return true;
+  return true;
 }
 
 export function RelationSnapshotFromJSON(json: any): RelationSnapshot {
-    return RelationSnapshotFromJSONTyped(json, false);
+  return RelationSnapshotFromJSONTyped(json, false);
 }
 
-export function RelationSnapshotFromJSONTyped(json: any, ignoreDiscriminator: boolean): RelationSnapshot {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'id': json['id'] == null ? undefined : json['id'],
-        'parentId': json['parentId'] == null ? undefined : json['parentId'],
-        'childId': json['childId'] == null ? undefined : json['childId'],
-        'relationType': json['relationType'] == null ? undefined : json['relationType'],
-    };
+export function RelationSnapshotFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): RelationSnapshot {
+  if (json == null) {
+    return json;
+  }
+  return {
+    id: json['id'] == null ? undefined : json['id'],
+    parentId: json['parentId'] == null ? undefined : json['parentId'],
+    childId: json['childId'] == null ? undefined : json['childId'],
+    relationType: json['relationType'] == null ? undefined : json['relationType'],
+  };
 }
 
 export function RelationSnapshotToJSON(json: any): RelationSnapshot {
-    return RelationSnapshotToJSONTyped(json, false);
+  return RelationSnapshotToJSONTyped(json, false);
 }
 
-export function RelationSnapshotToJSONTyped(value?: RelationSnapshot | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function RelationSnapshotToJSONTyped(
+  value?: RelationSnapshot | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'id': value['id'],
-        'parentId': value['parentId'],
-        'childId': value['childId'],
-        'relationType': value['relationType'],
-    };
+  return {
+    id: value['id'],
+    parentId: value['parentId'],
+    childId: value['childId'],
+    relationType: value['relationType'],
+  };
 }

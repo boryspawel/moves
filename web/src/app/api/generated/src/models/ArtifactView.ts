@@ -19,70 +19,71 @@ import { mapValues } from '../runtime';
  * @interface ArtifactView
  */
 export interface ArtifactView {
-    /**
-     *
-     * @type {string}
-     * @memberof ArtifactView
-     */
-    originalFilename?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof ArtifactView
-     */
-    mediaType?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof ArtifactView
-     */
-    byteSize?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof ArtifactView
-     */
-    sha256?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ArtifactView
+   */
+  originalFilename?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ArtifactView
+   */
+  mediaType?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof ArtifactView
+   */
+  byteSize?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof ArtifactView
+   */
+  sha256?: string;
 }
 
 /**
  * Check if a given object implements the ArtifactView interface.
  */
 export function instanceOfArtifactView(value: object): value is ArtifactView {
-    return true;
+  return true;
 }
 
 export function ArtifactViewFromJSON(json: any): ArtifactView {
-    return ArtifactViewFromJSONTyped(json, false);
+  return ArtifactViewFromJSONTyped(json, false);
 }
 
 export function ArtifactViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): ArtifactView {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'originalFilename': json['originalFilename'] == null ? undefined : json['originalFilename'],
-        'mediaType': json['mediaType'] == null ? undefined : json['mediaType'],
-        'byteSize': json['byteSize'] == null ? undefined : json['byteSize'],
-        'sha256': json['sha256'] == null ? undefined : json['sha256'],
-    };
+  if (json == null) {
+    return json;
+  }
+  return {
+    originalFilename: json['originalFilename'] == null ? undefined : json['originalFilename'],
+    mediaType: json['mediaType'] == null ? undefined : json['mediaType'],
+    byteSize: json['byteSize'] == null ? undefined : json['byteSize'],
+    sha256: json['sha256'] == null ? undefined : json['sha256'],
+  };
 }
 
 export function ArtifactViewToJSON(json: any): ArtifactView {
-    return ArtifactViewToJSONTyped(json, false);
+  return ArtifactViewToJSONTyped(json, false);
 }
 
-export function ArtifactViewToJSONTyped(value?: ArtifactView | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ArtifactViewToJSONTyped(
+  value?: ArtifactView | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'originalFilename': value['originalFilename'],
-        'mediaType': value['mediaType'],
-        'byteSize': value['byteSize'],
-        'sha256': value['sha256'],
-    };
+  return {
+    originalFilename: value['originalFilename'],
+    mediaType: value['mediaType'],
+    byteSize: value['byteSize'],
+    sha256: value['sha256'],
+  };
 }

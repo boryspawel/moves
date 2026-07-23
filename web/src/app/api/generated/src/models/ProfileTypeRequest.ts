@@ -19,57 +19,60 @@ import { mapValues } from '../runtime';
  * @interface ProfileTypeRequest
  */
 export interface ProfileTypeRequest {
-    /**
-     *
-     * @type {ProfileTypeRequestProfileTypeEnum}
-     * @memberof ProfileTypeRequest
-     */
-    profileType?: ProfileTypeRequestProfileTypeEnum;
+  /**
+   *
+   * @type {ProfileTypeRequestProfileTypeEnum}
+   * @memberof ProfileTypeRequest
+   */
+  profileType?: ProfileTypeRequestProfileTypeEnum;
 }
-
 
 /**
  * @export
  */
 export const ProfileTypeRequestProfileTypeEnum = {
-    Participant: 'PARTICIPANT',
-    Specialist: 'SPECIALIST'
+  Participant: 'PARTICIPANT',
+  Specialist: 'SPECIALIST',
 } as const;
-export type ProfileTypeRequestProfileTypeEnum = typeof ProfileTypeRequestProfileTypeEnum[keyof typeof ProfileTypeRequestProfileTypeEnum];
-
+export type ProfileTypeRequestProfileTypeEnum =
+  (typeof ProfileTypeRequestProfileTypeEnum)[keyof typeof ProfileTypeRequestProfileTypeEnum];
 
 /**
  * Check if a given object implements the ProfileTypeRequest interface.
  */
 export function instanceOfProfileTypeRequest(value: object): value is ProfileTypeRequest {
-    return true;
+  return true;
 }
 
 export function ProfileTypeRequestFromJSON(json: any): ProfileTypeRequest {
-    return ProfileTypeRequestFromJSONTyped(json, false);
+  return ProfileTypeRequestFromJSONTyped(json, false);
 }
 
-export function ProfileTypeRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): ProfileTypeRequest {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'profileType': json['profileType'] == null ? undefined : json['profileType'],
-    };
+export function ProfileTypeRequestFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): ProfileTypeRequest {
+  if (json == null) {
+    return json;
+  }
+  return {
+    profileType: json['profileType'] == null ? undefined : json['profileType'],
+  };
 }
 
 export function ProfileTypeRequestToJSON(json: any): ProfileTypeRequest {
-    return ProfileTypeRequestToJSONTyped(json, false);
+  return ProfileTypeRequestToJSONTyped(json, false);
 }
 
-export function ProfileTypeRequestToJSONTyped(value?: ProfileTypeRequest | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ProfileTypeRequestToJSONTyped(
+  value?: ProfileTypeRequest | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'profileType': value['profileType'],
-    };
+  return {
+    profileType: value['profileType'],
+  };
 }

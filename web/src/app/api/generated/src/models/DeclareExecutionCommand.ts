@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { ResultCommand } from './ResultCommand';
 import {
-    ResultCommandFromJSON,
-    ResultCommandFromJSONTyped,
-    ResultCommandToJSON,
-    ResultCommandToJSONTyped,
+  ResultCommandFromJSON,
+  ResultCommandFromJSONTyped,
+  ResultCommandToJSON,
+  ResultCommandToJSONTyped,
 } from './ResultCommand';
 
 /**
@@ -27,102 +27,113 @@ import {
  * @interface DeclareExecutionCommand
  */
 export interface DeclareExecutionCommand {
-    /**
-     *
-     * @type {boolean}
-     * @memberof DeclareExecutionCommand
-     */
-    declaredCompletion?: boolean;
-    /**
-     *
-     * @type {Array<ResultCommand>}
-     * @memberof DeclareExecutionCommand
-     */
-    results?: Array<ResultCommand>;
-    /**
-     *
-     * @type {number}
-     * @memberof DeclareExecutionCommand
-     */
-    painLevel?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof DeclareExecutionCommand
-     */
-    difficultyLevel?: number;
-    /**
-     *
-     * @type {number}
-     * @memberof DeclareExecutionCommand
-     */
-    techniqueConfidenceLevel?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof DeclareExecutionCommand
-     */
-    note?: string;
-    /**
-     *
-     * @type {number}
-     * @memberof DeclareExecutionCommand
-     */
-    sessionRpe?: number;
-    /**
-     *
-     * @type {string}
-     * @memberof DeclareExecutionCommand
-     */
-    observationMode?: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof DeclareExecutionCommand
+   */
+  declaredCompletion?: boolean;
+  /**
+   *
+   * @type {Array<ResultCommand>}
+   * @memberof DeclareExecutionCommand
+   */
+  results?: Array<ResultCommand>;
+  /**
+   *
+   * @type {number}
+   * @memberof DeclareExecutionCommand
+   */
+  painLevel?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof DeclareExecutionCommand
+   */
+  difficultyLevel?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof DeclareExecutionCommand
+   */
+  techniqueConfidenceLevel?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof DeclareExecutionCommand
+   */
+  note?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof DeclareExecutionCommand
+   */
+  sessionRpe?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof DeclareExecutionCommand
+   */
+  observationMode?: string;
 }
 
 /**
  * Check if a given object implements the DeclareExecutionCommand interface.
  */
 export function instanceOfDeclareExecutionCommand(value: object): value is DeclareExecutionCommand {
-    return true;
+  return true;
 }
 
 export function DeclareExecutionCommandFromJSON(json: any): DeclareExecutionCommand {
-    return DeclareExecutionCommandFromJSONTyped(json, false);
+  return DeclareExecutionCommandFromJSONTyped(json, false);
 }
 
-export function DeclareExecutionCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): DeclareExecutionCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'declaredCompletion': json['declaredCompletion'] == null ? undefined : json['declaredCompletion'],
-        'results': json['results'] == null ? undefined : ((json['results'] as Array<any>).map(ResultCommandFromJSON)),
-        'painLevel': json['painLevel'] == null ? undefined : json['painLevel'],
-        'difficultyLevel': json['difficultyLevel'] == null ? undefined : json['difficultyLevel'],
-        'techniqueConfidenceLevel': json['techniqueConfidenceLevel'] == null ? undefined : json['techniqueConfidenceLevel'],
-        'note': json['note'] == null ? undefined : json['note'],
-        'sessionRpe': json['sessionRpe'] == null ? undefined : json['sessionRpe'],
-        'observationMode': json['observationMode'] == null ? undefined : json['observationMode'],
-    };
+export function DeclareExecutionCommandFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): DeclareExecutionCommand {
+  if (json == null) {
+    return json;
+  }
+  return {
+    declaredCompletion: json['declaredCompletion'] == null ? undefined : json['declaredCompletion'],
+    results:
+      json['results'] == null
+        ? undefined
+        : (json['results'] as Array<any>).map(ResultCommandFromJSON),
+    painLevel: json['painLevel'] == null ? undefined : json['painLevel'],
+    difficultyLevel: json['difficultyLevel'] == null ? undefined : json['difficultyLevel'],
+    techniqueConfidenceLevel:
+      json['techniqueConfidenceLevel'] == null ? undefined : json['techniqueConfidenceLevel'],
+    note: json['note'] == null ? undefined : json['note'],
+    sessionRpe: json['sessionRpe'] == null ? undefined : json['sessionRpe'],
+    observationMode: json['observationMode'] == null ? undefined : json['observationMode'],
+  };
 }
 
 export function DeclareExecutionCommandToJSON(json: any): DeclareExecutionCommand {
-    return DeclareExecutionCommandToJSONTyped(json, false);
+  return DeclareExecutionCommandToJSONTyped(json, false);
 }
 
-export function DeclareExecutionCommandToJSONTyped(value?: DeclareExecutionCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function DeclareExecutionCommandToJSONTyped(
+  value?: DeclareExecutionCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'declaredCompletion': value['declaredCompletion'],
-        'results': value['results'] == null ? undefined : ((value['results'] as Array<any>).map(ResultCommandToJSON)),
-        'painLevel': value['painLevel'],
-        'difficultyLevel': value['difficultyLevel'],
-        'techniqueConfidenceLevel': value['techniqueConfidenceLevel'],
-        'note': value['note'],
-        'sessionRpe': value['sessionRpe'],
-        'observationMode': value['observationMode'],
-    };
+  return {
+    declaredCompletion: value['declaredCompletion'],
+    results:
+      value['results'] == null
+        ? undefined
+        : (value['results'] as Array<any>).map(ResultCommandToJSON),
+    painLevel: value['painLevel'],
+    difficultyLevel: value['difficultyLevel'],
+    techniqueConfidenceLevel: value['techniqueConfidenceLevel'],
+    note: value['note'],
+    sessionRpe: value['sessionRpe'],
+    observationMode: value['observationMode'],
+  };
 }

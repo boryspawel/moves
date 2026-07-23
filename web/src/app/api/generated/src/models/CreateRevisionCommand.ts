@@ -15,10 +15,10 @@
 import { mapValues } from '../runtime';
 import type { ActingContext } from './ActingContext';
 import {
-    ActingContextFromJSON,
-    ActingContextFromJSONTyped,
-    ActingContextToJSON,
-    ActingContextToJSONTyped,
+  ActingContextFromJSON,
+  ActingContextFromJSONTyped,
+  ActingContextToJSON,
+  ActingContextToJSONTyped,
 } from './ActingContext';
 
 /**
@@ -27,54 +27,59 @@ import {
  * @interface CreateRevisionCommand
  */
 export interface CreateRevisionCommand {
-    /**
-     *
-     * @type {string}
-     * @memberof CreateRevisionCommand
-     */
-    basedOnRevisionId?: string;
-    /**
-     *
-     * @type {ActingContext}
-     * @memberof CreateRevisionCommand
-     */
-    actingContext?: ActingContext;
+  /**
+   *
+   * @type {string}
+   * @memberof CreateRevisionCommand
+   */
+  basedOnRevisionId?: string;
+  /**
+   *
+   * @type {ActingContext}
+   * @memberof CreateRevisionCommand
+   */
+  actingContext?: ActingContext;
 }
 
 /**
  * Check if a given object implements the CreateRevisionCommand interface.
  */
 export function instanceOfCreateRevisionCommand(value: object): value is CreateRevisionCommand {
-    return true;
+  return true;
 }
 
 export function CreateRevisionCommandFromJSON(json: any): CreateRevisionCommand {
-    return CreateRevisionCommandFromJSONTyped(json, false);
+  return CreateRevisionCommandFromJSONTyped(json, false);
 }
 
-export function CreateRevisionCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): CreateRevisionCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'basedOnRevisionId': json['basedOnRevisionId'] == null ? undefined : json['basedOnRevisionId'],
-        'actingContext': json['actingContext'] == null ? undefined : ActingContextFromJSON(json['actingContext']),
-    };
+export function CreateRevisionCommandFromJSONTyped(
+  json: any,
+  ignoreDiscriminator: boolean,
+): CreateRevisionCommand {
+  if (json == null) {
+    return json;
+  }
+  return {
+    basedOnRevisionId: json['basedOnRevisionId'] == null ? undefined : json['basedOnRevisionId'],
+    actingContext:
+      json['actingContext'] == null ? undefined : ActingContextFromJSON(json['actingContext']),
+  };
 }
 
 export function CreateRevisionCommandToJSON(json: any): CreateRevisionCommand {
-    return CreateRevisionCommandToJSONTyped(json, false);
+  return CreateRevisionCommandToJSONTyped(json, false);
 }
 
-export function CreateRevisionCommandToJSONTyped(value?: CreateRevisionCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function CreateRevisionCommandToJSONTyped(
+  value?: CreateRevisionCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'basedOnRevisionId': value['basedOnRevisionId'],
-        'actingContext': ActingContextToJSON(value['actingContext']),
-    };
+  return {
+    basedOnRevisionId: value['basedOnRevisionId'],
+    actingContext: ActingContextToJSON(value['actingContext']),
+  };
 }

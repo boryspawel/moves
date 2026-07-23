@@ -19,62 +19,64 @@ import { mapValues } from '../runtime';
  * @interface ActionCommand
  */
 export interface ActionCommand {
-    /**
-     *
-     * @type {string}
-     * @memberof ActionCommand
-     */
-    action?: string;
-    /**
-     *
-     * @type {Date}
-     * @memberof ActionCommand
-     */
-    snoozedUntil?: Date;
-    /**
-     *
-     * @type {string}
-     * @memberof ActionCommand
-     */
-    usefulnessOutcome?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ActionCommand
+   */
+  action?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof ActionCommand
+   */
+  snoozedUntil?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof ActionCommand
+   */
+  usefulnessOutcome?: string;
 }
 
 /**
  * Check if a given object implements the ActionCommand interface.
  */
 export function instanceOfActionCommand(value: object): value is ActionCommand {
-    return true;
+  return true;
 }
 
 export function ActionCommandFromJSON(json: any): ActionCommand {
-    return ActionCommandFromJSONTyped(json, false);
+  return ActionCommandFromJSONTyped(json, false);
 }
 
 export function ActionCommandFromJSONTyped(json: any, ignoreDiscriminator: boolean): ActionCommand {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'action': json['action'] == null ? undefined : json['action'],
-        'snoozedUntil': json['snoozedUntil'] == null ? undefined : (new Date(json['snoozedUntil'])),
-        'usefulnessOutcome': json['usefulnessOutcome'] == null ? undefined : json['usefulnessOutcome'],
-    };
+  if (json == null) {
+    return json;
+  }
+  return {
+    action: json['action'] == null ? undefined : json['action'],
+    snoozedUntil: json['snoozedUntil'] == null ? undefined : new Date(json['snoozedUntil']),
+    usefulnessOutcome: json['usefulnessOutcome'] == null ? undefined : json['usefulnessOutcome'],
+  };
 }
 
 export function ActionCommandToJSON(json: any): ActionCommand {
-    return ActionCommandToJSONTyped(json, false);
+  return ActionCommandToJSONTyped(json, false);
 }
 
-export function ActionCommandToJSONTyped(value?: ActionCommand | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ActionCommandToJSONTyped(
+  value?: ActionCommand | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'action': value['action'],
-        'snoozedUntil': value['snoozedUntil'] == null ? value['snoozedUntil'] : value['snoozedUntil'].toISOString(),
-        'usefulnessOutcome': value['usefulnessOutcome'],
-    };
+  return {
+    action: value['action'],
+    snoozedUntil:
+      value['snoozedUntil'] == null ? value['snoozedUntil'] : value['snoozedUntil'].toISOString(),
+    usefulnessOutcome: value['usefulnessOutcome'],
+  };
 }

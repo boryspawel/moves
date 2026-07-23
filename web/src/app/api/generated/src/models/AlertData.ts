@@ -19,110 +19,111 @@ import { mapValues } from '../runtime';
  * @interface AlertData
  */
 export interface AlertData {
-    /**
-     *
-     * @type {string}
-     * @memberof AlertData
-     */
-    id?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof AlertData
-     */
-    sessionExecutionId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof AlertData
-     */
-    alertType?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof AlertData
-     */
-    priority?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof AlertData
-     */
-    ownerAccountId?: string;
-    /**
-     *
-     * @type {string}
-     * @memberof AlertData
-     */
-    status?: string;
-    /**
-     *
-     * @type {Date}
-     * @memberof AlertData
-     */
-    dueAt?: Date;
-    /**
-     *
-     * @type {string}
-     * @memberof AlertData
-     */
-    sourceResponseId?: string;
-    /**
-     *
-     * @type {Date}
-     * @memberof AlertData
-     */
-    createdAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof AlertData
+   */
+  id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AlertData
+   */
+  sessionExecutionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AlertData
+   */
+  alertType?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AlertData
+   */
+  priority?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AlertData
+   */
+  ownerAccountId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AlertData
+   */
+  status?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof AlertData
+   */
+  dueAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof AlertData
+   */
+  sourceResponseId?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof AlertData
+   */
+  createdAt?: Date;
 }
 
 /**
  * Check if a given object implements the AlertData interface.
  */
 export function instanceOfAlertData(value: object): value is AlertData {
-    return true;
+  return true;
 }
 
 export function AlertDataFromJSON(json: any): AlertData {
-    return AlertDataFromJSONTyped(json, false);
+  return AlertDataFromJSONTyped(json, false);
 }
 
 export function AlertDataFromJSONTyped(json: any, ignoreDiscriminator: boolean): AlertData {
-    if (json == null) {
-        return json;
-    }
-    return {
-
-        'id': json['id'] == null ? undefined : json['id'],
-        'sessionExecutionId': json['sessionExecutionId'] == null ? undefined : json['sessionExecutionId'],
-        'alertType': json['alertType'] == null ? undefined : json['alertType'],
-        'priority': json['priority'] == null ? undefined : json['priority'],
-        'ownerAccountId': json['ownerAccountId'] == null ? undefined : json['ownerAccountId'],
-        'status': json['status'] == null ? undefined : json['status'],
-        'dueAt': json['dueAt'] == null ? undefined : (new Date(json['dueAt'])),
-        'sourceResponseId': json['sourceResponseId'] == null ? undefined : json['sourceResponseId'],
-        'createdAt': json['createdAt'] == null ? undefined : (new Date(json['createdAt'])),
-    };
+  if (json == null) {
+    return json;
+  }
+  return {
+    id: json['id'] == null ? undefined : json['id'],
+    sessionExecutionId: json['sessionExecutionId'] == null ? undefined : json['sessionExecutionId'],
+    alertType: json['alertType'] == null ? undefined : json['alertType'],
+    priority: json['priority'] == null ? undefined : json['priority'],
+    ownerAccountId: json['ownerAccountId'] == null ? undefined : json['ownerAccountId'],
+    status: json['status'] == null ? undefined : json['status'],
+    dueAt: json['dueAt'] == null ? undefined : new Date(json['dueAt']),
+    sourceResponseId: json['sourceResponseId'] == null ? undefined : json['sourceResponseId'],
+    createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
+  };
 }
 
 export function AlertDataToJSON(json: any): AlertData {
-    return AlertDataToJSONTyped(json, false);
+  return AlertDataToJSONTyped(json, false);
 }
 
-export function AlertDataToJSONTyped(value?: AlertData | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function AlertDataToJSONTyped(
+  value?: AlertData | null,
+  ignoreDiscriminator: boolean = false,
+): any {
+  if (value == null) {
+    return value;
+  }
 
-    return {
-
-        'id': value['id'],
-        'sessionExecutionId': value['sessionExecutionId'],
-        'alertType': value['alertType'],
-        'priority': value['priority'],
-        'ownerAccountId': value['ownerAccountId'],
-        'status': value['status'],
-        'dueAt': value['dueAt'] == null ? value['dueAt'] : value['dueAt'].toISOString(),
-        'sourceResponseId': value['sourceResponseId'],
-        'createdAt': value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
-    };
+  return {
+    id: value['id'],
+    sessionExecutionId: value['sessionExecutionId'],
+    alertType: value['alertType'],
+    priority: value['priority'],
+    ownerAccountId: value['ownerAccountId'],
+    status: value['status'],
+    dueAt: value['dueAt'] == null ? value['dueAt'] : value['dueAt'].toISOString(),
+    sourceResponseId: value['sourceResponseId'],
+    createdAt: value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
+  };
 }
