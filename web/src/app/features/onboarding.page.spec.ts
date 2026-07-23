@@ -2,7 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { ApiFacade } from '../core/api.facade';
-import { OnboardingPage } from './onboarding.page';
+import { OnboardingPage, timeRangeValidator } from './onboarding.page';
+import { FormControl, FormGroup } from '@angular/forms';
 
 const api = {
   state: vi.fn(), selectProfileType: vi.fn(), participantProfile: vi.fn(), specialistProfile: vi.fn(), availability: vi.fn()
@@ -25,7 +26,7 @@ describe('OnboardingPage', () => {
     api.state.mockReturnValue(new Promise(() => undefined));
     const fixture = TestBed.createComponent(OnboardingPage); fixture.detectChanges();
     const page = fixture.nativeElement as HTMLElement;
-    expect(page.textContent).toContain('Ładujemy dane onboardingu');
+    expect(page.querySelector('.onboarding-progress .complete')).toBeNull();
     expect(page.querySelector('form')).toBeNull();
   });
 
@@ -33,7 +34,8 @@ describe('OnboardingPage', () => {
     api.state.mockRejectedValueOnce(new Error('backend body'));
     const fixture = TestBed.createComponent(OnboardingPage); fixture.detectChanges(); await settle(fixture);
     const page = fixture.nativeElement as HTMLElement;
-    expect(page.textContent).toContain('Nie udało się wczytać danych onboardingu');
+    expect(page.textContent).toContain('Nie udało się wczytać konfiguracji');
+    expect(page.querySelector('.onboarding-progress .complete')).toBeNull();
     expect(page.textContent).not.toContain('backend body');
     expect(page.querySelector('form')).toBeNull();
     (page.querySelector('button') as HTMLButtonElement).click(); await settle(fixture);
@@ -77,7 +79,16 @@ describe('OnboardingPage', () => {
   it('renders the ready completion state', async () => {
     api.state.mockResolvedValue({ stage: 'READY', missingSteps: [] });
     const fixture = TestBed.createComponent(OnboardingPage); fixture.detectChanges(); await settle(fixture);
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Onboarding ukończony');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Konto gotowe');
+  });
+
+  it('revalidates the entire time range whenever either time changes', () => {
+    const range = new FormGroup({ startTime: new FormControl('09:00'), endTime: new FormControl('10:00') }, { validators: timeRangeValidator });
+    expect(range.valid).toBe(true);
+    range.controls.startTime.setValue('11:00');
+    expect(range.hasError('invalidTimeRange')).toBe(true);
+    range.controls.endTime.setValue('12:00');
+    expect(range.valid).toBe(true);
   });
 
   it('supports repeatable availability across all seven days and rejects an end before its start', async () => {

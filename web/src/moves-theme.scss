@@ -2,8 +2,10 @@
 
 html { @include mat.theme((color: (primary: mat.$azure-palette, tertiary: mat.$cyan-palette), typography: Roboto, density: 0)); }
 :root { color-scheme: dark; --background: #08111f; --surface: #101d2e; --surface-strong: #1a2a40; --line: #2c3d53; --ink: #f4f7fb; --muted: #a8b6c8; --accent: #76d7c4; --danger: #ff9a9a; }
+/* Scoped semantic tokens allow the onboarding to use a calm, light SaaS surface without changing legacy screens. */
+:root { --onboarding-background:#F7F8FC; --onboarding-surface:#FFFFFF; --onboarding-surface-muted:#F1F5F9; --onboarding-border:#E2E8F0; --onboarding-border-strong:#CBD5E1; --onboarding-text:#0F172A; --onboarding-text-secondary:#475569; --onboarding-text-muted:#64748B; --onboarding-primary:#4F46E5; --onboarding-primary-hover:#4338CA; --onboarding-primary-active:#3730A3; --onboarding-primary-soft:#EEF2FF; --onboarding-success:#15803D; --onboarding-success-soft:#F0FDF4; --onboarding-warning:#B45309; --onboarding-warning-soft:#FFFBEB; --onboarding-danger:#DC2626; --onboarding-danger-soft:#FEF2F2; --onboarding-focus:#2563EB; }
 * { box-sizing: border-box; }
-html, body { margin: 0; min-height: 100%; background: radial-gradient(circle at top, #152d46 0, var(--background) 42rem); color: var(--ink); font-family: Roboto, system-ui, sans-serif; }
+html, body { margin: 0; min-height: 100%; background: radial-gradient(circle at top, #152d46 0, var(--background) 42rem); color: var(--ink); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 body { min-width: 320px; }
 h1, h2, h3 { line-height: 1.15; letter-spacing: -.025em; }
 p { line-height: 1.6; }

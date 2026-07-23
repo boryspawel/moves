@@ -1,5 +1,11 @@
 <a class="skip-link" href="#main-content">Przejdź do treści</a>
-@if (!onboardingMode()) {
+@if (onboardingMode()) {
+<mat-toolbar class="app-toolbar onboarding-toolbar">
+  <a class="brand" routerLink="/onboarding" aria-label="moves">moves</a>
+  <span class="spacer"></span>
+  @if (auth.authenticated()) { <span class="user-name onboarding-user-name">{{ auth.displayName() }}</span><button mat-stroked-button type="button" (click)="logout()">Wyloguj</button> }
+</mat-toolbar>
+} @else {
 <mat-toolbar class="app-toolbar">
   <a class="brand" routerLink="/" aria-label="moves — strona główna">moves</a>
   <nav aria-label="Główna nawigacja">
