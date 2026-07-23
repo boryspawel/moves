@@ -2,6 +2,8 @@ package com.motionecosystem.participant;
 
 import java.time.Clock;
 import java.util.Optional;
+import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,14 @@ public class ParticipantProfileService {
     @Transactional(readOnly = true)
     public Optional<ProfileView> find(UUID accountId) {
         return profiles.findByAccountId(accountId).map(ParticipantProfileService::view);
+    }
+
+    /** Names are composed only after the caller has enforced its relationship policy. */
+    @Transactional(readOnly = true)
+    public Map<UUID, String> findDisplayNames(Collection<UUID> accountIds) {
+        if (accountIds == null || accountIds.isEmpty()) return Map.of();
+        return profiles.findByAccountIdIn(accountIds).stream()
+                .collect(java.util.stream.Collectors.toUnmodifiableMap(profile -> profile.accountId, profile -> profile.displayName));
     }
 
     private static String validName(String value) {

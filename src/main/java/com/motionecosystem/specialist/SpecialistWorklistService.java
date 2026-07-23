@@ -164,8 +164,8 @@ class SpecialistWorklistService {
     record ParticipantIssueCommand(String problemCode, String shortText) { }
     record ReplyCommand(String shortText) { }
     record WorklistItemView(UUID id, UUID participantAccountId, UUID planRevisionId, String category, String priority,
-                            String reasonCode, String minimalData, String policyVersion, String status, Instant snoozedUntil,
+                            String reasonCode, String minimalData, String policyVersion, String status, Instant createdAt, Instant snoozedUntil,
                             String issueText, List<ReplyView> replies) { }
     record ReplyView(UUID id, String shortText, Instant createdAt) { }
-    private static WorklistItemView view(SpecialistWorklistItem item, String issueText, List<ReplyView> replies) { return new WorklistItemView(item.id, item.participantAccountId, item.planRevisionId, item.category, item.priority, item.reasonCode, item.minimalData, item.policyVersionCode, item.status, item.snoozedUntil, issueText, replies); }
+    private static WorklistItemView view(SpecialistWorklistItem item, String issueText, List<ReplyView> replies) { return new WorklistItemView(item.id, item.participantAccountId, item.planRevisionId, item.category, item.priority, item.reasonCode, item.minimalData, item.policyVersionCode, item.status, item.createdAt, item.snoozedUntil, issueText, replies); }
 }

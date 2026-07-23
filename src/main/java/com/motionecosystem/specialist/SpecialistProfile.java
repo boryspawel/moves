@@ -1,6 +1,7 @@
 package com.motionecosystem.specialist;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -24,6 +25,8 @@ class SpecialistProfile {
     @Enumerated(EnumType.STRING)
     @Column(name = "specialist_kind", nullable = false)
     SpecialistKind specialistKind;
+    @Column(name = "time_zone_id")
+    String timeZoneId;
     @Column(name = "created_at", nullable = false, updatable = false)
     Instant createdAt;
     @Column(name = "updated_at", nullable = false)
@@ -34,18 +37,20 @@ class SpecialistProfile {
     protected SpecialistProfile() {
     }
 
-    SpecialistProfile(UUID accountId, String displayName, SpecialistKind kind, Instant now) {
+    SpecialistProfile(UUID accountId, String displayName, SpecialistKind kind, ZoneId timeZone, Instant now) {
         this.id = UUID.randomUUID();
         this.accountId = accountId;
         this.displayName = displayName;
         this.specialistKind = kind;
+        this.timeZoneId = timeZone.getId();
         this.createdAt = now;
         this.updatedAt = now;
     }
 
-    void update(String name, SpecialistKind kind, Instant now) {
+    void update(String name, SpecialistKind kind, ZoneId timeZone, Instant now) {
         displayName = name;
         specialistKind = kind;
+        timeZoneId = timeZone.getId();
         updatedAt = now;
     }
 }

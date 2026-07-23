@@ -69,9 +69,9 @@ public class OnboardingService {
     }
 
     @Transactional
-    public State saveSpecialistProfile(String subject, String displayName, SpecialistKind specialistKind) {
+    public State saveSpecialistProfile(String subject, String displayName, SpecialistKind specialistKind, String timeZoneId) {
         CurrentAccount account = requireProfileType(subject, ProfileType.SPECIALIST);
-        SpecialistProfileService.ProfileView profile = specialistProfiles.save(account.id(), displayName, specialistKind);
+        SpecialistProfileService.ProfileView profile = specialistProfiles.save(account.id(), displayName, specialistKind, timeZoneId);
         audit.record(subject, "SPECIALIST_PROFILE_SAVED", "SpecialistProfile", profile.id());
         return stateFor(account);
     }

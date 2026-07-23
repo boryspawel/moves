@@ -1,6 +1,8 @@
 package com.motionecosystem.specialist;
 
 import java.time.Clock;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,14 +21,15 @@ public class SpecialistProfileService {
     private final Clock clock;
 
     @Transactional
-    public ProfileView save(UUID accountId, String displayName, SpecialistKind kind) {
+    public ProfileView save(UUID accountId, String displayName, SpecialistKind kind, String timeZoneId) {
         String name = validName(displayName);
         if (kind == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "specialist kind is required");
         }
+        ZoneId timeZone = validTimeZoneOrLegacyDefault(timeZoneId);
         SpecialistProfile profile = profiles.findByAccountId(accountId)
-                .orElseGet(() -> new SpecialistProfile(accountId, name, kind, clock.instant()));
-        profile.update(name, kind, clock.instant());
+                .orElseGet(() -> new SpecialistProfile(accountId, name, kind, timeZone, clock.instant()));
+        profile.update(name, kind, timeZone, clock.instant());
         if (!scopes.existsById(new ProfessionalScope.Id(accountId, kind))) {
             scopes.save(new ProfessionalScope(accountId, kind, clock.instant()));
         }
@@ -45,11 +48,17 @@ public class SpecialistProfileService {
         }
         return name;
     }
-
-    private static ProfileView view(SpecialistProfile profile) {
-        return new ProfileView(profile.id, profile.displayName, profile.specialistKind);
+    private static ZoneId validTimeZoneOrLegacyDefault(String value) {
+        String id = value == null ? "" : value.trim();
+        if (id.isEmpty()) return ZoneOffset.UTC;
+        try { return ZoneId.of(id); }
+        catch (RuntimeException invalid) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "timeZoneId must be a valid IANA identifier"); }
     }
 
-    public record ProfileView(UUID id, String displayName, SpecialistKind specialistKind) {
+    private static ProfileView view(SpecialistProfile profile) {
+        return new ProfileView(profile.id, profile.displayName, profile.specialistKind, profile.timeZoneId);
+    }
+
+    public record ProfileView(UUID id, String displayName, SpecialistKind specialistKind, String timeZoneId) {
     }
 }

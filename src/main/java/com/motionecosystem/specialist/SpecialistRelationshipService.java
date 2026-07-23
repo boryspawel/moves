@@ -25,6 +25,13 @@ public class SpecialistRelationshipService {
         }
     }
 
+    public java.util.Set<UUID> activeParticipantIds(UUID specialistAccountId) {
+        return relationships.findBySpecialistAccountIdAndStatus(specialistAccountId,
+                        ParticipantSpecialistRelationship.Status.ACTIVE).stream()
+                .map(ParticipantSpecialistRelationship::participantAccountId)
+                .collect(java.util.stream.Collectors.toUnmodifiableSet());
+    }
+
     /** Minimal selector projection; account identifiers remain an implementation detail of the client. */
     public List<ActiveParticipantView> activeParticipants(String subject) {
         UUID specialist = accounts.requireActive(subject).id();

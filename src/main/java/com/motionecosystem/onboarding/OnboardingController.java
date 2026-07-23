@@ -8,6 +8,7 @@ import com.motionecosystem.availability.RecurringAvailabilityService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.specialist.SpecialistKind;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -57,7 +58,7 @@ class OnboardingController {
     OnboardingService.State specialistProfile(@AuthenticationPrincipal Jwt jwt,
                                               @RequestBody SpecialistProfileRequest request) {
         return onboarding.saveSpecialistProfile(
-                jwt.getSubject(), request.displayName(), request.specialistKind());
+                jwt.getSubject(), request.displayName(), request.specialistKind(), request.timeZoneId());
     }
 
     @PutMapping("/availability")
@@ -79,7 +80,8 @@ class OnboardingController {
     record ParticipantProfileRequest(String displayName, String timeZoneId) {
     }
 
-    record SpecialistProfileRequest(String displayName, SpecialistKind specialistKind) {
+    record SpecialistProfileRequest(String displayName, SpecialistKind specialistKind,
+            @Schema(description = "Specialist IANA time zone. Required for new clients; legacy requests are persisted as UTC.", requiredMode = Schema.RequiredMode.REQUIRED, example = "Europe/Warsaw") String timeZoneId) {
     }
 
     record AvailabilityRequest(List<SlotRequest> slots) {
