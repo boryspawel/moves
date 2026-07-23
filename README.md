@@ -76,6 +76,16 @@ zatwierdzonego wariantu → check-in → prowadzona próba z zapisem postępu �
 lub bezpieczne zgłoszenie bariery. System nie podejmuje automatycznych decyzji
 klinicznych.
 
+## Workspace specjalisty
+
+Specjalista po ukończeniu onboardingu otwiera workspace „Dzisiaj” pod
+`/specialist/today`. Widok pokazuje bieżące i kolejne terminy, terminy danego
+dnia, zapisane okna dostępności oraz ograniczoną listę spraw wymagających uwagi.
+Dzień jest wyznaczany w zapisanej strefie IANA profilu specjalisty; terminy są
+przechowywane i przekazywane jako chwile UTC. Zadania operacyjne nie są jeszcze
+źródłem danych tego widoku, dlatego `operationalTasks` jest obecnie zwracane jako
+puste.
+
 ## Diagnostyka i smoke test
 
 ```bash

@@ -19,6 +19,7 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
 - `identityaccess`: mapowanie `sub`, status konta i role techniczne;
 - `participant`: profil uczestnika;
 - `specialist`: profil specjalisty, relacja do uczestnika oraz worklista adherence z participant issue/reply i aktywną deduplikacją;
+- `calendar`: terminy specjalisty i ich idempotentne komendy; moduł `specialist` składa z nich ograniczony widok `Today`, lecz nie przejmuje własności danych terminu;
 - `consent`: wersje dokumentów, granty, wycofanie i ważność;
 - `availability`: cykliczne przedziały i przyszłe wyjątki;
 - `anatomyreference`: wersjonowana taksonomia struktur anatomicznych;
@@ -51,12 +52,16 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
 - PostgreSQL jest jedynym źródłem prawdy; migracje są liniowe i forward-compatible.
 - Identyfikatory domenowe są UUID; `sub` Keycloak pozostaje tekstową referencją zewnętrzną.
 - Chwile są zapisywane jako UTC, a strefa IANA obok cyklicznych przedziałów.
+- `V034__create_specialist_calendar` tworzy schemat `calendar`, terminy i ich klucze idempotencji; `V035__add_specialist_profile_time_zone` utrwala wymaganą strefę IANA profilu specjalisty (dla istniejących profili deterministyczne `UTC`).
+- `GET /api/v1/specialist/today?date=YYYY-MM-DD` wyznacza dzień w utrwalonej strefie specjalisty i zwraca terminy, dostępność oraz sprawy worklisty; `operationalTasks` jest obecnie zwracane jako puste.
+- `POST /api/v1/specialist/appointments`, `PUT /api/v1/specialist/appointments/{id}`, `POST /api/v1/specialist/appointments/{id}/cancel` i `POST /api/v1/specialist/appointments/{id}/no-show` wymagają `Idempotency-Key`.
 - Operacje podatne na retry używają klucza idempotencji i unikalnego ograniczenia w bazie.
 
 ## Bezpieczeństwo i prywatność
 
 - OAuth2 Resource Server waliduje issuer i audience; role Keycloak są mapowane do `ROLE_*`.
 - Health i kontrakt OpenAPI mogą być publiczne; domenowe API domyślnie wymaga tokenu.
+- Endpointy `Today` i komendy terminów są dostępne wyłącznie dla `SPECIALIST`; widok `Today` pobiera wyłącznie terminy specjalisty oraz uczestników z jego aktywną relacją, a wyświetlana worklista pozostaje ograniczona do minimalnych danych.
 - Ból, ograniczenia, wywiad i notatki nie trafiają do gamifikacji ani publicznego profilu.
 - Trener widzi wyłącznie effective safety envelope. Clinical rationale jest osobnym widokiem fizjoterapeuty objętym osobną zgodą.
 - Collaborator planu ma jawny zakres, który nie zastępuje kontroli capability, relacji i consent.
