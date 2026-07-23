@@ -8,6 +8,14 @@ dist/
 test-results/
 playwright-report/
 
+# OpenAPI generator documentation and implementation metadata. The generated
+# TypeScript client under web/src/app/api/generated/src remains versioned.
+/web/src/app/api/generated/docs/
+/web/src/app/api/generated/README.md
+/web/src/app/api/generated/.openapi-generator/
+/web/src/app/api/generated/.gitignore
+/web/src/app/api/generated/.npmignore
+
 docs/moves-anatomy-v1.patch
 docs/moves-anatomy-v1.zip
 docs/moves-anatomy-v1/
