@@ -28,7 +28,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -46,7 +45,7 @@ public class CatalogService implements ExerciseCatalogQueryPort {
     private final AnatomyReferenceQueryPort anatomy;
     private final AuditRecorder audit;
     private final Clock clock;
-    private final JdbcTemplate jdbc;
+    private final ExerciseReviewReadRepository reviewReads;
 
     @Transactional
     public VersionView create(String actorSubject, String canonicalName, VersionCommand requested) {
@@ -112,12 +111,9 @@ public class CatalogService implements ExerciseCatalogQueryPort {
     }
 
     private void invalidateCurrentReviews(UUID versionId, String actorSubject) {
-        int invalidated = jdbc.update("""
-                UPDATE exercise_catalog.exercise_review
-                   SET invalidated_at=?, invalidated_by_subject=?
-                 WHERE exercise_version_id=? AND invalidated_at IS NULL
-                """, java.sql.Timestamp.from(clock.instant()), actorSubject, versionId);
-        if (invalidated > 0) {
+        List<ExerciseReview> active = reviewReads.findByExerciseVersionIdAndInvalidatedAtIsNull(versionId);
+        active.forEach(review -> review.invalidate(actorSubject, clock.instant()));
+        if (!active.isEmpty()) {
             audit.record(actorSubject, "EXERCISE_REVIEWS_INVALIDATED_BY_CONTENT_CHANGE", "ExerciseVersion", versionId);
         }
     }

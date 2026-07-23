@@ -130,6 +130,16 @@ public class AnatomyReferenceService implements AnatomyReferenceQueryPort {
 
     @Override
     @Transactional(readOnly = true)
+    public Map<UUID, AnatomicalStructureSnapshot> findStructures(Collection<UUID> structureIds) {
+        if (structureIds == null || structureIds.isEmpty()) {
+            return Map.of();
+        }
+        return persistence.findAll(Set.copyOf(structureIds)).values().stream()
+                .collect(Collectors.toUnmodifiableMap(AnatomicalStructure::id, AnatomyReferenceService::snapshot));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<AncestorPath> ancestorPaths(UUID structureId) {
         requireStructure(structureId);
         List<List<AnatomyReferencePersistence.ParentEdge>> paths = ancestorPathsInternal(structureId);

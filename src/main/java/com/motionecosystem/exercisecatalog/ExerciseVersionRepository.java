@@ -70,6 +70,16 @@ interface ExerciseVersionRepository extends JpaRepository<ExerciseVersion, UUID>
             Pageable pageable);
 
     List<ExerciseVersion> findByIdInAndStatus(Set<UUID> ids, ExerciseVersionStatus status);
+    List<ExerciseVersion> findByStatusOrderByCreatedAtAscIdAsc(ExerciseVersionStatus status);
+
+    @Query("""
+            SELECT version.semanticSha256 FROM ExerciseVersion version
+            WHERE version.exerciseId = :exerciseId
+              AND version.status = com.motionecosystem.exercisecatalog.ExerciseVersionStatus.PUBLISHED
+            ORDER BY version.versionNumber DESC
+            """)
+    List<String> findPublishedSemanticSha256(@Param("exerciseId") UUID exerciseId,
+                                             org.springframework.data.domain.Pageable pageable);
 
     @Query("""
             SELECT version.id AS versionId, pattern AS movementPattern

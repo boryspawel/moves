@@ -16,6 +16,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "exercise_version", schema = "exercise_catalog")
@@ -81,6 +83,11 @@ class ExerciseVersion {
     long version;
     @Column(name = "content_revision", nullable = false)
     long contentRevision;
+    @Column(name = "semantic_sha256")
+    @JdbcTypeCode(SqlTypes.CHAR)
+    String semanticSha256;
+    @Column(name = "import_record_id")
+    UUID importRecordId;
 
     protected ExerciseVersion() {
     }
@@ -118,6 +125,15 @@ class ExerciseVersion {
             throw new IllegalStateException("only a version in review can have changes requested");
         }
         status = ExerciseVersionStatus.CHANGES_REQUESTED;
+        reviewedBySubject = null;
+        reviewedAt = null;
+    }
+
+    void beginReview() {
+        if (status == ExerciseVersionStatus.PUBLISHED || status == ExerciseVersionStatus.WITHDRAWN) {
+            throw new IllegalStateException("published or withdrawn versions cannot be reviewed");
+        }
+        status = ExerciseVersionStatus.IN_REVIEW;
         reviewedBySubject = null;
         reviewedAt = null;
     }

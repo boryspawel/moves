@@ -2,12 +2,15 @@ package com.motionecosystem.anatomyreference.api;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface AnatomyReferenceQueryPort {
 
     Optional<AnatomicalStructureSnapshot> findStructure(UUID structureId);
+
+    Map<UUID, AnatomicalStructureSnapshot> findStructures(java.util.Collection<UUID> structureIds);
 
     List<AncestorPath> ancestorPaths(UUID structureId);
 

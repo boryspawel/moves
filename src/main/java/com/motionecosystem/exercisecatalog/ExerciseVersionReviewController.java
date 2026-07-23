@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -22,27 +21,26 @@ import java.util.UUID;
 class ExerciseVersionReviewController {
     private final ExerciseEditorialWorkflowService workflow;
     private final ExerciseReviewQueryService reviewQueries;
-    private final JdbcTemplate jdbc;
+    private final ExerciseVersionRepository versions;
+    private final ExerciseRepository exercises;
 
-    ExerciseVersionReviewController(ExerciseEditorialWorkflowService workflow, ExerciseReviewQueryService reviewQueries, JdbcTemplate jdbc) {
+    ExerciseVersionReviewController(ExerciseEditorialWorkflowService workflow, ExerciseReviewQueryService reviewQueries,
+                                    ExerciseVersionRepository versions, ExerciseRepository exercises) {
         this.workflow = workflow;
         this.reviewQueries = reviewQueries;
-        this.jdbc = jdbc;
+        this.versions = versions;
+        this.exercises = exercises;
     }
     @PostMapping("/{id}/reviews") ReviewExerciseVersion.ReviewResult review(@AuthenticationPrincipal Jwt jwt,@PathVariable UUID id,@RequestBody ReviewExerciseVersion.ReviewCommand request){return workflow.review(id,jwt.getSubject(),request);}
     @GetMapping("/{id}/reviews") ReviewExerciseVersion.ReviewResult reviews(@PathVariable UUID id){return workflow.status(id);}
 
     @GetMapping("/review-queue")
     List<ReviewQueueItem> reviewQueue() {
-        return jdbc.query("""
-                SELECT version.id,exercise.canonical_name FROM exercise_catalog.exercise_version version
-                JOIN exercise_catalog.exercise exercise ON exercise.id=version.exercise_id
-                WHERE version.status='DRAFT' ORDER BY version.created_at,version.id
-                """, (rs, n) -> {
-            UUID id = rs.getObject(1, UUID.class);
-            var review = workflow.status(id);
-            return new ReviewQueueItem(id, rs.getString(2), review.status(), review.unmetRequirements());
-        });
+        return versions.findByStatusOrderByCreatedAtAscIdAsc(ExerciseVersionStatus.DRAFT).stream().map(version -> {
+            var review = workflow.status(version.id);
+            String name = exercises.findById(version.exerciseId).map(item -> item.canonicalName).orElse("");
+            return new ReviewQueueItem(version.id, name, review.status(), review.unmetRequirements());
+        }).toList();
     }
     @GetMapping("/{id}/diff") ExerciseEditorialWorkflowService.VersionDiff diff(@PathVariable UUID id){return workflow.diff(id);}
     @PostMapping("/{id}/publish") PublishExerciseVersion.PublicationResult publish(@AuthenticationPrincipal Jwt jwt,@PathVariable UUID id,@Valid @RequestBody ExerciseVersionPublishRequest request){return workflow.publish(id,jwt.getSubject(),request.expectedVersion());}

@@ -167,7 +167,7 @@ class ExerciseImportEndToEndIntegrationTest {
         mvc.perform(get("/api/v1/admin/exercise-import/batches/{id}",batch)).andExpect(status().isUnauthorized());
     }
 
-    @Test void mappingLicenseAndTherapeuticIndependentReviewRulesBlockUnsafeProgress()throws Exception{
+    @Test void mappingAndLicenseRulesBlockUnsafeProgress()throws Exception{
         UUID unlicensed=createSource("NO_LICENSE",false);
         UUID licenseBatch=upload(unlicensed,"license-1",false,resource("fixtures/exercise-import-valid.jsonl"),contentAdmin("editor"));await(licenseBatch);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_record WHERE batch_id=? AND status='BLOCKED_BY_LICENSE'",Integer.class,licenseBatch)).isEqualTo(2);

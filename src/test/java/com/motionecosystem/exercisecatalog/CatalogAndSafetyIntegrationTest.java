@@ -174,6 +174,13 @@ class CatalogAndSafetyIntegrationTest {
     }
 
     @Test
+    void reviewQueueAcceptsUnsetOptionalFilters() throws Exception {
+        mvc.perform(get("/api/v1/admin/exercise-review/items").with(contentAdmin()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray());
+    }
+
+    @Test
     void concurrentNextVersionsAreSerializedWithoutRawServerError() throws Exception {
         CreatedExercise base = createExercise("Concurrent exercise");
         CountDownLatch ready = new CountDownLatch(2);
