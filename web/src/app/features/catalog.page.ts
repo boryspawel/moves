@@ -30,7 +30,7 @@ const asPage = (value: string | null) => value && /^\d+$/.test(value) ? Number(v
   @if (invalid()) {<p class="notice" aria-live="polite">Nieprawidłowe parametry adresu zostały znormalizowane.</p>}
   @if (loading()) {<p aria-live="polite">Ładowanie wyników…</p>} @else if (error()) {<section class="error" role="alert"><p>Nie udało się pobrać katalogu. Spróbuj ponownie.</p><button mat-button (click)="retry()">Ponów</button></section>} @else {<p aria-live="polite">{{total()}} wyników.</p>
     @if (items().length) {<ul class="card-list">@for (x of items(); track x.versionId) {<li><a [routerLink]="['/catalog', x.versionId]" [queryParams]="returnParams()"><h2>{{x.canonicalName}}</h2><p>{{label(x.primaryMovementPattern)}} · {{label(x.technicalLevel)}} · {{label(x.environment)}}</p><span>Opublikowana wersja {{x.versionNumber}}</span></a></li>}</ul>
-    <mat-paginator [length]="total()" [pageIndex]="state().page" [pageSize]="state().size" [pageSizeOptions]="[12, 24, 48]" aria-label="Strony wyników" (page)="paginate($event)"/>} @else {<p>Brak ćwiczeń spełniających kryteria.</p>}}
+    <mat-paginator [length]="total()" [pageIndex]="state().page" [pageSize]="state().size" [pageSizeOptions]="[12, 24, 48]" aria-label="Strony wyników" (page)="paginate($event)"/>} @else {<p class="empty-state">Brak ćwiczeń spełniających kryteria. Zmień lub wyczyść filtry i spróbuj ponownie.</p>}}
   </main>`
 })
 export class CatalogPage {
