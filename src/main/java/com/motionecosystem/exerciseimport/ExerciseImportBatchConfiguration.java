@@ -1,22 +1,6 @@
 package com.motionecosystem.exerciseimport;
 
-import com.motionecosystem.exerciseimport.api.FindExerciseMatch;
-import com.motionecosystem.exerciseimport.api.ImportArtifactStorage;
-import com.motionecosystem.exerciseimport.api.NormalizeImportRecord;
-import com.motionecosystem.exerciseimport.api.ValidateImportRecord;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.CodingErrorAction;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.sql.Timestamp;
-import java.time.Clock;
-import java.util.ArrayDeque;
-import java.util.HexFormat;
-import java.util.Queue;
-import java.util.UUID;
+import com.motionecosystem.exerciseimport.api.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.configuration.annotation.StepScope;
@@ -37,7 +21,23 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.ObjectMapper;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.sql.Timestamp;
+import java.time.Clock;
+import java.util.ArrayDeque;
+import java.util.HexFormat;
+import java.util.Queue;
+import java.util.UUID;
 
 @Configuration(proxyBeanMethods = false)
 @EnableAsync
@@ -50,6 +50,7 @@ class ExerciseImportBatchConfiguration {
     private final NormalizeImportRecord normalizer;
     private final ValidateImportRecord validator;
     private final FindExerciseMatch matcher;
+    private final CreateExerciseDraft drafts;
     private final Clock clock;
 
     @Bean(name = "exerciseImportExecutor")
@@ -143,7 +144,23 @@ class ExerciseImportBatchConfiguration {
     @Bean("prepareDraftExerciseImport")
     Step prepareDraft(JobRepository repository, PlatformTransactionManager transactions) {
         return new StepBuilder("CREATE_DRAFT", repository).tasklet((contribution, context) -> {
-            refresh(batchId(context.getStepContext().getJobParameters().get("batchId")));
+            UUID batchId = batchId(context.getStepContext().getJobParameters().get("batchId"));
+            // Each record owns its transaction.  A bad record remains retryable and is visible as an
+            // issue; successfully created drafts are never rolled back with an unrelated record.
+            TransactionTemplate perRecord = new TransactionTemplate(transactions);
+            perRecord.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+            for (UUID recordId : jdbc.queryForList("""
+                    SELECT id FROM exercise_import.import_record
+                    WHERE batch_id=? AND status='READY_FOR_DRAFT' AND draft_version_id IS NULL
+                    ORDER BY row_number,id
+                    """, UUID.class, batchId)) {
+                try {
+                    perRecord.executeWithoutResult(status -> drafts.createDraft(recordId, "exercise-import-batch"));
+                } catch (RuntimeException failure) {
+                    draftIssue(batchId, recordId);
+                }
+            }
+            refresh(batchId);
             return org.springframework.batch.infrastructure.repeat.RepeatStatus.FINISHED;
         }, transactions).build();
     }
@@ -183,7 +200,22 @@ class ExerciseImportBatchConfiguration {
     }
 
     private void refresh(UUID batchId) {
-        jdbc.execute("SELECT exercise_import.refresh_batch_projection('" + batchId + "'::uuid)");
+        jdbc.update("""
+                UPDATE exercise_import.import_batch batch SET
+                    total_count=(SELECT COUNT(*) FROM exercise_import.import_record r WHERE r.batch_id=?),
+                    valid_count=(SELECT COUNT(*) FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status NOT IN ('INVALID','BLOCKED_BY_MAPPING','BLOCKED_BY_LICENSE','REJECTED')),
+                    invalid_count=(SELECT COUNT(*) FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status='INVALID'),
+                    blocked_count=(SELECT COUNT(*) FROM exercise_import.import_record r WHERE r.batch_id=? AND (r.status IN ('BLOCKED_BY_MAPPING','BLOCKED_BY_LICENSE','MATCH_CANDIDATES') OR EXISTS (SELECT 1 FROM exercise_import.import_issue i WHERE i.record_id=r.id AND i.code='DRAFT_CREATION_FAILED' AND i.resolved_at IS NULL))),
+                    drafted_count=(SELECT COUNT(*) FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status='DRAFTED'),
+                    unchanged_count=(SELECT COUNT(*) FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status='UNCHANGED'),
+                    status=CASE WHEN batch.status='FAILED' THEN 'FAILED'
+                        WHEN NOT EXISTS (SELECT 1 FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status IN ('RECEIVED','PARSED','NORMALIZED'))
+                         AND (EXISTS (SELECT 1 FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status IN ('INVALID','BLOCKED_BY_MAPPING','BLOCKED_BY_LICENSE','MATCH_CANDIDATES')) OR EXISTS (SELECT 1 FROM exercise_import.import_issue i WHERE i.batch_id=? AND i.severity IN ('ERROR','BLOCKER') AND i.resolved_at IS NULL)) THEN 'COMPLETED_WITH_ISSUES'
+                        WHEN NOT EXISTS (SELECT 1 FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status IN ('RECEIVED','PARSED','NORMALIZED')) THEN 'COMPLETED'
+                        ELSE 'PROCESSING' END,
+                    completed_at=CASE WHEN EXISTS (SELECT 1 FROM exercise_import.import_record r WHERE r.batch_id=? ) AND NOT EXISTS (SELECT 1 FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status IN ('RECEIVED','PARSED','NORMALIZED')) THEN COALESCE(batch.completed_at,?) ELSE NULL END,
+                    version=batch.version+1 WHERE batch.id=?
+                """, batchId, batchId, batchId, batchId, batchId, batchId, batchId, batchId, batchId, batchId, batchId, batchId, Timestamp.from(clock.instant()), batchId);
     }
 
     private void insertRecord(UUID batchId, long row, String payload, String hash) {
@@ -218,6 +250,18 @@ class ExerciseImportBatchConfiguration {
                 INSERT INTO exercise_import.import_issue(id,batch_id,code,stage,severity,json_pointer,message,created_at)
                 VALUES (?,?,?,'PARSE',?,'/',?,?) ON CONFLICT DO NOTHING
                 """, UUID.randomUUID(), batchId, code, severity, message, Timestamp.from(clock.instant()));
+    }
+
+    private void draftIssue(UUID batchId, UUID recordId) {
+        jdbc.update("""
+                INSERT INTO exercise_import.import_issue(id,batch_id,record_id,row_number,code,stage,severity,json_pointer,message,created_at)
+                SELECT ?,?,?,row_number,'DRAFT_CREATION_FAILED','CREATE_DRAFT','ERROR','/',
+                       'Nie można było utworzyć szkicu. Rekord pozostaje gotowy do bezpiecznego ponowienia.',?
+                FROM exercise_import.import_record record WHERE id=?
+                  AND NOT EXISTS (SELECT 1 FROM exercise_import.import_issue issue
+                                  WHERE issue.record_id=record.id AND issue.code='DRAFT_CREATION_FAILED'
+                                    AND issue.resolved_at IS NULL)
+                """, UUID.randomUUID(), batchId, recordId, Timestamp.from(clock.instant()), recordId);
     }
 
     private static UUID batchId(Object value) { return UUID.fromString(String.valueOf(value)); }

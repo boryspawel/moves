@@ -1,88 +1,197 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { JsonPipe } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { ExerciseImportApi, ImportBatch, ImportRecord, ImportSource, RecordDetail, ReviewResult } from '../core/exercise-import.api';
+import {ChangeDetectionStrategy, Component, computed, inject, OnDestroy, signal} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatSelectModule} from '@angular/material/select';
+import {RouterLink} from '@angular/router';
+import {ExerciseImportApi, ImportBatch, ImportIssue, ImportSource} from '../core/exercise-import.api';
+
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
 @Component({
   selector: 'app-exercise-import-page',
-  imports: [FormsModule, JsonPipe, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [FormsModule, RouterLink, MatButtonModule, MatCardModule, MatFormFieldModule, MatSelectModule],
   template: `
     <section class="panel import-page">
-      <h1>Masowy import ćwiczeń</h1>
-      <p class="muted">JSONL trafia do stagingu. Publikacja zawsze wymaga jawnych recenzji.</p>
+      <h1>Import ćwiczeń</h1>
+      <p class="muted">Wybierz plik JSONL. Aplikacja sprawdzi dane i przygotuje szkice ćwiczeń.</p>
       <p class="status" aria-live="polite" [class.error]="failed()">{{ message() }}</p>
 
-      <div class="toolbar">
+      @if (sources().length > 1) {
         <mat-form-field><mat-label>Źródło</mat-label><mat-select [ngModel]="sourceId()" (ngModelChange)="sourceId.set($event)">
-          @for (source of sources(); track source.id) { <mat-option [value]="source.id">{{ source.displayName }} · {{ source.licenseCode }}</mat-option> }
+          @for (source of sources(); track source.id) { <mat-option [value]="source.id">{{ source.displayName }}</mat-option> }
         </mat-select></mat-form-field>
-        <button mat-stroked-button type="button" (click)="createStarterSource()">Utwórz źródło MOVES_STARTER_V1</button>
-        <label class="file">Plik JSONL <input type="file" accept=".jsonl,application/x-ndjson" (change)="choose($event)"></label>
-        <button mat-flat-button type="button" [disabled]="!canUpload()" (click)="upload()">Prześlij</button>
+      }
+      @if (!sources().length) {
+        <button mat-stroked-button type="button" (click)="createStarterSource()">Zainicjalizuj źródło starterowe</button>
+      }
+
+      <div class="picker" [class.invalid]="fileError()">
+        <input #picker id="exercise-jsonl" type="file" accept=".jsonl,application/x-ndjson" (change)="choose($event)">
+        <button mat-stroked-button type="button" (click)="picker.click()">Wybierz plik JSONL</button>
+        @if (file(); as selected) { <span>{{ selected.name }} · {{ formatBytes(selected.size) }}</span><button mat-button type="button" (click)="removeFile()">Usuń</button> }
+        @if (fileError()) { <span class="error">{{ fileError() }}</span> }
       </div>
+      <button mat-flat-button type="button" [disabled]="!canUpload()" (click)="upload()">Sprawdź i importuj</button>
 
       @if (batch(); as current) {
         <mat-card><mat-card-content>
-          <h2>Batch {{ current.id }}</h2>
-          <p><strong>{{ current.status }}</strong> · rekordy {{ current.totalCount }} · poprawne {{ current.validCount }} · błędne {{ current.invalidCount }} · blokady {{ current.blockedCount }} · szkice {{ current.draftedCount }} · bez zmian {{ current.unchangedCount }}</p>
-          <div class="toolbar"><mat-form-field><mat-label>Status rekordu</mat-label><input matInput [(ngModel)]="statusFilter"></mat-form-field><mat-form-field><mat-label>Severity</mat-label><input matInput [(ngModel)]="severityFilter"></mat-form-field><button mat-stroked-button (click)="loadRecords()">Filtruj</button></div>
+          <h2>Podsumowanie importu</h2>
+          @if (isProcessing(current)) { <p aria-live="polite">Trwa sprawdzanie i przygotowywanie szkiców…</p> }
+          @else { <p>{{ summary(current) }}</p> }
+          <dl class="summary"><div><dt>Zaimportowano</dt><dd>{{ current.totalCount }}</dd></div><div><dt>Utworzono szkice</dt><dd>{{ current.draftedCount }}</dd></div><div><dt>Bez zmian</dt><dd>{{ current.unchangedCount }}</dd></div><div><dt>Wymaga decyzji</dt><dd>{{ attentionCount(current) }}</dd></div><div><dt>Błędy</dt><dd>{{ current.invalidCount }}</dd></div><div><dt>Blokady</dt><dd>{{ current.blockedCount }}</dd></div></dl>
+          @if (!isProcessing(current) && attentionCount(current)) { <a mat-flat-button [routerLink]="['/admin/exercise-import/batches', current.id, 'attention']">Przejdź do rekordów wymagających uwagi</a> }
+          <a mat-button routerLink="/catalog">Wróć do katalogu</a>
         </mat-card-content></mat-card>
-        <div class="grid">
-          <ol class="records" aria-label="Rekordy importu">
-            @for (record of records(); track record.id) {
-              <li><button type="button" (click)="open(record)">#{{ record.rowNumber }} {{ record.sourceRecordKey || 'bez klucza' }} <strong>{{ record.status }}</strong></button></li>
-            }
-          </ol>
-          @if (detail(); as item) {
-            <article>
-              <h2>Rekord #{{ item.rowNumber }}</h2>
-              <h3>Raw</h3><pre>{{ item.raw | json }}</pre>
-              <h3>Normalized</h3><pre>{{ item.normalized | json }}</pre>
-              <h3>Problemy</h3><ul>@for (issue of item.issues; track issue.code + issue.jsonPointer) { <li><strong>{{ issue.severity }} {{ issue.code }}</strong> {{ issue.jsonPointer }} — {{ issue.message }}</li> }</ul>
-              <h3>Kandydaci</h3><ul>@for (candidate of item.matchCandidates; track candidate.id) { <li>#{{ candidate.rank }} {{ candidate.exerciseId }} ({{ candidate.score }}) <button mat-button (click)="decide(candidate.id, 'SAME')">SAME</button><button mat-button (click)="decide(candidate.id, 'DIFFERENT')">DIFFERENT</button><button mat-button (click)="decide(candidate.id, 'UNSURE')">UNSURE</button><pre>{{ candidate.reasons | json }}</pre></li> }</ul>
-              @if (item.status === 'READY_FOR_DRAFT') { <button mat-flat-button (click)="createDraft()">Utwórz szkic</button> }
-              @if (item.draftVersionId) { <button mat-stroked-button (click)="loadEditorial(item.draftVersionId)">Pokaż diff i recenzje</button> }
-            </article>
-          }
-        </div>
+        @if (issues().length) { <mat-card><mat-card-content><h2>Problemy</h2>@for (group of groupedIssues(); track group.name) { <section><h3>{{ group.name }}</h3><ul>@for (issue of group.items; track issue.code + issue.rowNumber) { <li><strong>{{ issue.rowNumber == null ? 'Plik' : 'Rekord ' + issue.rowNumber }}{{ issue.sourceRecordKey ? ' · ' + issue.sourceRecordKey : '' }}</strong><br>{{ issue.message }}<br><span class="muted">Dotyczy: {{ fieldLabel(issue.jsonPointer) }}. {{ remedy(issue.code) }}</span></li> }</ul></section> }<button mat-button type="button" (click)="exportIssues('csv')">Pobierz CSV</button><button mat-button type="button" (click)="exportIssues('jsonl')">Pobierz JSONL</button></mat-card-content></mat-card> }
+        <details><summary>Szczegóły techniczne</summary><p>Przetwarzanie techniczne zakończyło się statusem: {{ current.status }}.</p></details>
       }
-      @if (review(); as editorial) {
-        <mat-card><mat-card-content><h2>Recenzja wersji {{ editorial.exerciseVersionId }}</h2>
-          <p>Status: <strong>{{ editorial.status }}</strong></p><p>Niespełnione warunki: {{ editorial.unmetRequirements.join(', ') || 'brak' }}</p>
-          <pre>{{ difference() | json }}</pre>
-          <div class="toolbar"><mat-form-field><mat-label>Obszar</mat-label><mat-select [(ngModel)]="reviewArea">@for (area of reviewAreas; track area) { <mat-option [value]="area">{{ area }}</mat-option> }</mat-select></mat-form-field><mat-form-field><mat-label>Decyzja</mat-label><mat-select [(ngModel)]="reviewDecision"><mat-option value="APPROVED">APPROVED</mat-option><mat-option value="CHANGES_REQUESTED">CHANGES_REQUESTED</mat-option></mat-select></mat-form-field><button mat-flat-button (click)="submitReview()">Zapisz recenzję</button><button mat-flat-button (click)="publish()">Publikuj</button></div>
-        </mat-card-content></mat-card>
-      }
-    </section>
-  `,
-  styles: [`
-    .toolbar{display:flex;gap:1rem;align-items:center;flex-wrap:wrap}.file{padding:.75rem;border:1px solid var(--mat-sys-outline-variant);border-radius:.5rem}.grid{display:grid;grid-template-columns:minmax(18rem,1fr) 2fr;gap:1rem;margin-top:1rem}.records{margin:0;padding:0;list-style:none}.records button{width:100%;padding:.75rem;text-align:left;background:transparent;border:0;border-bottom:1px solid #ddd;cursor:pointer}article,mat-card{margin-top:1rem}pre{max-height:22rem;overflow:auto;white-space:pre-wrap;background:#f4f4f4;padding:.75rem;border-radius:.4rem}.error{color:#b3261e}@media(max-width:800px){.grid{grid-template-columns:1fr}}
-  `],
+    </section>`,
+  styles: [`.picker{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin:1rem 0;padding:1rem;border:1px dashed var(--mat-sys-outline-variant);border-radius:.5rem}.picker input{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.invalid{border-color:#b3261e}.error{color:#b3261e}.summary{display:grid;grid-template-columns:repeat(3,minmax(7rem,1fr));gap:1rem}.summary div{padding:.5rem;background:var(--mat-sys-surface-container-low);border-radius:.4rem}.summary dt{font-size:.85rem}.summary dd{font-size:1.35rem;margin:.2rem 0 0}@media(max-width:320px){.summary{grid-template-columns:repeat(2,minmax(0,1fr))}.picker{align-items:flex-start}}`],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ExerciseImportPage implements OnDestroy {
   private readonly api = inject(ExerciseImportApi); private timer?: number;
-  protected readonly sources = signal<ImportSource[]>([]); protected readonly batch = signal<ImportBatch | null>(null); protected readonly records = signal<ImportRecord[]>([]); protected readonly detail = signal<RecordDetail | null>(null); protected readonly review = signal<ReviewResult | null>(null); protected readonly difference = signal<unknown>(null); protected readonly message = signal('Ładowanie źródeł…'); protected readonly failed = signal(false);
-  protected readonly sourceId = signal(''); protected readonly file = signal<File | null>(null); protected readonly canUpload = computed(() => Boolean(this.sourceId() && this.file())); protected statusFilter=''; protected severityFilter=''; protected reviewArea='CONTENT'; protected reviewDecision='APPROVED'; protected readonly reviewAreas=['CONTENT','TECHNIQUE','ANATOMY_EXPOSURE','LICENSE','MEDIA'];
-  constructor(){void this.loadSources();}
-  ngOnDestroy():void{if(this.timer)window.clearTimeout(this.timer);}
-  protected choose(event:Event):void{this.file.set((event.target as HTMLInputElement).files?.[0] ?? null);}
-  protected async upload():Promise<void>{const sourceId=this.sourceId();const file=this.file();if(!file||!sourceId)return;await this.run(async()=>{const result=await this.api.upload(sourceId,file,false);await this.refresh(result.batchId);});}
-  protected async createStarterSource():Promise<void>{await this.run(async()=>{const source=await this.api.createSource({code:'MOVES_STARTER_V1',displayName:'Moves starter exercises V1',defaultLocale:'pl-PL',licenseCode:'MOVES-INTERNAL-AUTHORING-1.0',licenseVerified:true});await this.reloadSources(source.id);});}
-  protected async loadRecords():Promise<void>{const current=this.batch();if(!current)return;await this.run(async()=>{this.records.set((await this.api.records(current.id,this.statusFilter,this.severityFilter)).content);});}
-  protected async open(record:ImportRecord):Promise<void>{await this.run(async()=>this.detail.set(await this.api.record(record.id)));}
-  protected async decide(candidateId:string,decision:string):Promise<void>{const item=this.detail();if(!item)return;await this.run(async()=>{this.detail.set(await this.api.decide(item.id,candidateId,decision));await this.loadRecords();});}
-  protected async createDraft():Promise<void>{const item=this.detail();if(!item)return;await this.run(async()=>{const created=await this.api.createDraft(item.id);this.detail.set(await this.api.record(item.id));await this.loadEditorial(created.exerciseVersionId);});}
-  protected async loadEditorial(versionId:string):Promise<void>{await this.run(async()=>{this.review.set(await this.api.reviewStatus(versionId));this.difference.set(await this.api.diff(versionId));});}
-  protected async submitReview():Promise<void>{const value=this.review();if(!value)return;await this.run(async()=>this.review.set(await this.api.review(value.exerciseVersionId,this.reviewArea,this.reviewDecision,value.version)));}
-  protected async publish():Promise<void>{const value=this.review();if(!value)return;await this.run(async()=>this.review.set(await this.api.publish(value.exerciseVersionId,value.version)));}
-  private async loadSources():Promise<void>{await this.run(()=>this.reloadSources());}
-  private async reloadSources(selectedId?:string):Promise<void>{const values=await this.api.sources();this.sources.set(values);const selected=selectedId ?? values[0]?.id ?? '';this.sourceId.set(selected);this.message.set(`${values.length} źródeł.`);}
-  private async refresh(id:string):Promise<void>{const current=await this.api.batch(id);this.batch.set(current);await this.loadRecords();if(['QUEUED','PROCESSING','RECEIVED'].includes(current.status))this.timer=window.setTimeout(()=>void this.refresh(id),1000);}
-  private async run(action:()=>Promise<void>):Promise<void>{this.failed.set(false);try{await action();this.message.set('Operacja zakończona.');}catch(error){this.failed.set(true);this.message.set(error instanceof Error?error.message:'Operacja nie powiodła się.');}}
+  protected readonly sources = signal<ImportSource[]>([]);
+  protected readonly sourceId = signal('');
+  protected readonly file = signal<File | null>(null);
+  protected readonly fileError = signal('');
+  protected readonly batch = signal<ImportBatch | null>(null);
+  protected readonly issues = signal<ImportIssue[]>([]);
+  protected readonly message = signal('Ładowanie źródeł…');
+  protected readonly failed = signal(false);
+  protected readonly canUpload = computed(() => Boolean(this.sourceId() && this.file() && !this.fileError()));
+
+  constructor() {
+    void this.loadSources();
+  }
+
+  ngOnDestroy(): void {
+    if (this.timer) window.clearTimeout(this.timer);
+  }
+
+  protected choose(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
+    this.file.set(file);
+    this.fileError.set(!file ? '' : !file.name.toLowerCase().endsWith('.jsonl') ? 'Wybierz plik z rozszerzeniem .jsonl.' : file.size > MAX_FILE_BYTES ? 'Plik nie może przekraczać 10 MiB.' : '');
+  }
+
+  protected removeFile(): void {
+    this.file.set(null);
+    this.fileError.set('');
+  }
+
+  protected async upload(): Promise<void> {
+    const source = this.sourceId(), file = this.file();
+    if (!source || !file) return;
+    await this.run(async () => {
+      const result = await this.api.upload(source, file, false);
+      await this.refresh(result.batchId);
+    });
+  }
+
+  protected async createStarterSource(): Promise<void> {
+    await this.run(async () => {
+      const source = await this.api.createSource({
+        code: 'MOVES_STARTER_V1',
+        displayName: 'Moves starter exercises V1',
+        defaultLocale: 'pl-PL',
+        licenseCode: 'MOVES-INTERNAL-AUTHORING-1.0',
+        licenseVerified: true
+      });
+      await this.reloadSources(source.id);
+    });
+  }
+
+  protected isProcessing(batch: ImportBatch): boolean {
+    return ['QUEUED', 'PROCESSING', 'RECEIVED'].includes(batch.status);
+  }
+
+  protected attentionCount(batch: ImportBatch): number {
+    return Math.max(0, batch.blockedCount);
+  }
+
+  protected summary(batch: ImportBatch): string {
+    const attention = this.attentionCount(batch);
+    return attention ? `Import zakończony. ${batch.draftedCount} szkiców jest gotowych, a ${attention} rekordów wymaga decyzji.` : `Import zakończony. Utworzono ${batch.draftedCount} szkiców.`;
+  }
+
+  protected formatBytes(size: number): string {
+    return size < 1024 * 1024 ? `${Math.ceil(size / 1024)} KiB` : `${(size / 1024 / 1024).toFixed(1)} MiB`;
+  }
+
+  protected groupedIssues(): { name: string; items: ImportIssue[] }[] {
+    const groups = new Map<string, ImportIssue[]>();
+    for (const issue of this.issues()) {
+      const name = this.issueCategory(issue);
+      groups.set(name, [...(groups.get(name) ?? []), issue]);
+    }
+    return [...groups].map(([name, items]) => ({name, items}));
+  }
+
+  protected fieldLabel(pointer: string): string {
+    return ({
+      '/license': 'licencja',
+      '/schemaVersion': 'wersja formatu',
+      '/sourceRecordKey': 'klucz rekordu źródłowego',
+      '/equipment': 'sprzęt',
+      '/position': 'pozycja',
+      '/contributions': 'anatomia',
+      '/': 'cały rekord'
+    }[pointer] ?? 'dane rekordu');
+  }
+
+  protected remedy(code: string): string {
+    return ({
+      MALFORMED_JSON: 'Popraw składnię JSONL i zaimportuj plik ponownie.',
+      UNSUPPORTED_SCHEMA_VERSION: 'Użyj obsługiwanej wersji pliku.',
+      MAPPING_REQUIRED: 'Uzupełnij mapowanie słownika.',
+      LICENSE_NOT_VERIFIED: 'Potwierdź prawo do wykorzystania danych.',
+      DRAFT_CREATION_FAILED: 'Ponów utworzenie szkicu po usunięciu przyczyny technicznej.'
+    }[code] ?? 'Popraw wskazane dane i zaimportuj plik ponownie.');
+  }
+
+  protected async exportIssues(format: 'csv' | 'jsonl'): Promise<void> {
+    const current = this.batch();
+    if (!current) return;
+    await this.api.downloadIssues(current.id, format);
+  }
+
+  private async loadSources(): Promise<void> {
+    await this.run(() => this.reloadSources());
+  }
+
+  private issueCategory(issue: ImportIssue): string {
+    if (issue.stage === 'PARSE') return 'Błędy pliku';
+    if (issue.code === 'MAPPING_REQUIRED') return 'Brakujące mapowania';
+    if (issue.severity === 'WARNING') return 'Ostrzeżenia';
+    if (issue.code === 'DRAFT_CREATION_FAILED' || issue.stage === 'MATCH') return 'Wymagane decyzje redakcyjne';
+    return 'Błędy rekordu';
+  }
+
+  private async reloadSources(selected?: string): Promise<void> {
+    const sources = await this.api.sources();
+    this.sources.set(sources);
+    const starter = sources.find(source => source.code === 'MOVES_STARTER_V1');
+    this.sourceId.set(selected ?? starter?.id ?? sources[0]?.id ?? '');
+    this.message.set(sources.length ? '' : 'Brak źródła importu.');
+  }
+
+  private async refresh(id: string): Promise<void> {
+    const batch = await this.api.batch(id);
+    this.batch.set(batch);
+    if (!this.isProcessing(batch)) this.issues.set(await this.api.issues(id)); else this.timer = window.setTimeout(() => void this.refresh(id), 1000);
+  }
+
+  private async run(action: () => Promise<void>): Promise<void> {
+    this.failed.set(false);
+    try {
+      await action();
+      this.message.set('');
+    } catch (error) {
+      this.failed.set(true);
+      this.message.set(error instanceof Error ? error.message : 'Operacja nie powiodła się.');
+    }
+  }
 }

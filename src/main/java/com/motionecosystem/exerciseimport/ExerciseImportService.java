@@ -1,21 +1,7 @@
 package com.motionecosystem.exerciseimport;
 
 import com.motionecosystem.audit.AuditRecorder;
-import com.motionecosystem.exerciseimport.api.CreateExerciseDraft;
-import com.motionecosystem.exerciseimport.api.FindExerciseMatch;
-import com.motionecosystem.exerciseimport.api.ImportArtifactStorage;
-import com.motionecosystem.exerciseimport.api.NormalizeImportRecord;
-import com.motionecosystem.exerciseimport.api.ValidateImportRecord;
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.sql.Timestamp;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-import java.util.UUID;
+import com.motionecosystem.exerciseimport.api.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -23,10 +9,21 @@ import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Timestamp;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -202,20 +199,32 @@ class ExerciseImportService {
             jdbc.update("UPDATE exercise_import.import_match_candidate SET decision=?,decided_by_subject=?,decided_at=?,version=version+1 WHERE id=?",
                     decision,actor,Timestamp.from(clock.instant()),request.candidateId());
             if (decision.equals("SAME")) {
-                jdbc.update("UPDATE exercise_import.import_record SET matched_exercise_id=?,status='READY_FOR_DRAFT',updated_at=?,version=version+1 WHERE id=?",
+                jdbc.update("UPDATE exercise_import.import_record SET matched_exercise_id=?,status='READY_FOR_DRAFT',updated_at=?,version=version+1 WHERE id=? AND draft_version_id IS NULL",
                         exercise,Timestamp.from(clock.instant()),recordId);
             } else if (decision.equals("UNSURE")) {
-                jdbc.update("UPDATE exercise_import.import_record SET status='MATCH_CANDIDATES',updated_at=?,version=version+1 WHERE id=?",
+                jdbc.update("UPDATE exercise_import.import_record SET status='MATCH_CANDIDATES',updated_at=?,version=version+1 WHERE id=? AND draft_version_id IS NULL",
                         Timestamp.from(clock.instant()),recordId);
             } else {
                 Boolean remaining = jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM exercise_import.import_match_candidate WHERE record_id=? AND decision IS DISTINCT FROM 'DIFFERENT')",
                         Boolean.class,recordId);
-                if (!Boolean.TRUE.equals(remaining)) jdbc.update("UPDATE exercise_import.import_record SET matched_exercise_id=NULL,status='READY_FOR_DRAFT',updated_at=?,version=version+1 WHERE id=?",
+                if (!Boolean.TRUE.equals(remaining))
+                    jdbc.update("UPDATE exercise_import.import_record SET matched_exercise_id=NULL,status='READY_FOR_DRAFT',updated_at=?,version=version+1 WHERE id=? AND draft_version_id IS NULL",
                         Timestamp.from(clock.instant()),recordId);
             }
             audit.record(actor,"EXERCISE_IMPORT_MATCH_DECIDED","ImportRecord",recordId);
         });
         UUID batchId = jdbc.queryForObject("SELECT batch_id FROM exercise_import.import_record WHERE id=?",UUID.class,recordId);
+        if (readyForDraft(recordId)) {
+            try {
+                // Use the same idempotent catalog boundary as the batch step.  The
+                // matching decision remains durable even if catalog draft creation
+                // temporarily fails, so the record stays visible for a safe retry.
+                createDraft(actor, recordId);
+            } catch (RuntimeException failure) {
+                draftIssue(batchId, recordId);
+                audit.record(actor, "EXERCISE_IMPORT_DRAFT_CREATION_FAILED", "ImportRecord", recordId);
+            }
+        }
         if(batchId!=null) refresh(batchId);
         return record(recordId);
     }
@@ -285,12 +294,59 @@ class ExerciseImportService {
     private void requireSource(UUID id){ source(id); }
     private BatchView batchByRequest(UUID sourceId,String key){return jdbc.query("SELECT id FROM exercise_import.import_batch WHERE source_id=? AND request_key=?",rs->rs.next()?batch(rs.getObject(1,UUID.class)):null,sourceId,key);}
     private List<IssueView> issues(UUID id){return jdbc.query("SELECT issue.id,issue.record_id,issue.row_number,record.source_record_key,issue.code,issue.stage,issue.severity,issue.json_pointer,issue.message,issue.created_at,issue.resolved_at FROM exercise_import.import_issue issue JOIN exercise_import.import_record record ON record.id=issue.record_id WHERE issue.record_id=? ORDER BY issue.severity,issue.code,issue.id",(rs,n)->issueView(rs),id);}
-    private List<CandidateView> candidates(UUID id){return jdbc.query("SELECT id,exercise_id,rank,score,reasons::text,algorithm_version,decision,decided_by_subject,decided_at,version FROM exercise_import.import_match_candidate WHERE record_id=? ORDER BY rank,id",(rs,n)->new CandidateView(rs.getObject(1,UUID.class),rs.getObject(2,UUID.class),rs.getInt(3),rs.getBigDecimal(4),parse(rs.getString(5)),rs.getString(6),rs.getString(7),rs.getString(8),instant(rs,9),rs.getLong(10)),id);}
+
+    private List<CandidateView> candidates(UUID id) {
+        return jdbc.query("""
+                SELECT candidate.id,candidate.exercise_id,exercise.canonical_name,candidate.rank,candidate.score,
+                       candidate.reasons::text,candidate.algorithm_version,candidate.decision,
+                       candidate.decided_by_subject,candidate.decided_at,candidate.version
+                  FROM exercise_import.import_match_candidate candidate
+                  JOIN exercise_catalog.exercise exercise ON exercise.id=candidate.exercise_id
+                 WHERE candidate.record_id=? ORDER BY candidate.rank,candidate.id
+                """, (rs, n) -> new CandidateView(rs.getObject(1, UUID.class), rs.getObject(2, UUID.class), rs.getString(3), rs.getInt(4), rs.getBigDecimal(5), parse(rs.getString(6)), rs.getString(7), rs.getString(8), rs.getString(9), instant(rs, 10), rs.getLong(11)), id);
+    }
     private MappingView mapping(UUID id){MappingView value=jdbc.query("SELECT id,source_id,dictionary_type,source_value,canonical_value,status,decided_by_subject,decided_at,version FROM exercise_import.import_mapping WHERE id=?",rs->rs.next()?new MappingView(rs.getObject(1,UUID.class),rs.getObject(2,UUID.class),rs.getString(3),rs.getString(4),rs.getString(5),rs.getString(6),rs.getString(7),instant(rs,8),rs.getLong(9)):null,id);if(value==null)throw notFound("mapping not found");return value;}
     private boolean canonicalExists(String type,String value){String table=switch(type){case"EQUIPMENT"->"exercise_catalog.exercise_equipment_dictionary";case"POSITION"->"exercise_catalog.exercise_position_dictionary";case"DOSE_UNIT"->"exercise_catalog.dose_unit_dictionary";default->null;};return table!=null&&Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM "+table+" WHERE code=? AND active)",Boolean.class,value));}
     private JsonNode parse(String value){return json.readTree(value);} private JsonNode parseNullable(String value){return value==null?null:parse(value);}
     private void deleteTransientArtifact(String key){try{artifacts.delete(key);}catch(IOException ignored){}}
-    private void refresh(UUID batchId){jdbc.execute("SELECT exercise_import.refresh_batch_projection('"+batchId+"'::uuid)");}
+
+    private void refresh(UUID batchId) {
+        jdbc.update("""
+                UPDATE exercise_import.import_batch batch SET
+                    total_count=(SELECT COUNT(*) FROM exercise_import.import_record r WHERE r.batch_id=?),
+                    valid_count=(SELECT COUNT(*) FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status NOT IN ('INVALID','BLOCKED_BY_MAPPING','BLOCKED_BY_LICENSE','REJECTED')),
+                    invalid_count=(SELECT COUNT(*) FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status='INVALID'),
+                    blocked_count=(SELECT COUNT(*) FROM exercise_import.import_record r WHERE r.batch_id=? AND (r.status IN ('BLOCKED_BY_MAPPING','BLOCKED_BY_LICENSE','MATCH_CANDIDATES') OR EXISTS (SELECT 1 FROM exercise_import.import_issue i WHERE i.record_id=r.id AND i.code='DRAFT_CREATION_FAILED' AND i.resolved_at IS NULL))),
+                    drafted_count=(SELECT COUNT(*) FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status='DRAFTED'),
+                    unchanged_count=(SELECT COUNT(*) FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status='UNCHANGED'),
+                    status=CASE WHEN batch.status='FAILED' THEN 'FAILED'
+                        WHEN NOT EXISTS (SELECT 1 FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status IN ('RECEIVED','PARSED','NORMALIZED'))
+                         AND (EXISTS (SELECT 1 FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status IN ('INVALID','BLOCKED_BY_MAPPING','BLOCKED_BY_LICENSE','MATCH_CANDIDATES')) OR EXISTS (SELECT 1 FROM exercise_import.import_issue i WHERE i.batch_id=? AND i.severity IN ('ERROR','BLOCKER') AND i.resolved_at IS NULL)) THEN 'COMPLETED_WITH_ISSUES'
+                        WHEN NOT EXISTS (SELECT 1 FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status IN ('RECEIVED','PARSED','NORMALIZED')) THEN 'COMPLETED'
+                        ELSE 'PROCESSING' END,
+                    completed_at=CASE WHEN EXISTS (SELECT 1 FROM exercise_import.import_record r WHERE r.batch_id=? ) AND NOT EXISTS (SELECT 1 FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status IN ('RECEIVED','PARSED','NORMALIZED')) THEN COALESCE(batch.completed_at,?) ELSE NULL END,
+                    version=batch.version+1 WHERE batch.id=?
+                """, batchId, batchId, batchId, batchId, batchId, batchId, batchId, batchId, batchId, batchId, batchId, batchId, Timestamp.from(clock.instant()), batchId);
+    }
+
+    private boolean readyForDraft(UUID recordId) {
+        return Boolean.TRUE.equals(jdbc.queryForObject("SELECT status='READY_FOR_DRAFT' AND draft_version_id IS NULL FROM exercise_import.import_record WHERE id=?",
+                Boolean.class, recordId));
+    }
+
+    private void draftIssue(UUID batchId, UUID recordId) {
+        if (batchId == null) return;
+        jdbc.update("""
+                INSERT INTO exercise_import.import_issue(id,batch_id,record_id,row_number,code,stage,severity,json_pointer,message,created_at)
+                SELECT ?,?,?,row_number,'DRAFT_CREATION_FAILED','CREATE_DRAFT','ERROR','/',
+                       'Nie można było utworzyć szkicu. Rekord pozostaje gotowy do bezpiecznego ponowienia.',?
+                  FROM exercise_import.import_record record
+                 WHERE record.id=?
+                   AND NOT EXISTS (SELECT 1 FROM exercise_import.import_issue issue
+                                   WHERE issue.record_id=record.id AND issue.code='DRAFT_CREATION_FAILED'
+                                     AND issue.resolved_at IS NULL)
+                """, UUID.randomUUID(), batchId, recordId, Timestamp.from(clock.instant()), recordId);
+    }
     private static void page(int p,int s){if(p<0||s<1||s>100)throw badRequest("page must be >= 0 and size between 1 and 100");}
     private static String safeFilename(String value){String name=value==null?"import.jsonl":value.replace('\\','/');name=name.substring(name.lastIndexOf('/')+1);return name.isBlank()?"import.jsonl":name.substring(0,Math.min(255,name.length()));}
     private static String text(String value,int max,String field){String v=value==null?"":value.trim();if(v.isBlank()||v.length()>max)throw badRequest(field+" is required and limited to "+max+" characters");return v;}
@@ -310,7 +366,11 @@ class ExerciseImportService {
     record RecordSummary(UUID id,long rowNumber,String sourceRecordKey,String status,String rawSha256,String normalizedSha256,UUID matchedExerciseId,UUID draftVersionId,long version){}
     record RecordPage(List<RecordSummary> content,int page,int size,long totalElements){}
     record IssueView(UUID id,UUID recordId,Long rowNumber,String sourceRecordKey,String code,String stage,String severity,String jsonPointer,String message,Instant createdAt,Instant resolvedAt){}
-    record CandidateView(UUID id,UUID exerciseId,int rank,java.math.BigDecimal score,JsonNode reasons,String algorithmVersion,String decision,String decidedBySubject,Instant decidedAt,long version){}
+
+    record CandidateView(UUID id, UUID exerciseId, String exerciseName, int rank, java.math.BigDecimal score,
+                         JsonNode reasons, String algorithmVersion, String decision, String decidedBySubject,
+                         Instant decidedAt, long version) {
+    }
     record RecordDetail(UUID id,UUID batchId,long rowNumber,String sourceRecordKey,String status,JsonNode raw,JsonNode normalized,String rawSha256,String normalizedSha256,String normalizationVersion,UUID matchedExerciseId,UUID draftVersionId,Instant createdAt,Instant updatedAt,long version,List<IssueView> issues,List<CandidateView> matchCandidates){}
     record MatchDecision(UUID candidateId,String decision){}
     record MappingDecision(String decision,String canonicalValue){}

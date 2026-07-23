@@ -1,70 +1,62 @@
-import { TestBed } from '@angular/core/testing';
-import { describe, expect, it, vi } from 'vitest';
-import { ExerciseImportApi } from '../core/exercise-import.api';
-import { ExerciseImportPage } from './exercise-import.page';
+import {TestBed} from '@angular/core/testing';
+import {RouterTestingModule} from '@angular/router/testing';
+import {describe, expect, it, vi} from 'vitest';
+import {ExerciseImportApi} from '../core/exercise-import.api';
+import {ExerciseImportPage} from './exercise-import.page';
 
 const api = {
-  sources: vi.fn().mockResolvedValue([]),
+  sources: vi.fn(),
   createSource: vi.fn(),
-  upload: vi.fn(), batch: vi.fn(), records: vi.fn(), record: vi.fn(), decide: vi.fn(),
-  createDraft: vi.fn(), review: vi.fn(), reviewStatus: vi.fn(), diff: vi.fn(), publish: vi.fn()
+  upload: vi.fn(),
+  batch: vi.fn(),
+  issues: vi.fn(),
+  downloadIssues: vi.fn()
 };
 
 describe('ExerciseImportPage', () => {
-  it('creates the starter source and enables upload after a file is selected', async () => {
-    const source = { id: 'starter-id', code: 'MOVES_STARTER_V1', displayName: 'Moves starter exercises V1', licenseCode: 'MOVES-INTERNAL-AUTHORING-1.0', licenseVerified: true };
-    api.sources.mockResolvedValueOnce([]).mockResolvedValueOnce([source]);
-    api.createSource.mockResolvedValueOnce(source);
+  it('uses the starter source automatically and provides a keyboard-accessible JSONL picker', async () => {
+    api.sources.mockResolvedValue([{
+      id: 'starter-id',
+      code: 'MOVES_STARTER_V1',
+      displayName: 'Moves starter exercises V1',
+      licenseCode: 'license',
+      licenseVerified: true
+    }]);
     await TestBed.configureTestingModule({
-      imports: [ExerciseImportPage], providers: [{ provide: ExerciseImportApi, useValue: api }]
+      imports: [ExerciseImportPage, RouterTestingModule],
+      providers: [{provide: ExerciseImportApi, useValue: api}]
     }).compileComponents();
     const fixture = TestBed.createComponent(ExerciseImportPage);
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
-
     const page = fixture.nativeElement as HTMLElement;
-    const create = [...page.querySelectorAll('button')].find(button => button.textContent?.includes('Utwórz źródło')) as HTMLButtonElement;
-    create.click();
-    await fixture.whenStable();
-    fixture.detectChanges();
-    const instance = fixture.componentInstance as any;
-    const input = page.querySelector('input[type="file"]') as HTMLInputElement;
-    Object.defineProperty(input, 'files', { value: [new File(['{}'], 'exercises.jsonl', { type: 'application/x-ndjson' })] });
-    input.dispatchEvent(new Event('change'));
-    fixture.detectChanges();
-    const upload = [...page.querySelectorAll('button')].find(button => button.textContent?.includes('Prześlij')) as HTMLButtonElement;
-    expect(api.createSource).toHaveBeenCalledWith({ code: 'MOVES_STARTER_V1', displayName: 'Moves starter exercises V1', defaultLocale: 'pl-PL', licenseCode: 'MOVES-INTERNAL-AUTHORING-1.0', licenseVerified: true });
-    expect(instance.sourceId()).toBe('starter-id');
-    expect(upload.disabled).toBe(false);
+    expect(page.querySelector('h1')?.textContent).toContain('Import ćwiczeń');
+    expect([...page.querySelectorAll('button')].find(button => button.textContent?.includes('Wybierz plik JSONL'))).toBeTruthy();
+    expect((fixture.componentInstance as any).sourceId()).toBe('starter-id');
+    expect(page.textContent).not.toContain('Raw');
+    expect(page.textContent).not.toContain('SAME');
   });
 
-  it('enables upload only after a source and JSONL file are selected', async () => {
+  it('rejects an invalid extension before upload', async () => {
+    api.sources.mockResolvedValue([{
+      id: 'source-id',
+      code: 'OTHER',
+      displayName: 'Other',
+      licenseCode: 'license',
+      licenseVerified: true
+    }]);
     await TestBed.configureTestingModule({
-      imports: [ExerciseImportPage], providers: [{ provide: ExerciseImportApi, useValue: api }]
+      imports: [ExerciseImportPage, RouterTestingModule],
+      providers: [{provide: ExerciseImportApi, useValue: api}]
     }).compileComponents();
     const fixture = TestBed.createComponent(ExerciseImportPage);
     fixture.detectChanges();
     await fixture.whenStable();
-    fixture.detectChanges();
-
-    const page = fixture.nativeElement as HTMLElement;
-    const upload = [...page.querySelectorAll('button')].find(button => button.textContent?.includes('Prześlij')) as HTMLButtonElement;
-    const input = page.querySelector('input[type="file"]') as HTMLInputElement;
-    const instance = fixture.componentInstance as any;
-    expect(upload.disabled).toBe(true);
-
-    instance.sourceId.set('source-id');
-    fixture.detectChanges();
-    expect(upload.disabled).toBe(true);
-
-    Object.defineProperty(input, 'files', { value: [new File(['{}'], 'exercises.jsonl', { type: 'application/x-ndjson' })] });
+    const input = fixture.nativeElement.querySelector('input[type="file"]') as HTMLInputElement;
+    Object.defineProperty(input, 'files', {value: [new File(['{}'], 'exercises.json', {type: 'application/json'})]});
     input.dispatchEvent(new Event('change'));
     fixture.detectChanges();
-    expect(upload.disabled).toBe(false);
-
-    instance.sourceId.set('');
-    fixture.detectChanges();
-    expect(upload.disabled).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('Wybierz plik z rozszerzeniem .jsonl.');
   });
 });

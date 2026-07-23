@@ -1,15 +1,7 @@
 package com.motionecosystem.exerciseimport;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.motionecosystem.application.MotionEcosystemApplication;
 import com.motionecosystem.support.PostgresTestConfiguration;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,6 +11,14 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(classes = MotionEcosystemApplication.class)
 @Import(PostgresTestConfiguration.class)
@@ -66,14 +66,8 @@ class MovesStarterExercisesV1IntegrationTest {
                 """, Integer.class, first)).isZero();
         assertThat(jdbc.queryForObject("""
                 SELECT COUNT(*) FROM exercise_import.import_record
-                 WHERE batch_id=? AND status='READY_FOR_DRAFT'
+                 WHERE batch_id=? AND status='DRAFTED'
                 """, Integer.class, first)).isEqualTo(120);
-
-        List<UUID> recordIds = jdbc.queryForList("""
-                SELECT id FROM exercise_import.import_record
-                 WHERE batch_id=? ORDER BY row_number
-                """, UUID.class, first);
-        recordIds.forEach(id -> imports.createDraft("starter-test", id));
 
         UUID forced = imports.upload("starter-test", sourceId, "starter-2", true, file).id();
         await(forced);

@@ -5,22 +5,6 @@ import com.motionecosystem.exerciseimport.api.CreateExerciseDraft;
 import com.motionecosystem.exerciseimport.api.FindExerciseMatch;
 import com.motionecosystem.exerciseimport.api.NormalizeImportRecord;
 import com.motionecosystem.exerciseimport.api.ValidateImportRecord;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.text.Normalizer;
-import java.time.Clock;
-import java.time.Instant;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HexFormat;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.StreamSupport;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -33,6 +17,16 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.sql.Timestamp;
+import java.text.Normalizer;
+import java.time.Clock;
+import java.time.Instant;
+import java.util.*;
+import java.util.stream.StreamSupport;
 
 @Service
 @RequiredArgsConstructor
@@ -164,6 +158,16 @@ public class ImportRecordUseCases implements NormalizeImportRecord, ValidateImpo
             return;
         }
 
+        // A verified source record key is its authoritative identity.  Similarity is
+        // deliberately reserved for records without that stable identity: presenting
+        // name-based candidates here would turn an unambiguous import into editorial
+        // work and could attach a new source record to the wrong exercise.
+        if (record.licenseVerified && record.sourceRecordKey != null && !record.sourceRecordKey.isBlank()) {
+            jdbc.update("DELETE FROM exercise_import.import_match_candidate WHERE record_id=?", recordId);
+            setStatus(recordId, "READY_FOR_DRAFT");
+            return;
+        }
+
         jdbc.update("DELETE FROM exercise_import.import_match_candidate WHERE record_id=?", recordId);
         List<Candidate> candidates = candidates(record);
         int rank = 1;
@@ -219,6 +223,8 @@ public class ImportRecordUseCases implements NormalizeImportRecord, ValidateImpo
             insertSemanticChildren(versionId, exerciseId, record.sourceId, data, actorSubject, now);
             jdbc.update("UPDATE exercise_import.import_record SET status='DRAFTED', matched_exercise_id=?, draft_version_id=?, updated_at=?, version=version+1 WHERE id=?",
                     exerciseId, versionId, sql(now), recordId);
+            jdbc.update("UPDATE exercise_import.import_issue SET resolved_at=? WHERE record_id=? AND code='DRAFT_CREATION_FAILED' AND resolved_at IS NULL",
+                    sql(now), recordId);
             jdbc.update("""
                     INSERT INTO exercise_import.import_source_reference(
                         id,source_id,source_record_key,exercise_id,latest_exercise_version_id,

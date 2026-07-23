@@ -1,24 +1,7 @@
 package com.motionecosystem.exerciseimport;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doCallRealMethod;
-import static org.mockito.Mockito.doThrow;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.motionecosystem.application.MotionEcosystemApplication;
 import com.motionecosystem.support.PostgresTestConfiguration;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +11,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.TransientDataAccessResourceException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor;
 import org.springframework.security.web.FilterChainProxy;
@@ -39,8 +23,22 @@ import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequ
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import org.springframework.mock.web.MockMultipartFile;
 import tools.jackson.databind.ObjectMapper;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes=MotionEcosystemApplication.class)
 @Import(PostgresTestConfiguration.class)
@@ -48,7 +46,13 @@ class ExerciseImportEndToEndIntegrationTest {
     private static final Path ARTIFACTS=tempDirectory();
     @DynamicPropertySource static void properties(DynamicPropertyRegistry registry){registry.add("exercise-import.artifacts.directory",()->ARTIFACTS.toString());}
     @Autowired WebApplicationContext context; @Autowired FilterChainProxy filters;
-    @Autowired JdbcTemplate jdbc; @Autowired ObjectMapper json; MockMvc mvc;
+    @Autowired
+    JdbcTemplate jdbc;
+    @Autowired
+    ObjectMapper json;
+    @Autowired
+    ExerciseImportService imports;
+    MockMvc mvc;
     @MockitoSpyBean ImportRecordUseCases useCases;
 
     @BeforeEach void setup(){mvc=MockMvcBuilders.webAppContextSetup(context).addFilters(filters).build();
@@ -67,11 +71,9 @@ class ExerciseImportEndToEndIntegrationTest {
     @Test void jsonlToDraftReviewPublishAndForcedReimportIsUnchanged()throws Exception{
         UUID source=createSource("FIXTURE",true);byte[] file=resource("fixtures/exercise-import-valid.jsonl");
         UUID batch=upload(source,"request-1",false,file,contentAdmin("editor-one"));await(batch);
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_record WHERE batch_id=? AND status='READY_FOR_DRAFT'",Integer.class,batch)).isEqualTo(2);
-        UUID record=jdbc.queryForObject("SELECT id FROM exercise_import.import_record WHERE batch_id=? ORDER BY row_number LIMIT 1",UUID.class,batch);
-        String draftBody=mvc.perform(post("/api/v1/admin/exercise-import/records/{id}/create-draft",record).with(contentAdmin("editor-one")))
-                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
-        UUID version=UUID.fromString(json.readTree(draftBody).path("exerciseVersionId").asText());
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_record WHERE batch_id=? AND status='DRAFTED'", Integer.class, batch)).isEqualTo(2);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_match_candidate candidate JOIN exercise_import.import_record record ON record.id=candidate.record_id WHERE record.batch_id=?", Integer.class, batch)).isZero();
+        UUID version = jdbc.queryForObject("SELECT draft_version_id FROM exercise_import.import_record WHERE batch_id=? ORDER BY row_number LIMIT 1", UUID.class, batch);
         long optimistic=jdbc.queryForObject("SELECT version FROM exercise_catalog.exercise_version WHERE id=?",Long.class,version);
         for(String area:new String[]{"CONTENT","TECHNIQUE","ANATOMY_EXPOSURE","LICENSE"}){
             String response=mvc.perform(post("/api/v1/admin/exercise-versions/{id}/reviews",version).with(contentAdmin("editor-one"))
@@ -86,22 +88,75 @@ class ExerciseImportEndToEndIntegrationTest {
         assertThatThrownBy(()->jdbc.update("UPDATE exercise_catalog.exercise_instruction_step SET instruction='mutated' WHERE exercise_version_id=?",version))
                 .hasMessageContaining("immutable");
 
-        UUID secondRecord=jdbc.queryForObject("SELECT id FROM exercise_import.import_record WHERE batch_id=? AND row_number=2",UUID.class,batch);
-        mvc.perform(post("/api/v1/admin/exercise-import/records/{id}/create-draft",secondRecord).with(contentAdmin("editor-one")))
-                .andExpect(status().isCreated());
-
         assertThat(upload(source,"request-1",false,file,contentAdmin("editor-one"))).isEqualTo(batch);
         assertThat(upload(source,"request-2",false,file,contentAdmin("editor-one"))).isEqualTo(batch);
         UUID forced=upload(source,"request-3",true,file,systemAdmin("admin"));await(forced);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_record WHERE batch_id=? AND status='UNCHANGED'",Integer.class,forced)).isEqualTo(2);
         assertThat(jdbc.queryForObject("SELECT forced_from_batch_id FROM exercise_import.import_batch WHERE id=?",UUID.class,forced)).isEqualTo(batch);
         assertThat(Files.list(ARTIFACTS).count()).isGreaterThanOrEqualTo(2);
+
+        byte[] changed = new String(file).replace("Fikcyjny przysiad testowy", "Fikcyjny przysiad zmieniony").getBytes();
+        UUID changedBatch = upload(source, "request-4", false, changed, contentAdmin("editor-one"));
+        await(changedBatch);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_record WHERE batch_id=? AND status='DRAFTED'", Integer.class, changedBatch)).isOne();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_match_candidate candidate JOIN exercise_import.import_record record ON record.id=candidate.record_id WHERE record.batch_id=?", Integer.class, changedBatch)).isZero();
+    }
+
+    @Test
+    void draftCreationFailureIsVisibleAndCanBeRetried() throws Exception {
+        doThrow(new IllegalStateException("controlled draft failure")).doCallRealMethod()
+                .when(useCases).createDraft(any(UUID.class), any(String.class));
+        UUID source = createSource("DRAFT_RETRY", true);
+        UUID batch = upload(source, "draft-retry-1", false, resource("fixtures/exercise-import-valid.jsonl"), contentAdmin("editor"));
+        await(batch);
+        assertThat(jdbc.queryForObject("SELECT status FROM exercise_import.import_batch WHERE id=?", String.class, batch)).isEqualTo("COMPLETED_WITH_ISSUES");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_record WHERE batch_id=? AND status='READY_FOR_DRAFT'", Integer.class, batch)).isOne();
+        assertThat(jdbc.queryForObject("SELECT blocked_count FROM exercise_import.import_batch WHERE id=?", Integer.class, batch)).isOne();
+        UUID record = jdbc.queryForObject("SELECT record_id FROM exercise_import.import_issue WHERE batch_id=? AND code='DRAFT_CREATION_FAILED'", UUID.class, batch);
+        imports.createDraft("editor", record);
+        assertThat(jdbc.queryForObject("SELECT status FROM exercise_import.import_record WHERE id=?", String.class, record)).isEqualTo("DRAFTED");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_issue WHERE record_id=? AND code='DRAFT_CREATION_FAILED' AND resolved_at IS NULL", Integer.class, record)).isZero();
+    }
+
+    @Test
+    void resolvedMatchCreatesDraftImmediatelyAndFailureIsRetryableWithoutDuplicateIssue() throws Exception {
+        UUID source = createSource("MATCH_DECISION", true);
+        UUID batch = upload(source, "match-decision-1", false, resource("fixtures/exercise-import-valid.jsonl"), contentAdmin("editor"));
+        await(batch);
+        UUID imported = jdbc.queryForObject("SELECT id FROM exercise_import.import_record WHERE batch_id=? ORDER BY row_number LIMIT 1", UUID.class, batch);
+        UUID exercise = jdbc.queryForObject("SELECT matched_exercise_id FROM exercise_import.import_record WHERE id=?", UUID.class, imported);
+        UUID record = UUID.randomUUID();
+        UUID candidate = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO exercise_import.import_record(
+                    id,batch_id,row_number,source_record_key,status,raw_payload,normalized_payload,raw_sha256,
+                    normalized_sha256,normalization_version,created_at,updated_at,version)
+                SELECT ?,batch_id,99,'attention-record','MATCH_CANDIDATES',raw_payload,normalized_payload,raw_sha256,
+                       ?,normalization_version,now(),now(),0
+                  FROM exercise_import.import_record WHERE id=?
+                """, record, "a".repeat(64), imported);
+        jdbc.update("""
+                INSERT INTO exercise_import.import_match_candidate(id,record_id,exercise_id,rank,score,reasons,algorithm_version,version)
+                VALUES (?,?,?,1,1.0,CAST('[\"test candidate\"]' AS jsonb),'test',0)
+                """, candidate, record, exercise);
+        doThrow(new IllegalStateException("controlled decision draft failure")).doCallRealMethod()
+                .when(useCases).createDraft(any(UUID.class), any(String.class));
+
+        assertThat(imports.decideMatch("editor", record, new ExerciseImportService.MatchDecision(candidate, "SAME")).status()).isEqualTo("READY_FOR_DRAFT");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_issue WHERE record_id=? AND code='DRAFT_CREATION_FAILED' AND resolved_at IS NULL", Integer.class, record)).isOne();
+
+        assertThat(imports.decideMatch("editor", record, new ExerciseImportService.MatchDecision(candidate, "SAME")).status()).isEqualTo("DRAFTED");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_issue WHERE record_id=? AND code='DRAFT_CREATION_FAILED'", Integer.class, record)).isOne();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_issue WHERE record_id=? AND code='DRAFT_CREATION_FAILED' AND resolved_at IS NULL", Integer.class, record)).isZero();
+        UUID draft = jdbc.queryForObject("SELECT draft_version_id FROM exercise_import.import_record WHERE id=?", UUID.class, record);
+        imports.decideMatch("editor", record, new ExerciseImportService.MatchDecision(candidate, "SAME"));
+        assertThat(jdbc.queryForObject("SELECT draft_version_id FROM exercise_import.import_record WHERE id=?", UUID.class, record)).isEqualTo(draft);
     }
 
     @Test void partialFileKeepsValidRecordAndReportsMalformedAndUnsupportedLines()throws Exception{
         UUID source=createSource("PARTIAL",true);UUID batch=upload(source,"partial-1",false,resource("fixtures/exercise-import-partial.jsonl"),contentAdmin("editor"));await(batch);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_record WHERE batch_id=?",Integer.class,batch)).isEqualTo(3);
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_record WHERE batch_id=? AND status='READY_FOR_DRAFT'",Integer.class,batch)).isOne();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_record WHERE batch_id=? AND status='DRAFTED'", Integer.class, batch)).isOne();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_issue WHERE batch_id=? AND code IN ('MALFORMED_JSON','UNSUPPORTED_SCHEMA_VERSION')",Integer.class,batch)).isEqualTo(2);
         mvc.perform(get("/api/v1/admin/exercise-import/batches/{id}/records",batch).param("size","1").with(contentAdmin("editor")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.content.length()").value(1));
@@ -141,7 +196,7 @@ class ExerciseImportEndToEndIntegrationTest {
                 .andExpect(status().isAccepted());
         await(batch);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_record WHERE batch_id=?",Integer.class,batch)).isEqualTo(2);
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_record WHERE batch_id=? AND status='READY_FOR_DRAFT'",Integer.class,batch)).isEqualTo(2);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_record WHERE batch_id=? AND status='DRAFTED'", Integer.class, batch)).isEqualTo(2);
     }
 
     private UUID createSource(String code,boolean verified)throws Exception{String body=mvc.perform(post("/api/v1/admin/exercise-import/sources").with(contentAdmin("editor"))
