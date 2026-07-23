@@ -1,6 +1,7 @@
 import {Routes} from '@angular/router';
 import {authGuard, roleGuard} from './core/auth.guards';
-import {completedOnboardingGuard} from './core/onboarding.guards';
+import {completedOnboardingGuard, rootLandingGuard} from './core/onboarding.guards';
+import {RootLandingComponent} from './core/root-landing.component';
 
 export const routes: Routes = [
   { path: 'login', loadComponent: () => import('./features/login.page').then(m => m.LoginPage) },
@@ -29,6 +30,6 @@ export const routes: Routes = [
   { path: 'reminders', canActivate: [authGuard, completedOnboardingGuard, roleGuard('PARTICIPANT')], loadComponent: () => import('./features/reminder-preferences.page').then(m => m.ReminderPreferencesPage) },
   { path: 'specialist-alerts', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/specialist-alerts.page').then(m => m.SpecialistAlertsPage) },
   { path: 'gamification', canActivate: [authGuard, completedOnboardingGuard, roleGuard('PARTICIPANT')], loadComponent: () => import('./features/gamification.page').then(m => m.GamificationPage) },
-  { path: '', pathMatch: 'full', redirectTo: 'onboarding' },
+  { path: '', pathMatch: 'full', canActivate: [rootLandingGuard], component: RootLandingComponent },
   { path: '**', redirectTo: '' }
 ];
