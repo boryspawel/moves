@@ -76,6 +76,17 @@ describe('OnboardingPage', () => {
     resolve({ stage: 'AVAILABILITY_REQUIRED' }); await settle(fixture);
   });
 
+  it('sends the selected specialist time zone with the specialist profile', async () => {
+    api.state.mockResolvedValue({ stage: 'PROFILE_REQUIRED', profileType: 'SPECIALIST' });
+    api.specialistProfile.mockResolvedValue({ stage: 'AVAILABILITY_REQUIRED' });
+    const fixture = TestBed.createComponent(OnboardingPage); fixture.detectChanges(); await settle(fixture);
+    const instance = fixture.componentInstance as any;
+    instance.profileForm.controls.displayName.setValue('Ada');
+    instance.profileForm.controls.timeZoneId.setValue('Europe/Warsaw');
+    instance.saveProfile(instance.profileForm.getRawValue()); await settle(fixture);
+    expect(api.specialistProfile).toHaveBeenCalledWith({ specialistProfileRequest: { displayName: 'Ada', specialistKind: 'TRAINER', timeZoneId: 'Europe/Warsaw' } });
+  });
+
   it('renders the ready completion state', async () => {
     api.state.mockResolvedValue({ stage: 'READY', missingSteps: [] });
     const fixture = TestBed.createComponent(OnboardingPage); fixture.detectChanges(); await settle(fixture);

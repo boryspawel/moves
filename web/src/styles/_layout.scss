@@ -1,0 +1,46 @@
+.page-shell {
+  width: min(var(--app-page-max), calc(100% - 2 * var(--app-page-padding)));
+  min-height: calc(100vh - 130px);
+  margin: 0 auto;
+  padding: var(--space-6) 0 var(--space-7);
+}
+.page-shell.onboarding-shell {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+.app-page {
+  width: min(100%, var(--app-page-max));
+  margin-inline: auto;
+}
+.app-page--wide {
+  max-width: var(--app-page-wide-max);
+}
+.section {
+  margin-block: var(--space-5);
+}
+.grid {
+  display: grid;
+  gap: var(--space-4);
+}
+.two-column {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: var(--space-4);
+  max-width: var(--app-form-max);
+}
+.full {
+  grid-column: 1 / -1;
+}
+@media (max-width: 760px) {
+  :root {
+    --app-page-padding: var(--space-4);
+  }
+  .page-shell {
+    padding-top: var(--space-5);
+  }
+}

@@ -1,0 +1,70 @@
+@use '@angular/material' as mat;
+
+html {
+  @include mat.theme(
+    (
+      color: (
+        theme-type: light,
+        primary: mat.$violet-palette,
+        tertiary: mat.$violet-palette,
+      ),
+      typography: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      density: 0,
+    )
+  );
+  @include mat.theme-overrides(
+    (
+      primary: #4f46e5,
+      on-primary: #fff,
+      primary-container: #eef2ff,
+      on-primary-container: #3730a3,
+      secondary: #475569,
+      on-secondary: #fff,
+      secondary-container: #f1f5f9,
+      on-secondary-container: #0f172a,
+      surface: #fff,
+      on-surface: #0f172a,
+      surface-variant: #f1f5f9,
+      on-surface-variant: #475569,
+      surface-container: #fff,
+      surface-container-low: #fff,
+      surface-container-high: #f1f5f9,
+      surface-container-highest: #f1f5f9,
+      background: #f7f8fc,
+      on-background: #0f172a,
+      outline: #cbd5e1,
+      outline-variant: #e2e8f0,
+      error: #dc2626,
+      on-error: #fff,
+      error-container: #fef2f2,
+      on-error-container: #991b1b,
+    )
+  );
+  @include mat.card-overrides(
+    (
+      elevated-container-color: #fff,
+      elevated-container-elevation: 0 8px 24px rgb(15 23 42 / 6%),
+      outlined-container-color: #fff,
+      outlined-outline-color: #e2e8f0,
+    )
+  );
+  @include mat.toolbar-overrides(
+    (
+      container-background-color: #fff,
+      container-text-color: #0f172a,
+    )
+  );
+  @include mat.form-field-overrides(
+    (
+      outlined-outline-color: #cbd5e1,
+      outlined-hover-outline-color: #475569,
+      outlined-focus-outline-color: #4f46e5,
+      outlined-input-text-color: #0f172a,
+      outlined-label-text-color: #475569,
+      outlined-focus-label-text-color: #4f46e5,
+      outlined-disabled-outline-color: #e2e8f0,
+      outlined-disabled-label-text-color: #64748b,
+      outlined-disabled-input-text-color: #64748b,
+    )
+  );
+}

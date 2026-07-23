@@ -1,0 +1,54 @@
+mat-form-field {
+  width: 100%;
+}
+button.mat-mdc-button-base,
+a.mat-mdc-button-base {
+  min-height: 44px;
+}
+button[mat-flat-button],
+a[mat-flat-button] {
+  --mat-button-filled-container-color: var(--app-primary);
+  --mat-button-filled-label-text-color: var(--app-text-inverse);
+}
+button[mat-flat-button]:not([disabled]):hover,
+a[mat-flat-button]:hover {
+  --mat-button-filled-container-color: var(--app-primary-hover);
+}
+button[mat-stroked-button] {
+  --mat-button-outlined-outline-color: var(--app-border-strong);
+  --mat-button-outlined-label-text-color: var(--app-text);
+}
+.picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  border: 1px dashed var(--app-border-strong);
+  border-radius: var(--radius-control);
+}
+.picker input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: var(--space-4);
+}
+.summary div {
+  padding: var(--space-2);
+  border-radius: var(--radius-control);
+  background: var(--app-surface-subtle);
+}
+.summary dt {
+  font-size: 0.85rem;
+}
+.summary dd {
+  margin: 0.2rem 0 0;
+  font-size: 1.35rem;
+}

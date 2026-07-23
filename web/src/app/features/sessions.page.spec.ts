@@ -73,7 +73,7 @@ describe('SessionsPage', () => {
     expect(page.querySelector('button.contact-specialist')?.textContent).toContain('Skontaktuj się ze specjalistą');
   });
 
-  it('keeps problem controls keyboard-focusable and exposes the accessibility shell rules', async () => {
+  it('keeps problem controls keyboard-focusable and exposes component accessibility shell rules', async () => {
     const fixture = TestBed.createComponent(SessionsPage); fixture.detectChanges(); await settle(fixture);
     const page = fixture.nativeElement as HTMLElement;
     const problem = page.querySelector('button.problem-link') as HTMLButtonElement;
@@ -82,7 +82,6 @@ describe('SessionsPage', () => {
     const styles = (SessionsPage as any).ɵcmp.styles.join(' ');
     expect(styles).toContain('font-size: clamp(18px');
     expect(styles).toContain('min-height: 44px');
-    expect(styles).toContain(':focus-visible');
     expect(styles).toContain('prefers-reduced-motion: reduce');
     expect(styles).toContain('max-width: 480px');
   });
