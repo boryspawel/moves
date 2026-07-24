@@ -130,7 +130,10 @@ class SpecialistWorklistService {
 
     private boolean visible(SpecialistWorklistItem item, UUID specialist, ActingContext context, Purpose purpose) {
         try { authorize(specialist, item.participantAccountId, context, purpose, Capability.VIEW_ADHERENCE_WORKLIST); return true; }
-        catch (ResponseStatusException denied) { return false; }
+        catch (ResponseStatusException error) {
+            if (error.getStatusCode().value() == HttpStatus.FORBIDDEN.value()) return false;
+            throw error;
+        }
     }
     private void authorize(UUID specialist, UUID participant, ActingContext context, Purpose purpose, Capability capability) {
         authorization.requireCapabilities(specialist, participant, context, Set.of(capability), purpose);

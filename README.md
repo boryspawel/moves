@@ -80,7 +80,13 @@ klinicznych.
 
 Specjalista po ukończeniu onboardingu otwiera workspace „Dzisiaj” pod
 `/specialist/today`. Widok pokazuje bieżące i kolejne terminy, terminy danego
-dnia, zapisane okna dostępności oraz ograniczoną listę spraw wymagających uwagi.
+dnia, wolne sloty wyliczone z dostępności pomniejszonej o zajęte terminy przy
+skonfigurowanym kroku, zapisane okna dostępności oraz ograniczoną listę spraw
+wymagających uwagi. Dla dzisiejszego dnia dostępne są wyłącznie przyszłe sloty;
+tylko one można wybrać do utworzenia terminu. Dialog pokazuje wyłącznie
+uczestników z aktywną relacją i tworzy termin idempotentnie, komunikując jasno
+konflikty oraz błędy. Gdy nie ma zapisanej dostępności, CTA prowadzi do
+onboardingu edycji dostępności, który wczytuje istniejące sloty.
 Dzień jest wyznaczany w zapisanej strefie IANA profilu specjalisty; terminy są
 przechowywane i przekazywane jako chwile UTC. Zadania operacyjne nie są jeszcze
 źródłem danych tego widoku, dlatego `operationalTasks` jest obecnie zwracane jako

@@ -8,6 +8,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   FormArray,
   FormControl,
@@ -23,6 +24,7 @@ import {
   SlotRequestDayOfWeekEnum,
   SpecialistProfileRequestSpecialistKindEnum,
   type SpecialistProfileRequest,
+  type Slot,
   type State,
 } from '../api/generated/src';
 import { detectedBrowserTimeZone } from '../core/browser-time-zone';
@@ -132,13 +134,20 @@ export class OnboardingPage {
   private readonly api = inject(ApiFacade).onboarding;
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly injector = inject(Injector);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly availabilityEdit = this.route.snapshot.queryParamMap.get('availabilityEdit') === 'true';
   protected readonly state = signal<State | null>(null);
   protected readonly loadState = signal<LoadState>('loading');
   protected readonly message = signal('');
   protected readonly submittingStage = signal<OnboardingPresentationStage | null>(null);
-  protected readonly presentationStage = computed(() =>
-    this.state() ? toPresentationStage(this.state()!) : undefined,
-  );
+  protected readonly presentationStage = computed(() => {
+    const state = this.state();
+    if (!state) return undefined;
+    return this.availabilityEdit && state.stage === 'READY'
+      ? 'availability'
+      : toPresentationStage(state);
+  });
   protected readonly mobileStep = computed(
     () =>
       ({ 'profile-type': 1, legal: 2, 'basic-profile': 3, availability: 4, complete: 4 })[
@@ -257,12 +266,15 @@ export class OnboardingPage {
     );
   }
   private createSlot(): AvailabilitySlotForm {
+    return this.createSlotFrom();
+  }
+  private createSlotFrom(slot?: Slot): AvailabilitySlotForm {
     return new FormGroup(
       {
-        dayOfWeek: new FormControl<string>(SlotRequestDayOfWeekEnum.Monday, { nonNullable: true }),
-        startTime: new FormControl('09:00', { nonNullable: true, validators: Validators.required }),
-        endTime: new FormControl('10:00', { nonNullable: true, validators: Validators.required }),
-        timeZone: new FormControl(detectedBrowserTimeZone() ?? 'Europe/Warsaw', {
+        dayOfWeek: new FormControl<string>(slot?.dayOfWeek ?? SlotRequestDayOfWeekEnum.Monday, { nonNullable: true }),
+        startTime: new FormControl(slot?.startTime ?? '09:00', { nonNullable: true, validators: Validators.required }),
+        endTime: new FormControl(slot?.endTime ?? '10:00', { nonNullable: true, validators: Validators.required }),
+        timeZone: new FormControl(slot?.timeZone ?? detectedBrowserTimeZone() ?? 'Europe/Warsaw', {
           nonNullable: true,
           validators: Validators.required,
         }),
@@ -270,10 +282,17 @@ export class OnboardingPage {
       { validators: timeRangeValidator },
     );
   }
+  private loadAvailabilityForEdit(state: State): void {
+    if (!this.availabilityEdit || state.stage !== 'READY' || !state.availability?.length) return;
+    this.availabilityForm.controls.slots.clear();
+    state.availability.forEach(slot => this.availabilityForm.controls.slots.push(this.createSlotFrom(slot)));
+  }
   private async refresh(force = false): Promise<void> {
     this.loadState.set('loading');
     try {
-      this.state.set(await this.stateStore.get(force));
+      const state = await this.stateStore.get(force);
+      this.loadAvailabilityForEdit(state);
+      this.state.set(state);
       this.loadState.set('loaded');
       this.message.set('');
     } catch {
@@ -297,6 +316,9 @@ export class OnboardingPage {
       this.state.set(state);
       this.message.set(success);
       this.focusAfterRender('.onboarding-card h2');
+      if (this.availabilityEdit && stage === 'availability') {
+        void this.router.navigate(['/specialist/today']);
+      }
     } catch {
       this.message.set('Nie udało się zapisać tego kroku. Sprawdź dane i spróbuj ponownie.');
     } finally {

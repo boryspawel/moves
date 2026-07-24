@@ -17,7 +17,8 @@ import {
   TrainingPlanningV2ControllerApi,
   PlanRevisionWorkflowControllerApi,
   SpecialistParticipantReadControllerApi,
-  AppointmentControllerApi
+  AppointmentControllerApi,
+  SpecialistTodayControllerApi
 } from '../api/generated/src';
 import { Middleware } from '../api/generated/src/runtime';
 import { AuthService } from './auth.service';
@@ -55,6 +56,7 @@ export class ApiFacade {
   /** Read-only bounded client workspace; generated client remains unmodified. */
   readonly participantWorkspace: SpecialistParticipantReadControllerApi;
   readonly appointments: AppointmentControllerApi;
+  readonly specialistToday: SpecialistTodayControllerApi;
 
   constructor() {
     const auth = inject(AuthService);
@@ -79,5 +81,6 @@ export class ApiFacade {
     this.reminders = new ReminderPreferenceControllerApi(configuration);
     this.participantWorkspace = new SpecialistParticipantReadControllerApi(configuration);
     this.appointments = new AppointmentControllerApi(configuration);
+    this.specialistToday = new SpecialistTodayControllerApi(configuration);
   }
 }

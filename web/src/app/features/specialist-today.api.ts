@@ -1,53 +1,41 @@
 import { Injectable, inject } from '@angular/core';
-import { Configuration } from '../api/generated/src';
-import { BaseAPI, type RequestOpts } from '../api/generated/src/runtime';
-import { AuthService } from '../core/auth.service';
-import { generatedAuthorizationMiddleware, normalizeGeneratedApiBasePath } from '../core/api.facade';
-import { environment } from '../../environments/environment';
+import { ApiFacade } from '../core/api.facade';
+import type { TodayView } from '../api/generated/src/models/TodayView';
 import type { SpecialistTodayView } from './specialist-today.types';
 
 @Injectable({ providedIn: 'root' })
 export class SpecialistTodayApi {
-  private readonly auth = inject(AuthService);
-  private readonly client = new SpecialistTodayGeneratedStyleClient(new Configuration({
-    basePath: normalizeGeneratedApiBasePath(environment.apiBaseUrl),
-    accessToken: () => this.auth.accessToken(),
-    middleware: [generatedAuthorizationMiddleware(() => this.auth.accessToken())],
-  }));
+  private readonly api = inject(ApiFacade);
 
   async get(date?: string): Promise<SpecialistTodayView> {
-    return this.normalize(await this.client.today(date));
+    return this.normalize(await this.api.specialistToday.getToday({ date: date ? new Date(`${date}T12:00:00`) : undefined }));
   }
 
-  private normalize(value: any): SpecialistTodayView {
-    const appointment = (item: any) => ({
-      ...item,
-      appointmentId: item.appointmentId ?? item.id,
-      participantLabel: item.participantLabel ?? 'Dane uczestnika niedostępne',
-      startsAt: item.startsAt,
-      endsAt: item.endsAt,
+  private normalize(value: TodayView): SpecialistTodayView {
+    const iso = (date?: Date) => date?.toISOString() ?? '';
+    const appointment = (item: NonNullable<TodayView['appointments']>[number]) => ({
+      appointmentId: item.appointmentId ?? '',
+      participantId: item.participantId,
+      participantLabel: 'Dane uczestnika niedostępne',
+      startsAt: iso(item.startsAt),
+      endsAt: iso(item.endsAt),
+      type: item.type ?? 'CONSULTATION', status: item.status ?? 'SCHEDULED', locationMode: item.locationMode, location: item.location,
+      shortPurpose: item.shortPurpose, isCurrent: item.isCurrent, isNext: item.isNext,
       availableActions: item.availableActions ?? [],
+      version: item.version,
     });
     return {
-      ...value,
-      localDate: value.localDate,
+      generatedAt: iso(value.generatedAt),
+      localDate: value.localDate ? iso(value.localDate).slice(0, 10) : '',
       timeZoneId: value.timeZoneId ?? 'Europe/Warsaw',
-      visibleRange: value.visibleRange,
+      visibleRange: { startsAt: iso(value.visibleRange?.startsAt), endsAt: iso(value.visibleRange?.endsAt), recommendedStepMinutes: value.visibleRange?.recommendedStepMinutes ?? 30 },
       appointments: (value.appointments ?? []).map(appointment),
       currentAppointment: value.currentAppointment ? appointment(value.currentAppointment) : undefined,
       nextAppointment: value.nextAppointment ? appointment(value.nextAppointment) : undefined,
-      availabilityWindows: value.availabilityWindows ?? [],
-      attentionItems: (value.attentionItems ?? []).map((item: any) => ({ ...item, id: item.id ?? item.itemId, title: item.title ?? item.shortTitle ?? 'Sprawa wymaga uwagi' })),
-      operationalTasks: value.operationalTasks ?? [],
-    } as SpecialistTodayView;
-  }
-}
-
-/** Temporary generated-client-shaped wrapper until `api:refresh` can run against the canonical snapshot. */
-class SpecialistTodayGeneratedStyleClient extends BaseAPI {
-  async today(date?: string): Promise<any> {
-    const request: RequestOpts = { path: '/api/v1/specialist/today', method: 'GET', headers: {}, query: date ? { date } : undefined };
-    const response = await this.request(request);
-    return response.json();
+      availabilityWindows: (value.availabilityWindows ?? []).map(item => ({ startsAt: iso(item.startsAt), endsAt: iso(item.endsAt), type: item.type ?? '' })),
+      attentionItems: (value.attentionItems ?? []).map(item => ({ id: item.id ?? '', type: item.type, priority: item.priority, participantLabel: item.participantLabel, title: item.title ?? 'Sprawa wymaga uwagi', reason: item.neutralReason, createdAt: iso(item.createdAt), dueAt: item.dueAt ? iso(item.dueAt) : undefined, status: item.status, availableActions: item.availableActions, navigationReference: item.navigationReference })),
+      operationalTasks: (value.operationalTasks ?? []).map(item => ({ id: item.type ?? item.title ?? '', title: item.title ?? 'Zadanie operacyjne' })),
+      counts: value.counts ? { appointments: value.counts.appointments ?? 0, attentionItems: value.counts.attentionItems ?? 0, operationalTasks: value.counts.operationalTasks ?? 0, currentAppointments: value.counts.currentAppointments ?? 0 } : undefined,
+    };
   }
 }

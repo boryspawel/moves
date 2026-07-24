@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { ApiFacade } from '../core/api.facade';
 import { OnboardingPage, timeRangeValidator } from './onboarding.page';
@@ -8,6 +8,7 @@ import { FormControl, FormGroup } from '@angular/forms';
 const api = {
   state: vi.fn(), selectProfileType: vi.fn(), legal: vi.fn(), participantProfile: vi.fn(), specialistProfile: vi.fn(), availability: vi.fn()
 };
+const route = { snapshot: { queryParamMap: convertToParamMap({}) } };
 
 async function settle(fixture: ReturnType<typeof TestBed.createComponent>): Promise<void> {
   await fixture.whenStable();
@@ -18,8 +19,9 @@ async function settle(fixture: ReturnType<typeof TestBed.createComponent>): Prom
 describe('OnboardingPage', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
+    route.snapshot.queryParamMap = convertToParamMap({});
     api.state.mockResolvedValue({ stage: 'PROFILE_TYPE_REQUIRED', missingSteps: ['PROFILE_TYPE'] });
-    await TestBed.configureTestingModule({ imports: [OnboardingPage], providers: [provideRouter([]), { provide: ApiFacade, useValue: { onboarding: api } }] }).compileComponents();
+    await TestBed.configureTestingModule({ imports: [OnboardingPage], providers: [provideRouter([]), { provide: ActivatedRoute, useValue: route }, { provide: ApiFacade, useValue: { onboarding: api } }] }).compileComponents();
   });
 
   it('shows only loading content until the initial state resolves', () => {
@@ -94,6 +96,22 @@ describe('OnboardingPage', () => {
     api.state.mockResolvedValue({ stage: 'READY', missingSteps: [] });
     const fixture = TestBed.createComponent(OnboardingPage); fixture.detectChanges(); await settle(fixture);
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Konto gotowe');
+  });
+
+  it('edits prefilled availability for a ready account and returns to today after saving', async () => {
+    route.snapshot.queryParamMap = convertToParamMap({ availabilityEdit: 'true' });
+    api.state.mockResolvedValue({ stage: 'READY', availability: [{ dayOfWeek: 'WEDNESDAY', startTime: '12:00', endTime: '14:00', timeZone: 'Europe/Warsaw' }] });
+    api.availability.mockResolvedValue({ stage: 'READY' });
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const fixture = TestBed.createComponent(OnboardingPage); fixture.detectChanges(); await settle(fixture);
+    const instance = fixture.componentInstance as any;
+    const slot = instance.availabilityForm.controls.slots.at(0);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Typowa dostępność');
+    expect(slot.controls.dayOfWeek.value).toBe('WEDNESDAY');
+    expect(slot.controls.startTime.value).toBe('12:00');
+    instance.saveAvailability(); await settle(fixture);
+    expect(api.availability).toHaveBeenCalledWith({ availabilityRequest: { slots: [{ dayOfWeek: 'WEDNESDAY', startTime: '12:00', endTime: '14:00', timeZone: 'Europe/Warsaw' }] } });
+    expect(navigate).toHaveBeenCalledWith(['/specialist/today']);
   });
 
   it('revalidates the entire time range whenever either time changes', () => {

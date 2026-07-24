@@ -53,7 +53,7 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
 - Identyfikatory domenowe są UUID; `sub` Keycloak pozostaje tekstową referencją zewnętrzną.
 - Chwile są zapisywane jako UTC, a strefa IANA obok cyklicznych przedziałów.
 - `V034__create_specialist_calendar` tworzy schemat `calendar`, terminy i ich klucze idempotencji; `V035__add_specialist_profile_time_zone` utrwala wymaganą strefę IANA profilu specjalisty (dla istniejących profili deterministyczne `UTC`).
-- `GET /api/v1/specialist/today?date=YYYY-MM-DD` wyznacza dzień w utrwalonej strefie specjalisty i zwraca terminy, dostępność oraz sprawy worklisty; `operationalTasks` jest obecnie zwracane jako puste.
+- `GET /api/v1/specialist/today?date=YYYY-MM-DD` wyznacza dzień w utrwalonej strefie specjalisty i zwraca terminy, dostępność oraz sprawy worklisty; wolne sloty są wyliczane z dostępności pomniejszonej o zajęte terminy przy skonfigurowanym kroku. Dla bieżącego dnia slot jest możliwy do działania tylko, gdy leży w przyszłości; `operationalTasks` jest obecnie zwracane jako puste.
 - `POST /api/v1/specialist/appointments`, `PUT /api/v1/specialist/appointments/{id}`, `POST /api/v1/specialist/appointments/{id}/cancel` i `POST /api/v1/specialist/appointments/{id}/no-show` wymagają `Idempotency-Key`.
 - Operacje podatne na retry używają klucza idempotencji i unikalnego ograniczenia w bazie.
 
@@ -61,7 +61,7 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
 
 - OAuth2 Resource Server waliduje issuer i audience; role Keycloak są mapowane do `ROLE_*`.
 - Health i kontrakt OpenAPI mogą być publiczne; domenowe API domyślnie wymaga tokenu.
-- Endpointy `Today` i komendy terminów są dostępne wyłącznie dla `SPECIALIST`; widok `Today` pobiera wyłącznie terminy specjalisty oraz uczestników z jego aktywną relacją, a wyświetlana worklista pozostaje ograniczona do minimalnych danych.
+- Endpointy `Today` i komendy terminów są dostępne wyłącznie dla `SPECIALIST`; widok `Today` pobiera wyłącznie terminy specjalisty oraz uczestników z jego aktywną relacją, a wyświetlana worklista pozostaje ograniczona do minimalnych danych. Dialog tworzenia terminu udostępnia tylko aktywnych uczestników, tworzy termin idempotentnie i przekazuje jednoznaczne konflikty oraz błędy. Brak dostępności kieruje do onboardingu jej edycji z preładowaniem istniejących slotów.
 - Ból, ograniczenia, wywiad i notatki nie trafiają do gamifikacji ani publicznego profilu.
 - Trener widzi wyłącznie effective safety envelope. Clinical rationale jest osobnym widokiem fizjoterapeuty objętym osobną zgodą.
 - Collaborator planu ma jawny zakres, który nie zastępuje kontroli capability, relacji i consent.
