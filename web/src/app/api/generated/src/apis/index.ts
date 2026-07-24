@@ -1,6 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export * from './AnatomyReferenceAdminControllerApi';
+export * from './AppointmentControllerApi';
 export * from './BarrierReportControllerApi';
 export * from './ConsentControllerApi';
 export * from './CurrentIdentityControllerApi';
@@ -20,7 +21,9 @@ export * from './ReminderPreferenceControllerApi';
 export * from './SafetyV2ControllerApi';
 export * from './SessionExecutionAttemptControllerApi';
 export * from './SessionExecutionControllerApi';
+export * from './SpecialistParticipantReadControllerApi';
 export * from './SpecialistRelationshipControllerApi';
+export * from './SpecialistTodayControllerApi';
 export * from './SpecialistWorklistControllerApi';
 export * from './TodayAgendaControllerApi';
 export * from './TrainingPlanningControllerApi';

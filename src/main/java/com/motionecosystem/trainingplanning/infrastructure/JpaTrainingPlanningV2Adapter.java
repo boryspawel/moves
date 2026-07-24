@@ -274,6 +274,13 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
         return revisionIds.stream().findFirst().flatMap(this::findRevision);
     }
 
+    @Override
+    public List<PlanRevisionSnapshot> findRevisions(java.util.Collection<UUID> revisionIds) {
+        if (revisionIds == null || revisionIds.isEmpty()) return List.of();
+        if (revisionIds.size() > 100) throw new IllegalArgumentException("revision history batch exceeds 100");
+        return revisionIds.stream().distinct().map(this::findRevision).flatMap(Optional::stream).toList();
+    }
+
     private void touch(UUID revisionId, long expectedVersion, Instant updatedAt) {
         PlanRevisionJpaEntity revision = entityManager.find(PlanRevisionJpaEntity.class, revisionId);
         if (revision == null) {

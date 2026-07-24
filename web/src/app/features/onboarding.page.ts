@@ -32,7 +32,7 @@ import {
   OnboardingAvailabilityComponent,
   OnboardingBasicProfileComponent,
   OnboardingCompletionComponent,
-  OnboardingLegalBlockerComponent,
+  OnboardingLegalAcknowledgementsComponent,
   OnboardingProfileTypeComponent,
   OnboardingProgressComponent,
   type ProfileValue,
@@ -59,7 +59,7 @@ export const timeRangeValidator: ValidatorFn = (control): ValidationErrors | nul
     MatButtonModule,
     OnboardingProgressComponent,
     OnboardingProfileTypeComponent,
-    OnboardingLegalBlockerComponent,
+    OnboardingLegalAcknowledgementsComponent,
     OnboardingBasicProfileComponent,
     OnboardingAvailabilityComponent,
     OnboardingCompletionComponent,
@@ -96,7 +96,10 @@ export const timeRangeValidator: ValidatorFn = (control): ValidationErrors | nul
             (continue)="selectRole($event)"
           />
         } @else if (presentationStage() === 'legal') {
-          <app-onboarding-legal-blocker />
+          <app-onboarding-legal-acknowledgements
+            [busy]="isSubmitting('legal')"
+            (acknowledged)="acknowledgeLegal()"
+          />
         } @else if (presentationStage() === 'basic-profile') {
           <app-onboarding-basic-profile
             [form]="profileForm"
@@ -193,6 +196,16 @@ export class OnboardingPage {
       'profile-type',
       () => this.api.selectProfileType({ profileTypeRequest: { profileType } }),
       'Typ profilu zapisany.',
+    );
+  }
+  protected acknowledgeLegal(): void {
+    void this.submit(
+      'legal',
+      () =>
+        this.api.legal({
+          legalRequest: { termsAccepted: true, privacyNoticeAcknowledged: true },
+        }),
+      'Potwierdzenia zapisane.',
     );
   }
   protected saveProfile(value: ProfileValue): void {

@@ -47,7 +47,7 @@ export interface AncestorsRequest {
   structureId: string;
 }
 
-export interface Create1Request {
+export interface Create2Request {
   createStructureRequest: CreateStructureRequest;
 }
 
@@ -177,13 +177,13 @@ export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for create1 without sending the request
+   * Creates request options for create2 without sending the request
    */
-  async create1RequestOpts(requestParameters: Create1Request): Promise<runtime.RequestOpts> {
+  async create2RequestOpts(requestParameters: Create2Request): Promise<runtime.RequestOpts> {
     if (requestParameters['createStructureRequest'] == null) {
       throw new runtime.RequiredError(
         'createStructureRequest',
-        'Required parameter "createStructureRequest" was null or undefined when calling create1().',
+        'Required parameter "createStructureRequest" was null or undefined when calling create2().',
       );
     }
 
@@ -207,11 +207,11 @@ export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
   /**
    * Create a draft anatomical structure
    */
-  async create1Raw(
-    requestParameters: Create1Request,
+  async create2Raw(
+    requestParameters: Create2Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AnatomicalStructureSnapshot>> {
-    const requestOptions = await this.create1RequestOpts(requestParameters);
+    const requestOptions = await this.create2RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
@@ -222,11 +222,11 @@ export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
   /**
    * Create a draft anatomical structure
    */
-  async create1(
-    requestParameters: Create1Request,
+  async create2(
+    requestParameters: Create2Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<AnatomicalStructureSnapshot> {
-    const response = await this.create1Raw(requestParameters, initOverrides);
+    const response = await this.create2Raw(requestParameters, initOverrides);
     return await response.value();
   }
 

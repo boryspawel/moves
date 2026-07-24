@@ -63,6 +63,16 @@ class SpecialistWorklistService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    List<WorklistItemView> forParticipant(String subject, UUID participantId, ActingContext context, Purpose purpose) {
+        UUID specialist = specialist(subject);
+        authorize(specialist, participantId, context, purpose, Capability.VIEW_ADHERENCE_WORKLIST);
+        return items.findByParticipantAccountIdOrderByUpdatedAtDesc(participantId).stream()
+                .filter(item -> ACTIVE_STATUSES.contains(item.status))
+                .map(this::viewFor)
+                .toList();
+    }
+
     @Transactional
     WorklistItemView action(String subject, UUID itemId, ActingContext context, Purpose purpose, ActionCommand command) {
         UUID specialist = specialist(subject);

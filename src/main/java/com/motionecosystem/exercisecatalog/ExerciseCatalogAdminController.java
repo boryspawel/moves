@@ -38,7 +38,7 @@ class ExerciseCatalogAdminController {
     }
 
     @PostMapping
-    CatalogService.VersionView create(@AuthenticationPrincipal Jwt jwt, @RequestBody CreateRequest request) {
+    CatalogService.VersionView create(@AuthenticationPrincipal Jwt jwt, @RequestBody CatalogCreateRequest request) {
         return catalog.create(jwt.getSubject(), request.canonicalName(), request.version());
     }
 
@@ -132,7 +132,8 @@ class ExerciseCatalogAdminController {
         return catalog.legacyContraindicationReport();
     }
 
-    record CreateRequest(String canonicalName, CatalogService.VersionCommand version) {
+    /** Distinct schema name avoids a TypeScript generator collision with operation CreateRequest. */
+    record CatalogCreateRequest(String canonicalName, CatalogService.VersionCommand version) {
     }
 
     record PublishRequest(@NotNull @PositiveOrZero Long expectedVersion) {

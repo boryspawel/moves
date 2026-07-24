@@ -15,7 +15,9 @@ import {
   TodayAgendaControllerApi,
   TrainingPlanningControllerApi,
   TrainingPlanningV2ControllerApi,
-  PlanRevisionWorkflowControllerApi
+  PlanRevisionWorkflowControllerApi,
+  SpecialistParticipantReadControllerApi,
+  AppointmentControllerApi
 } from '../api/generated/src';
 import { Middleware } from '../api/generated/src/runtime';
 import { AuthService } from './auth.service';
@@ -50,6 +52,9 @@ export class ApiFacade {
   readonly barriers: BarrierReportControllerApi;
   readonly gamification: GamificationControllerApi;
   readonly reminders: ReminderPreferenceControllerApi;
+  /** Read-only bounded client workspace; generated client remains unmodified. */
+  readonly participantWorkspace: SpecialistParticipantReadControllerApi;
+  readonly appointments: AppointmentControllerApi;
 
   constructor() {
     const auth = inject(AuthService);
@@ -72,5 +77,7 @@ export class ApiFacade {
     this.barriers = new BarrierReportControllerApi(configuration);
     this.gamification = new GamificationControllerApi(configuration);
     this.reminders = new ReminderPreferenceControllerApi(configuration);
+    this.participantWorkspace = new SpecialistParticipantReadControllerApi(configuration);
+    this.appointments = new AppointmentControllerApi(configuration);
   }
 }

@@ -2,6 +2,7 @@ package com.motionecosystem.specialist;
 
 import java.util.UUID;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -14,4 +15,7 @@ interface ParticipantSpecialistRelationshipRepository extends JpaRepository<Part
 
     List<ParticipantSpecialistRelationship> findBySpecialistAccountIdAndStatus(
             UUID specialistAccountId, ParticipantSpecialistRelationship.Status status);
+
+    Optional<ParticipantSpecialistRelationship> findBySpecialistAccountIdAndParticipantAccountId(
+            UUID specialistAccountId, UUID participantAccountId);
 }

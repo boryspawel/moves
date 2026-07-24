@@ -1,5 +1,6 @@
 package com.motionecosystem.calendar;
 
+import com.motionecosystem.calendar.api.SpecialistAppointmentQueryPort;
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
@@ -7,6 +8,7 @@ import com.motionecosystem.specialist.SpecialistRelationshipService;
 import java.time.*;
 import java.util.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -16,7 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
-public class AppointmentService {
+public class AppointmentService implements SpecialistAppointmentQueryPort {
     private final AppointmentRepository appointments;
     private final AppointmentIdempotencyRepository idempotency;
     private final CurrentAccountService accounts;
@@ -63,6 +65,42 @@ public class AppointmentService {
         return appointments.findIntersecting(specialist, start, end).stream()
                 .filter(appointment -> activeParticipants.contains(appointment.participantAccountId))
                 .map(appointment -> view(appointment, now)).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SpecialistAppointmentQueryPort.AppointmentSummary> findForParticipant(UUID specialistAccountId,
+            UUID participantAccountId, Instant fromInclusive, Instant toExclusive, int limit) {
+        if (specialistAccountId == null || participantAccountId == null || fromInclusive == null || toExclusive == null
+                || !toExclusive.isAfter(fromInclusive) || limit < 1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "specialist, participant, range and limit are required");
+        }
+        return appointments.findIntersecting(specialistAccountId, fromInclusive, toExclusive).stream()
+                .filter(item -> participantAccountId.equals(item.participantAccountId))
+                .sorted(Comparator.comparing((Appointment item) -> item.startsAt).reversed().thenComparing(item -> item.id))
+                .limit(limit)
+                .map(AppointmentService::summary)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SpecialistAppointmentQueryPort.AppointmentSummary> timeline(UUID specialistAccountId,
+            UUID participantAccountId, Instant fromInclusive, Instant toExclusive,
+            SpecialistAppointmentQueryPort.SeekCursor after, int limit) {
+        if (specialistAccountId == null || participantAccountId == null || fromInclusive == null || toExclusive == null
+                || !toExclusive.isAfter(fromInclusive) || limit < 1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "specialist, participant, range and limit are required");
+        }
+        PageRequest page = PageRequest.of(0, limit);
+        List<Appointment> result = after == null
+                ? appointments.findTimelineInitial(specialistAccountId, participantAccountId, fromInclusive, toExclusive, page)
+                : after.recordedAt() == null
+                ? appointments.findTimelineAfterUnrecorded(specialistAccountId, participantAccountId, fromInclusive, toExclusive,
+                        after.effectiveFrom(), page)
+                : appointments.findTimelineAfterRecorded(specialistAccountId, participantAccountId, fromInclusive, toExclusive,
+                        after.effectiveFrom(), after.recordedAt(), after.eventId(), page);
+        return result.stream().map(AppointmentService::summary).toList();
     }
 
     private AppointmentView changeStatus(String subject, UUID id, String key, VersionCommand command, String operation, boolean cancelling) {
@@ -113,6 +151,10 @@ public class AppointmentService {
     private static void bad(String detail) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST, detail); }
     private static ResponseStatusException conflict(String detail) { return new ResponseStatusException(HttpStatus.CONFLICT, detail); }
     private static AppointmentView view(Appointment appointment) { return view(appointment, null); }
+    private static SpecialistAppointmentQueryPort.AppointmentSummary summary(Appointment appointment) {
+        return new SpecialistAppointmentQueryPort.AppointmentSummary(appointment.id, appointment.startsAt, appointment.endsAt,
+                appointment.type.name(), appointment.status.name(), appointment.shortPurpose, appointment.createdAt, appointment.updatedAt);
+    }
     private static AppointmentView view(Appointment appointment, Instant now) { return new AppointmentView(appointment.id, appointment.participantAccountId, appointment.startsAt, appointment.endsAt, appointment.type, appointment.status, appointment.locationMode, appointment.location, appointment.shortPurpose, now != null && !appointment.startsAt.isAfter(now) && appointment.endsAt.isAfter(now), false, actions(appointment), appointment.version); }
     private static List<String> actions(Appointment appointment) { return appointment.status == Appointment.Status.SCHEDULED || appointment.status == Appointment.Status.CONFIRMED || appointment.status == Appointment.Status.IN_PROGRESS ? List.of("OPEN_APPOINTMENT", "OPEN_PARTICIPANT", "CANCEL", "MARK_NO_SHOW") : List.of("OPEN_APPOINTMENT", "OPEN_PARTICIPANT"); }
     private record Values(UUID participantId, Instant startsAt, Instant endsAt, Appointment.Type type, Appointment.LocationMode locationMode, String location, String shortPurpose) { }

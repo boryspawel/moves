@@ -50,7 +50,8 @@ class SpecialistTodayService {
         Optional<AppointmentService.AppointmentView> current = raw.stream().filter(item -> item.isCurrent() && active(item)).findFirst();
         Optional<UUID> nextId = raw.stream().filter(item -> item.status() != com.motionecosystem.calendar.Appointment.Status.CANCELLED
                         && item.status() != com.motionecosystem.calendar.Appointment.Status.COMPLETED && item.startsAt().isAfter(now))
-                .map(AppointmentService.AppointmentView::appointmentId).findFirst();
+                .min(Comparator.comparing(AppointmentService.AppointmentView::startsAt))
+                .map(AppointmentService.AppointmentView::appointmentId);
         List<AppointmentView> appointmentViews = raw.stream().map(item -> appointmentView(item, labels.get(item.participantId()), nextId.filter(item.appointmentId()::equals).isPresent())).toList();
         List<AvailabilityWindowView> windows = windows(slots, localDate);
         List<AttentionItemView> attention = attention(subject, account.id(), profile, labels);

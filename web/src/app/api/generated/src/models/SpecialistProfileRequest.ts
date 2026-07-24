@@ -31,6 +31,12 @@ export interface SpecialistProfileRequest {
    * @memberof SpecialistProfileRequest
    */
   specialistKind?: SpecialistProfileRequestSpecialistKindEnum;
+  /**
+   * Specialist IANA time zone. Required for new clients; legacy requests are persisted as UTC.
+   * @type {string}
+   * @memberof SpecialistProfileRequest
+   */
+  timeZoneId: string;
 }
 
 /**
@@ -49,6 +55,7 @@ export type SpecialistProfileRequestSpecialistKindEnum =
 export function instanceOfSpecialistProfileRequest(
   value: object,
 ): value is SpecialistProfileRequest {
+  if (!('timeZoneId' in value) || value['timeZoneId'] === undefined) return false;
   return true;
 }
 
@@ -66,6 +73,7 @@ export function SpecialistProfileRequestFromJSONTyped(
   return {
     displayName: json['displayName'] == null ? undefined : json['displayName'],
     specialistKind: json['specialistKind'] == null ? undefined : json['specialistKind'],
+    timeZoneId: json['timeZoneId'],
   };
 }
 
@@ -84,5 +92,6 @@ export function SpecialistProfileRequestToJSONTyped(
   return {
     displayName: value['displayName'],
     specialistKind: value['specialistKind'],
+    timeZoneId: value['timeZoneId'],
   };
 }

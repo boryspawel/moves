@@ -1,5 +1,6 @@
 package com.motionecosystem.participant;
 
+import com.motionecosystem.participant.api.ParticipantSummaryQueryPort;
 import java.time.Clock;
 import java.util.Optional;
 import java.util.Collection;
@@ -14,7 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
-public class ParticipantProfileService {
+public class ParticipantProfileService implements ParticipantSummaryQueryPort {
 
     private final ParticipantProfileRepository profiles;
     private final Clock clock;
@@ -31,6 +32,13 @@ public class ParticipantProfileService {
     @Transactional(readOnly = true)
     public Optional<ProfileView> find(UUID accountId) {
         return profiles.findByAccountId(accountId).map(ParticipantProfileService::view);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<ParticipantSummary> findSummary(UUID participantAccountId) {
+        return profiles.findByAccountId(participantAccountId)
+                .map(profile -> new ParticipantSummary(profile.accountId, profile.displayName));
     }
 
     /** Names are composed only after the caller has enforced its relationship policy. */

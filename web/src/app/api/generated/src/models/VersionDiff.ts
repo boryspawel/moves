@@ -54,12 +54,6 @@ export interface VersionDiff {
    * @type {string}
    * @memberof VersionDiff
    */
-  normalizedSource?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof VersionDiff
-   */
   currentPublishedSemanticSha256?: string;
 }
 
@@ -85,7 +79,6 @@ export function VersionDiffFromJSONTyped(json: any, ignoreDiscriminator: boolean
     status: json['status'] == null ? undefined : json['status'],
     draftSemanticSha256:
       json['draftSemanticSha256'] == null ? undefined : json['draftSemanticSha256'],
-    normalizedSource: json['normalizedSource'] == null ? undefined : json['normalizedSource'],
     currentPublishedSemanticSha256:
       json['currentPublishedSemanticSha256'] == null
         ? undefined
@@ -111,7 +104,6 @@ export function VersionDiffToJSONTyped(
     versionNumber: value['versionNumber'],
     status: value['status'],
     draftSemanticSha256: value['draftSemanticSha256'],
-    normalizedSource: value['normalizedSource'],
     currentPublishedSemanticSha256: value['currentPublishedSemanticSha256'],
   };
 }

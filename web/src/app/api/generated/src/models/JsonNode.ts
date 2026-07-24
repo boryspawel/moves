@@ -54,6 +54,36 @@ export interface JsonNode {
    * @type {boolean}
    * @memberof JsonNode
    */
+  valueNode?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof JsonNode
+   */
+  missingNode?: boolean;
+  /**
+   *
+   * @type {JsonNodeNodeTypeEnum}
+   * @memberof JsonNode
+   */
+  nodeType?: JsonNodeNodeTypeEnum;
+  /**
+   *
+   * @type {boolean}
+   * @memberof JsonNode
+   */
+  string?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof JsonNode
+   */
+  integralNumber?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof JsonNode
+   */
   pojo?: boolean;
   /**
    *
@@ -121,36 +151,6 @@ export interface JsonNode {
    * @type {boolean}
    * @memberof JsonNode
    */
-  valueNode?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof JsonNode
-   */
-  missingNode?: boolean;
-  /**
-   *
-   * @type {JsonNodeNodeTypeEnum}
-   * @memberof JsonNode
-   */
-  nodeType?: JsonNodeNodeTypeEnum;
-  /**
-   *
-   * @type {boolean}
-   * @memberof JsonNode
-   */
-  string?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof JsonNode
-   */
-  integralNumber?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof JsonNode
-   */
   container?: boolean;
   /**
    *
@@ -203,6 +203,11 @@ export function JsonNodeFromJSONTyped(json: any, ignoreDiscriminator: boolean): 
     _null: json['null'] == null ? undefined : json['null'],
     object: json['object'] == null ? undefined : json['object'],
     _float: json['float'] == null ? undefined : json['float'],
+    valueNode: json['valueNode'] == null ? undefined : json['valueNode'],
+    missingNode: json['missingNode'] == null ? undefined : json['missingNode'],
+    nodeType: json['nodeType'] == null ? undefined : json['nodeType'],
+    string: json['string'] == null ? undefined : json['string'],
+    integralNumber: json['integralNumber'] == null ? undefined : json['integralNumber'],
     pojo: json['pojo'] == null ? undefined : json['pojo'],
     floatingPointNumber:
       json['floatingPointNumber'] == null ? undefined : json['floatingPointNumber'],
@@ -215,11 +220,6 @@ export function JsonNodeFromJSONTyped(json: any, ignoreDiscriminator: boolean): 
     textual: json['textual'] == null ? undefined : json['textual'],
     _boolean: json['boolean'] == null ? undefined : json['boolean'],
     binary: json['binary'] == null ? undefined : json['binary'],
-    valueNode: json['valueNode'] == null ? undefined : json['valueNode'],
-    missingNode: json['missingNode'] == null ? undefined : json['missingNode'],
-    nodeType: json['nodeType'] == null ? undefined : json['nodeType'],
-    string: json['string'] == null ? undefined : json['string'],
-    integralNumber: json['integralNumber'] == null ? undefined : json['integralNumber'],
     container: json['container'] == null ? undefined : json['container'],
     number: json['number'] == null ? undefined : json['number'],
     embeddedValue: json['embeddedValue'] == null ? undefined : json['embeddedValue'],
@@ -244,6 +244,11 @@ export function JsonNodeToJSONTyped(
     null: value['_null'],
     object: value['object'],
     float: value['_float'],
+    valueNode: value['valueNode'],
+    missingNode: value['missingNode'],
+    nodeType: value['nodeType'],
+    string: value['string'],
+    integralNumber: value['integralNumber'],
     pojo: value['pojo'],
     floatingPointNumber: value['floatingPointNumber'],
     short: value['_short'],
@@ -255,11 +260,6 @@ export function JsonNodeToJSONTyped(
     textual: value['textual'],
     boolean: value['_boolean'],
     binary: value['binary'],
-    valueNode: value['valueNode'],
-    missingNode: value['missingNode'],
-    nodeType: value['nodeType'],
-    string: value['string'],
-    integralNumber: value['integralNumber'],
     container: value['container'],
     number: value['number'],
     embeddedValue: value['embeddedValue'],

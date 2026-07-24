@@ -6,7 +6,7 @@ import { OnboardingPage, timeRangeValidator } from './onboarding.page';
 import { FormControl, FormGroup } from '@angular/forms';
 
 const api = {
-  state: vi.fn(), selectProfileType: vi.fn(), participantProfile: vi.fn(), specialistProfile: vi.fn(), availability: vi.fn()
+  state: vi.fn(), selectProfileType: vi.fn(), legal: vi.fn(), participantProfile: vi.fn(), specialistProfile: vi.fn(), availability: vi.fn()
 };
 
 async function settle(fixture: ReturnType<typeof TestBed.createComponent>): Promise<void> {
@@ -54,12 +54,14 @@ describe('OnboardingPage', () => {
     expect(instance.state().stage).toBe('PROFILE_REQUIRED');
   });
 
-  it('blocks legal acknowledgement when approved public document content is absent', async () => {
+  it('submits both required legal acknowledgements', async () => {
     api.state.mockResolvedValue({ stage: 'LEGAL_REQUIRED', missingSteps: ['LEGAL_DOCUMENTS'] });
+    api.legal.mockResolvedValue({ stage: 'PROFILE_REQUIRED', profileType: 'PARTICIPANT' });
     const fixture = TestBed.createComponent(OnboardingPage); fixture.detectChanges(); await settle(fixture);
-    const page = fixture.nativeElement as HTMLElement;
-    expect(page.textContent).toContain('Nie możemy bezpiecznie pokazać dokumentów do akceptacji');
-    expect(page.querySelector('button')).toBeNull();
+    const instance = fixture.componentInstance as any;
+    instance.acknowledgeLegal(); await settle(fixture);
+    expect(api.legal).toHaveBeenCalledWith({ legalRequest: { termsAccepted: true, privacyNoticeAcknowledged: true } });
+    expect(instance.state().stage).toBe('PROFILE_REQUIRED');
   });
 
   it('prevents duplicate submission and sends a detected participant time zone when present', async () => {
@@ -68,6 +70,7 @@ describe('OnboardingPage', () => {
     api.participantProfile.mockReturnValue(new Promise(release => { resolve = release; }));
     const fixture = TestBed.createComponent(OnboardingPage); fixture.detectChanges(); await settle(fixture);
     const instance = fixture.componentInstance as any;
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Strefa czasowa');
     instance.profileForm.controls.displayName.setValue('Ada');
     instance.profileForm.controls.timeZoneId.setValue('Europe/Warsaw');
     instance.saveProfile(instance.profileForm.getRawValue()); instance.saveProfile(instance.profileForm.getRawValue());

@@ -20,6 +20,13 @@ import {
   ImportProblemToJSON,
   ImportProblemToJSONTyped,
 } from './ImportProblem';
+import type { AnatomyContributionSnapshot } from './AnatomyContributionSnapshot';
+import {
+  AnatomyContributionSnapshotFromJSON,
+  AnatomyContributionSnapshotFromJSONTyped,
+  AnatomyContributionSnapshotToJSON,
+  AnatomyContributionSnapshotToJSONTyped,
+} from './AnatomyContributionSnapshot';
 import type { VersionDiff } from './VersionDiff';
 import {
   VersionDiffFromJSON,
@@ -87,6 +94,12 @@ export interface EditorialDetail {
   diff?: VersionDiff;
   /**
    *
+   * @type {Array<AnatomyContributionSnapshot>}
+   * @memberof EditorialDetail
+   */
+  anatomyContributions?: Array<AnatomyContributionSnapshot>;
+  /**
+   *
    * @type {boolean}
    * @memberof EditorialDetail
    */
@@ -127,6 +140,10 @@ export function EditorialDetailFromJSONTyped(
         : (json['importProblems'] as Array<any>).map(ImportProblemFromJSON),
     review: json['review'] == null ? undefined : ReviewResultFromJSON(json['review']),
     diff: json['diff'] == null ? undefined : VersionDiffFromJSON(json['diff']),
+    anatomyContributions:
+      json['anatomyContributions'] == null
+        ? undefined
+        : (json['anatomyContributions'] as Array<any>).map(AnatomyContributionSnapshotFromJSON),
     readyToPublish: json['readyToPublish'] == null ? undefined : json['readyToPublish'],
     actionNeeded: json['actionNeeded'] == null ? undefined : json['actionNeeded'],
   };
@@ -153,6 +170,10 @@ export function EditorialDetailToJSONTyped(
         : (value['importProblems'] as Array<any>).map(ImportProblemToJSON),
     review: ReviewResultToJSON(value['review']),
     diff: VersionDiffToJSON(value['diff']),
+    anatomyContributions:
+      value['anatomyContributions'] == null
+        ? undefined
+        : (value['anatomyContributions'] as Array<any>).map(AnatomyContributionSnapshotToJSON),
     readyToPublish: value['readyToPublish'],
     actionNeeded: value['actionNeeded'],
   };

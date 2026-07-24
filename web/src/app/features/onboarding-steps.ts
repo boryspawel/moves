@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
-import { FormArray, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatError, MatFormFieldModule, MatHint, MatLabel } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -210,22 +211,33 @@ export class OnboardingProfileTypeComponent {
 }
 
 @Component({
-  selector: 'app-onboarding-legal-blocker',
+  selector: 'app-onboarding-legal-acknowledgements',
   standalone: true,
-  imports: [MatCardModule],
-  template: `<mat-card class="onboarding-card legal-blocker" role="alert"
+  imports: [FormsModule, MatButtonModule, MatCardModule, MatCheckboxModule],
+  template: `<mat-card class="onboarding-card"
     ><mat-card-header
       ><mat-card-title><h2 tabindex="-1">Dokumenty</h2></mat-card-title></mat-card-header
     ><mat-card-content
-      ><p>
-        Nie możemy bezpiecznie pokazać dokumentów do akceptacji: w aplikacji nie ma zatwierdzonych
-        publicznych treści ani adresów dokumentów.
-      </p></mat-card-content
+      ><p>Potwierdź wymagane oświadczenia, aby przejść do konfiguracji profilu.</p>
+      <form (ngSubmit)="acknowledge()">
+        <p><mat-checkbox [(ngModel)]="termsAccepted" name="termsAccepted">Akceptuję warunki korzystania z usługi.</mat-checkbox></p>
+        <p><mat-checkbox [(ngModel)]="privacyNoticeAcknowledged" name="privacyNoticeAcknowledged">Potwierdzam zapoznanie się z informacją o prywatności.</mat-checkbox></p>
+        <button mat-flat-button type="submit" [disabled]="busy || !termsAccepted || !privacyNoticeAcknowledged">Potwierdzam</button>
+      </form></mat-card-content
     ></mat-card
   >`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class OnboardingLegalBlockerComponent {}
+export class OnboardingLegalAcknowledgementsComponent {
+  @Input() busy = false;
+  @Output() readonly acknowledged = new EventEmitter<void>();
+  protected termsAccepted = false;
+  protected privacyNoticeAcknowledged = false;
+
+  protected acknowledge(): void {
+    if (this.termsAccepted && this.privacyNoticeAcknowledged && !this.busy) this.acknowledged.emit();
+  }
+}
 
 @Component({
   selector: 'app-onboarding-basic-profile',
@@ -265,7 +277,7 @@ export class OnboardingLegalBlockerComponent {}
             ></mat-form-field
           >
         }
-        @if (profileType === 'PARTICIPANT') {
+        @if (profileType === 'PARTICIPANT' || profileType === 'SPECIALIST') {
           <mat-form-field appearance="outline"
             ><mat-label>Strefa czasowa</mat-label
             ><mat-select formControlName="timeZoneId">

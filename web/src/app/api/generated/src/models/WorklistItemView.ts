@@ -86,6 +86,12 @@ export interface WorklistItemView {
    * @type {Date}
    * @memberof WorklistItemView
    */
+  createdAt?: Date;
+  /**
+   *
+   * @type {Date}
+   * @memberof WorklistItemView
+   */
   snoozedUntil?: Date;
   /**
    *
@@ -130,6 +136,7 @@ export function WorklistItemViewFromJSONTyped(
     minimalData: json['minimalData'] == null ? undefined : json['minimalData'],
     policyVersion: json['policyVersion'] == null ? undefined : json['policyVersion'],
     status: json['status'] == null ? undefined : json['status'],
+    createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
     snoozedUntil: json['snoozedUntil'] == null ? undefined : new Date(json['snoozedUntil']),
     issueText: json['issueText'] == null ? undefined : json['issueText'],
     replies:
@@ -159,6 +166,7 @@ export function WorklistItemViewToJSONTyped(
     minimalData: value['minimalData'],
     policyVersion: value['policyVersion'],
     status: value['status'],
+    createdAt: value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
     snoozedUntil:
       value['snoozedUntil'] == null ? value['snoozedUntil'] : value['snoozedUntil'].toISOString(),
     issueText: value['issueText'],

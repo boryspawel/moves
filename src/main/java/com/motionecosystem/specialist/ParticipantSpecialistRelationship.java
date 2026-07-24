@@ -36,4 +36,12 @@ class ParticipantSpecialistRelationship {
     UUID participantAccountId() {
         return participantAccountId;
     }
+
+    Instant activatedAt() {
+        return activatedAt;
+    }
+
+    Status status() {
+        return status;
+    }
 }

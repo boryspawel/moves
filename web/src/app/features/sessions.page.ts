@@ -435,7 +435,7 @@ export class SessionsPage {
 
   protected async start(): Promise<void> {
     const session = this.todaySession();
-    const revisionId = this.agenda()?.activePlan?.revisionId;
+    const revisionId = this.agenda()?.activePlan?.activeRevisionId;
     if (!session?.sessionId || !revisionId)
       return this.error('Brakuje danych aktywnego planu. Odśwież widok i spróbuj ponownie.');
     if (!this.matchingSession(session)?.prescriptions?.length) return this.missingPrescriptions();

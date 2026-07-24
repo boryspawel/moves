@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -13,6 +14,9 @@ public interface PlanRevisionQueryPort {
     Optional<PlanRevisionSnapshot> findRevision(UUID revisionId);
 
     Optional<PlanRevisionSnapshot> findActiveRevision(UUID participantAccountId);
+
+    /** Bounded owner-side history lookup for consumers composing participant timelines. */
+    List<PlanRevisionSnapshot> findRevisions(Collection<UUID> revisionIds);
 
     record PlanRevisionSnapshot(
             UUID revisionId, UUID planId, UUID participantAccountId, int revisionNumber,

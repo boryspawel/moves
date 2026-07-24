@@ -10,7 +10,7 @@ async function settle(fixture: ReturnType<typeof TestBed.createComponent>): Prom
 }
 
 const api = {
-  today: { today: vi.fn().mockResolvedValue({ activePlan: { revisionId: 'revision' }, sessions: [{ sessionId: 'session', title: 'Sesja', expectedDurationMinutes: 20 }] }) },
+  today: { today: vi.fn().mockResolvedValue({ activePlan: { activeRevisionId: 'revision' }, sessions: [{ sessionId: 'session', title: 'Sesja', expectedDurationMinutes: 20 }] }) },
   planning: { sessions: vi.fn().mockResolvedValue([{ id: 'session', prescriptions: [{ id: 'prescription-1', position: 1, targetSets: 2, targetRepetitions: 8 }] }]) },
   safety: { checkIn: vi.fn().mockResolvedValue({}) },
   attempts: { start: vi.fn(), get1: vi.fn(), resume: vi.fn(), pause: vi.fn(), progress: vi.fn(), complete: vi.fn() },
@@ -20,7 +20,7 @@ const api = {
 describe('SessionsPage', () => {
   beforeEach(async () => {
     sessionStorage.clear(); vi.clearAllMocks();
-    api.today.today.mockResolvedValue({ activePlan: { revisionId: 'revision' }, sessions: [{ sessionId: 'session', title: 'Sesja', expectedDurationMinutes: 20 }] });
+    api.today.today.mockResolvedValue({ activePlan: { activeRevisionId: 'revision' }, sessions: [{ sessionId: 'session', title: 'Sesja', expectedDurationMinutes: 20 }] });
     api.planning.sessions.mockResolvedValue([{ id: 'session', prescriptions: [{ id: 'prescription-1', position: 1, targetSets: 2, targetRepetitions: 8 }] }]);
     await TestBed.configureTestingModule({ imports: [SessionsPage], providers: [{ provide: ApiFacade, useValue: api }] }).compileComponents();
   });

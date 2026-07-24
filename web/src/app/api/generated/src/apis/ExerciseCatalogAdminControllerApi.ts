@@ -14,6 +14,11 @@
 
 import * as runtime from '../runtime';
 import {
+  type CatalogCreateRequest,
+  CatalogCreateRequestFromJSON,
+  CatalogCreateRequestToJSON,
+} from '../models/CatalogCreateRequest';
+import {
   type ContributionCommand,
   ContributionCommandFromJSON,
   ContributionCommandToJSON,
@@ -23,11 +28,6 @@ import {
   ContributionViewFromJSON,
   ContributionViewToJSON,
 } from '../models/ContributionView';
-import {
-  type CreateRequest,
-  CreateRequestFromJSON,
-  CreateRequestToJSON,
-} from '../models/CreateRequest';
 import {
   type DraftUpdateCommand,
   DraftUpdateCommandFromJSON,
@@ -90,8 +90,8 @@ export interface ApproveRequest {
   versionId: string;
 }
 
-export interface CreateOperationRequest {
-  createRequest: CreateRequest;
+export interface Create1Request {
+  catalogCreateRequest: CatalogCreateRequest;
 }
 
 export interface CreateVersionRequest {
@@ -121,7 +121,7 @@ export interface SubmitReviewRequest {
   versionId: string;
 }
 
-export interface UpdateRequest {
+export interface Update1Request {
   versionId: string;
   versionCommand: VersionCommand;
 }
@@ -323,13 +323,13 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for create without sending the request
+   * Creates request options for create1 without sending the request
    */
-  async createRequestOpts(requestParameters: CreateOperationRequest): Promise<runtime.RequestOpts> {
-    if (requestParameters['createRequest'] == null) {
+  async create1RequestOpts(requestParameters: Create1Request): Promise<runtime.RequestOpts> {
+    if (requestParameters['catalogCreateRequest'] == null) {
       throw new runtime.RequiredError(
-        'createRequest',
-        'Required parameter "createRequest" was null or undefined when calling create().',
+        'catalogCreateRequest',
+        'Required parameter "catalogCreateRequest" was null or undefined when calling create1().',
       );
     }
 
@@ -346,17 +346,17 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
       method: 'POST',
       headers: headerParameters,
       query: queryParameters,
-      body: CreateRequestToJSON(requestParameters['createRequest']),
+      body: CatalogCreateRequestToJSON(requestParameters['catalogCreateRequest']),
     };
   }
 
   /**
    */
-  async createRaw(
-    requestParameters: CreateOperationRequest,
+  async create1Raw(
+    requestParameters: Create1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<VersionView>> {
-    const requestOptions = await this.createRequestOpts(requestParameters);
+    const requestOptions = await this.create1RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) => VersionViewFromJSON(jsonValue));
@@ -364,11 +364,11 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async create(
-    requestParameters: CreateOperationRequest,
+  async create1(
+    requestParameters: Create1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<VersionView> {
-    const response = await this.createRaw(requestParameters, initOverrides);
+    const response = await this.create1Raw(requestParameters, initOverrides);
     return await response.value();
   }
 
@@ -761,20 +761,20 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for update without sending the request
+   * Creates request options for update1 without sending the request
    */
-  async updateRequestOpts(requestParameters: UpdateRequest): Promise<runtime.RequestOpts> {
+  async update1RequestOpts(requestParameters: Update1Request): Promise<runtime.RequestOpts> {
     if (requestParameters['versionId'] == null) {
       throw new runtime.RequiredError(
         'versionId',
-        'Required parameter "versionId" was null or undefined when calling update().',
+        'Required parameter "versionId" was null or undefined when calling update1().',
       );
     }
 
     if (requestParameters['versionCommand'] == null) {
       throw new runtime.RequiredError(
         'versionCommand',
-        'Required parameter "versionCommand" was null or undefined when calling update().',
+        'Required parameter "versionCommand" was null or undefined when calling update1().',
       );
     }
 
@@ -801,11 +801,11 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async updateRaw(
-    requestParameters: UpdateRequest,
+  async update1Raw(
+    requestParameters: Update1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<VersionView>> {
-    const requestOptions = await this.updateRequestOpts(requestParameters);
+    const requestOptions = await this.update1RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) => VersionViewFromJSON(jsonValue));
@@ -813,11 +813,11 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async update(
-    requestParameters: UpdateRequest,
+  async update1(
+    requestParameters: Update1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<VersionView> {
-    const response = await this.updateRaw(requestParameters, initOverrides);
+    const response = await this.update1Raw(requestParameters, initOverrides);
     return await response.value();
   }
 
