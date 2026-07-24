@@ -70,7 +70,11 @@
           "temporary": false
         }
       ],
-      "realmRoles": ["CONTENT_ADMIN", "SYSTEM_ADMIN"]
+      "realmRoles": [
+        "CONTENT_ADMIN",
+        "SYSTEM_ADMIN",
+        "SPECIALIST"
+      ]
     }
   ]
 }
