@@ -1,5 +1,7 @@
 package com.motionecosystem.specialist;
 
+import com.motionecosystem.participant.ParticipantRecord;
+
 import java.time.Instant;
 import java.util.UUID;
 
@@ -20,8 +22,14 @@ class ParticipantSpecialistRelationship {
     private UUID id;
     @Column(name = "specialist_account_id", nullable = false)
     private UUID specialistAccountId;
-    @Column(name = "participant_account_id", nullable = false)
+    /** Deprecated compatibility bridge; account-free records leave this null. */
+    @Column(name = "participant_account_id")
     private UUID participantAccountId;
+    @Column(name = "participant_id")
+    private UUID participantId;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "relationship_context")
+    private ParticipantRecord.RelationshipContext relationshipContext;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status;
@@ -31,6 +39,16 @@ class ParticipantSpecialistRelationship {
     private Instant endedAt;
 
     protected ParticipantSpecialistRelationship() {
+    }
+
+    ParticipantSpecialistRelationship(UUID specialistAccountId, UUID participantId,
+            ParticipantRecord.RelationshipContext relationshipContext, Instant activatedAt) {
+        this.id = UUID.randomUUID();
+        this.specialistAccountId = specialistAccountId;
+        this.participantId = participantId;
+        this.relationshipContext = relationshipContext;
+        this.status = Status.ACTIVE;
+        this.activatedAt = activatedAt;
     }
 
     UUID participantAccountId() {
@@ -44,4 +62,6 @@ class ParticipantSpecialistRelationship {
     Status status() {
         return status;
     }
+
+    UUID participantId() { return participantId; }
 }

@@ -9,7 +9,6 @@ import com.motionecosystem.specialist.api.SpecialistAuthorizationPort;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.Capability;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.Purpose;
-import java.sql.Timestamp;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
@@ -19,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 /** Specialist-owned, deliberately small projection of signals that need a human decision. */
@@ -38,7 +36,6 @@ class SpecialistWorklistService {
     private final SpecialistAuthorizationPort authorization;
     private final AuditRecorder audit;
     private final Clock clock;
-    private final JdbcTemplate jdbc;
     private final AdherenceMetricsService metrics;
 
     @Transactional
@@ -100,13 +97,8 @@ class SpecialistWorklistService {
         String key = key(participant, null, "PARTICIPANT_ISSUE", problemCode);
         SpecialistWorklistItem item = activeItem(key).orElseGet(() -> createActiveItem(participant, null,
                 "PARTICIPANT_ISSUE", "MEDIUM", problemCode, "participant-reported-problem", "PARTICIPANT_ISSUE_V1", key, now));
-        ParticipantIssue issue = new ParticipantIssue(participant, item.id, problemCode, text, now);
-        if (jdbc.update("""
-                INSERT INTO specialist.participant_issue
-                    (id, participant_account_id, worklist_item_id, problem_code, short_text, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)
-                ON CONFLICT (worklist_item_id) DO NOTHING
-                """, issue.id, participant, item.id, problemCode, text, Timestamp.from(now)) == 1) {
+        if (issues.findByWorklistItemId(item.id).isEmpty()) {
+            ParticipantIssue issue = issues.save(new ParticipantIssue(participant, item.id, problemCode, text, now));
             audit.record(subject, "PARTICIPANT_ISSUE_REPORTED", "ParticipantIssue", issue.id);
         }
         return viewFor(item);
@@ -146,18 +138,7 @@ class SpecialistWorklistService {
     }
     private SpecialistWorklistItem createActiveItem(UUID participant, UUID plan, String category, String priority,
             String reason, String data, String policy, String key, Instant now) {
-        SpecialistWorklistItem candidate = new SpecialistWorklistItem(participant, plan, category, priority, reason, data, policy, key, now);
-        if (jdbc.update("""
-                INSERT INTO specialist.worklist_item
-                    (id, participant_account_id, plan_revision_id, category, priority, reason_code, minimal_data,
-                     policy_version_code, deduplication_key, status, created_at, updated_at, version)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'OPEN', ?, ?, 0)
-                ON CONFLICT (deduplication_key) WHERE status IN ('OPEN', 'ACKNOWLEDGED', 'SNOOZED') DO NOTHING
-                """, candidate.id, participant, plan, category, priority, reason, data, policy, key,
-                Timestamp.from(now), Timestamp.from(now)) == 1) {
-            return candidate;
-        }
-        return activeItem(key).orElseThrow(() -> new IllegalStateException("active worklist item was not found after deduplication conflict"));
+        return items.save(new SpecialistWorklistItem(participant, plan, category, priority, reason, data, policy, key, now));
     }
     private WorklistItemView viewFor(SpecialistWorklistItem item) {
         return issues.findByWorklistItemId(item.id).map(issue -> view(item, issue.shortText,

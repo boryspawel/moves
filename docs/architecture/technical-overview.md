@@ -82,3 +82,6 @@ neutralny audit. P10 dostarcza `analytics.adherencemetrics` w V032: wyłącznie
 techniczne identyfikatory, kody zdarzeń/reguł/wariantów i czas; rekordy wygasają
 po 180 dniach, a automatyczny, codzienny cleanup wywołuje wewnętrzny job przez
 `purgeExpired()`.
+# Participant records (test vertical)
+
+Participant records are separate from access accounts. The specialist client API uses `participant.participant_record` and may create an account-free record; `participant.participant_access_link` represents a later account link. See [test participant-record consent debt](../test-participant-record-consent-debt.md) for the explicit local/test consent override and migration debt.

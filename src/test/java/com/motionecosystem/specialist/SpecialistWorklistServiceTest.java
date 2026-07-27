@@ -63,7 +63,7 @@ class SpecialistWorklistServiceTest {
                 .when(authorization).requireCapabilities(any(), any(), any(), any(), any());
         return new Fixture(new SpecialistWorklistService(items, mock(ParticipantIssueRepository.class),
                 mock(ParticipantIssueReplyRepository.class), relationships, accounts, authorization, mock(AuditRecorder.class),
-                Clock.fixed(Instant.EPOCH, ZoneOffset.UTC), null, mock(AdherenceMetricsService.class)));
+                Clock.fixed(Instant.EPOCH, ZoneOffset.UTC), mock(AdherenceMetricsService.class)));
     }
 
     private ActingContext trainer() {

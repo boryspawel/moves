@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ParticipantContextService implements ParticipantContextQueryPort {
 
     private final ParticipantProfileRepository profiles;
+    private final ParticipantRecordRepository records;
     private final Clock clock;
 
     @Transactional
@@ -30,7 +31,10 @@ public class ParticipantContextService implements ParticipantContextQueryPort {
     public Optional<ParticipantContext> findContext(UUID participantAccountId) {
         return profiles.findByAccountId(participantAccountId)
                 .filter(profile -> profile.timeZoneId != null)
-                .map(profile -> new ParticipantContext(profile.accountId, ZoneId.of(profile.timeZoneId)));
+                .map(profile -> new ParticipantContext(profile.accountId, ZoneId.of(profile.timeZoneId)))
+                .or(() -> records.findById(participantAccountId)
+                        .filter(record -> record.timeZoneId() != null)
+                        .map(record -> new ParticipantContext(record.id(), ZoneId.of(record.timeZoneId()))));
     }
     private static ZoneId requiredTimeZone(String value) {
         String id = value == null ? "" : value.trim();

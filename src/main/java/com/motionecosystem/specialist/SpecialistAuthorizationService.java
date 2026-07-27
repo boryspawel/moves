@@ -42,7 +42,9 @@ class SpecialistAuthorizationService implements SpecialistAuthorizationPort {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN, "verified professional scope is required");
         }
-        if (!relationships.existsBySpecialistAccountIdAndParticipantAccountIdAndStatus(
+        if (!relationships.existsBySpecialistAccountIdAndParticipantIdAndStatus(
+                actor, participant, ParticipantSpecialistRelationship.Status.ACTIVE)
+                && !relationships.existsBySpecialistAccountIdAndParticipantAccountIdAndStatus(
                 actor, participant, ParticipantSpecialistRelationship.Status.ACTIVE)) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN, "active specialist relationship is required");

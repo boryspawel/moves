@@ -109,3 +109,6 @@ source /home/pb/.sdkman/bin/sdkman-init.sh
 sdk use java 25.0.1-tem
 mvn verify
 ```
+# Participant-record test vertical
+
+The account-free specialist-client test vertical and its consent/migration constraints are documented in [docs/test-participant-record-consent-debt.md](docs/test-participant-record-consent-debt.md).

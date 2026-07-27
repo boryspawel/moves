@@ -144,7 +144,8 @@ public class SpecialistParticipantReadService {
 
     private RelationshipView relationship(UUID specialistId, UUID participantId) {
         ParticipantSpecialistRelationship relationship = relationships
-                .findBySpecialistAccountIdAndParticipantAccountId(specialistId, participantId)
+                .findBySpecialistAccountIdAndParticipantId(specialistId, participantId)
+                .or(() -> relationships.findBySpecialistAccountIdAndParticipantAccountId(specialistId, participantId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "active participant-specialist relationship is required"));
         return new RelationshipView(relationship.status().name(), relationship.activatedAt());
     }

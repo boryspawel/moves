@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.consent.api.ConsentDecisionPort;
+import com.motionecosystem.consent.api.TestDefaultConsentOverridePort;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class ConsentGrantService implements ConsentDecisionPort {
     private final CurrentAccountService accounts;
     private final AuditRecorder audit;
     private final Clock clock;
+    private final TestDefaultConsentOverridePort testDefaultOverrides;
 
     @Transactional
     public TemplateView publishTemplate(String code, int number, String reference, String basis) {
@@ -95,6 +97,10 @@ public class ConsentGrantService implements ConsentDecisionPort {
             throw forbidden("explicit consent decision input is required");
         }
         Instant now = clock.instant();
+        var testOverride = testDefaultOverrides.find(participant, actor, purpose, scopes);
+        if (testOverride.isPresent()) {
+            return new ConsentDecision(testOverride.get().id(), actor, participant, scopes, purpose, null);
+        }
         var grant = grants.findByParticipantIdAndRecipientTypeAndRecipientIdAndPurposeAndStatus(
                         participant,
                         ConsentGrant.RecipientType.SPECIALIST,
