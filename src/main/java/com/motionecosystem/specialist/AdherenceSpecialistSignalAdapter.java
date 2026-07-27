@@ -1,6 +1,7 @@
 package com.motionecosystem.specialist;
 
 import com.motionecosystem.specialist.api.AdherenceSpecialistSignalPort;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -61,7 +62,7 @@ interface AdherenceContactSignalRepository extends JpaRepository<AdherenceContac
 @Table(name = "adherence_contact_signal", schema = "specialist")
 class AdherenceContactSignal {
     @Id UUID id;
-    UUID participantAccountId;
+    @Column(name = "participant_id") UUID participantAccountId;
     UUID barrierReportId;
     UUID recoveryEpisodeId;
     String category;

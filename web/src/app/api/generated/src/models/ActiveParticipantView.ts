@@ -24,7 +24,7 @@ export interface ActiveParticipantView {
    * @type {string}
    * @memberof ActiveParticipantView
    */
-  participantAccountId?: string;
+  participantId?: string;
   /**
    *
    * @type {string}
@@ -52,8 +52,7 @@ export function ActiveParticipantViewFromJSONTyped(
     return json;
   }
   return {
-    participantAccountId:
-      json['participantAccountId'] == null ? undefined : json['participantAccountId'],
+    participantId: json['participantId'] == null ? undefined : json['participantId'],
     label: json['label'] == null ? undefined : json['label'],
   };
 }
@@ -71,7 +70,7 @@ export function ActiveParticipantViewToJSONTyped(
   }
 
   return {
-    participantAccountId: value['participantAccountId'],
+    participantId: value['participantId'],
     label: value['label'],
   };
 }

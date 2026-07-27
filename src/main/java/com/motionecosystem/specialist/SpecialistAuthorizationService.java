@@ -14,14 +14,17 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 class SpecialistAuthorizationService implements SpecialistAuthorizationPort {
     private final ProfessionalScopeRepository scopes;
+    private final LocalTestProfessionalScopeOverride localTestScopeOverride;
     private final ParticipantSpecialistRelationshipRepository relationships;
     private final ConsentDecisionPort consent;
     private final AuditRecorder audit;
 
     SpecialistAuthorizationService(ProfessionalScopeRepository scopes,
+            LocalTestProfessionalScopeOverride localTestScopeOverride,
             ParticipantSpecialistRelationshipRepository relationships, ConsentDecisionPort consent,
             AuditRecorder audit) {
         this.scopes = scopes;
+        this.localTestScopeOverride = localTestScopeOverride;
         this.relationships = relationships;
         this.consent = consent;
         this.audit = audit;
@@ -37,14 +40,8 @@ class SpecialistAuthorizationService implements SpecialistAuthorizationPort {
                     "actor, participant, acting context, capabilities and purpose are required");
         }
         SpecialistKind kind = SpecialistKind.valueOf(context.role().name());
-        if (!scopes.existsByIdAccountIdAndIdKindAndStatus(
-                actor, kind, ProfessionalScope.VerificationStatus.VERIFIED)) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "verified professional scope is required");
-        }
+        requireVerifiedScope(actor, kind);
         if (!relationships.existsBySpecialistAccountIdAndParticipantIdAndStatus(
-                actor, participant, ParticipantSpecialistRelationship.Status.ACTIVE)
-                && !relationships.existsBySpecialistAccountIdAndParticipantAccountIdAndStatus(
                 actor, participant, ParticipantSpecialistRelationship.Status.ACTIVE)) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN, "active specialist relationship is required");
@@ -101,5 +98,17 @@ class SpecialistAuthorizationService implements SpecialistAuthorizationPort {
                 "Participant",
                 participant));
         return new AuthorizationDecision(actor, participant, context.role(), purpose, granted);
+    }
+
+    void requireVerifiedScope(UUID specialistAccountId, SpecialistKind kind) {
+        if (specialistAccountId == null || kind == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "specialist account and kind are required");
+        }
+        if (scopes.existsByIdAccountIdAndIdKindAndStatus(
+                specialistAccountId, kind, ProfessionalScope.VerificationStatus.VERIFIED)
+                || localTestScopeOverride.permits(specialistAccountId, kind)) {
+            return;
+        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "verified professional scope is required");
     }
 }

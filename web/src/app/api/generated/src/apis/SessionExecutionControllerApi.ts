@@ -60,7 +60,7 @@ export interface Post24hRequest {
 }
 
 export interface SpecialistExecutionsRequest {
-  participantAccountId: string;
+  participantId: string;
 }
 
 export interface TransitionAlertRequest {
@@ -301,10 +301,10 @@ export class SessionExecutionControllerApi extends runtime.BaseAPI {
   async specialistExecutionsRequestOpts(
     requestParameters: SpecialistExecutionsRequest,
   ): Promise<runtime.RequestOpts> {
-    if (requestParameters['participantAccountId'] == null) {
+    if (requestParameters['participantId'] == null) {
       throw new runtime.RequiredError(
-        'participantAccountId',
-        'Required parameter "participantAccountId" was null or undefined when calling specialistExecutions().',
+        'participantId',
+        'Required parameter "participantId" was null or undefined when calling specialistExecutions().',
       );
     }
 
@@ -312,10 +312,10 @@ export class SessionExecutionControllerApi extends runtime.BaseAPI {
 
     const headerParameters: runtime.HTTPHeaders = {};
 
-    let urlPath = `/api/v1/specialist/participants/{participantAccountId}/executions`;
+    let urlPath = `/api/v1/specialist/participants/{participantId}/executions`;
     urlPath = urlPath.replace(
-      '{participantAccountId}',
-      encodeURIComponent(String(requestParameters['participantAccountId'])),
+      '{participantId}',
+      encodeURIComponent(String(requestParameters['participantId'])),
     );
 
     return {

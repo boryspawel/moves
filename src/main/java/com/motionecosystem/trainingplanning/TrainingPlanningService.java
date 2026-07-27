@@ -8,6 +8,7 @@ import java.util.UUID;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
+import com.motionecosystem.participant.api.ParticipantClientPort;
 import com.motionecosystem.trainingplanning.PlannedSession.SessionKind;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class TrainingPlanningService {
 
     private final CurrentAccountService accounts;
+    private final ParticipantClientPort participants;
     private final TrainingPlanningPersistence persistence;
 
     @Transactional
@@ -33,7 +35,10 @@ public class TrainingPlanningService {
     public List<SessionView> participantSessions(String subject) {
         CurrentAccount participant = accounts.requireActive(subject);
         requireProfile(participant, ProfileType.PARTICIPANT, "participant profile is required");
-        return persistence.findParticipantSessions(participant.id()).stream()
+        UUID participantId = participants.findParticipantIdByPrincipalAccountId(participant.id())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "an active participant access link is required"));
+        return persistence.findParticipantSessions(participantId).stream()
                 .map(session -> new SessionView(session.id(), session.title(), session.kind(), session.status(),
                         session.assignedAt(), session.prescriptions().stream()
                         .map(item -> new PrescriptionView(item.id(), item.exerciseVersionId(), item.position(),

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -e
+
+cd "$(dirname "$0")/.."
+source ~/.sdkman/bin/sdkman-init.sh
+sdk use java 25.0.2-open
+mvn -Plocal initialize flyway:repair

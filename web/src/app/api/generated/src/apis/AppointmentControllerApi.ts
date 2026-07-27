@@ -40,7 +40,7 @@ export interface CancelRequest {
   versionCommand: VersionCommand;
 }
 
-export interface CreateRequest {
+export interface Create1Request {
   idempotencyKey: string;
   createCommand: CreateCommand;
 }
@@ -133,20 +133,20 @@ export class AppointmentControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for create without sending the request
+   * Creates request options for create1 without sending the request
    */
-  async createRequestOpts(requestParameters: CreateRequest): Promise<runtime.RequestOpts> {
+  async create1RequestOpts(requestParameters: Create1Request): Promise<runtime.RequestOpts> {
     if (requestParameters['idempotencyKey'] == null) {
       throw new runtime.RequiredError(
         'idempotencyKey',
-        'Required parameter "idempotencyKey" was null or undefined when calling create().',
+        'Required parameter "idempotencyKey" was null or undefined when calling create1().',
       );
     }
 
     if (requestParameters['createCommand'] == null) {
       throw new runtime.RequiredError(
         'createCommand',
-        'Required parameter "createCommand" was null or undefined when calling create().',
+        'Required parameter "createCommand" was null or undefined when calling create1().',
       );
     }
 
@@ -174,11 +174,11 @@ export class AppointmentControllerApi extends runtime.BaseAPI {
   /**
    * Create a specialist appointment
    */
-  async createRaw(
-    requestParameters: CreateRequest,
+  async create1Raw(
+    requestParameters: Create1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AppointmentView>> {
-    const requestOptions = await this.createRequestOpts(requestParameters);
+    const requestOptions = await this.create1RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) => AppointmentViewFromJSON(jsonValue));
@@ -187,11 +187,11 @@ export class AppointmentControllerApi extends runtime.BaseAPI {
   /**
    * Create a specialist appointment
    */
-  async create(
-    requestParameters: CreateRequest,
+  async create1(
+    requestParameters: Create1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<AppointmentView> {
-    const response = await this.createRaw(requestParameters, initOverrides);
+    const response = await this.create1Raw(requestParameters, initOverrides);
     return await response.value();
   }
 

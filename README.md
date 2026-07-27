@@ -62,6 +62,22 @@ Domyślne porty są częścią kontraktu lokalnego realm importu. Dla zmienionyc
 PostgreSQL 18 używa nazwanego wolumenu `motion-postgres` pod `/var/lib/postgresql`, zgodnie ze zmienionym `PGDATA` obrazu 18. Flyway pozostaje właścicielem schematu, a Hibernate działa w trybie `validate`.
 Oryginalne artefakty JSONL są przechowywane w osobnym nazwanym wolumenie `motion-exercise-import`; zwykły restart stosu zachowuje oba wolumeny.
 
+### Ręczne migracje Flyway
+
+Po uruchomieniu PostgreSQL można wykonać migrację bez uruchamiania backendu:
+
+```bash
+bin/flyway-migrate
+```
+
+Naprawa historii Flyway jest operacją administracyjną i powinna być używana wyłącznie po zdiagnozowaniu problemu:
+
+```bash
+bin/flyway-repair
+```
+
+Oba skrypty aktywują Java 25.0.2-open przez SDKMAN i bezpośrednio uruchamiają odpowiedni cel Maven Flyway.
+
 ## Adherence-first
 
 Aktualny zakres tego strumienia określa [prompt.md](prompt.md); starszy
@@ -109,6 +125,13 @@ source /home/pb/.sdkman/bin/sdkman-init.sh
 sdk use java 25.0.1-tem
 mvn verify
 ```
+
+## Stan bieżący i weryfikacja
+
+Aktualny, potwierdzony stan projektu oraz obowiązkowe kontrole CI opisuje
+[docs/status/current-state.md](docs/status/current-state.md). Dokumenty audytowe i raporty
+z wcześniejszych etapów pozostają w `docs/` jako materiały historyczne; nie są
+źródłem bieżącego statusu.
 # Participant-record test vertical
 
 The account-free specialist-client test vertical and its consent/migration constraints are documented in [docs/test-participant-record-consent-debt.md](docs/test-participant-record-consent-debt.md).

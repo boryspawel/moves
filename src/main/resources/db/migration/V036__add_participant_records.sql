@@ -54,6 +54,264 @@ ALTER TABLE specialist.participant_specialist_relationship
     FOREIGN KEY (participant_id) REFERENCES participant.participant_record (id);
 CREATE INDEX ix_specialist_relationship_participant ON specialist.participant_specialist_relationship (specialist_account_id, participant_id, status);
 
+-- participant_id is the canonical participant identity. The account columns below are
+-- retained only as nullable legacy bridges for already-claimed participant records.
+ALTER TABLE calendar.appointment ADD COLUMN participant_id UUID;
+UPDATE calendar.appointment appointment
+SET participant_id = link.participant_id
+FROM participant.participant_access_link link
+WHERE appointment.participant_account_id = link.principal_account_id;
+ALTER TABLE calendar.appointment
+    ALTER COLUMN participant_id SET NOT NULL,
+    ALTER COLUMN participant_account_id DROP NOT NULL,
+    ADD CONSTRAINT fk_calendar_appointment_participant
+        FOREIGN KEY (participant_id) REFERENCES participant.participant_record (id);
+CREATE INDEX ix_calendar_appointment_participant_time
+    ON calendar.appointment (participant_id, starts_at, ends_at);
+
+ALTER TABLE training_planning.training_goal ADD COLUMN participant_id UUID;
+UPDATE training_planning.training_goal goal
+SET participant_id = link.participant_id
+FROM participant.participant_access_link link
+WHERE goal.participant_account_id = link.principal_account_id;
+ALTER TABLE training_planning.training_goal
+    ALTER COLUMN participant_id SET NOT NULL,
+    ALTER COLUMN participant_account_id DROP NOT NULL,
+    ADD CONSTRAINT fk_training_goal_participant
+        FOREIGN KEY (participant_id) REFERENCES participant.participant_record (id);
+CREATE INDEX ix_training_goal_participant_created
+    ON training_planning.training_goal (participant_id, created_at);
+
+ALTER TABLE training_planning.training_plan ADD COLUMN participant_id UUID;
+UPDATE training_planning.training_plan plan
+SET participant_id = link.participant_id
+FROM participant.participant_access_link link
+WHERE plan.participant_account_id = link.principal_account_id;
+ALTER TABLE training_planning.training_plan
+    ALTER COLUMN participant_id SET NOT NULL,
+    ALTER COLUMN participant_account_id DROP NOT NULL,
+    ADD CONSTRAINT fk_training_plan_participant
+        FOREIGN KEY (participant_id) REFERENCES participant.participant_record (id);
+CREATE INDEX ix_training_plan_participant_status
+    ON training_planning.training_plan (participant_id, status);
+
+ALTER TABLE training_planning.planned_session ADD COLUMN participant_id UUID;
+UPDATE training_planning.planned_session session
+SET participant_id = link.participant_id
+FROM participant.participant_access_link link
+WHERE session.participant_account_id = link.principal_account_id;
+ALTER TABLE training_planning.planned_session
+    ALTER COLUMN participant_id SET NOT NULL,
+    ALTER COLUMN participant_account_id DROP NOT NULL,
+    ADD CONSTRAINT fk_planned_session_participant
+        FOREIGN KEY (participant_id) REFERENCES participant.participant_record (id);
+CREATE INDEX ix_planned_session_canonical_participant
+    ON training_planning.planned_session (participant_id, assigned_at DESC);
+
+ALTER TABLE training_execution.session_execution ADD COLUMN participant_id UUID;
+UPDATE training_execution.session_execution execution
+SET participant_id = link.participant_id
+FROM participant.participant_access_link link
+WHERE execution.participant_account_id = link.principal_account_id;
+ALTER TABLE training_execution.session_execution
+    ALTER COLUMN participant_id SET NOT NULL,
+    ALTER COLUMN participant_account_id DROP NOT NULL,
+    ADD CONSTRAINT fk_session_execution_participant
+        FOREIGN KEY (participant_id) REFERENCES participant.participant_record (id);
+CREATE UNIQUE INDEX uq_session_execution_participant_idempotency
+    ON training_execution.session_execution (participant_id, idempotency_key);
+CREATE INDEX ix_session_execution_participant_recorded
+    ON training_execution.session_execution (participant_id, recorded_at DESC);
+
+ALTER TABLE training_execution.session_execution_attempt ADD COLUMN participant_id UUID;
+UPDATE training_execution.session_execution_attempt attempt
+SET participant_id = link.participant_id
+FROM participant.participant_access_link link
+WHERE attempt.participant_account_id = link.principal_account_id;
+ALTER TABLE training_execution.session_execution_attempt
+    ALTER COLUMN participant_id SET NOT NULL,
+    ALTER COLUMN participant_account_id DROP NOT NULL,
+    ADD CONSTRAINT fk_session_execution_attempt_participant
+        FOREIGN KEY (participant_id) REFERENCES participant.participant_record (id);
+CREATE UNIQUE INDEX uq_session_execution_attempt_canonical_active
+    ON training_execution.session_execution_attempt (participant_id, planned_session_id)
+    WHERE status IN ('STARTED', 'PAUSED');
+CREATE UNIQUE INDEX uq_session_execution_attempt_canonical_idempotency
+    ON training_execution.session_execution_attempt (participant_id, start_idempotency_key)
+    WHERE start_idempotency_key <> $$legacy$$;
+CREATE INDEX ix_session_execution_attempt_canonical_progress
+    ON training_execution.session_execution_attempt (participant_id, planned_session_id, updated_at DESC);
+
+ALTER TABLE training_execution.post_24h_response ADD COLUMN participant_id UUID;
+UPDATE training_execution.post_24h_response response
+SET participant_id = link.participant_id
+FROM participant.participant_access_link link
+WHERE response.participant_account_id = link.principal_account_id;
+ALTER TABLE training_execution.post_24h_response
+    ALTER COLUMN participant_id SET NOT NULL,
+    ALTER COLUMN participant_account_id DROP NOT NULL,
+    ADD CONSTRAINT fk_post_24h_response_participant
+        FOREIGN KEY (participant_id) REFERENCES participant.participant_record (id);
+CREATE INDEX ix_post_24h_response_participant_reported
+    ON training_execution.post_24h_response (participant_id, reported_at DESC);
+
+ALTER TABLE training_execution.executed_load_aggregate ADD COLUMN participant_id UUID;
+UPDATE training_execution.executed_load_aggregate aggregate
+SET participant_id = link.participant_id
+FROM participant.participant_access_link link
+WHERE aggregate.participant_account_id = link.principal_account_id;
+ALTER TABLE training_execution.executed_load_aggregate
+    ALTER COLUMN participant_id SET NOT NULL,
+    ALTER COLUMN participant_account_id DROP NOT NULL,
+    ADD CONSTRAINT fk_executed_load_aggregate_participant
+        FOREIGN KEY (participant_id) REFERENCES participant.participant_record (id);
+CREATE UNIQUE INDEX uq_executed_load_aggregate_canonical_participant
+    ON training_execution.executed_load_aggregate
+        (participant_id, window_days, window_end, anatomical_structure_id, side, channel, unit);
+
+ALTER TABLE specialist.worklist_item ADD COLUMN participant_id UUID;
+UPDATE specialist.worklist_item item
+SET participant_id = link.participant_id
+FROM participant.participant_access_link link
+WHERE item.participant_account_id = link.principal_account_id;
+ALTER TABLE specialist.worklist_item
+    ALTER COLUMN participant_id SET NOT NULL,
+    ALTER COLUMN participant_account_id DROP NOT NULL,
+    ADD CONSTRAINT fk_worklist_item_participant
+        FOREIGN KEY (participant_id) REFERENCES participant.participant_record (id);
+CREATE INDEX ix_worklist_item_canonical_participant_status
+    ON specialist.worklist_item (participant_id, status, updated_at DESC);
+
+ALTER TABLE specialist.participant_issue ADD COLUMN participant_id UUID;
+UPDATE specialist.participant_issue issue
+SET participant_id = link.participant_id
+FROM participant.participant_access_link link
+WHERE issue.participant_account_id = link.principal_account_id;
+ALTER TABLE specialist.participant_issue
+    ALTER COLUMN participant_id SET NOT NULL,
+    ALTER COLUMN participant_account_id DROP NOT NULL,
+    ADD CONSTRAINT fk_participant_issue_participant
+        FOREIGN KEY (participant_id) REFERENCES participant.participant_record (id);
+CREATE INDEX ix_participant_issue_canonical_participant
+    ON specialist.participant_issue (participant_id, created_at DESC);
+
+ALTER TABLE specialist.adherence_contact_signal ADD COLUMN participant_id UUID;
+UPDATE specialist.adherence_contact_signal signal
+SET participant_id = link.participant_id
+FROM participant.participant_access_link link
+WHERE signal.participant_account_id = link.principal_account_id;
+ALTER TABLE specialist.adherence_contact_signal
+    ALTER COLUMN participant_id SET NOT NULL,
+    ALTER COLUMN participant_account_id DROP NOT NULL,
+    ADD CONSTRAINT fk_adherence_contact_signal_participant
+        FOREIGN KEY (participant_id) REFERENCES participant.participant_record (id);
+CREATE INDEX ix_adherence_contact_signal_participant_status
+    ON specialist.adherence_contact_signal (participant_id, status, created_at DESC);
+
+ALTER TABLE adherence.barrier_report ADD COLUMN participant_id UUID;
+UPDATE adherence.barrier_report report
+SET participant_id = link.participant_id
+FROM participant.participant_access_link link
+WHERE report.participant_account_id = link.principal_account_id;
+ALTER TABLE adherence.barrier_report
+    ALTER COLUMN participant_id SET NOT NULL,
+    ALTER COLUMN participant_account_id DROP NOT NULL,
+    ADD CONSTRAINT fk_barrier_report_participant
+        FOREIGN KEY (participant_id) REFERENCES participant.participant_record (id);
+CREATE UNIQUE INDEX uq_barrier_report_canonical_idempotency
+    ON adherence.barrier_report (participant_id, idempotency_key);
+CREATE INDEX ix_barrier_report_canonical_participant_session
+    ON adherence.barrier_report (participant_id, planned_session_id, reported_at DESC);
+
+ALTER TABLE adherence.recovery_episode ADD COLUMN participant_id UUID;
+UPDATE adherence.recovery_episode episode
+SET participant_id = link.participant_id
+FROM participant.participant_access_link link
+WHERE episode.participant_account_id = link.principal_account_id;
+ALTER TABLE adherence.recovery_episode
+    ALTER COLUMN participant_id SET NOT NULL,
+    ALTER COLUMN participant_account_id DROP NOT NULL,
+    ADD CONSTRAINT fk_recovery_episode_participant
+        FOREIGN KEY (participant_id) REFERENCES participant.participant_record (id);
+CREATE UNIQUE INDEX uq_recovery_episode_canonical_active
+    ON adherence.recovery_episode (participant_id)
+    WHERE status IN ('OPEN', 'RETURN_IN_PROGRESS');
+
+ALTER TABLE safety.participant_restriction ADD COLUMN participant_id UUID;
+UPDATE safety.participant_restriction restriction
+SET participant_id = link.participant_id
+FROM participant.participant_access_link link
+WHERE restriction.account_id = link.principal_account_id;
+ALTER TABLE safety.participant_restriction
+    ALTER COLUMN participant_id SET NOT NULL,
+    ALTER COLUMN account_id DROP NOT NULL,
+    ADD CONSTRAINT fk_participant_restriction_participant
+        FOREIGN KEY (participant_id) REFERENCES participant.participant_record (id);
+CREATE UNIQUE INDEX uq_participant_restriction_canonical_tag
+    ON safety.participant_restriction (participant_id, contraindication_tag);
+
+ALTER TABLE safety.readiness_check_in ADD COLUMN participant_id UUID;
+UPDATE safety.readiness_check_in check_in
+SET participant_id = link.participant_id
+FROM participant.participant_access_link link
+WHERE check_in.account_id = link.principal_account_id;
+ALTER TABLE safety.readiness_check_in
+    ALTER COLUMN participant_id SET NOT NULL,
+    ALTER COLUMN account_id DROP NOT NULL,
+    ADD CONSTRAINT fk_readiness_check_in_participant
+        FOREIGN KEY (participant_id) REFERENCES participant.participant_record (id);
+CREATE INDEX ix_readiness_canonical_participant_recorded
+    ON safety.readiness_check_in (participant_id, recorded_at DESC);
+
+ALTER TABLE safety.restriction ADD COLUMN participant_id UUID;
+UPDATE safety.restriction restriction
+SET participant_id = link.participant_id
+FROM participant.participant_access_link link
+WHERE restriction.participant_account_id = link.principal_account_id;
+ALTER TABLE safety.restriction
+    ALTER COLUMN participant_id SET NOT NULL,
+    ALTER COLUMN participant_account_id DROP NOT NULL,
+    ADD CONSTRAINT fk_safety_restriction_participant
+        FOREIGN KEY (participant_id) REFERENCES participant.participant_record (id);
+CREATE INDEX ix_safety_restriction_canonical_participant
+    ON safety.restriction (participant_id, status, valid_from, valid_to);
+
+ALTER TABLE safety.plan_safety_assessment ADD COLUMN participant_id UUID;
+UPDATE safety.plan_safety_assessment assessment
+SET participant_id = link.participant_id
+FROM participant.participant_access_link link
+WHERE assessment.participant_account_id = link.principal_account_id;
+ALTER TABLE safety.plan_safety_assessment
+    ALTER COLUMN participant_id SET NOT NULL,
+    ALTER COLUMN participant_account_id DROP NOT NULL,
+    ADD CONSTRAINT fk_plan_safety_assessment_participant
+        FOREIGN KEY (participant_id) REFERENCES participant.participant_record (id);
+CREATE INDEX ix_plan_safety_assessment_canonical_participant
+    ON safety.plan_safety_assessment (participant_id, assessed_at DESC);
+
+ALTER TABLE specialist.participant_specialist_relationship
+    ALTER COLUMN participant_id SET NOT NULL,
+    ADD CONSTRAINT uq_specialist_relationship_canonical_participant
+        UNIQUE (specialist_account_id, participant_id);
+
+COMMENT ON COLUMN calendar.appointment.participant_account_id IS 'Legacy account bridge; canonical identity is participant_id.';
+COMMENT ON COLUMN training_planning.training_goal.participant_account_id IS 'Legacy account bridge; canonical identity is participant_id.';
+COMMENT ON COLUMN training_planning.training_plan.participant_account_id IS 'Legacy account bridge; canonical identity is participant_id.';
+COMMENT ON COLUMN training_planning.planned_session.participant_account_id IS 'Legacy account bridge; canonical identity is participant_id.';
+COMMENT ON COLUMN training_execution.session_execution.participant_account_id IS 'Legacy account bridge; canonical identity is participant_id.';
+COMMENT ON COLUMN training_execution.session_execution_attempt.participant_account_id IS 'Legacy account bridge; canonical identity is participant_id.';
+COMMENT ON COLUMN training_execution.post_24h_response.participant_account_id IS 'Legacy account bridge; canonical identity is participant_id.';
+COMMENT ON COLUMN training_execution.executed_load_aggregate.participant_account_id IS 'Legacy account bridge; canonical identity is participant_id.';
+COMMENT ON COLUMN specialist.worklist_item.participant_account_id IS 'Legacy account bridge; canonical identity is participant_id.';
+COMMENT ON COLUMN specialist.participant_issue.participant_account_id IS 'Legacy account bridge; canonical identity is participant_id.';
+COMMENT ON COLUMN specialist.adherence_contact_signal.participant_account_id IS 'Legacy account bridge; canonical identity is participant_id.';
+COMMENT ON COLUMN adherence.barrier_report.participant_account_id IS 'Legacy account bridge; canonical identity is participant_id.';
+COMMENT ON COLUMN adherence.recovery_episode.participant_account_id IS 'Legacy account bridge; canonical identity is participant_id.';
+COMMENT ON COLUMN safety.participant_restriction.account_id IS 'Legacy account bridge; canonical identity is participant_id.';
+COMMENT ON COLUMN safety.readiness_check_in.account_id IS 'Legacy account bridge; canonical identity is participant_id.';
+COMMENT ON COLUMN safety.restriction.participant_account_id IS 'Legacy account bridge; canonical identity is participant_id.';
+COMMENT ON COLUMN safety.plan_safety_assessment.participant_account_id IS 'Legacy account bridge; canonical identity is participant_id.';
+
 CREATE TABLE consent.test_default_consent_override (
     id UUID PRIMARY KEY,
     participant_id UUID NOT NULL REFERENCES participant.participant_record (id) ON DELETE CASCADE,

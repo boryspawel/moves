@@ -4,6 +4,7 @@ import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.analytics.adherencemetrics.AdherenceMetricsService;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
+import com.motionecosystem.participant.api.ParticipantClientPort;
 import com.motionecosystem.specialist.api.AdherenceSpecialistSignalPort;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
@@ -33,6 +34,7 @@ class SpecialistWorklistService {
     private final ParticipantIssueReplyRepository replies;
     private final ParticipantSpecialistRelationshipRepository relationships;
     private final CurrentAccountService accounts;
+    private final ParticipantClientPort participants;
     private final SpecialistAuthorizationPort authorization;
     private final AuditRecorder audit;
     private final Clock clock;
@@ -40,11 +42,11 @@ class SpecialistWorklistService {
 
     @Transactional
     void signal(AdherenceSpecialistSignalPort.WorklistSignal signal) {
-        if (signal == null || signal.participantAccountId() == null || !CATEGORIES.contains(signal.category())) return;
-        String key = key(signal.participantAccountId(), signal.planRevisionId(), signal.category(), signal.reasonCode());
+        if (signal == null || signal.participantId() == null || !CATEGORIES.contains(signal.category())) return;
+        String key = key(signal.participantId(), signal.planRevisionId(), signal.category(), signal.reasonCode());
         Instant now = clock.instant();
         SpecialistWorklistItem item = activeItem(key).orElseGet(() -> createActiveItem(
-                signal.participantAccountId(), signal.planRevisionId(), signal.category(), priority(signal.priority()),
+                signal.participantId(), signal.planRevisionId(), signal.category(), priority(signal.priority()),
                 signal.reasonCode(), minimalData(signal.reasonCode()), policy(signal.policyVersion()), key, now));
         item.refresh(priority(signal.priority()), signal.reasonCode(), minimalData(signal.reasonCode()), policy(signal.policyVersion()), now);
         items.save(item);
@@ -54,7 +56,7 @@ class SpecialistWorklistService {
     List<WorklistItemView> list(String subject, ActingContext context, Purpose purpose) {
         UUID specialist = specialist(subject);
         return relationships.findBySpecialistAccountIdAndStatus(specialist, ParticipantSpecialistRelationship.Status.ACTIVE).stream()
-                .flatMap(relationship -> items.findByParticipantAccountIdOrderByUpdatedAtDesc(relationship.participantAccountId()).stream()
+                .flatMap(relationship -> items.findByParticipantIdOrderByUpdatedAtDesc(relationship.participantId()).stream()
                         .filter(item -> visible(item, specialist, context, purpose))
                         .map(this::viewFor))
                 .toList();
@@ -64,7 +66,7 @@ class SpecialistWorklistService {
     List<WorklistItemView> forParticipant(String subject, UUID participantId, ActingContext context, Purpose purpose) {
         UUID specialist = specialist(subject);
         authorize(specialist, participantId, context, purpose, Capability.VIEW_ADHERENCE_WORKLIST);
-        return items.findByParticipantAccountIdOrderByUpdatedAtDesc(participantId).stream()
+        return items.findByParticipantIdOrderByUpdatedAtDesc(participantId).stream()
                 .filter(item -> ACTIVE_STATUSES.contains(item.status))
                 .map(this::viewFor)
                 .toList();
@@ -74,7 +76,7 @@ class SpecialistWorklistService {
     WorklistItemView action(String subject, UUID itemId, ActingContext context, Purpose purpose, ActionCommand command) {
         UUID specialist = specialist(subject);
         SpecialistWorklistItem item = item(itemId);
-        authorize(specialist, item.participantAccountId, context, purpose, Capability.VIEW_ADHERENCE_WORKLIST);
+        authorize(specialist, item.participantId, context, purpose, Capability.VIEW_ADHERENCE_WORKLIST);
         String action = command == null || command.action() == null ? "" : command.action().trim();
         Instant now = clock.instant();
         switch (action) {
@@ -108,20 +110,20 @@ class SpecialistWorklistService {
     ReplyView reply(String subject, UUID itemId, ActingContext context, Purpose purpose, ReplyCommand command) {
         UUID specialist = specialist(subject);
         SpecialistWorklistItem item = item(itemId);
-        authorize(specialist, item.participantAccountId, context, purpose, Capability.RESPOND_TO_PARTICIPANT_ISSUE);
+        authorize(specialist, item.participantId, context, purpose, Capability.RESPOND_TO_PARTICIPANT_ISSUE);
         ParticipantIssue issue = issues.findByWorklistItemId(itemId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "worklist item has no participant issue"));
         String text = requiredText(command == null ? null : command.shortText());
         ParticipantIssueReply reply = replies.save(new ParticipantIssueReply(issue.id, specialist, text, clock.instant()));
         item.acknowledge(clock.instant());
         audit.record(subject, "SPECIALIST_REPLIED_TO_PARTICIPANT_ISSUE", "ParticipantIssueReply", reply.id);
-        metrics.record(item.participantAccountId, "WORKLIST_REPLIED", reply.id, item.planRevisionId, null, null,
+        metrics.record(item.participantId, "WORKLIST_REPLIED", reply.id, item.planRevisionId, null, null,
                 "WORKLIST_REPLY_V1", null);
         return new ReplyView(reply.id, reply.shortText, reply.createdAt);
     }
 
     private boolean visible(SpecialistWorklistItem item, UUID specialist, ActingContext context, Purpose purpose) {
-        try { authorize(specialist, item.participantAccountId, context, purpose, Capability.VIEW_ADHERENCE_WORKLIST); return true; }
+        try { authorize(specialist, item.participantId, context, purpose, Capability.VIEW_ADHERENCE_WORKLIST); return true; }
         catch (ResponseStatusException error) {
             if (error.getStatusCode().value() == HttpStatus.FORBIDDEN.value()) return false;
             throw error;
@@ -131,7 +133,15 @@ class SpecialistWorklistService {
         authorization.requireCapabilities(specialist, participant, context, Set.of(capability), purpose);
     }
     private UUID specialist(String subject) { var account = accounts.requireActive(subject); if (!account.hasProfile(ProfileType.SPECIALIST)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "specialist profile is required"); return account.id(); }
-    private UUID participant(String subject) { var account = accounts.requireActive(subject); if (!account.hasProfile(ProfileType.PARTICIPANT)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "participant profile is required"); return account.id(); }
+    private UUID participant(String subject) {
+        var account = accounts.requireActive(subject);
+        if (!account.hasProfile(ProfileType.PARTICIPANT)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "participant profile is required");
+        }
+        return participants.findParticipantIdByPrincipalAccountId(account.id())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "an active participant access link is required"));
+    }
     private SpecialistWorklistItem item(UUID id) { return items.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "worklist item not found")); }
     private java.util.Optional<SpecialistWorklistItem> activeItem(String key) {
         return items.findByDeduplicationKeyAndStatusIn(key, ACTIVE_STATUSES);
@@ -157,9 +167,9 @@ class SpecialistWorklistService {
     record ActionCommand(String action, Instant snoozedUntil, String usefulnessOutcome) { }
     record ParticipantIssueCommand(String problemCode, String shortText) { }
     record ReplyCommand(String shortText) { }
-    record WorklistItemView(UUID id, UUID participantAccountId, UUID planRevisionId, String category, String priority,
+    record WorklistItemView(UUID id, UUID participantId, UUID planRevisionId, String category, String priority,
                             String reasonCode, String minimalData, String policyVersion, String status, Instant createdAt, Instant snoozedUntil,
                             String issueText, List<ReplyView> replies) { }
     record ReplyView(UUID id, String shortText, Instant createdAt) { }
-    private static WorklistItemView view(SpecialistWorklistItem item, String issueText, List<ReplyView> replies) { return new WorklistItemView(item.id, item.participantAccountId, item.planRevisionId, item.category, item.priority, item.reasonCode, item.minimalData, item.policyVersionCode, item.status, item.createdAt, item.snoozedUntil, issueText, replies); }
+    private static WorklistItemView view(SpecialistWorklistItem item, String issueText, List<ReplyView> replies) { return new WorklistItemView(item.id, item.participantId, item.planRevisionId, item.category, item.priority, item.reasonCode, item.minimalData, item.policyVersionCode, item.status, item.createdAt, item.snoozedUntil, issueText, replies); }
 }

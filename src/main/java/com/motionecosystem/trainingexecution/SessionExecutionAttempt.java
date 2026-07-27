@@ -14,7 +14,7 @@ class SessionExecutionAttempt {
     enum Status { STARTED, PAUSED, COMPLETED, ABANDONED }
 
     @Id UUID id;
-    @Column(name = "participant_account_id", nullable = false) UUID participantAccountId;
+    @Column(name = "participant_id", nullable = false) UUID participantAccountId;
     @Column(name = "planned_session_id", nullable = false) UUID plannedSessionId;
     @Column(name = "plan_revision_id") UUID planRevisionId;
     @Column(name = "selected_variant_type", nullable = false) String selectedVariantType;

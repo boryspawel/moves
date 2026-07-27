@@ -7,11 +7,11 @@ import java.util.UUID;
 /** Bounded appointment projection for an already authorized specialist-participant relationship. */
 public interface SpecialistAppointmentQueryPort {
 
-    List<AppointmentSummary> findForParticipant(UUID specialistAccountId, UUID participantAccountId,
+    List<AppointmentSummary> findForParticipant(UUID specialistAccountId, UUID participantId,
                                                 Instant fromInclusive, Instant toExclusive, int limit);
 
     /** Bounded seek page ordered as the specialist participant timeline. */
-    List<AppointmentSummary> timeline(UUID specialistAccountId, UUID participantAccountId,
+    List<AppointmentSummary> timeline(UUID specialistAccountId, UUID participantId,
                                       Instant fromInclusive, Instant toExclusive, SeekCursor after, int limit);
 
     record SeekCursor(Instant effectiveFrom, Instant recordedAt, String eventId) { }

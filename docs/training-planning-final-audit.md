@@ -10,11 +10,13 @@ rewizjami, celami i receptami, a także zapis wykonania: RPE, ból, trudność i
 raport po 24 godzinach. Dostępne są również safety, worklista specjalisty,
 terminy oraz mechanizmy recovery.
 
-Nie ma jeszcze notatek, dokumentów, postępu ani audytowego modelu odczytu.
-Nie istnieją ogólne endpointy workspace ani timeline; istniejący ograniczony
-widok `Today` nie jest takim modelem. W kolejnych etapach potrzebne będą
-publiczne porty odczytowe właścicieli tych danych, zamiast bezpośredniego
-odczytu między modułami.
+Nie ma jeszcze notatek, dokumentów ani pełnych modeli postępu. Istnieją
+autoryzowane, audytowane endpointy specjalistycznego workspace i timeline,
+komponowane przez publiczne porty właścicieli danych; nie zastępują one
+bezpośrednim odczytem między modułami. Specjalista może także w utworzonym
+flow kartotek utworzyć, listować, otworzyć, edytować i archiwizować kartotekę
+bez konta uczestnika. Granicą tych flow jest `participantId`, a konto jest
+opcjonalnym linkiem dostępu.
 
 ## Zakres ukończony
 
@@ -26,11 +28,13 @@ Plan zachowuje jednego ownera i jawnie zakresowanych collaborators. Zablokowana 
 
 ## Weryfikacja techniczna
 
-- Migracje V001–V015 są liniowe. Testy obejmują czystą bazę oraz upgrade realistycznego fixture z V005.
+- Migracje V001–V037 są liniowe. `V036` ustanawia kanoniczną kartotekę i
+  opcjonalny link dostępu, a `V037` stabilizuje idempotentne tworzenie przez
+  fingerprint payloadu oraz indeks aktywnej relacji.
 - Wewnętrzne relacje nowych tabel mają FK, CHECK constraints i indeksy; referencje między kontekstami pozostają UUID walidowanymi przez porty.
 - Testy architektury kontrolują granice modułów i brak cykli. Audyt nie wykazał nowych cross-schema native queries, publicznych setterów, `FetchType.EAGER`, tymczasowych adapterów ani TODO/FIXME.
 - Planned i executed load są osobnymi profilami wielowymiarowymi, z wersją kalkulatora/reguł; nie istnieje globalny score.
-- OpenAPI jest generowane z uruchomionej aplikacji, a klient `typescript-fetch` przez OpenAPI Generator 7.24.0. Pliki wygenerowane nie są edytowane ręcznie.
+- OpenAPI jest generowane z uruchomionej aplikacji, a klient `typescript-fetch` przez OpenAPI Generator 7.24.0; aktualny snapshot obejmuje flow kartoteki, workspace i timeline. Pliki wygenerowane nie są edytowane ręcznie. Odświeżenie wymaga Docker/Testcontainers, więc środowisko bez socketu Dockera nie może zastąpić go ręczną edycją ani smoke testem Compose.
 - Backend CI używa Temurin Java 25 i wykonuje pełne `mvn --batch-mode verify`.
 
 Ścieżki akceptacyjne są pokryte przez testy integracyjne modułów planowania, workflow, safety i execution:

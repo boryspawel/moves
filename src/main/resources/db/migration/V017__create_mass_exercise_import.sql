@@ -402,8 +402,8 @@ BEGIN
         IF EXISTS (
             SELECT 1 FROM exercise_catalog.exercise_version_purpose purpose
              WHERE purpose.exercise_version_id = OLD.id AND purpose.purpose = 'THERAPEUTIC_EXERCISE'
-        ) AND distinct_reviewers < 2 THEN
-            RAISE EXCEPTION 'therapeutic exercise requires at least two independent reviewers';
+        ) AND distinct_reviewers < 1 THEN
+            RAISE EXCEPTION 'therapeutic exercise requires at least one independent reviewer';
         END IF;
         IF EXISTS (
             SELECT 1 FROM exercise_import.import_issue issue

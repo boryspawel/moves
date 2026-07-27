@@ -159,22 +159,22 @@ public class JpaSessionExecutionAdapter implements SessionExecutionPersistence {
         for (int days : List.of(7, 14, 28)) {
             entityManager.createNativeQuery("""
                     INSERT INTO training_execution.executed_load_aggregate
-                        (id, participant_account_id, window_days, window_end,
+                        (id, participant_id, window_days, window_end,
                          anatomical_structure_id, side, channel, unit,
                          value_low, value_high, rebuilt_at)
-                    SELECT gen_random_uuid(), execution.participant_account_id, :days, :windowEnd,
+                    SELECT gen_random_uuid(), execution.participant_id, :days, :windowEnd,
                            observation.anatomical_structure_id, observation.side,
                            observation.channel, observation.unit,
                            SUM(observation.value_low), SUM(observation.value_high), :windowEnd
                     FROM training_execution.executed_load_observation observation
                     JOIN training_execution.session_execution execution
                       ON execution.id = observation.session_execution_id
-                    WHERE execution.participant_account_id = :participant
+                    WHERE execution.participant_id = :participant
                       AND observation.observed_at > :windowStart
                       AND observation.observed_at <= :windowEnd
-                    GROUP BY execution.participant_account_id, observation.anatomical_structure_id,
+                    GROUP BY execution.participant_id, observation.anatomical_structure_id,
                              observation.side, observation.channel, observation.unit
-                    ON CONFLICT (participant_account_id, window_days, window_end,
+                    ON CONFLICT (participant_id, window_days, window_end,
                                  anatomical_structure_id, side, channel, unit)
                     DO UPDATE SET value_low=EXCLUDED.value_low, value_high=EXCLUDED.value_high,
                                   rebuilt_at=EXCLUDED.rebuilt_at

@@ -1,5 +1,7 @@
 # Prompt 1 — kontrakt i stan onboardingu
 
+> **Archiwum historyczne.** Raport z zakończonego etapu; nie określa bieżącego statusu projektu.
+
 ## Decyzje
 
 - Backendowy `State.stage` pozostaje jedynym źródłem prawdy; frontend mapuje go centralnie na stan prezentacji: wybór typu profilu, dokumenty, dane profilu, dostępność albo ukończenie.

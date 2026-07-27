@@ -18,7 +18,8 @@ import {
   PlanRevisionWorkflowControllerApi,
   SpecialistParticipantReadControllerApi,
   AppointmentControllerApi,
-  SpecialistTodayControllerApi
+  SpecialistTodayControllerApi,
+  SpecialistClientControllerApi
 } from '../api/generated/src';
 import { Middleware } from '../api/generated/src/runtime';
 import { AuthService } from './auth.service';
@@ -57,6 +58,7 @@ export class ApiFacade {
   readonly participantWorkspace: SpecialistParticipantReadControllerApi;
   readonly appointments: AppointmentControllerApi;
   readonly specialistToday: SpecialistTodayControllerApi;
+  readonly specialistClients: SpecialistClientControllerApi;
 
   constructor() {
     const auth = inject(AuthService);
@@ -82,5 +84,6 @@ export class ApiFacade {
     this.participantWorkspace = new SpecialistParticipantReadControllerApi(configuration);
     this.appointments = new AppointmentControllerApi(configuration);
     this.specialistToday = new SpecialistTodayControllerApi(configuration);
+    this.specialistClients = new SpecialistClientControllerApi(configuration);
   }
 }

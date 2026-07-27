@@ -5,7 +5,7 @@ import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.calendar.AppointmentService;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
-import com.motionecosystem.participant.ParticipantProfileService;
+import com.motionecosystem.participant.api.ParticipantClientPort;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ProfessionalRole;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.Purpose;
@@ -25,7 +25,7 @@ class SpecialistTodayService {
     private final CurrentAccountService accounts;
     private final SpecialistRelationshipService relationships;
     private final SpecialistProfileService profiles;
-    private final ParticipantProfileService participantProfiles;
+    private final ParticipantClientPort participants;
     private final RecurringAvailabilityService availability;
     private final AppointmentService appointments;
     private final SpecialistWorklistService worklist;
@@ -45,7 +45,7 @@ class SpecialistTodayService {
         Instant end = SpecialistTodayTime.endOfDay(localDate, zone);
         Instant now = clock.instant();
         Set<UUID> activeParticipants = relationships.activeParticipantIds(account.id());
-        Map<UUID, String> labels = participantProfiles.findDisplayNames(activeParticipants);
+        Map<UUID, String> labels = participantLabels(activeParticipants);
         List<AppointmentService.AppointmentView> raw = appointments.inRange(account.id(), start, end, activeParticipants, now);
         Optional<AppointmentService.AppointmentView> current = raw.stream().filter(item -> item.isCurrent() && active(item)).findFirst();
         Optional<UUID> nextId = raw.stream().filter(item -> item.status() != com.motionecosystem.calendar.Appointment.Status.CANCELLED
@@ -64,6 +64,12 @@ class SpecialistTodayService {
                 new Counts(appointmentViews.size(), attention.size(), 0, current.isPresent() ? 1 : 0));
     }
     private static boolean active(AppointmentService.AppointmentView item) { return item.status() != com.motionecosystem.calendar.Appointment.Status.CANCELLED && item.status() != com.motionecosystem.calendar.Appointment.Status.COMPLETED && item.status() != com.motionecosystem.calendar.Appointment.Status.NO_SHOW; }
+    private Map<UUID, String> participantLabels(Set<UUID> participantIds) {
+        return participantIds.stream().map(participantId -> participants.find(participantId)
+                        .map(record -> Map.entry(participantId, record.displayName())))
+                .flatMap(Optional::stream)
+                .collect(java.util.stream.Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
     private List<AttentionItemView> attention(String subject, UUID specialist, SpecialistProfileService.ProfileView profile, Map<UUID, String> labels) {
         if (profile == null) return List.of();
         ProfessionalRole role = ProfessionalRole.valueOf(profile.specialistKind().name());
@@ -72,7 +78,7 @@ class SpecialistTodayService {
                 .sorted(Comparator.comparingInt((SpecialistWorklistService.WorklistItemView item) -> priority(item.priority())).reversed()
                         .thenComparing(SpecialistWorklistService.WorklistItemView::createdAt))
                 .limit(ATTENTION_LIMIT)
-                .map(item -> new AttentionItemView(item.id(), item.category(), item.priority(), labels.get(item.participantAccountId()),
+                .map(item -> new AttentionItemView(item.id(), item.category(), item.priority(), labels.get(item.participantId()),
                         item.category().replace('_', ' '), item.minimalData(), item.createdAt(), item.snoozedUntil(), item.status(),
                         actions(item), "/api/v1/specialist/worklist/" + item.id())).toList();
     }

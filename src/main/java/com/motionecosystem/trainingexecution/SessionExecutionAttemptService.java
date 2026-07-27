@@ -3,6 +3,7 @@ package com.motionecosystem.trainingexecution;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.analytics.adherencemetrics.AdherenceMetricsService;
 import com.motionecosystem.identityaccess.api.ProfileType;
+import com.motionecosystem.participant.api.ParticipantClientPort;
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.safety.api.SessionSafetyDecisionQueryPort;
 import com.motionecosystem.trainingexecution.api.SessionExecutionProgressQueryPort;
@@ -26,6 +27,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class SessionExecutionAttemptService implements SessionExecutionProgressQueryPort {
     private final CurrentAccountService accounts;
+    private final ParticipantClientPort participants;
     private final PlannedSessionExecutionPort sessions;
     private final SessionExecutionAttemptRepository attempts;
     private final SessionExecutionAttemptProgressRepository progress;
@@ -194,7 +196,9 @@ public class SessionExecutionAttemptService implements SessionExecutionProgressQ
         if (!account.hasProfile(ProfileType.PARTICIPANT)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "participant profile is required");
         }
-        return account.id();
+        return participants.findParticipantIdByPrincipalAccountId(account.id())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "an active participant access link is required"));
     }
 
     private static SessionExecutionProgress progress(SessionExecutionAttempt attempt, boolean finalDeclared) {

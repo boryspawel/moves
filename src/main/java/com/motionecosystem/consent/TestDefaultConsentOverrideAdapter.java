@@ -1,4 +1,4 @@
-package com.motionecosystem.specialist;
+package com.motionecosystem.consent;
 
 import com.motionecosystem.consent.api.ConsentDecisionPort;
 import com.motionecosystem.consent.api.TestDefaultConsentOverridePort;
@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-/** Exposes the explicitly audited test bridge to the consent decision owner. */
+/** Consent-owned, explicitly audited bridge for account-free local and test fixtures. */
 @Service
 @RequiredArgsConstructor
 class TestDefaultConsentOverrideAdapter implements TestDefaultConsentOverridePort {
@@ -25,5 +25,13 @@ class TestDefaultConsentOverrideAdapter implements TestDefaultConsentOverridePor
         return overrides.findByParticipantIdAndSpecialistIdAndPurpose(participantId, specialistId, purpose.name())
                 .filter(item -> item.permits(purpose.name(), requested))
                 .map(item -> new OverrideDecision(item.id(), item.createdAt));
+    }
+
+    @Override
+    public void create(CreateCommand command) {
+        if (!enabled) throw new IllegalStateException("test default consent override is disabled");
+        overrides.save(new TestDefaultConsentOverride(command.participantId(), command.specialistId(), command.purpose().name(),
+                command.scopes().stream().map(Enum::name).sorted().collect(java.util.stream.Collectors.joining(",")),
+                command.createdByAccountId().toString(), command.createdAt()));
     }
 }

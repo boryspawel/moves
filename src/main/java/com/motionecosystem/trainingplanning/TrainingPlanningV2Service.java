@@ -15,7 +15,6 @@ import java.util.UUID;
 
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.exercisecatalog.api.ExerciseCatalogQueryPort;
-import com.motionecosystem.identityaccess.api.ActiveParticipantPort;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
@@ -24,6 +23,7 @@ import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingCont
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.Capability;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ProfessionalRole;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.Purpose;
+import com.motionecosystem.participant.api.ParticipantClientPort;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.BudgetAction;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.DoseType;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.GoalPerspective;
@@ -51,7 +51,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
 
     private final CurrentAccountService accounts;
-    private final ActiveParticipantPort participants;
+    private final ParticipantClientPort participants;
     private final SpecialistAuthorizationPort authorization;
     private final PlanCollaborationPersistence collaborations;
     private final ExerciseCatalogQueryPort catalog;
@@ -66,11 +66,12 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
         if (command == null) {
             throw badRequest("draft command is required");
         }
-        UUID participantId = command.participantAccountId();
+        UUID participantId = command.participantId();
         PlanMode mode = command.mode();
         if (actor.profileType() == ProfileType.PARTICIPANT) {
-            participantId = participantId == null ? actor.id() : participantId;
-            if (!actor.id().equals(participantId)) {
+            UUID linkedParticipantId = participantIdFor(actor);
+            participantId = participantId == null ? linkedParticipantId : participantId;
+            if (!linkedParticipantId.equals(participantId)) {
                 throw forbidden("participant can only create their own plan");
             }
             mode = mode == null ? PlanMode.SELF_DIRECTED : mode;
@@ -79,7 +80,7 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
             }
         } else if (actor.profileType() == ProfileType.SPECIALIST) {
             if (participantId == null) {
-                throw badRequest("participant account is required");
+                throw badRequest("participantId is required");
             }
             mode = mode == null ? PlanMode.SPECIALIST : mode;
             if (mode == PlanMode.SELF_DIRECTED) {
@@ -469,9 +470,15 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
     }
 
     private void requireParticipant(UUID participantId) {
-        if (participants.findActiveParticipant(participantId).isEmpty()) {
-            throw badRequest("active participant account is required");
+        if (participants.find(participantId)
+                .filter(value -> value.recordStatus() == ParticipantClientPort.RecordStatus.ACTIVE).isEmpty()) {
+            throw badRequest("active participant record is required");
         }
+    }
+
+    private UUID participantIdFor(CurrentAccount account) {
+        return participants.findParticipantIdByPrincipalAccountId(account.id())
+                .orElseThrow(() -> forbidden("an active participant access link is required"));
     }
 
     private static void validateDose(AddPrescriptionCommand command) {
@@ -651,12 +658,12 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
 
     private record ResourceAuthorization(ProfessionalRole role, Set<String> scopes) { }
 
-    public record CreateDraftCommand(UUID participantAccountId, String name, String purpose, PlanMode mode,
+    public record CreateDraftCommand(UUID participantId, String name, String purpose, PlanMode mode,
                                      String phaseIntent, LocalDate validFrom, LocalDate validTo,
                                      ActingContext actingContext) {
-        public CreateDraftCommand(UUID participantAccountId, String name, String purpose, PlanMode mode,
+        public CreateDraftCommand(UUID participantId, String name, String purpose, PlanMode mode,
                                   String phaseIntent, LocalDate validFrom, LocalDate validTo) {
-            this(participantAccountId, name, purpose, mode, phaseIntent, validFrom, validTo, null);
+            this(participantId, name, purpose, mode, phaseIntent, validFrom, validTo, null);
         }
     }
     public record AddGoalCommand(long expectedVersion, GoalPerspective perspective, String category,
@@ -702,7 +709,7 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
     }
     public record ValidateCommand(long expectedVersion) {
     }
-    public record EditorView(UUID planId, UUID participantAccountId, String name, String purpose,
+    public record EditorView(UUID planId, UUID participantId, String name, String purpose,
                              UUID ownerAccountId, String mode, String planStatus, UUID currentRevisionId,
                              PlanRevisionSnapshot revision) {
     }

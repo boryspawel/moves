@@ -26,6 +26,7 @@ export const routes: Routes = [
   },
   { path: 'plan', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/plan.page').then(m => m.PlanPage) },
   { path: 'specialist/today', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/specialist-today.page').then(m => m.SpecialistTodayPage) },
+  { path: 'specialist/clients', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/specialist-clients.page').then(m => m.SpecialistClientsPage) },
   { path: 'specialist/clients/:participantId', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/specialist-participant-workspace.page').then(m => m.SpecialistParticipantWorkspacePage) },
   { path: 'sessions', canActivate: [authGuard, completedOnboardingGuard, roleGuard('PARTICIPANT')], loadComponent: () => import('./features/sessions.page').then(m => m.SessionsPage) },
   { path: 'reminders', canActivate: [authGuard, completedOnboardingGuard, roleGuard('PARTICIPANT')], loadComponent: () => import('./features/reminder-preferences.page').then(m => m.ReminderPreferencesPage) },

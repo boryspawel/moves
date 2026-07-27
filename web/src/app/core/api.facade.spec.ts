@@ -19,7 +19,7 @@ describe('normalizeGeneratedApiBasePath', () => {
   it('propagates the authenticated token to generated catalog requests', async () => {
     const fetchApi = vi.fn().mockResolvedValue(new Response(JSON.stringify({ content: [], totalElements: 0 }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
     const api = new ExerciseCatalogControllerApi(new Configuration({ basePath: '', fetchApi, middleware: [generatedAuthorizationMiddleware(async () => 'demo-token')] }));
-    await api.list();
+    await api.list1();
     expect(new Headers(fetchApi.mock.calls[0][1].headers).get('Authorization')).toBe('Bearer demo-token');
   });
 });

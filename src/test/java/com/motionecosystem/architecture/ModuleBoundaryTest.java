@@ -4,9 +4,15 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
+import com.tngtech.archunit.core.domain.Dependency;
+import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
+import com.tngtech.archunit.lang.ArchCondition;
+import com.tngtech.archunit.lang.ConditionEvents;
+import com.tngtech.archunit.lang.SimpleConditionEvent;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.junit.jupiter.api.Test;
 
 class ModuleBoundaryTest {
@@ -150,6 +156,33 @@ class ModuleBoundaryTest {
     }
 
     @Test
+    void modulesDoNotDependOnJpaRepositoriesOwnedByAnotherModule() {
+        classes().should(onlyDependOnJpaRepositoriesInTheirOwnModule())
+                .check(productionClasses);
+
+        noClasses().that().haveFullyQualifiedName("com.motionecosystem.specialist.SpecialistClientService")
+                .should().dependOnClassesThat().resideInAPackage("com.motionecosystem.participant")
+                .check(productionClasses);
+    }
+
+    @Test
+    void consentInternalsAreConsumedOnlyThroughConsentApi() {
+        noClasses().that().resideOutsideOfPackage("com.motionecosystem.consent..")
+                .should().dependOnClassesThat().resideInAPackage("com.motionecosystem.consent")
+                .check(productionClasses);
+
+        classes().that().resideInAPackage("com.motionecosystem.consent..")
+                .and().areAnnotatedWith(jakarta.persistence.Entity.class)
+                .should().notBePublic()
+                .check(productionClasses);
+
+        classes().that().resideInAPackage("com.motionecosystem.consent..")
+                .and().areAssignableTo(JpaRepository.class)
+                .should().notBePublic()
+                .check(productionClasses);
+    }
+
+    @Test
     void trainingApplicationAndDomainDoNotComposeSql() {
         noClasses().that().resideInAnyPackage(
                         "com.motionecosystem.trainingplanning.application..",
@@ -168,5 +201,32 @@ class ModuleBoundaryTest {
                 .should().dependOnClassesThat().haveFullyQualifiedName(
                         "org.springframework.jdbc.core.JdbcTemplate")
                 .check(productionClasses);
+    }
+
+    private static ArchCondition<JavaClass> onlyDependOnJpaRepositoriesInTheirOwnModule() {
+        return new ArchCondition<>("only depend on JPA repositories in their own top-level module") {
+            @Override
+            public void check(JavaClass source, ConditionEvents events) {
+                String sourceModule = topLevelModule(source);
+                for (Dependency dependency : source.getDirectDependenciesFromSelf()) {
+                    JavaClass target = dependency.getTargetClass();
+                    if (!topLevelModule(target).isEmpty()
+                            && target.isAssignableTo(JpaRepository.class)
+                            && !sourceModule.equals(topLevelModule(target))) {
+                        events.add(SimpleConditionEvent.violated(source, dependency.getDescription()));
+                    }
+                }
+            }
+        };
+    }
+
+    private static String topLevelModule(JavaClass javaClass) {
+        String packageName = javaClass.getPackageName();
+        String prefix = "com.motionecosystem.";
+        if (!packageName.startsWith(prefix)) {
+            return "";
+        }
+        int separator = packageName.indexOf('.', prefix.length());
+        return separator < 0 ? packageName.substring(prefix.length()) : packageName.substring(prefix.length(), separator);
     }
 }

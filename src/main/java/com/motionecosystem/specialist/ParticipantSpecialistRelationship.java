@@ -1,6 +1,6 @@
 package com.motionecosystem.specialist;
 
-import com.motionecosystem.participant.ParticipantRecord;
+import com.motionecosystem.participant.api.ParticipantClientPort;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -29,7 +29,7 @@ class ParticipantSpecialistRelationship {
     private UUID participantId;
     @Enumerated(EnumType.STRING)
     @Column(name = "relationship_context")
-    private ParticipantRecord.RelationshipContext relationshipContext;
+    private ParticipantClientPort.RelationshipContext relationshipContext;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status;
@@ -42,7 +42,7 @@ class ParticipantSpecialistRelationship {
     }
 
     ParticipantSpecialistRelationship(UUID specialistAccountId, UUID participantId,
-            ParticipantRecord.RelationshipContext relationshipContext, Instant activatedAt) {
+            ParticipantClientPort.RelationshipContext relationshipContext, Instant activatedAt) {
         this.id = UUID.randomUUID();
         this.specialistAccountId = specialistAccountId;
         this.participantId = participantId;

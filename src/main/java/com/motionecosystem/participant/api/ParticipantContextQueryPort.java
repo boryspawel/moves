@@ -9,5 +9,9 @@ public interface ParticipantContextQueryPort {
 
     Optional<ParticipantContext> findContext(UUID participantAccountId);
 
+    Optional<ParticipantRecordContext> findContextByParticipantId(UUID participantId);
+
     record ParticipantContext(UUID participantAccountId, ZoneId timeZone) { }
+
+    record ParticipantRecordContext(UUID participantId, String displayName, ZoneId timeZone) { }
 }

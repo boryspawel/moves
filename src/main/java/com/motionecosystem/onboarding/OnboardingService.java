@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.availability.RecurringAvailabilityService;
-import com.motionecosystem.consent.LegalAcknowledgementService;
+import com.motionecosystem.consent.api.LegalAcknowledgementPort;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
@@ -24,7 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class OnboardingService {
 
     private final CurrentAccountService accounts;
-    private final LegalAcknowledgementService legal;
+    private final LegalAcknowledgementPort legal;
     private final ParticipantProfileService participantProfiles;
     private final ParticipantContextService participantContexts;
     private final SpecialistProfileService specialistProfiles;
@@ -163,7 +163,7 @@ public class OnboardingService {
             List<Step> missingSteps,
             ProfileType profileType,
             ProfileSummary profile,
-            List<LegalAcknowledgementService.View> currentLegalAcknowledgements,
+            List<LegalAcknowledgementPort.View> currentLegalAcknowledgements,
             List<RecurringAvailabilityService.Slot> availability) {
     }
 }

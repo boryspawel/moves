@@ -14,7 +14,7 @@ class ReadinessCheckIn {
 
     @Id
     UUID id;
-    @Column(name = "account_id", nullable = false)
+    @Column(name = "participant_id", nullable = false)
     UUID accountId;
     @Column(name = "pain_level", nullable = false)
     int painLevel;

@@ -4,6 +4,7 @@ import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.participant.api.ParticipantContextQueryPort;
+import com.motionecosystem.participant.api.ParticipantClientPort;
 import com.motionecosystem.safety.api.SessionSafetyDecisionQueryPort;
 import com.motionecosystem.trainingexecution.api.SessionExecutionProgressQueryPort;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort;
@@ -30,6 +31,7 @@ public class TodayAgendaService {
 
     private final CurrentAccountService accounts;
     private final ParticipantContextQueryPort participants;
+    private final ParticipantClientPort participantClients;
     private final PlanRevisionQueryPort revisions;
     private final SessionExecutionProgressQueryPort progress;
     private final SessionSafetyDecisionQueryPort safety;
@@ -42,14 +44,16 @@ public class TodayAgendaService {
         if (!account.hasProfile(ProfileType.PARTICIPANT)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "participant profile is required");
         }
-        Optional<ParticipantContextQueryPort.ParticipantContext> participant = participants.findContext(account.id());
+        UUID participantId = participantClients.findParticipantIdByPrincipalAccountId(account.id())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "participant record not found"));
+        Optional<ParticipantContextQueryPort.ParticipantContext> participant = participants.findContext(participantId);
         if (participant.isEmpty()) {
             return new TodayAgendaView(null, null, null, List.of(), "TIME_ZONE_REQUIRED", null);
         }
         ZoneId timeZone = participant.get().timeZone();
         Instant now = clock.instant();
         LocalDate localDate = now.atZone(timeZone).toLocalDate();
-        Optional<PlanRevisionSnapshot> revision = revisions.findActiveRevision(account.id());
+        Optional<PlanRevisionSnapshot> revision = revisions.findActiveRevision(participantId);
         if (revision.isEmpty()) {
             return new TodayAgendaView(timeZone.getId(), localDate, null, List.of(), "NO_ACTIVE_PLAN", recovery.current(subject));
         }
@@ -59,8 +63,8 @@ public class TodayAgendaService {
                 .flatMap(microcycle -> microcycle.sessions().stream())
                 .filter(session -> belongsToLocalDay(session, localDate, timeZone)).toList();
         List<UUID> sessionIds = todaySessions.stream().map(SessionSnapshot::id).toList();
-        var executionProgress = progress.findForSessions(account.id(), sessionIds);
-        var safetyDecisions = safety.evaluateForSessions(account.id(), snapshot.revisionId(), sessionIds, now);
+        var executionProgress = progress.findForSessions(participantId, sessionIds);
+        var safetyDecisions = safety.evaluateForSessions(participantId, snapshot.revisionId(), sessionIds, now);
         List<AgendaSessionView> sessions = todaySessions.stream()
                 .map(session -> toView(session, now, executionProgress.get(session.id()), safetyDecisions.get(session.id())))
                 .sorted(Comparator.comparing(AgendaSessionView::sortAt)

@@ -1,5 +1,8 @@
 # MOVES — prompty implementacyjne dla Codex
 
+> **Archiwum historyczne.** Ta seria promptów dokumentuje wcześniejszy strumień
+> planowania treningowego i nie jest bieżącą roadmapą ani źródłem statusu.
+
 Zakres: Training Planning, Exercise Catalog V2, Load Analysis, Safety V2 i Training Execution  
 Tryb pracy: lokalne repozytorium otwarte w IntelliJ IDEA  
 Kolejność: prompty wykonywać sekwencyjnie, każdy w osobnej turze Codex  

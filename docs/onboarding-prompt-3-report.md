@@ -1,5 +1,7 @@
 # Prompt 3 — raport kontroli runtime onboardingu
 
+> **Archiwum historyczne.** Raport z zakończonego etapu; nie określa bieżącego statusu projektu.
+
 ## Status końcowy
 
 **NOT ACCEPTABLE FOR RELEASE** — blokada do czasu wykonania rzeczywistego QA

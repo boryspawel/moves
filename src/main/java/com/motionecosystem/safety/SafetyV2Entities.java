@@ -41,7 +41,7 @@ class RestrictionEntity {
     int revisionNumber;
     @Column(name = "supersedes_restriction_id")
     UUID supersedesRestrictionId;
-    @Column(name = "participant_account_id")
+    @Column(name = "participant_id")
     UUID participantId;
     @Enumerated(EnumType.STRING)
     @Column(name = "source_type")
@@ -156,7 +156,7 @@ class RestrictionTargetEntity {
 class SafetyAssessmentEntity {
     @Id
     UUID id;
-    @Column(name = "participant_account_id")
+    @Column(name = "participant_id")
     UUID participantId;
     @Column(name = "revision_id")
     UUID revisionId;

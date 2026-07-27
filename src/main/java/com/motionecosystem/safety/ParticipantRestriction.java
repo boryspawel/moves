@@ -14,7 +14,7 @@ class ParticipantRestriction {
 
     @Id
     UUID id;
-    @Column(name = "account_id", nullable = false)
+    @Column(name = "participant_id", nullable = false)
     UUID accountId;
     @Column(name = "contraindication_tag", nullable = false)
     String contraindicationTag;

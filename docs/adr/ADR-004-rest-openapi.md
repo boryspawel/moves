@@ -11,13 +11,12 @@ Web, późniejszy mobile i integracje wymagają jednego, wersjonowanego kontrakt
 
 Publiczny kontrakt wewnętrzny używa REST/JSON pod `/api/v1`, OpenAPI, DTO oddzielonych od encji i Problem Details. Klient TypeScript jest generowany z kontraktu. Retry-sensitive commands przyjmują `Idempotency-Key`.
 
-Aktualny kontrakt backendu obejmuje `GET /api/v1/specialist/today` oraz komendy
-terminów pod `/api/v1/specialist/appointments`. Wersjonowany snapshot OpenAPI i
-wygenerowany klient nie zawierają jeszcze endpointu `Today`, dopóki backend nie
-uruchomi workflow `api:refresh`. Frontend używa więc tymczasowego adaptera
-zgodnego w czasie wykonania z wygenerowanym klientem (`BaseAPI` i jego
-konfiguracja autoryzacji); nie jest to ręcznie utrzymywany docelowy kontrakt.
+Aktualny snapshot OpenAPI i wygenerowany klient obejmują `Today`, komendy
+terminów oraz specjalistyczne flow kartoteki (`/api/v1/specialist/clients`),
+workspace i timeline z `participantId`. Frontend używa wygenerowanych API, bez
+tymczasowego adaptera kontraktu. Odświeżenie nadal odbywa się wyłącznie przez
+`npm run api:refresh`; wymaga ono środowiska z Docker/Testcontainers.
 
 ## Konsekwencje
 
-Zmiany kontraktu są testowane, a frontend nie duplikuje modeli. Filtrowanie jest ograniczone do jawnie dozwolonych pól. Po uruchomieniu backendowego snapshotu należy zregenerować klienta, aby usunąć tymczasowy adapter.
+Zmiany kontraktu są testowane, a frontend nie duplikuje modeli. Filtrowanie jest ograniczone do jawnie dozwolonych pól. W środowisku bez socketu Dockera nie należy ręcznie zmieniać snapshotu ani wygenerowanego klienta; odświeżenie wykonuje się w dostępnej walidacji Dockerowej.

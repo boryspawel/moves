@@ -168,7 +168,7 @@ class TrainingPlanningV2IntegrationTest {
                 null, "My plan", "Independent training", null, "Build consistency",
                 LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31)));
         assertThat(self.mode()).isEqualTo("SELF_DIRECTED");
-        assertThat(self.participantAccountId()).isEqualTo(participantId);
+        assertThat(self.participantId()).isEqualTo(participantId);
 
         assertStatus(HttpStatus.FORBIDDEN, () -> planning.createDraft("planning-participant",
                 new CreateDraftCommand(otherParticipantId, "Wrong", "Wrong owner", PlanMode.SELF_DIRECTED,

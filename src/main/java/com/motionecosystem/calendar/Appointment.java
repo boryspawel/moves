@@ -13,7 +13,7 @@ public class Appointment {
 
     @Id UUID id;
     @Column(name = "specialist_account_id", nullable = false) UUID specialistAccountId;
-    @Column(name = "participant_account_id", nullable = false) UUID participantAccountId;
+    @Column(name = "participant_id", nullable = false) UUID participantId;
     @Column(name = "starts_at", nullable = false) Instant startsAt;
     @Column(name = "ends_at", nullable = false) Instant endsAt;
     @Enumerated(EnumType.STRING) @Column(nullable = false) Type type;
@@ -30,7 +30,7 @@ public class Appointment {
     protected Appointment() { }
     Appointment(UUID specialist, UUID participant, Instant starts, Instant ends, Type type, LocationMode mode,
             String location, String purpose, UUID createdBy, Instant now) {
-        id = UUID.randomUUID(); specialistAccountId = specialist; participantAccountId = participant;
+        id = UUID.randomUUID(); specialistAccountId = specialist; participantId = participant;
         startsAt = starts; endsAt = ends; this.type = type; status = Status.SCHEDULED; locationMode = mode;
         this.location = location; shortPurpose = purpose; createdByAccountId = createdBy; createdAt = now; updatedAt = now;
     }

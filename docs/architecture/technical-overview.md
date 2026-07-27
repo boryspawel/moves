@@ -53,6 +53,14 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
 - Identyfikatory domenowe są UUID; `sub` Keycloak pozostaje tekstową referencją zewnętrzną.
 - Chwile są zapisywane jako UTC, a strefa IANA obok cyklicznych przedziałów.
 - `V034__create_specialist_calendar` tworzy schemat `calendar`, terminy i ich klucze idempotencji; `V035__add_specialist_profile_time_zone` utrwala wymaganą strefę IANA profilu specjalisty (dla istniejących profili deterministyczne `UTC`).
+- `V036__add_participant_records` wprowadziła kanoniczny rekord uczestnika i
+  opcjonalne powiązanie z kontem (`participant_record` i
+  `participant_access_link`). `V037__stabilize_client_create_idempotency`
+  utrwala fingerprint tworzenia kartoteki i indeks aktywnej relacji; replay z
+  odmiennym payloadem, jak również historyczny replay bez payloadu, jest
+  odrzucany. `participantId` jest granicą nowych ścieżek kartoteki, a link
+  dostępu jest wyłącznym przejściem do konta. Moduły nieprzeniesione korzystają
+  wyłącznie z kontrolowanych, lokalnych mostów legacy `*AccountId`.
 - `GET /api/v1/specialist/today?date=YYYY-MM-DD` wyznacza dzień w utrwalonej strefie specjalisty i zwraca terminy, dostępność oraz sprawy worklisty; wolne sloty są wyliczane z dostępności pomniejszonej o zajęte terminy przy skonfigurowanym kroku. Dla bieżącego dnia slot jest możliwy do działania tylko, gdy leży w przyszłości; `operationalTasks` jest obecnie zwracane jako puste.
 - `POST /api/v1/specialist/appointments`, `PUT /api/v1/specialist/appointments/{id}`, `POST /api/v1/specialist/appointments/{id}/cancel` i `POST /api/v1/specialist/appointments/{id}/no-show` wymagają `Idempotency-Key`.
 - Operacje podatne na retry używają klucza idempotencji i unikalnego ograniczenia w bazie.
@@ -62,6 +70,13 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
 - OAuth2 Resource Server waliduje issuer i audience; role Keycloak są mapowane do `ROLE_*`.
 - Health i kontrakt OpenAPI mogą być publiczne; domenowe API domyślnie wymaga tokenu.
 - Endpointy `Today` i komendy terminów są dostępne wyłącznie dla `SPECIALIST`; widok `Today` pobiera wyłącznie terminy specjalisty oraz uczestników z jego aktywną relacją, a wyświetlana worklista pozostaje ograniczona do minimalnych danych. Dialog tworzenia terminu udostępnia tylko aktywnych uczestników, tworzy termin idempotentnie i przekazuje jednoznaczne konflikty oraz błędy. Brak dostępności kieruje do onboardingu jej edycji z preładowaniem istniejących slotów.
+- Kartoteka klienta jest dostępna także bez konta uczestnika. Brak konta ogranicza
+  wyłącznie akcje self-service uczestnika; nie wyłącza specjalistycznego
+  workspace, planowania terminu ani prowadzenia planu.
+- Frontend specjalisty korzysta z wygenerowanych endpointów kartoteki,
+  workspace i timeline. Lista klientów oraz workspace prezentują dane z
+  publicznych portów modułów bez własnych, ręcznie utrzymywanych modeli
+  kontraktu; `Today` zachowuje tę samą granicę `participantId`.
 - Ból, ograniczenia, wywiad i notatki nie trafiają do gamifikacji ani publicznego profilu.
 - Trener widzi wyłącznie effective safety envelope. Clinical rationale jest osobnym widokiem fizjoterapeuty objętym osobną zgodą.
 - Collaborator planu ma jawny zakres, który nie zastępuje kontroli capability, relacji i consent.
@@ -75,6 +90,12 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
 - walidacja Flyway i `ddl-auto=validate`;
 - kontrakt OpenAPI, frontendowe testy komponentów i główny Playwright E2E.
 
+Lokalne cele administracyjne Flyway są dostępne przez `bin/flyway-migrate` i
+`bin/flyway-repair`; odczytują parametry z `.env` przez profil Maven `local`.
+Naprawa historii Flyway nie jest zwykłym krokiem wdrożenia. Aktualne testy
+frontendowe pokrywają funkcje workspace i `Today`; nadal wymagane jest E2E dla
+mobile viewport, zoomu 200%, klawiatury i reduced motion.
+
 P6 worklisty jest w `d004a36`. P7 `/sessions` ma niecommitowane testy
 komponentowe, lecz nadal wymaga E2E dla mobile viewport, 200% zoomu, klawiatury
 i reduced motion. P9 ma reguły timezone/quiet-hours, opt-out, suppression i
@@ -84,4 +105,9 @@ po 180 dniach, a automatyczny, codzienny cleanup wywołuje wewnętrzny job przez
 `purgeExpired()`.
 # Participant records (test vertical)
 
-Participant records are separate from access accounts. The specialist client API uses `participant.participant_record` and may create an account-free record; `participant.participant_access_link` represents a later account link. See [test participant-record consent debt](../test-participant-record-consent-debt.md) for the explicit local/test consent override and migration debt.
+Participant records are separate from access accounts. The generated specialist
+client API and Angular flow create, list, open, update and archive account-free
+records using `participantId`; workspace and timeline use the same identifier.
+`participant.participant_access_link` represents the optional account boundary.
+The explicit `TEST_DEFAULT` override is available only in `local` or `test`,
+never in `prod`; see [test participant-record consent debt](../test-participant-record-consent-debt.md).

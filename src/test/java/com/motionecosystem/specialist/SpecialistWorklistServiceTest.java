@@ -12,6 +12,7 @@ import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
+import com.motionecosystem.participant.api.ParticipantClientPort;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ProfessionalRole;
@@ -43,10 +44,38 @@ class SpecialistWorklistServiceTest {
                         error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
     }
 
+    @Test
+    void participantIssueUsesTheLinkedParticipantIdRatherThanTheAccountId() {
+        UUID accountId = UUID.randomUUID();
+        UUID participantId = UUID.randomUUID();
+        var accounts = mock(CurrentAccountService.class);
+        var participants = mock(ParticipantClientPort.class);
+        var items = mock(SpecialistWorklistItemRepository.class);
+        var issues = mock(ParticipantIssueRepository.class);
+        when(accounts.requireActive("participant"))
+                .thenReturn(new CurrentAccount(accountId, "participant", ProfileType.PARTICIPANT));
+        when(participants.findParticipantIdByPrincipalAccountId(accountId)).thenReturn(java.util.Optional.of(participantId));
+        when(items.findByDeduplicationKeyAndStatusIn(any(), any())).thenReturn(java.util.Optional.empty());
+        when(items.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(issues.findByWorklistItemId(any())).thenReturn(java.util.Optional.empty());
+        when(issues.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        var service = new SpecialistWorklistService(items, issues, mock(ParticipantIssueReplyRepository.class),
+                mock(ParticipantSpecialistRelationshipRepository.class), accounts, participants,
+                mock(SpecialistAuthorizationPort.class), mock(AuditRecorder.class),
+                Clock.fixed(Instant.EPOCH, ZoneOffset.UTC), mock(AdherenceMetricsService.class));
+
+        var result = service.reportIssue("participant",
+                new SpecialistWorklistService.ParticipantIssueCommand("PAIN", "knee hurts"));
+
+        assertThat(result.participantId()).isEqualTo(participantId);
+        assertThat(result.participantId()).isNotEqualTo(accountId);
+    }
+
     private Fixture fixture(HttpStatus authorizationStatus) {
         UUID specialist = UUID.randomUUID();
         UUID participant = UUID.randomUUID();
         var accounts = mock(CurrentAccountService.class);
+        var participants = mock(ParticipantClientPort.class);
         var relationships = mock(ParticipantSpecialistRelationshipRepository.class);
         var items = mock(SpecialistWorklistItemRepository.class);
         var authorization = mock(SpecialistAuthorizationPort.class);
@@ -55,14 +84,14 @@ class SpecialistWorklistServiceTest {
                 "participant-reported-problem", "PARTICIPANT_ISSUE_V1", "key", Instant.EPOCH);
         when(accounts.requireActive("specialist"))
                 .thenReturn(new CurrentAccount(specialist, "specialist", ProfileType.SPECIALIST));
-        when(relationship.participantAccountId()).thenReturn(participant);
+        when(relationship.participantId()).thenReturn(participant);
         when(relationships.findBySpecialistAccountIdAndStatus(specialist, ParticipantSpecialistRelationship.Status.ACTIVE))
                 .thenReturn(List.of(relationship));
-        when(items.findByParticipantAccountIdOrderByUpdatedAtDesc(participant)).thenReturn(List.of(item));
+        when(items.findByParticipantIdOrderByUpdatedAtDesc(participant)).thenReturn(List.of(item));
         doThrow(new ResponseStatusException(authorizationStatus, "authorization failure"))
                 .when(authorization).requireCapabilities(any(), any(), any(), any(), any());
         return new Fixture(new SpecialistWorklistService(items, mock(ParticipantIssueRepository.class),
-                mock(ParticipantIssueReplyRepository.class), relationships, accounts, authorization, mock(AuditRecorder.class),
+                mock(ParticipantIssueReplyRepository.class), relationships, accounts, participants, authorization, mock(AuditRecorder.class),
                 Clock.fixed(Instant.EPOCH, ZoneOffset.UTC), mock(AdherenceMetricsService.class)));
     }
 

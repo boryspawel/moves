@@ -10,5 +10,11 @@ public interface TestDefaultConsentOverridePort {
                                               ConsentDecisionPort.Purpose purpose,
                                               Set<ConsentDecisionPort.DataScope> scopes);
 
+    /** Records the explicitly non-participant test decision in the consent boundary. */
+    void create(CreateCommand command);
+
     record OverrideDecision(UUID id, Instant createdAt) { }
+
+    record CreateCommand(UUID participantId, UUID specialistId, ConsentDecisionPort.Purpose purpose,
+                         Set<ConsentDecisionPort.DataScope> scopes, UUID createdByAccountId, Instant createdAt) { }
 }

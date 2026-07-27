@@ -58,7 +58,7 @@ export interface ExecutionView {
    * @type {string}
    * @memberof ExecutionView
    */
-  participantAccountId?: string;
+  participantId?: string;
   /**
    *
    * @type {boolean}
@@ -151,8 +151,7 @@ export function ExecutionViewFromJSONTyped(json: any, ignoreDiscriminator: boole
   return {
     id: json['id'] == null ? undefined : json['id'],
     plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
-    participantAccountId:
-      json['participantAccountId'] == null ? undefined : json['participantAccountId'],
+    participantId: json['participantId'] == null ? undefined : json['participantId'],
     declaredCompletion: json['declaredCompletion'] == null ? undefined : json['declaredCompletion'],
     recordedAt: json['recordedAt'] == null ? undefined : new Date(json['recordedAt']),
     painLevel: json['painLevel'] == null ? undefined : json['painLevel'],
@@ -191,7 +190,7 @@ export function ExecutionViewToJSONTyped(
   return {
     id: value['id'],
     plannedSessionId: value['plannedSessionId'],
-    participantAccountId: value['participantAccountId'],
+    participantId: value['participantId'],
     declaredCompletion: value['declaredCompletion'],
     recordedAt:
       value['recordedAt'] == null ? value['recordedAt'] : value['recordedAt'].toISOString(),

@@ -45,8 +45,8 @@ public class AppointmentService implements SpecialistAppointmentQueryPort {
         UUID specialist = specialist(subject); String idempotencyKey = key(key);
         return replay(specialist, "UPDATE:" + id, idempotencyKey).orElseGet(() -> {
             Appointment appointment = owned(specialist, id); version(appointment, command == null ? null : command.version());
-            Values values = values(command); if (!appointment.participantAccountId.equals(values.participantId())) bad("participantId cannot be changed");
-            relationships.requireActive(specialist, appointment.participantAccountId);
+            Values values = values(command); if (!appointment.participantId.equals(values.participantId())) bad("participantId cannot be changed");
+            relationships.requireActive(specialist, appointment.participantId);
             if (appointment.status == Appointment.Status.CANCELLED) conflict("cancelled appointment cannot be changed");
             conflictIfOverlapping(specialist, values.startsAt(), values.endsAt(), appointment.id);
             appointment.update(values.startsAt(), values.endsAt(), values.type(), values.locationMode(), values.location(), values.shortPurpose(), clock.instant());
@@ -63,20 +63,20 @@ public class AppointmentService implements SpecialistAppointmentQueryPort {
     @Transactional(readOnly = true)
     public List<AppointmentView> inRange(UUID specialist, Instant start, Instant end, Set<UUID> activeParticipants, Instant now) {
         return appointments.findIntersecting(specialist, start, end).stream()
-                .filter(appointment -> activeParticipants.contains(appointment.participantAccountId))
+                .filter(appointment -> activeParticipants.contains(appointment.participantId))
                 .map(appointment -> view(appointment, now)).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<SpecialistAppointmentQueryPort.AppointmentSummary> findForParticipant(UUID specialistAccountId,
-            UUID participantAccountId, Instant fromInclusive, Instant toExclusive, int limit) {
-        if (specialistAccountId == null || participantAccountId == null || fromInclusive == null || toExclusive == null
+            UUID participantId, Instant fromInclusive, Instant toExclusive, int limit) {
+        if (specialistAccountId == null || participantId == null || fromInclusive == null || toExclusive == null
                 || !toExclusive.isAfter(fromInclusive) || limit < 1) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "specialist, participant, range and limit are required");
         }
         return appointments.findIntersecting(specialistAccountId, fromInclusive, toExclusive).stream()
-                .filter(item -> participantAccountId.equals(item.participantAccountId))
+                .filter(item -> participantId.equals(item.participantId))
                 .sorted(Comparator.comparing((Appointment item) -> item.startsAt).reversed().thenComparing(item -> item.id))
                 .limit(limit)
                 .map(AppointmentService::summary)
@@ -86,19 +86,19 @@ public class AppointmentService implements SpecialistAppointmentQueryPort {
     @Override
     @Transactional(readOnly = true)
     public List<SpecialistAppointmentQueryPort.AppointmentSummary> timeline(UUID specialistAccountId,
-            UUID participantAccountId, Instant fromInclusive, Instant toExclusive,
+            UUID participantId, Instant fromInclusive, Instant toExclusive,
             SpecialistAppointmentQueryPort.SeekCursor after, int limit) {
-        if (specialistAccountId == null || participantAccountId == null || fromInclusive == null || toExclusive == null
+        if (specialistAccountId == null || participantId == null || fromInclusive == null || toExclusive == null
                 || !toExclusive.isAfter(fromInclusive) || limit < 1) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "specialist, participant, range and limit are required");
         }
         PageRequest page = PageRequest.of(0, limit);
         List<Appointment> result = after == null
-                ? appointments.findTimelineInitial(specialistAccountId, participantAccountId, fromInclusive, toExclusive, page)
+                ? appointments.findTimelineInitial(specialistAccountId, participantId, fromInclusive, toExclusive, page)
                 : after.recordedAt() == null
-                ? appointments.findTimelineAfterUnrecorded(specialistAccountId, participantAccountId, fromInclusive, toExclusive,
+                ? appointments.findTimelineAfterUnrecorded(specialistAccountId, participantId, fromInclusive, toExclusive,
                         after.effectiveFrom(), page)
-                : appointments.findTimelineAfterRecorded(specialistAccountId, participantAccountId, fromInclusive, toExclusive,
+                : appointments.findTimelineAfterRecorded(specialistAccountId, participantId, fromInclusive, toExclusive,
                         after.effectiveFrom(), after.recordedAt(), after.eventId(), page);
         return result.stream().map(AppointmentService::summary).toList();
     }
@@ -107,7 +107,7 @@ public class AppointmentService implements SpecialistAppointmentQueryPort {
         UUID specialist = specialist(subject); String idempotencyKey = key(key); String scopedOperation = operation + ":" + id;
         return replay(specialist, scopedOperation, idempotencyKey).orElseGet(() -> {
             Appointment appointment = owned(specialist, id); version(appointment, command == null ? null : command.version());
-            relationships.requireActive(specialist, appointment.participantAccountId);
+            relationships.requireActive(specialist, appointment.participantId);
             if (appointment.status == Appointment.Status.CANCELLED || appointment.status == Appointment.Status.COMPLETED) conflict("appointment cannot transition from its current status");
             if (cancelling) appointment.cancel(clock.instant()); else appointment.noShow(clock.instant());
             Appointment saved = saveConflict(appointment); remember(specialist, scopedOperation, idempotencyKey, id);
@@ -155,7 +155,7 @@ public class AppointmentService implements SpecialistAppointmentQueryPort {
         return new SpecialistAppointmentQueryPort.AppointmentSummary(appointment.id, appointment.startsAt, appointment.endsAt,
                 appointment.type.name(), appointment.status.name(), appointment.shortPurpose, appointment.createdAt, appointment.updatedAt);
     }
-    private static AppointmentView view(Appointment appointment, Instant now) { return new AppointmentView(appointment.id, appointment.participantAccountId, appointment.startsAt, appointment.endsAt, appointment.type, appointment.status, appointment.locationMode, appointment.location, appointment.shortPurpose, now != null && !appointment.startsAt.isAfter(now) && appointment.endsAt.isAfter(now), false, actions(appointment), appointment.version); }
+    private static AppointmentView view(Appointment appointment, Instant now) { return new AppointmentView(appointment.id, appointment.participantId, appointment.startsAt, appointment.endsAt, appointment.type, appointment.status, appointment.locationMode, appointment.location, appointment.shortPurpose, now != null && !appointment.startsAt.isAfter(now) && appointment.endsAt.isAfter(now), false, actions(appointment), appointment.version); }
     private static List<String> actions(Appointment appointment) { return appointment.status == Appointment.Status.SCHEDULED || appointment.status == Appointment.Status.CONFIRMED || appointment.status == Appointment.Status.IN_PROGRESS ? List.of("OPEN_APPOINTMENT", "OPEN_PARTICIPANT", "CANCEL", "MARK_NO_SHOW") : List.of("OPEN_APPOINTMENT", "OPEN_PARTICIPANT"); }
     private record Values(UUID participantId, Instant startsAt, Instant endsAt, Appointment.Type type, Appointment.LocationMode locationMode, String location, String shortPurpose) { }
     public record CreateCommand(UUID participantId, Instant startsAt, Instant endsAt, Appointment.Type type, Appointment.LocationMode locationMode, String location, String shortPurpose) { }

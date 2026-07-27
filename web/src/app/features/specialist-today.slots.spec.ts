@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { buildFreeSlots } from './specialist-today.slots';
-import type { AvailabilityWindow, TodayAppointment } from './specialist-today.types';
+import type { AppointmentView } from '../api/generated/src/models/AppointmentView';
+import type { AvailabilityWindowView } from '../api/generated/src/models/AvailabilityWindowView';
+import type { VisibleRange } from '../api/generated/src/models/VisibleRange';
 
-const range = { startsAt: '2026-07-24T08:00:00.000Z', endsAt: '2026-07-24T11:00:00.000Z' };
-const available: AvailabilityWindow[] = [{ startsAt: range.startsAt, endsAt: range.endsAt, type: 'STANDARD_AVAILABILITY' }];
-const appointment = (status: string, startsAt: string, endsAt: string): TodayAppointment => ({ appointmentId: status, participantLabel: status, startsAt, endsAt, type: 'TRAINING', status, availableActions: [] });
+const range: VisibleRange = { startsAt: new Date('2026-07-24T08:00:00.000Z'), endsAt: new Date('2026-07-24T11:00:00.000Z') };
+const available: AvailabilityWindowView[] = [{ startsAt: range.startsAt, endsAt: range.endsAt, type: 'STANDARD_AVAILABILITY' }];
+const appointment = (status: AppointmentView['status'], startsAt: string, endsAt: string): AppointmentView => ({ appointmentId: status, participantId: status, startsAt: new Date(startsAt), endsAt: new Date(endsAt), type: 'TRAINING', status, availableActions: [] });
 
 describe('buildFreeSlots', () => {
   it('uses only standard availability, aligns slots and subtracts occupied appointments', () => {
@@ -21,7 +23,7 @@ describe('buildFreeSlots', () => {
   });
 
   it('ignores unavailable windows and returns stable ordering across multiple windows', () => {
-    const slots = buildFreeSlots([{ startsAt: '2026-07-24T10:00:00Z', endsAt: '2026-07-24T11:00:00Z', type: 'STANDARD_AVAILABILITY' }, { startsAt: '2026-07-24T08:00:00Z', endsAt: '2026-07-24T09:00:00Z', type: 'STANDARD_AVAILABILITY' }, { startsAt: '2026-07-24T09:00:00Z', endsAt: '2026-07-24T10:00:00Z', type: 'UNAVAILABLE' }], [], range, new Date('2026-07-23T00:00:00Z'), 30);
+    const slots = buildFreeSlots([{ startsAt: new Date('2026-07-24T10:00:00Z'), endsAt: new Date('2026-07-24T11:00:00Z'), type: 'STANDARD_AVAILABILITY' }, { startsAt: new Date('2026-07-24T08:00:00Z'), endsAt: new Date('2026-07-24T09:00:00Z'), type: 'STANDARD_AVAILABILITY' }, { startsAt: new Date('2026-07-24T09:00:00Z'), endsAt: new Date('2026-07-24T10:00:00Z'), type: 'UNAVAILABLE' }], [], range, new Date('2026-07-23T00:00:00Z'), 30);
     expect(slots.map(slot => slot.startsAt)).toEqual(['2026-07-24T08:00:00.000Z', '2026-07-24T08:30:00.000Z', '2026-07-24T10:00:00.000Z', '2026-07-24T10:30:00.000Z']);
   });
 });

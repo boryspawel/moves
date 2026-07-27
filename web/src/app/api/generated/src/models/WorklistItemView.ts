@@ -38,7 +38,7 @@ export interface WorklistItemView {
    * @type {string}
    * @memberof WorklistItemView
    */
-  participantAccountId?: string;
+  participantId?: string;
   /**
    *
    * @type {string}
@@ -127,8 +127,7 @@ export function WorklistItemViewFromJSONTyped(
   }
   return {
     id: json['id'] == null ? undefined : json['id'],
-    participantAccountId:
-      json['participantAccountId'] == null ? undefined : json['participantAccountId'],
+    participantId: json['participantId'] == null ? undefined : json['participantId'],
     planRevisionId: json['planRevisionId'] == null ? undefined : json['planRevisionId'],
     category: json['category'] == null ? undefined : json['category'],
     priority: json['priority'] == null ? undefined : json['priority'],
@@ -158,7 +157,7 @@ export function WorklistItemViewToJSONTyped(
 
   return {
     id: value['id'],
-    participantAccountId: value['participantAccountId'],
+    participantId: value['participantId'],
     planRevisionId: value['planRevisionId'],
     category: value['category'],
     priority: value['priority'],

@@ -38,7 +38,7 @@ export interface EditorView {
    * @type {string}
    * @memberof EditorView
    */
-  participantAccountId?: string;
+  participantId?: string;
   /**
    *
    * @type {string}
@@ -100,8 +100,7 @@ export function EditorViewFromJSONTyped(json: any, ignoreDiscriminator: boolean)
   }
   return {
     planId: json['planId'] == null ? undefined : json['planId'],
-    participantAccountId:
-      json['participantAccountId'] == null ? undefined : json['participantAccountId'],
+    participantId: json['participantId'] == null ? undefined : json['participantId'],
     name: json['name'] == null ? undefined : json['name'],
     purpose: json['purpose'] == null ? undefined : json['purpose'],
     ownerAccountId: json['ownerAccountId'] == null ? undefined : json['ownerAccountId'],
@@ -126,7 +125,7 @@ export function EditorViewToJSONTyped(
 
   return {
     planId: value['planId'],
-    participantAccountId: value['participantAccountId'],
+    participantId: value['participantId'],
     name: value['name'],
     purpose: value['purpose'],
     ownerAccountId: value['ownerAccountId'],

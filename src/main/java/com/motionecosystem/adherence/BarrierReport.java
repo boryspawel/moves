@@ -11,7 +11,7 @@ import java.util.UUID;
 @Table(name = "barrier_report", schema = "adherence")
 class BarrierReport {
     @Id UUID id;
-    @Column(name = "participant_account_id") UUID participantAccountId;
+    @Column(name = "participant_id") UUID participantAccountId;
     @Column(name = "planned_session_id") UUID plannedSessionId;
     @Column(name = "session_attempt_id") UUID sessionAttemptId;
     @Column(name = "plan_revision_id") UUID planRevisionId;

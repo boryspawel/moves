@@ -21,7 +21,7 @@ import jakarta.persistence.Table;
 class SessionExecutionJpaEntity {
     @Id UUID id;
     @Column(name = "planned_session_id", nullable = false) UUID plannedSessionId;
-    @Column(name = "participant_account_id", nullable = false) UUID participantAccountId;
+    @Column(name = "participant_id", nullable = false) UUID participantAccountId;
     @Column(name = "declared_completion", nullable = false) boolean declaredCompletion;
     @Column(name = "idempotency_key", nullable = false, length = 120) String idempotencyKey;
     @Column(name = "recorded_at", nullable = false, updatable = false) Instant recordedAt;
@@ -297,7 +297,7 @@ class ExecutionQualificationJpaEntity {
 class Post24hResponseJpaEntity {
     @Id UUID id;
     @Column(name = "session_execution_id") UUID executionId;
-    @Column(name = "participant_account_id") UUID participantId;
+    @Column(name = "participant_id") UUID participantId;
     @Column(name = "pain_level") int painLevel;
     @Column(name = "difficulty_level") int difficultyLevel;
     String note;

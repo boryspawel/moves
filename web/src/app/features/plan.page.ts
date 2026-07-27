@@ -16,7 +16,7 @@ import { ApiFacade } from '../core/api.facade';
       <h1>Nowy plan</h1>
       <p class="muted">Plan zostanie sprawdzony przed aktywacją. Identyfikatory techniczne nie są wyświetlane.</p>
       <form class="form-grid" [formGroup]="form" (ngSubmit)="build()">
-        <mat-form-field><mat-label>Uczestnik</mat-label><mat-select formControlName="participant"><mat-option value="">Wybierz uczestnika</mat-option>@for (participant of participants(); track participant.participantAccountId) { <mat-option [value]="participant.participantAccountId">{{ participant.label }}</mat-option> }</mat-select></mat-form-field>
+        <mat-form-field><mat-label>Uczestnik</mat-label><mat-select formControlName="participant"><mat-option value="">Wybierz uczestnika</mat-option>@for (participant of participants(); track participant.participantId) { <mat-option [value]="participant.participantId">{{ participant.label }}</mat-option> }</mat-select></mat-form-field>
         <mat-form-field><mat-label>Cel</mat-label><input matInput formControlName="goal"></mat-form-field>
         <mat-form-field><mat-label>Ćwiczenie</mat-label><mat-select formControlName="exercise"><mat-option value="">Wybierz ćwiczenie</mat-option>@for (exercise of exercises(); track exercise.versionId) { <mat-option [value]="exercise.versionId">{{ exercise.canonicalName }}</mat-option> }</mat-select></mat-form-field>
         <mat-form-field><mat-label>Sesja</mat-label><input matInput formControlName="session"></mat-form-field>
@@ -37,7 +37,7 @@ import { ApiFacade } from '../core/api.facade';
 })
 export class PlanPage {
   private readonly facade = inject(ApiFacade);
-  protected readonly participants = signal<Array<{ participantAccountId?: string; label?: string }>>([]);
+  protected readonly participants = signal<Array<{ participantId?: string; label?: string }>>([]);
   protected readonly exercises = signal<Array<{ versionId?: string; canonicalName?: string }>>([]);
   protected readonly safety = signal<string[]>([]); protected readonly revisionId = signal('');
   protected readonly message = signal(''); protected readonly failed = signal(false); protected readonly busy = signal(false);
@@ -49,12 +49,12 @@ export class PlanPage {
     sets: new FormControl(3, { nonNullable: true, validators: Validators.min(1) }), repetitions: new FormControl(8, { nonNullable: true, validators: Validators.min(1) }), short: new FormControl(true, { nonNullable: true }), minimum: new FormControl(true, { nonNullable: true })
   });
   constructor() { void this.loadChoices(); }
-  private async loadChoices(): Promise<void> { try { const [participants, catalog] = await Promise.all([this.facade.specialistParticipants.activeParticipants(), this.facade.catalog.list({ page: 0, size: 100 })]); this.participants.set(participants); this.exercises.set(catalog.content ?? []); } catch { this.failed.set(true); this.message.set('Nie udało się pobrać uczestników lub katalogu ćwiczeń.'); } }
+  private async loadChoices(): Promise<void> { try { const [participants, catalog] = await Promise.all([this.facade.specialistParticipants.activeParticipants(), this.facade.catalog.list1({ page: 0, size: 100 })]); this.participants.set(participants); this.exercises.set(catalog.content ?? []); } catch { this.failed.set(true); this.message.set('Nie udało się pobrać uczestników lub katalogu ćwiczeń.'); } }
   protected async build(): Promise<void> {
     if (this.form.invalid) return; this.busy.set(true); this.failed.set(false); this.safety.set([]);
     try {
       const v = this.form.getRawValue(); const context = { role: 'TRAINER' as const };
-      let editor = await this.facade.planningV2.createDraft({ createDraftCommand: { participantAccountId: v.participant, name: `Plan: ${v.goal}`, purpose: v.goal, mode: 'SPECIALIST', phaseIntent: v.goal, validFrom: new Date(v.date), validTo: new Date(v.date), actingContext: context } });
+      let editor = await this.facade.planningV2.createDraft({ createDraftCommand: { participantId: v.participant, name: `Plan: ${v.goal}`, purpose: v.goal, mode: 'SPECIALIST', phaseIntent: v.goal, validFrom: new Date(v.date), validTo: new Date(v.date), actingContext: context } });
       const revision = editor.currentRevisionId!;
       editor = await this.facade.planningV2.addGoal({ revisionId: revision, addGoalCommand: { expectedVersion: this.version(editor), perspective: 'GENERAL_FITNESS', category: 'FUNCTIONAL', title: v.goal, priority: 1, status: 'ACTIVE' } });
       editor = await this.facade.planningV2.addCycle({ revisionId: revision, addCycleCommand: { expectedVersion: this.version(editor), sequenceNumber: 1, name: 'Cykl podstawowy', startDate: new Date(v.date), endDate: new Date(v.date), phaseIntent: v.goal, phaseGoal: v.goal } });

@@ -13,7 +13,7 @@ import java.util.UUID;
 @Table(name = "recovery_episode", schema = "adherence")
 class RecoveryEpisode {
     @Id UUID id;
-    @Column(name = "participant_account_id", nullable = false) UUID participantAccountId;
+    @Column(name = "participant_id", nullable = false) UUID participantAccountId;
     @Column(nullable = false) String status;
     @Column(name = "policy_version_code", nullable = false) String policyVersionCode;
     @Column(name = "opened_at", nullable = false) Instant openedAt;

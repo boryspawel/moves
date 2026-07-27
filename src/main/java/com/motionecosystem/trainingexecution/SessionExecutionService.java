@@ -13,6 +13,7 @@ import com.motionecosystem.audit.api.TransactionalOutbox;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
+import com.motionecosystem.participant.api.ParticipantClientPort;
 import com.motionecosystem.specialist.SpecialistRelationshipService;
 import com.motionecosystem.trainingexecution.SessionExecutionPersistence.AlertData;
 import com.motionecosystem.trainingexecution.SessionExecutionPersistence.CorrectionData;
@@ -34,6 +35,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class SessionExecutionService implements com.motionecosystem.trainingexecution.api.ExecutionHistoryQueryPort {
 
     private final CurrentAccountService accounts;
+    private final ParticipantClientPort participants;
     private final SpecialistRelationshipService relationships;
     private final PlannedSessionExecutionPort plannedSessions;
     private final SessionExecutionPersistence persistence;
@@ -49,9 +51,10 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
                                  DeclareExecutionCommand command) {
         CurrentAccount participant = accounts.requireActive(subject);
         requireProfile(participant, ProfileType.PARTICIPANT, "participant profile is required");
+        UUID participantId = participantIdFor(participant);
         String key = requiredText(idempotencyKey, 120, "Idempotency-Key");
 
-        var existing = persistence.findByParticipantAndIdempotencyKey(participant.id(), key);
+        var existing = persistence.findByParticipantAndIdempotencyKey(participantId, key);
         if (existing.isPresent()) {
             ExecutionView result = view(existing.get());
             if (!result.plannedSessionId().equals(plannedSessionId)) {
@@ -64,11 +67,11 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
         if (command == null || !command.declaredCompletion()) {
             throw badRequest("declaredCompletion must be explicitly true");
         }
-        var plannedSession = plannedSessions.lockOwnedSession(plannedSessionId, participant.id())
+        var plannedSession = plannedSessions.lockOwnedSession(plannedSessionId, participantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "assigned session not found"));
 
-        existing = persistence.findByParticipantAndIdempotencyKey(participant.id(), key);
+        existing = persistence.findByParticipantAndIdempotencyKey(participantId, key);
         if (existing.isPresent()) {
             ExecutionView result = view(existing.get());
             if (!result.plannedSessionId().equals(plannedSessionId)) {
@@ -97,8 +100,8 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
         UUID executionId = UUID.randomUUID();
         UUID eventId = outbox.append("SessionExecution", executionId, "SessionExecutionDeclared",
                 "{\"executionId\":\"" + executionId + "\",\"participantId\":\""
-                        + participant.id() + "\",\"plannedSessionId\":\"" + plannedSessionId + "\"}", now);
-        SessionExecution execution = new SessionExecution(executionId, plannedSessionId, participant.id(),
+                        + participantId + "\",\"plannedSessionId\":\"" + plannedSessionId + "\"}", now);
+        SessionExecution execution = new SessionExecution(executionId, plannedSessionId, participantId,
                 true, key, now);
         PainDifficultyReport report = new PainDifficultyReport(UUID.randomUUID(), execution.id(),
                 command.painLevel(), command.difficultyLevel(), command.techniqueConfidenceLevel(), optionalText(command.note(), 500), now);
@@ -132,9 +135,9 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
                 new ReportData(report.id(), report.sessionExecutionId(), report.painLevel(),
                         report.difficultyLevel(), report.techniqueConfidenceLevel(), report.note(), command.sessionRpe(),
                         mode(command.observationMode()), report.reportedAt()), alerts);
-        attempts.completeAfterFinalDeclaration(subject, participant.id(), plannedSessionId);
-        recovery.executionCompleted(participant.id(), plannedSessionId, execution.id());
-        recovery.detect(participant.id());
+        attempts.completeAfterFinalDeclaration(subject, participantId, plannedSessionId);
+        recovery.executionCompleted(participantId, plannedSessionId, execution.id());
+        recovery.detect(participantId);
         plannedSessions.markCompleted(plannedSessionId);
         audit.record(subject, "SESSION_EXECUTION_DECLARED", "SessionExecution", execution.id());
         return execution(execution.id());
@@ -146,7 +149,7 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
         CurrentAccount actor = accounts.requireActive(subject);
         ExecutionOwner owner = owner(executionId);
         if (actor.profileType() == ProfileType.PARTICIPANT) {
-            if (!actor.id().equals(owner.participantAccountId())) {
+            if (!participantIdFor(actor).equals(owner.participantAccountId())) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "execution belongs to another participant");
             }
         } else if (actor.profileType() == ProfileType.SPECIALIST) {
@@ -205,11 +208,17 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
     }
 
     @Transactional(readOnly = true)
-    public List<ExecutionView> specialistExecutions(String subject, UUID participantAccountId) {
+    public List<ExecutionView> specialistExecutions(String subject, UUID participantId) {
         CurrentAccount specialist = accounts.requireActive(subject);
         requireProfile(specialist, ProfileType.SPECIALIST, "specialist profile is required");
-        relationships.requireActive(specialist.id(), participantAccountId);
-        return persistence.findByParticipant(participantAccountId).stream().map(this::view).toList();
+        relationships.requireActive(specialist.id(), participantId);
+        return persistence.findByParticipant(participantId).stream().map(this::view).toList();
+    }
+
+    private UUID participantIdFor(CurrentAccount account) {
+        return participants.findParticipantIdByPrincipalAccountId(account.id())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "an active participant access link is required"));
     }
 
     private static void validateResults(List<PrescriptionReference> prescribed, List<ResultCommand> results) {
@@ -386,7 +395,7 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
             String observationMode) {
     }
 
-    public record ExecutionView(UUID id, UUID plannedSessionId, UUID participantAccountId,
+    public record ExecutionView(UUID id, UUID plannedSessionId, UUID participantId,
                                  boolean declaredCompletion, Instant recordedAt, int painLevel,
                                  int difficultyLevel, Integer techniqueConfidenceLevel, String note, Integer sessionRpe,
                                 String observationMode, List<ResultView> results,

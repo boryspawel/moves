@@ -12,7 +12,7 @@ interface AppointmentRepository extends JpaRepository<Appointment, UUID> {
     @Query("""
             select a from Appointment a
             where a.specialistAccountId = :specialist
-              and a.participantAccountId = :participant
+              and a.participantId = :participant
               and a.startsAt < :to and a.endsAt > :from
             order by a.startsAt desc, a.createdAt desc, a.id asc
             """)
@@ -21,7 +21,7 @@ interface AppointmentRepository extends JpaRepository<Appointment, UUID> {
     @Query("""
             select a from Appointment a
             where a.specialistAccountId = :specialist
-              and a.participantAccountId = :participant
+              and a.participantId = :participant
               and a.startsAt < :to and a.endsAt > :from
               and (a.startsAt < :effective
                 or (a.startsAt = :effective and (a.createdAt < :recorded
@@ -34,7 +34,7 @@ interface AppointmentRepository extends JpaRepository<Appointment, UUID> {
     @Query("""
             select a from Appointment a
             where a.specialistAccountId = :specialist
-              and a.participantAccountId = :participant
+              and a.participantId = :participant
               and a.startsAt < :to and a.endsAt > :from
               and a.startsAt < :effective
             order by a.startsAt desc, a.createdAt desc, a.id asc

@@ -21,6 +21,7 @@ export * from './ReminderPreferenceControllerApi';
 export * from './SafetyV2ControllerApi';
 export * from './SessionExecutionAttemptControllerApi';
 export * from './SessionExecutionControllerApi';
+export * from './SpecialistClientControllerApi';
 export * from './SpecialistParticipantReadControllerApi';
 export * from './SpecialistRelationshipControllerApi';
 export * from './SpecialistTodayControllerApi';

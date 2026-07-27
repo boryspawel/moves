@@ -2,6 +2,7 @@ package com.motionecosystem.specialist;
 
 import java.util.UUID;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.IntStream;
 
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
@@ -17,9 +18,9 @@ public class SpecialistRelationshipService {
     private final ParticipantSpecialistRelationshipRepository relationships;
     private final CurrentAccountService accounts;
 
-    public void requireActive(UUID specialistAccountId, UUID participantAccountId) {
-        if (!relationships.existsBySpecialistAccountIdAndParticipantAccountIdAndStatus(
-                specialistAccountId, participantAccountId, ParticipantSpecialistRelationship.Status.ACTIVE)) {
+    public void requireActive(UUID specialistAccountId, UUID participantId) {
+        if (!relationships.existsBySpecialistAccountIdAndParticipantIdAndStatus(
+                specialistAccountId, participantId, ParticipantSpecialistRelationship.Status.ACTIVE)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "active participant-specialist relationship is required");
         }
@@ -28,7 +29,8 @@ public class SpecialistRelationshipService {
     public java.util.Set<UUID> activeParticipantIds(UUID specialistAccountId) {
         return relationships.findBySpecialistAccountIdAndStatus(specialistAccountId,
                         ParticipantSpecialistRelationship.Status.ACTIVE).stream()
-                .map(ParticipantSpecialistRelationship::participantAccountId)
+                .map(SpecialistRelationshipService::participantId)
+                .filter(Objects::nonNull)
                 .collect(java.util.stream.Collectors.toUnmodifiableSet());
     }
 
@@ -37,7 +39,8 @@ public class SpecialistRelationshipService {
         UUID specialist = accounts.requireActive(subject).id();
         List<UUID> participants = relationships.findBySpecialistAccountIdAndStatus(specialist, ParticipantSpecialistRelationship.Status.ACTIVE)
                 .stream()
-                .map(ParticipantSpecialistRelationship::participantAccountId)
+                .map(SpecialistRelationshipService::participantId)
+                .filter(Objects::nonNull)
                 .sorted()
                 .toList();
         return IntStream.range(0, participants.size())
@@ -45,5 +48,9 @@ public class SpecialistRelationshipService {
                 .toList();
     }
 
-    public record ActiveParticipantView(UUID participantAccountId, String label) { }
+    private static UUID participantId(ParticipantSpecialistRelationship relationship) {
+        return relationship.participantId();
+    }
+
+    public record ActiveParticipantView(UUID participantId, String label) { }
 }

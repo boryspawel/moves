@@ -32,7 +32,7 @@ export interface CreateDraftCommand {
    * @type {string}
    * @memberof CreateDraftCommand
    */
-  participantAccountId?: string;
+  participantId?: string;
   /**
    *
    * @type {string}
@@ -107,8 +107,7 @@ export function CreateDraftCommandFromJSONTyped(
     return json;
   }
   return {
-    participantAccountId:
-      json['participantAccountId'] == null ? undefined : json['participantAccountId'],
+    participantId: json['participantId'] == null ? undefined : json['participantId'],
     name: json['name'] == null ? undefined : json['name'],
     purpose: json['purpose'] == null ? undefined : json['purpose'],
     mode: json['mode'] == null ? undefined : json['mode'],
@@ -133,7 +132,7 @@ export function CreateDraftCommandToJSONTyped(
   }
 
   return {
-    participantAccountId: value['participantAccountId'],
+    participantId: value['participantId'],
     name: value['name'],
     purpose: value['purpose'],
     mode: value['mode'],

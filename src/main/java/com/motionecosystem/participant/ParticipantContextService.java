@@ -32,9 +32,15 @@ public class ParticipantContextService implements ParticipantContextQueryPort {
         return profiles.findByAccountId(participantAccountId)
                 .filter(profile -> profile.timeZoneId != null)
                 .map(profile -> new ParticipantContext(profile.accountId, ZoneId.of(profile.timeZoneId)))
-                .or(() -> records.findById(participantAccountId)
-                        .filter(record -> record.timeZoneId() != null)
-                        .map(record -> new ParticipantContext(record.id(), ZoneId.of(record.timeZoneId()))));
+                ;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<ParticipantRecordContext> findContextByParticipantId(UUID participantId) {
+        return records.findById(participantId)
+                .map(record -> new ParticipantRecordContext(record.id(), record.displayName(),
+                        record.timeZoneId() == null ? null : ZoneId.of(record.timeZoneId())));
     }
     private static ZoneId requiredTimeZone(String value) {
         String id = value == null ? "" : value.trim();

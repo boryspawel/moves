@@ -21,10 +21,10 @@ import { mapValues } from '../runtime';
 export interface View {
   /**
    *
-   * @type {ViewTypeEnum}
+   * @type {string}
    * @memberof View
    */
-  type?: ViewTypeEnum;
+  type?: string;
   /**
    *
    * @type {string}
@@ -38,15 +38,6 @@ export interface View {
    */
   acceptedAt?: Date;
 }
-
-/**
- * @export
- */
-export const ViewTypeEnum = {
-  TermsOfService: 'TERMS_OF_SERVICE',
-  PrivacyNotice: 'PRIVACY_NOTICE',
-} as const;
-export type ViewTypeEnum = (typeof ViewTypeEnum)[keyof typeof ViewTypeEnum];
 
 /**
  * Check if a given object implements the View interface.

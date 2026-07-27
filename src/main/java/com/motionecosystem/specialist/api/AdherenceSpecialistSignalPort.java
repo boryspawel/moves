@@ -8,6 +8,6 @@ public interface AdherenceSpecialistSignalPort {
     void signalRecoveryContact(UUID participantAccountId, UUID recoveryEpisodeId);
     void signalWorklist(WorklistSignal signal);
 
-    record WorklistSignal(UUID participantAccountId, UUID planRevisionId, String category,
+    record WorklistSignal(UUID participantId, UUID planRevisionId, String category,
                           String priority, String reasonCode, String policyVersion) { }
 }

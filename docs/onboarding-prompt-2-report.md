@@ -1,5 +1,7 @@
 # Prompt 2 — focused onboarding UI
 
+> **Archiwum historyczne.** Raport z zakończonego etapu; nie określa bieżącego statusu projektu.
+
 ## Participant workspace (frontend prompt 2)
 
 - Added lazy, specialist-guarded `/specialist/clients/:participantId` workspace using only the generated bounded workspace and cursor-timeline endpoints through `ApiFacade`.

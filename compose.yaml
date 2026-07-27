@@ -45,6 +45,9 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
+      SPRING_PROFILES_ACTIVE: local
+      MOVES_TEST_DEFAULT_CONSENT_ENABLED: "true"
+      MOVES_LOCAL_TEST_VERIFIED_SCOPE_ENABLED: "true"
       DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-motion}
       DB_USER: ${POSTGRES_USER:-motion}
       DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}

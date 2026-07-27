@@ -56,12 +56,12 @@ class SessionExecutionController {
         return executions.correct(jwt.getSubject(), executionId, idempotencyKey, command);
     }
 
-    @GetMapping("/specialist/participants/{participantAccountId}/executions")
+    @GetMapping("/specialist/participants/{participantId}/executions")
     @PreAuthorize("hasRole('SPECIALIST')")
     @Operation(summary = "List executions and alerts for a participant with an active relationship")
     List<ExecutionView> specialistExecutions(@AuthenticationPrincipal Jwt jwt,
-                                             @PathVariable UUID participantAccountId) {
-        return executions.specialistExecutions(jwt.getSubject(), participantAccountId);
+                                             @PathVariable UUID participantId) {
+        return executions.specialistExecutions(jwt.getSubject(), participantId);
     }
 
     @PostMapping("/session-executions/{executionId}/post-24h-responses")

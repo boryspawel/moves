@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { clampToVisibleRange, heightPercent, layoutOverlappingAppointments, minutesSinceRangeStart, positionPercent } from './specialist-today.geometry';
-import type { TodayAppointment } from './specialist-today.types';
+import type { AppointmentView } from '../api/generated/src/models/AppointmentView';
 
 const range = { start: new Date('2026-07-23T08:00:00Z'), end: new Date('2026-07-23T18:00:00Z') };
-const appointment = (id: string, startsAt: string, endsAt: string): TodayAppointment => ({ appointmentId: id, participantLabel: id, startsAt, endsAt, type: 'TRAINING', status: 'SCHEDULED', availableActions: [] });
+const appointment = (id: string, startsAt: string, endsAt: string): AppointmentView => ({ appointmentId: id, participantId: id, startsAt: new Date(startsAt), endsAt: new Date(endsAt), type: 'TRAINING', status: 'SCHEDULED', availableActions: [] });
 
 describe('specialist today geometry', () => {
   it('calculates and clamps timeline geometry', () => {

@@ -6,7 +6,6 @@ import com.motionecosystem.exerciseimport.api.FindExerciseMatch;
 import com.motionecosystem.exerciseimport.api.NormalizeImportRecord;
 import com.motionecosystem.exerciseimport.api.ValidateImportRecord;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -30,7 +29,6 @@ import java.util.stream.StreamSupport;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class ImportRecordUseCases implements NormalizeImportRecord, ValidateImportRecord,
         FindExerciseMatch, CreateExerciseDraft {
 
@@ -246,7 +244,6 @@ public class ImportRecordUseCases implements NormalizeImportRecord, ValidateImpo
         } catch (ResponseStatusException status) {
             throw status;
         } catch (Exception invalid) {
-            log.warn("Creating draft for import record {} failed", recordId, invalid);
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "normalized record cannot create a draft", invalid);
         }
     }

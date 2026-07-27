@@ -10,6 +10,7 @@ import com.motionecosystem.exercisecatalog.api.ExerciseCatalogQueryPort.SideRule
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
+import com.motionecosystem.participant.api.ParticipantClientPort;
 import com.motionecosystem.specialist.SpecialistRelationshipService;
 import com.motionecosystem.trainingexecution.SessionExecutionPersistence.AlertData;
 import com.motionecosystem.trainingexecution.SessionExecutionPersistence.CorrectionData;
@@ -41,6 +42,7 @@ public class ExecutionProjectionService {
     private final SessionExecutionPersistence persistence;
     private final ExerciseCatalogQueryPort catalog;
     private final CurrentAccountService accounts;
+    private final ParticipantClientPort participants;
     private final SpecialistRelationshipService relationships;
     private final TransactionalOutbox outbox;
     private final AuditRecorder audit;
@@ -141,7 +143,7 @@ public class ExecutionProjectionService {
         if (!participant.hasProfile(ProfileType.PARTICIPANT)) throw forbidden("participant profile is required");
         var owner = persistence.findOwner(executionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "execution not found"));
-        if (!participant.id().equals(owner.participantAccountId())) throw forbidden("execution belongs to another participant");
+        if (!participantIdFor(participant).equals(owner.participantAccountId())) throw forbidden("execution belongs to another participant");
         String key = required(idempotencyKey, 120, "Idempotency-Key");
         var existing = persistence.findPost24h(executionId, key);
         if (existing.isPresent()) return existing.get();
@@ -151,7 +153,7 @@ public class ExecutionProjectionService {
         }
         Instant now = clock.instant();
         Post24hData saved = persistence.savePost24h(new Post24hData(
-                UUID.randomUUID(), executionId, participant.id(), command.painLevel(),
+                UUID.randomUUID(), executionId, participantIdFor(participant), command.painLevel(),
                 command.difficultyLevel(), optional(command.note(), 500), mode(command.observationMode()),
                 key, now));
         outbox.append("SessionExecution", executionId, "Post24hResponseRecorded",
@@ -169,7 +171,7 @@ public class ExecutionProjectionService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "execution not found"));
         boolean participantContext = actor.hasProfile(ProfileType.PARTICIPANT);
         if (participantContext) {
-            if (!actor.id().equals(owner.participantAccountId())) throw forbidden("execution belongs to another participant");
+            if (!participantIdFor(actor).equals(owner.participantAccountId())) throw forbidden("execution belongs to another participant");
         } else if (actor.hasProfile(ProfileType.SPECIALIST)) {
             relationships.requireActive(actor.id(), owner.participantAccountId());
         } else throw forbidden("profile cannot manage execution alerts");
@@ -193,6 +195,11 @@ public class ExecutionProjectionService {
         if (!result.sessionExecutionId().equals(executionId)) throw forbidden("alert belongs to another execution");
         audit.record(subject, "EXECUTION_ALERT_" + command.action(), "ExecutionAlert", alertId);
         return result;
+    }
+
+    private UUID participantIdFor(CurrentAccount account) {
+        return participants.findParticipantIdByPrincipalAccountId(account.id())
+                .orElseThrow(() -> forbidden("an active participant access link is required"));
     }
 
     private static Dose dose(ResultData result, String channel) {

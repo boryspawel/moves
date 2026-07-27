@@ -5,7 +5,7 @@ import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.participant.api.ParticipantContextQueryPort;
-import com.motionecosystem.participant.api.ParticipantSummaryQueryPort;
+import com.motionecosystem.participant.api.ParticipantClientPort;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.Capability;
@@ -42,7 +42,7 @@ public class SpecialistParticipantReadService {
     private final CurrentAccountService accounts;
     private final SpecialistProfileService profiles;
     private final SpecialistAuthorizationPort authorization;
-    private final ParticipantSummaryQueryPort participants;
+    private final ParticipantClientPort participantClients;
     private final ParticipantContextQueryPort participantContexts;
     private final SpecialistAppointmentQueryPort appointments;
     private final PlanRevisionQueryPort revisions;
@@ -135,17 +135,16 @@ public class SpecialistParticipantReadService {
     }
 
     private ParticipantHeader participant(UUID participantId) {
-        ParticipantSummaryQueryPort.ParticipantSummary summary = participants.findSummary(participantId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "participant profile not found"));
+        ParticipantClientPort.ClientRecord summary = participantClients.find(participantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "participant record not found"));
         String timeZone = participantContexts.findContext(participantId).map(value -> value.timeZone().getId()).orElse(null);
-        return new ParticipantHeader(summary.participantAccountId(), summary.displayName(), null, null, timeZone,
+        return new ParticipantHeader(summary.id(), summary.displayName(), null, null, timeZone,
                 List.of("OPEN_WORKSPACE", "OPEN_TIMELINE"));
     }
 
     private RelationshipView relationship(UUID specialistId, UUID participantId) {
         ParticipantSpecialistRelationship relationship = relationships
                 .findBySpecialistAccountIdAndParticipantId(specialistId, participantId)
-                .or(() -> relationships.findBySpecialistAccountIdAndParticipantAccountId(specialistId, participantId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "active participant-specialist relationship is required"));
         return new RelationshipView(relationship.status().name(), relationship.activatedAt());
     }

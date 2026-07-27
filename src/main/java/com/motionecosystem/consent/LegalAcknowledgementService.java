@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import com.motionecosystem.consent.api.LegalAcknowledgementPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
-public class LegalAcknowledgementService {
+public class LegalAcknowledgementService implements LegalAcknowledgementPort {
 
     private final LegalAcknowledgementRepository acknowledgements;
     private final LegalDocumentVersions versions;
@@ -46,10 +47,7 @@ public class LegalAcknowledgementService {
     public List<View> current(UUID accountId) {
         return acknowledgements.findByAccountIdOrderByAcceptedAt(accountId).stream()
                 .filter(item -> item.documentVersion.equals(versions.version(item.type)))
-                .map(item -> new View(item.type, item.documentVersion, item.acceptedAt))
+                .map(item -> new View(item.type.name(), item.documentVersion, item.acceptedAt))
                 .toList();
-    }
-
-    public record View(AcknowledgementType type, String documentVersion, Instant acceptedAt) {
     }
 }

@@ -25,7 +25,7 @@ import jakarta.persistence.Version;
 @Table(name = "training_goal", schema = "training_planning")
 class TrainingGoalJpaEntity {
     @Id UUID id;
-    @Column(name = "participant_account_id", nullable = false) UUID participantAccountId;
+    @Column(name = "participant_id", nullable = false) UUID participantAccountId;
     @Column(nullable = false) String name;
     @Column(name = "created_by_account_id", nullable = false) UUID createdByAccountId;
     @Column(name = "created_at", nullable = false, updatable = false) Instant createdAt;
@@ -71,7 +71,7 @@ class TrainingGoalJpaEntity {
 class TrainingPlanJpaEntity {
     @Id UUID id;
     @Column(name = "goal_id") UUID goalId;
-    @Column(name = "participant_account_id", nullable = false) UUID participantAccountId;
+    @Column(name = "participant_id", nullable = false) UUID participantAccountId;
     @Column(name = "created_by_account_id", nullable = false) UUID createdByAccountId;
     @Column(nullable = false) String name;
     @Column(name = "plan_mode", nullable = false) String mode;
@@ -189,7 +189,7 @@ class MicrocycleJpaEntity {
 class PlannedSessionJpaEntity {
     @Id UUID id;
     @Column(name = "microcycle_id", nullable = false) UUID microcycleId;
-    @Column(name = "participant_account_id", nullable = false) UUID participantAccountId;
+    @Column(name = "participant_id", nullable = false) UUID participantAccountId;
     @Column(nullable = false) String title;
     @Enumerated(EnumType.STRING) @Column(name = "session_kind", nullable = false) PlannedSession.SessionKind kind;
     @Enumerated(EnumType.STRING) @Column(nullable = false) PlannedSession.SessionStatus status;

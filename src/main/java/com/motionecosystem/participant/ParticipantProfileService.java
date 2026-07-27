@@ -40,8 +40,7 @@ public class ParticipantProfileService implements ParticipantSummaryQueryPort {
     public Optional<ParticipantSummary> findSummary(UUID participantAccountId) {
         return profiles.findByAccountId(participantAccountId)
                 .map(profile -> new ParticipantSummary(profile.accountId, profile.displayName))
-                .or(() -> records.findById(participantAccountId)
-                        .map(record -> new ParticipantSummary(record.id(), record.displayName())));
+                ;
     }
 
     /** Names are composed only after the caller has enforced its relationship policy. */
