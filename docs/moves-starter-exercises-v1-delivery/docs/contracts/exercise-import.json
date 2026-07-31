@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "moves.exercise-import/1.0",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "sourceRecordKey",
+    "locale",
+    "name",
+    "instructions",
+    "purposes",
+    "movementPatterns",
+    "stimulusType",
+    "fatigueProfile",
+    "technicalLevel",
+    "environment",
+    "equipment",
+    "position",
+    "loadNature",
+    "doseCapabilities",
+    "loadCharacteristics",
+    "contributions",
+    "license"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "moves.exercise-import/1.0"
+    },
+    "sourceRecordKey": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240
+    },
+    "locale": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 35
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "aliases": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160
+      },
+      "uniqueItems": true
+    },
+    "instructions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 10000
+      }
+    },
+    "purposes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "TRAINING",
+          "THERAPEUTIC_EXERCISE",
+          "ASSESSMENT",
+          "WARM_UP",
+          "RECOVERY"
+        ]
+      }
+    },
+    "movementPatterns": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "SQUAT",
+          "HINGE",
+          "PUSH",
+          "PULL",
+          "LUNGE",
+          "CARRY",
+          "ROTATION",
+          "LOCOMOTION",
+          "BREATHING",
+          "MOBILITY",
+          "OTHER"
+        ]
+      }
+    },
+    "stimulusType": {
+      "enum": [
+        "STRENGTH",
+        "ENDURANCE",
+        "POWER",
+        "MOBILITY",
+        "BALANCE",
+        "MOTOR_CONTROL",
+        "RECOVERY"
+      ]
+    },
+    "fatigueProfile": {
+      "enum": [
+        "LOW",
+        "MODERATE",
+        "HIGH"
+      ]
+    },
+    "technicalLevel": {
+      "enum": [
+        "FOUNDATIONAL",
+        "INTERMEDIATE",
+        "ADVANCED"
+      ]
+    },
+    "environment": {
+      "enum": [
+        "HOME",
+        "GYM",
+        "OUTDOOR",
+        "CLINIC",
+        "ANY"
+      ]
+    },
+    "equipment": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 80
+      },
+      "uniqueItems": true
+    },
+    "position": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "unilateral": {
+      "type": "boolean"
+    },
+    "loadNature": {
+      "enum": [
+        "BODYWEIGHT",
+        "EXTERNAL",
+        "ASSISTED",
+        "MIXED"
+      ]
+    },
+    "doseCapabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "unit"
+        ],
+        "properties": {
+          "unit": {
+            "type": "string"
+          },
+          "minimum": {
+            "type": "number",
+            "minimum": 0
+          },
+          "maximum": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "loadCharacteristics": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "movementPlane",
+          "contractionType",
+          "rangeOfMotion",
+          "characteristicType"
+        ]
+      }
+    },
+    "contributions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "anatomyCode",
+          "role",
+          "loadChannel",
+          "band",
+          "coefficientLow",
+          "coefficientHigh",
+          "sideRule"
+        ]
+      }
+    },
+    "license": {
+      "type": "object",
+      "required": [
+        "redistributionAllowed"
+      ],
+      "properties": {
+        "redistributionAllowed": {
+          "const": true
+        }
+      }
+    }
+  }
+}

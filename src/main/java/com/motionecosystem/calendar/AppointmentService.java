@@ -1,10 +1,12 @@
 package com.motionecosystem.calendar;
 
 import com.motionecosystem.calendar.api.SpecialistAppointmentQueryPort;
+import com.motionecosystem.availability.RecurringAvailabilityService;
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.specialist.SpecialistRelationshipService;
+import com.motionecosystem.specialist.SpecialistProfileService;
 import java.time.*;
 import java.util.*;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,8 @@ public class AppointmentService implements SpecialistAppointmentQueryPort {
     private final AppointmentIdempotencyRepository idempotency;
     private final CurrentAccountService accounts;
     private final SpecialistRelationshipService relationships;
+    private final RecurringAvailabilityService availability;
+    private final SpecialistProfileService profiles;
     private final AuditRecorder audit;
     private final Clock clock;
 
@@ -31,6 +35,7 @@ public class AppointmentService implements SpecialistAppointmentQueryPort {
         UUID specialist = specialist(subject); String idempotencyKey = key(key);
         return replay(specialist, "CREATE", idempotencyKey).orElseGet(() -> {
             Values values = values(command); relationships.requireActive(specialist, values.participantId());
+            requireWithinAvailability(specialist, values.startsAt(), values.endsAt());
             conflictIfOverlapping(specialist, values.startsAt(), values.endsAt(), UUID.randomUUID());
             Appointment saved = appointments.saveAndFlush(new Appointment(specialist, values.participantId(), values.startsAt(), values.endsAt(),
                     values.type(), values.locationMode(), values.location(), values.shortPurpose(), specialist, clock.instant()));
@@ -48,6 +53,7 @@ public class AppointmentService implements SpecialistAppointmentQueryPort {
             Values values = values(command); if (!appointment.participantId.equals(values.participantId())) bad("participantId cannot be changed");
             relationships.requireActive(specialist, appointment.participantId);
             if (appointment.status == Appointment.Status.CANCELLED) conflict("cancelled appointment cannot be changed");
+            requireWithinAvailability(specialist, values.startsAt(), values.endsAt());
             conflictIfOverlapping(specialist, values.startsAt(), values.endsAt(), appointment.id);
             appointment.update(values.startsAt(), values.endsAt(), values.type(), values.locationMode(), values.location(), values.shortPurpose(), clock.instant());
             Appointment saved = saveConflict(appointment); remember(specialist, "UPDATE:" + id, idempotencyKey, id);
@@ -65,6 +71,14 @@ public class AppointmentService implements SpecialistAppointmentQueryPort {
         return appointments.findIntersecting(specialist, start, end).stream()
                 .filter(appointment -> activeParticipants.contains(appointment.participantId))
                 .map(appointment -> view(appointment, now)).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TimeRange> blockingInRange(UUID specialist, Instant start, Instant end) {
+        return appointments.findIntersecting(specialist, start, end).stream()
+                .filter(appointment -> appointment.status != Appointment.Status.CANCELLED)
+                .map(appointment -> new TimeRange(appointment.startsAt, appointment.endsAt))
+                .toList();
     }
 
     @Override
@@ -129,6 +143,16 @@ public class AppointmentService implements SpecialistAppointmentQueryPort {
     private void conflictIfOverlapping(UUID specialist, Instant start, Instant end, UUID excluded) {
         if (appointments.hasActiveOverlap(specialist, start, end, excluded)) conflict("appointment overlaps an existing appointment");
     }
+    private void requireWithinAvailability(UUID specialist, Instant start, Instant end) {
+        ZoneId zone = profiles.find(specialist)
+                .map(SpecialistProfileService.ProfileView::timeZoneId)
+                .map(AppointmentService::zone)
+                .orElseThrow(() -> conflict("specialist profile is required"));
+        LocalDate date = start.atZone(zone).toLocalDate();
+        boolean contained = availability.windows(specialist, date).stream()
+                .anyMatch(window -> !start.isBefore(window.startsAt()) && !end.isAfter(window.endsAt()));
+        if (!contained) throw conflict("appointment must be within specialist availability");
+    }
     private Appointment owned(UUID specialist, UUID id) {
         Appointment appointment = appointments.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "appointment not found"));
         if (!appointment.specialistAccountId.equals(specialist)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "appointment not found");
@@ -148,6 +172,7 @@ public class AppointmentService implements SpecialistAppointmentQueryPort {
     }
     private static String key(String value) { if (value == null || value.isBlank() || value.trim().length() > 120) bad("Idempotency-Key is required"); return value.trim(); }
     private static String optional(String value, int max, String field) { if (value == null || value.isBlank()) return null; if (value.trim().length() > max) bad(field + " is too long"); return value.trim(); }
+    private static ZoneId zone(String value) { try { return ZoneId.of(value); } catch (RuntimeException invalid) { throw conflict("specialist time zone is invalid"); } }
     private static void bad(String detail) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST, detail); }
     private static ResponseStatusException conflict(String detail) { return new ResponseStatusException(HttpStatus.CONFLICT, detail); }
     private static AppointmentView view(Appointment appointment) { return view(appointment, null); }
@@ -161,5 +186,6 @@ public class AppointmentService implements SpecialistAppointmentQueryPort {
     public record CreateCommand(UUID participantId, Instant startsAt, Instant endsAt, Appointment.Type type, Appointment.LocationMode locationMode, String location, String shortPurpose) { }
     public record UpdateCommand(UUID participantId, Instant startsAt, Instant endsAt, Appointment.Type type, Appointment.LocationMode locationMode, String location, String shortPurpose, Long version) { }
     public record VersionCommand(Long version) { }
+    public record TimeRange(Instant startsAt, Instant endsAt) { }
     public record AppointmentView(UUID appointmentId, UUID participantId, Instant startsAt, Instant endsAt, Appointment.Type type, Appointment.Status status, Appointment.LocationMode locationMode, String location, String shortPurpose, boolean isCurrent, boolean isNext, List<String> availableActions, long version) { }
 }
