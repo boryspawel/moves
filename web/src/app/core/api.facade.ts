@@ -19,7 +19,11 @@ import {
   SpecialistParticipantReadControllerApi,
   AppointmentControllerApi,
   SpecialistTodayControllerApi,
-  SpecialistClientControllerApi
+  SpecialistAvailableSlotsControllerApi,
+  SpecialistClientControllerApi,
+  ExerciseSetControllerApi,
+  ExerciseCatalogSearchControllerApi,
+  AnatomyReferenceControllerApi
 } from '../api/generated/src';
 import { Middleware } from '../api/generated/src/runtime';
 import { AuthService } from './auth.service';
@@ -58,7 +62,11 @@ export class ApiFacade {
   readonly participantWorkspace: SpecialistParticipantReadControllerApi;
   readonly appointments: AppointmentControllerApi;
   readonly specialistToday: SpecialistTodayControllerApi;
+  readonly specialistAvailableSlots: SpecialistAvailableSlotsControllerApi;
   readonly specialistClients: SpecialistClientControllerApi;
+  readonly exerciseSets: ExerciseSetControllerApi;
+  readonly catalogSearch: ExerciseCatalogSearchControllerApi;
+  readonly anatomyReference: AnatomyReferenceControllerApi;
 
   constructor() {
     const auth = inject(AuthService);
@@ -84,6 +92,10 @@ export class ApiFacade {
     this.participantWorkspace = new SpecialistParticipantReadControllerApi(configuration);
     this.appointments = new AppointmentControllerApi(configuration);
     this.specialistToday = new SpecialistTodayControllerApi(configuration);
+    this.specialistAvailableSlots = new SpecialistAvailableSlotsControllerApi(configuration);
     this.specialistClients = new SpecialistClientControllerApi(configuration);
+    this.exerciseSets = new ExerciseSetControllerApi(configuration);
+    this.catalogSearch = new ExerciseCatalogSearchControllerApi(configuration);
+    this.anatomyReference = new AnatomyReferenceControllerApi(configuration);
   }
 }

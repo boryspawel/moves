@@ -24,7 +24,11 @@ export const routes: Routes = [
     canActivate: [authGuard, completedOnboardingGuard, roleGuard('CONTENT_ADMIN')],
     loadComponent: () => import('./features/exercise-review-detail.page').then(m => m.ExerciseReviewDetailPage)
   },
-  { path: 'plan', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/plan.page').then(m => m.PlanPage) },
+  { path: 'plan', pathMatch: 'full', redirectTo: 'exercise-sets' },
+  { path: 'exercise-sets', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/exercise-sets/exercise-set-list.page').then(m => m.ExerciseSetListPage) },
+  { path: 'exercise-sets/new', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/exercise-sets/exercise-set-editor.page').then(m => m.ExerciseSetEditorPage) },
+  { path: 'exercise-sets/:exerciseSetId/versions/:versionId/edit', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/exercise-sets/exercise-set-editor.page').then(m => m.ExerciseSetEditorPage) },
+  { path: 'exercise-sets/:exerciseSetId/versions/:versionId', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/exercise-sets/exercise-set-editor.page').then(m => m.ExerciseSetEditorPage) },
   { path: 'specialist/today', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/specialist-today.page').then(m => m.SpecialistTodayPage) },
   { path: 'specialist/clients', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/specialist-clients.page').then(m => m.SpecialistClientsPage) },
   { path: 'specialist/clients/:participantId', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/specialist-participant-workspace.page').then(m => m.SpecialistParticipantWorkspacePage) },
