@@ -27,6 +27,16 @@ public interface AnatomyReferencePersistence {
 
     List<ParentEdge> findParentEdges(Set<UUID> childIds);
 
+    List<VisualMapping> findApprovedVisualMappings(Collection<UUID> structureIds);
+
+    List<VisualRegion> findActiveVisualRegions();
+
     record ParentEdge(UUID parentId, UUID childId, RelationType relationType) {
     }
+
+    record VisualMapping(UUID structureId, long mappingVersion, UUID regionId, String regionCode,
+                         String regionDisplayName, String viewName, String layerName, String labelKey,
+                         UUID parentRegionId, int displayOrder, String regionStatus) { }
+    record VisualRegion(UUID id, String code, String displayName, String viewName, String layerName,
+                        String labelKey, UUID parentRegionId, int displayOrder, String status) { }
 }

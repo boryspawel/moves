@@ -363,12 +363,14 @@ public class CatalogService implements ExerciseCatalogQueryPort {
         Set<UUID> contributionIds = allContributions.stream().map(item -> item.id).collect(Collectors.toSet());
         Map<UUID, List<EvidenceSource>> evidenceByContribution = contributionIds.isEmpty()
                 ? Map.of() : linkedEvidence(contributionIds, evidenceById);
+        Map<UUID, AnatomyReferenceQueryPort.AnatomicalStructureSnapshot> structures = anatomy.findStructures(
+                allContributions.stream().map(value -> value.anatomicalStructureId).collect(Collectors.toSet()));
         return published.stream().collect(Collectors.toUnmodifiableMap(item -> item.id, item -> snapshot(
                 exerciseById.get(item.exerciseId), item,
                 patterns.getOrDefault(item.id, Set.of()), equipment.getOrDefault(item.id, Set.of()),
                 allContributions.stream().filter(value -> value.exerciseVersionId.equals(item.id)).toList(),
                 allCharacteristics.stream().filter(value -> value.exerciseVersionId.equals(item.id)).toList(),
-                evidenceByContribution)));
+                evidenceByContribution, structures)));
     }
 
     private void validateCompleteProfile(ExerciseVersion version) {
@@ -532,22 +534,25 @@ public class CatalogService implements ExerciseCatalogQueryPort {
             Exercise exercise, ExerciseVersion version, Set<MovementPattern> patterns, Set<String> equipment,
             List<ExerciseContribution> contributionItems,
             List<ExerciseLoadCharacteristic> characteristicItems,
-            Map<UUID, List<EvidenceSource>> evidenceByContribution) {
+            Map<UUID, List<EvidenceSource>> evidenceByContribution,
+            Map<UUID, AnatomyReferenceQueryPort.AnatomicalStructureSnapshot> structures) {
         return new PublishedExerciseVersionSnapshot(exercise.id, exercise.canonicalName,
                 version.id, version.versionNumber, version.profileSchemaVersion,
                 patterns.stream().map(value -> MovementPatternValue.valueOf(value.name()))
                         .collect(Collectors.toUnmodifiableSet()),
                 equipment,
                 contributionItems.stream().sorted(Comparator.comparing(item -> item.id))
-                        .map(item -> contributionSnapshot(item,
-                                evidenceByContribution.getOrDefault(item.id, List.of()))).toList(),
+                        .map(item -> contributionSnapshot(item, evidenceByContribution.getOrDefault(item.id, List.of()),
+                                structures.get(item.anatomicalStructureId))).toList(),
                 characteristicItems.stream().sorted(Comparator.comparing(item -> item.id))
                         .map(CatalogService::characteristicSnapshot).toList());
     }
 
     private static ContributionSnapshot contributionSnapshot(ExerciseContribution item,
-                                                               List<EvidenceSource> evidence) {
+                                                               List<EvidenceSource> evidence,
+                                                               AnatomyReferenceQueryPort.AnatomicalStructureSnapshot structure) {
         return new ContributionSnapshot(item.id, item.anatomicalStructureId,
+                structure == null ? null : structure.code(), structure == null ? null : structure.type().name(),
                 ContributionRoleValue.valueOf(item.role.name()), LoadChannelValue.valueOf(item.loadChannel.name()),
                 ContributionBandValue.valueOf(item.contributionBand.name()), item.coefficientLow,
                 item.coefficientHigh, item.confidenceClass, item.evidenceGrade,

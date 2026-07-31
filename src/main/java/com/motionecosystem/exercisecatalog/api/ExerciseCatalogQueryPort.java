@@ -35,6 +35,8 @@ public interface ExerciseCatalogQueryPort {
     record ContributionSnapshot(
             UUID id,
             UUID anatomicalStructureId,
+            String anatomicalStructureCode,
+            String anatomicalStructureType,
             ContributionRoleValue role,
             LoadChannelValue loadChannel,
             ContributionBandValue contributionBand,

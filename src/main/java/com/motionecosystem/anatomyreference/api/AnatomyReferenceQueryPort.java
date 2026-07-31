@@ -14,6 +14,11 @@ public interface AnatomyReferenceQueryPort {
 
     List<AncestorPath> ancestorPaths(UUID structureId);
 
+    /** A complete, approved visual mapping snapshot for the supplied source structures. */
+    Map<UUID, VisualMappingSnapshot> visualMappings(java.util.Collection<UUID> structureIds);
+
+    List<VisualRegionSnapshot> activeVisualRegions();
+
     record AnatomicalStructureSnapshot(UUID id, String code, StructureType type,
                                        String displayName, StructureSidePolicy sidePolicy,
                                        StructureStatus status, String externalOntology,
@@ -28,6 +33,13 @@ public interface AnatomyReferenceQueryPort {
         public AncestorPath {
             steps = List.copyOf(steps);
         }
+    }
+
+    record VisualRegionSnapshot(UUID id, String code, String displayName, String viewName, String layerName,
+                                String labelKey, UUID parentRegionId, int displayOrder, String status) { }
+
+    record VisualMappingSnapshot(long mappingVersion, List<VisualRegionSnapshot> regions) {
+        public VisualMappingSnapshot { regions = List.copyOf(regions); }
     }
 
     enum StructureType { BODY_REGION, MUSCLE_GROUP, MUSCLE, TENDON_GROUP, JOINT }

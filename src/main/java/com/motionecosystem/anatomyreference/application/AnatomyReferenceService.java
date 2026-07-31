@@ -155,6 +155,30 @@ public class AnatomyReferenceService implements AnatomyReferenceQueryPort {
                 .toList();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UUID, VisualMappingSnapshot> visualMappings(Collection<UUID> structureIds) {
+        if (structureIds == null || structureIds.isEmpty()) return Map.of();
+        return persistence.findApprovedVisualMappings(Set.copyOf(structureIds)).stream()
+                .collect(Collectors.groupingBy(AnatomyReferencePersistence.VisualMapping::structureId,
+                        Collectors.collectingAndThen(Collectors.toList(), mappings -> {
+                            long version = mappings.stream().mapToLong(AnatomyReferencePersistence.VisualMapping::mappingVersion).max().orElseThrow();
+                            var regions = mappings.stream().filter(mapping -> mapping.mappingVersion() == version)
+                                    .sorted(Comparator.comparing(AnatomyReferencePersistence.VisualMapping::regionCode))
+                                    .map(mapping -> new VisualRegionSnapshot(mapping.regionId(), mapping.regionCode(), mapping.regionDisplayName(), mapping.viewName(), mapping.layerName(), mapping.labelKey(), mapping.parentRegionId(), mapping.displayOrder(), mapping.regionStatus()))
+                                    .toList();
+                            return new VisualMappingSnapshot(version, regions);
+                        })));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<VisualRegionSnapshot> activeVisualRegions() {
+        return persistence.findActiveVisualRegions().stream()
+                .map(region -> new VisualRegionSnapshot(region.id(), region.code(), region.displayName(), region.viewName(),
+                        region.layerName(), region.labelKey(), region.parentRegionId(), region.displayOrder(), region.status())).toList();
+    }
+
     private List<List<AnatomyReferencePersistence.ParentEdge>> ancestorPathsInternal(UUID structureId) {
         List<List<AnatomyReferencePersistence.ParentEdge>> active = persistence.findParentEdges(Set.of(structureId))
                 .stream().map(List::of).collect(Collectors.toCollection(ArrayList::new));

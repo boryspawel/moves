@@ -100,3 +100,37 @@ class HierarchyGuardJpaEntity {
     protected HierarchyGuardJpaEntity() {
     }
 }
+
+@Entity(name = "VisualRegionJpaEntity")
+@Table(name = "visual_region", schema = "anatomy_reference")
+class VisualRegionJpaEntity {
+    @Id UUID id;
+    @Column(nullable = false) String code;
+    @Column(name = "display_name", nullable = false) String displayName;
+    @Column(nullable = false) String status;
+    @Column(name = "view_name", nullable = false) String viewName;
+    @Column(name = "layer_name", nullable = false) String layerName;
+    @Column(name = "label_key", nullable = false) String labelKey;
+    @Column(name = "parent_region_id") UUID parentRegionId;
+    @Column(name = "display_order", nullable = false) int displayOrder;
+    protected VisualRegionJpaEntity() { }
+}
+
+@Entity(name = "VisualMappingVersionJpaEntity")
+@Table(name = "visual_mapping_version", schema = "anatomy_reference")
+class VisualMappingVersionJpaEntity {
+    @Id UUID id;
+    @Column(name = "version_number", nullable = false) long versionNumber;
+    @Column(nullable = false) String status;
+    protected VisualMappingVersionJpaEntity() { }
+}
+
+@Entity(name = "AnatomicalStructureVisualRegionMappingJpaEntity")
+@Table(name = "anatomical_structure_visual_region_mapping", schema = "anatomy_reference")
+class AnatomicalStructureVisualRegionMappingJpaEntity {
+    @Id UUID id;
+    @Column(name = "structure_id", nullable = false) UUID structureId;
+    @Column(name = "mapping_version_id", nullable = false) UUID mappingVersionId;
+    @Column(name = "visual_region_id", nullable = false) UUID visualRegionId;
+    protected AnatomicalStructureVisualRegionMappingJpaEntity() { }
+}

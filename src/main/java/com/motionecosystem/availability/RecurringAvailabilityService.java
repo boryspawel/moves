@@ -3,6 +3,8 @@ package com.motionecosystem.availability;
 import com.motionecosystem.analytics.adherencemetrics.AdherenceMetricsService;
 import java.time.Clock;
 import java.time.DayOfWeek;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.zone.ZoneRulesException;
@@ -49,6 +51,21 @@ public class RecurringAvailabilityService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<Window> windows(UUID accountId, LocalDate date) {
+        if (date == null) {
+            throw invalid("availability date is required");
+        }
+        return list(accountId).stream()
+                .filter(slot -> slot.dayOfWeek() == date.getDayOfWeek())
+                .map(slot -> {
+                    ZoneId zone = ZoneId.of(slot.timeZone());
+                    return new Window(date.atTime(slot.startTime()).atZone(zone).toInstant(),
+                            date.atTime(slot.endTime()).atZone(zone).toInstant());
+                })
+                .toList();
+    }
+
     private static List<Slot> validate(List<Slot> requested) {
         if (requested == null || requested.isEmpty()) {
             throw invalid("at least one availability slot is required");
@@ -85,5 +102,8 @@ public class RecurringAvailabilityService {
     }
 
     public record Slot(DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime, String timeZone) {
+    }
+
+    public record Window(Instant startsAt, Instant endsAt) {
     }
 }

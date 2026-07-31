@@ -91,4 +91,33 @@ public class JpaAnatomyReferenceAdapter implements AnatomyReferencePersistence {
                 .map(item -> new ParentEdge(item.parentId(), item.childId(), item.relationType()))
                 .toList();
     }
+
+    @Override
+    public List<VisualMapping> findApprovedVisualMappings(Collection<UUID> structureIds) {
+        if (structureIds.isEmpty()) return List.of();
+        return entityManager.createQuery("""
+                SELECT mapping, version, region FROM AnatomicalStructureVisualRegionMappingJpaEntity mapping,
+                     VisualMappingVersionJpaEntity version, VisualRegionJpaEntity region
+                WHERE mapping.structureId IN :ids AND version.status = 'APPROVED' AND region.status = 'ACTIVE'
+                  AND version.id = mapping.mappingVersionId AND region.id = mapping.visualRegionId
+                """, Object[].class)
+                .setParameter("ids", structureIds).getResultList().stream()
+                .map(row -> {
+                    var mapping = (AnatomicalStructureVisualRegionMappingJpaEntity) row[0];
+                    var version = (VisualMappingVersionJpaEntity) row[1];
+                    var region = (VisualRegionJpaEntity) row[2];
+                    return new VisualMapping(mapping.structureId, version.versionNumber, region.id, region.code, region.displayName,
+                            region.viewName, region.layerName, region.labelKey, region.parentRegionId, region.displayOrder, region.status);
+                }).toList();
+    }
+
+    @Override
+    public List<VisualRegion> findActiveVisualRegions() {
+        return entityManager.createQuery("""
+                SELECT region FROM VisualRegionJpaEntity region
+                WHERE region.status = 'ACTIVE' ORDER BY region.code
+                """, VisualRegionJpaEntity.class).getResultList().stream()
+                .map(region -> new VisualRegion(region.id, region.code, region.displayName, region.viewName,
+                        region.layerName, region.labelKey, region.parentRegionId, region.displayOrder, region.status)).toList();
+    }
 }
