@@ -1,0 +1,1 @@
+ALTER TABLE exercise_set.exercise_set_analysis_run DROP COLUMN anatomy_data_available;
