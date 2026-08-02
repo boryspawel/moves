@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "sourceSha256": "56aae1c8068df6bcbbaec2faf074df82581d997afc5bd45912efc555b624e5f3",
+  "assets": {
+    "FRONT": {
+      "path": "web/src/assets/anatomy/anatomy-body-front-v1.svg",
+      "sha256": "9bc9102f4449331e0a27720f1ada44e60ea526125a789bf6862bd70aaf4adc32",
+      "directOverlayPathCount": 17,
+      "mirroredOverlayPathCount": 16
+    },
+    "BACK": {
+      "path": "web/src/assets/anatomy/anatomy-body-back-v1.svg",
+      "sha256": "314d0e886bdbdf7c7b3840691833caf280d1e7ded6ab813090c864318c3b5da5",
+      "directOverlayPathCount": 22,
+      "mirroredOverlayPathCount": 18
+    }
+  }
+}

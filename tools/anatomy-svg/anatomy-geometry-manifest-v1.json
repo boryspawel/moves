@@ -1,0 +1,1682 @@
+{
+  "schemaVersion": 2,
+  "sourceSha256": "56aae1c8068df6bcbbaec2faf074df82581d997afc5bd45912efc555b624e5f3",
+  "geometryVersion": "anatomy-geometry-v1",
+  "visualMappingVersion": "anatomy-visual-map-v1",
+  "reviewStage": "SET-07A3_FINAL",
+  "entries": [
+    {
+      "sourceElementId": "use1903",
+      "view": "FRONT",
+      "geometryRole": "REFERENCE_ONLY",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "rationale": "Ścieżka w definicji clipPath; nie jest samodzielną geometrią regionu."
+    },
+    {
+      "sourceElementId": "path1351",
+      "view": "FRONT",
+      "geometryRole": "REFERENCE_ONLY",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "rationale": "Element definicji przycinania, poza niezależną sylwetką."
+    },
+    {
+      "sourceElementId": "path2223",
+      "reviewStatus": "APPROVED",
+      "view": "FRONT",
+      "geometryRole": "INTERACTIVE",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:FRONT:THORACIC",
+      "laterality": "LEFT",
+      "confidence": "HIGH",
+      "rationale": "Zamknięte pole obejmuje wyłącznie lewą (anatomicznie) część przedniej ściany klatki piersiowej: od obojczyka do dolnej granicy klatki. W kontekście sąsiaduje z mostkiem po stronie przyśrodkowej i barkiem/ramieniem bocznie, bez wejścia w szyję ani jamę brzuszną."
+    },
+    {
+      "sourceElementId": "path2205",
+      "view": "FRONT",
+      "geometryRole": "SUPPORT",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "CENTRAL",
+      "confidence": "LOW",
+      "rationale": "Wąski jasny detal wewnątrz tułowia; nie stanowi odrębnego pola mięśniowego."
+    },
+    {
+      "sourceElementId": "path2063",
+      "view": "FRONT",
+      "geometryRole": "REFERENCE_ONLY",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Drobny element palców/stopy w dolnej części przedniej sylwetki."
+    },
+    {
+      "sourceElementId": "path2043",
+      "view": "FRONT",
+      "geometryRole": "REFERENCE_ONLY",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Drobny detal stopy widoczny w kontekście dolnego końca sylwetki."
+    },
+    {
+      "sourceElementId": "path2023",
+      "view": "FRONT",
+      "geometryRole": "REFERENCE_ONLY",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Mały fragment palców/stopy; nie proponuje się pola interaktywnego."
+    },
+    {
+      "sourceElementId": "path2033",
+      "view": "FRONT",
+      "geometryRole": "REFERENCE_ONLY",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Drobna geometria palców/stopy w izolacji i kontekście."
+    },
+    {
+      "sourceElementId": "path2013",
+      "view": "FRONT",
+      "geometryRole": "REFERENCE_ONLY",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Drobny element palców/stopy, klasyfikowany jako referencyjny."
+    },
+    {
+      "sourceElementId": "path1983",
+      "view": "FRONT",
+      "geometryRole": "SUPPORT",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Jasna konstrukcyjna warstwa stopy/palców, bez pola mapowanego."
+    },
+    {
+      "sourceElementId": "path1943",
+      "view": "FRONT",
+      "geometryRole": "SUPPORT",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Mały jasny detal wspierający rysunek stopy."
+    },
+    {
+      "sourceElementId": "path1963",
+      "view": "FRONT",
+      "geometryRole": "SUPPORT",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Jasna warstwa konstrukcyjna stopy/palców."
+    },
+    {
+      "sourceElementId": "path1887",
+      "reviewStatus": "APPROVED",
+      "view": "FRONT",
+      "geometryRole": "INTERACTIVE",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:FRONT:LOWER_LEG",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Zamknięty, wydłużony płat mięśniowy prawego podudzia w widoku przednim. Jego górna granica leży poniżej rzepki, a dolna kończy się przed stawem skokowym; nie obejmuje kolana ani stopy."
+    },
+    {
+      "sourceElementId": "path1848",
+      "reviewStatus": "APPROVED",
+      "view": "FRONT",
+      "geometryRole": "INTERACTIVE",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:FRONT:LOWER_LEG",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Odrębne zamknięte pole sąsiadujące z pozostałymi mięśniami prawego podudzia. W pełnej sylwetce biegnie od poniżej kolana do ponad kostką i pozostaje w granicach regionu podudzia."
+    },
+    {
+      "sourceElementId": "path1828",
+      "view": "FRONT",
+      "geometryRole": "SUPPORT",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Mały jasny element przy stawie skokowym, nie pole mięśniowe."
+    },
+    {
+      "sourceElementId": "path1790",
+      "reviewStatus": "APPROVED",
+      "view": "FRONT",
+      "geometryRole": "INTERACTIVE",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:FRONT:LOWER_LEG",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Zamknięta geometria mięśniowa prawego podudzia, czytelnie ograniczona przez pola sąsiednie. Nie przechodzi na rzepkę, staw skokowy ani stopę, dlatego podświetlenie pozostaje w zakresie LOWER_LEG."
+    },
+    {
+      "sourceElementId": "path1734",
+      "reviewStatus": "APPROVED",
+      "view": "FRONT",
+      "geometryRole": "INTERACTIVE",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:FRONT:LOWER_LEG",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Zamknięty boczno-przyśrodkowy płat mięśniowy prawego podudzia. Izolowana ścieżka i kontekst pokazują granice od poziomu poniżej kolana do przed kostką, bez nakładania się na stopę."
+    },
+    {
+      "sourceElementId": "path1714",
+      "view": "FRONT",
+      "geometryRole": "SUPPORT",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Jasna, wydłużona warstwa konstrukcyjna podudzia."
+    },
+    {
+      "sourceElementId": "path1901",
+      "view": "FRONT",
+      "geometryRole": "SUPPORT",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Jasny detal przy dolnej części podudzia/stawie skokowym."
+    },
+    {
+      "sourceElementId": "path1694",
+      "view": "FRONT",
+      "geometryRole": "SUPPORT",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Jasny detal na granicy podudzia i stawu skokowego."
+    },
+    {
+      "sourceElementId": "path1593",
+      "view": "FRONT",
+      "geometryRole": "REFERENCE_ONLY",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Wąski detal konturowy przy kolanie; brak pewnej reprezentacji mięśnia."
+    },
+    {
+      "sourceElementId": "path1589",
+      "view": "FRONT",
+      "geometryRole": "REFERENCE_ONLY",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Wąski detal konturowy przy kolanie."
+    },
+    {
+      "sourceElementId": "path1585",
+      "view": "FRONT",
+      "geometryRole": "SUPPORT",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Jasny element konstrukcyjny okolicy kolana."
+    },
+    {
+      "sourceElementId": "path1554",
+      "reviewStatus": "APPROVED",
+      "view": "FRONT",
+      "geometryRole": "INTERACTIVE",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:FRONT:THIGH",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Duże zamknięte pole mięśniowe prawego uda; w kontekście zaczyna się poniżej pachwiny i kończy na granicy przed rzepką. Nie zawiera miednicy ani geometrii kolana."
+    },
+    {
+      "sourceElementId": "path1440",
+      "reviewStatus": "APPROVED",
+      "view": "FRONT",
+      "geometryRole": "INTERACTIVE",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:FRONT:THIGH",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Zamknięty płat przednio-przyśrodkowej części prawego uda. Granice są wyraźnie oddzielone od pachwiny/miednicy oraz od kolana, więc odpowiada pojedynczemu regionowi THIGH."
+    },
+    {
+      "sourceElementId": "path1504",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Cienka linia podziału wewnątrz uda."
+    },
+    {
+      "sourceElementId": "path1366",
+      "reviewStatus": "AMBIGUOUS",
+      "view": "FRONT",
+      "geometryRole": "INTERACTIVE",
+      "laterality": "RIGHT",
+      "confidence": "MEDIUM",
+      "rationale": "Długi płat leży zasadniczo na prawym udzie, lecz jego dolna, rozwidlona granica dochodzi do i wizualnie miesza się z geometrią okolicy rzepki. Jedno podświetlenie mogłoby objąć także kolano, dlatego nie przypisano kodu THIGH."
+    },
+    {
+      "sourceElementId": "path1508",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Krótka linia podziału w obrębie uda."
+    },
+    {
+      "sourceElementId": "path1411",
+      "view": "FRONT",
+      "geometryRole": "SUPPORT",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Jasna warstwa konstrukcyjna uda, nie samodzielne pole mięśniowe."
+    },
+    {
+      "sourceElementId": "path1286",
+      "view": "FRONT",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Mały wypełniony fragment na obrzeżu uda; przypisanie regionalne wymaga kontroli; propozycja nie jest wystarczająco pewna i pozostaje bez kodu regionu."
+    },
+    {
+      "sourceElementId": "path1307",
+      "reviewStatus": "APPROVED",
+      "view": "FRONT",
+      "geometryRole": "INTERACTIVE",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:FRONT:THIGH",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Zamknięty, boczny płat mięśniowy prawego uda. W kontekście biegnie od poziomu biodra do górnej granicy kolana i jest od niego oddzielony, bez wejścia w miednicę lub podudzie."
+    },
+    {
+      "sourceElementId": "path1512",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Krótka linia podziału w okolicy uda."
+    },
+    {
+      "sourceElementId": "path1516",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Cienka linia pomocnicza na udzie."
+    },
+    {
+      "sourceElementId": "path1337",
+      "reviewStatus": "APPROVED",
+      "view": "FRONT",
+      "geometryRole": "INTERACTIVE",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:FRONT:THIGH",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Zamknięty płat mięśniowy prawego uda, położony między pachwiną a górną częścią uda. Nie przecina granicy kolana ani miednicy; zakres jest zgodny z THIGH."
+    },
+    {
+      "sourceElementId": "path1397",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Cienka linia podziału mięśni uda."
+    },
+    {
+      "sourceElementId": "path1893",
+      "view": "FRONT",
+      "geometryRole": "SUPPORT",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Jasny element konstrukcyjny w dolnej części podudzia."
+    },
+    {
+      "sourceElementId": "path1897",
+      "view": "FRONT",
+      "geometryRole": "SUPPORT",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Jasny detal konstrukcyjny podudzia."
+    },
+    {
+      "sourceElementId": "path1905",
+      "view": "FRONT",
+      "geometryRole": "SUPPORT",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Jasny detal konstrukcyjny podudzia."
+    },
+    {
+      "sourceElementId": "path2377",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Pojedyncza cienka linia pomocnicza przy nodze."
+    },
+    {
+      "sourceElementId": "path1674",
+      "view": "FRONT",
+      "geometryRole": "SUPPORT",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Jasny element konstrukcyjny przy stawie kolanowym."
+    },
+    {
+      "sourceElementId": "path1100",
+      "reviewStatus": "APPROVED",
+      "view": "FRONT",
+      "geometryRole": "INTERACTIVE",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:FRONT:UPPER_ARM",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Zamknięte pole na prawym ramieniu w widoku przednim, ograniczone od góry obręczą barkową i od dołu okolicą łokcia. Kształt oraz sąsiednie pola wykluczają wejście w klatkę piersiową i przedramię."
+    },
+    {
+      "sourceElementId": "rect1075",
+      "view": "FRONT",
+      "geometryRole": "SUPPORT",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "CENTRAL",
+      "confidence": "LOW",
+      "rationale": "Wąska jasna konstrukcja w środku górnego tułowia."
+    },
+    {
+      "sourceElementId": "path1304",
+      "view": "FRONT",
+      "geometryRole": "REFERENCE_ONLY",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Fragment obrysu/tła twarzy i głowy, poza słownikiem regionów."
+    },
+    {
+      "sourceElementId": "path3697",
+      "view": "FRONT",
+      "geometryRole": "REFERENCE_ONLY",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "CENTRAL",
+      "confidence": "LOW",
+      "rationale": "Geometria czaszki/głowy, klasyfikowana jako referencyjna."
+    },
+    {
+      "sourceElementId": "path1353",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "HIGH",
+      "rationale": "Izolowana płaszczyzna należy do twarzy w przedniej sylwetce; nie opisuje regionu V047. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "use1355",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "HIGH",
+      "rationale": "Powielona geometria twarzy w przedniej sylwetce; pozostaje elementem referencyjnym poza V047. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path1200",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Izolowany fragment jest detalem palców prawej dłoni w pełnej sylwetce; nie wyznacza regionu V047. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path1257",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Wąski kontur palca prawej dłoni; element referencyjny poza zakresem mapy. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path1228",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Detal palców prawej dłoni, bez użytecznej powierzchni regionu. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path987",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Kontur dłoni po prawej stronie anatomicznej; nie stanowi regionu interaktywnego. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path991",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Izolowany detal palca prawej dłoni; wyłącznie referencyjny. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path1186",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Mały detal palca/dłoni prawej; nie wyznacza obszaru V047. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path983",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Fragment obrysu prawej dłoni; brak odrębnej geometrii regionu. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path1157",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Detal palca prawej dłoni, nieprzydatny do podświetlania regionu. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path1115",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Kontur palców prawej dłoni; element referencyjny. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path1129",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Detal palców prawej dłoni; nie jest obszarem regionu. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path1101",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Fragment dłoni prawej widoczny w kontekście pełnej sylwetki; nie jest geometrią V047. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path1047",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Detal dłoni prawej; pozostaje geometrią referencyjną. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path1017",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Obrys/detal prawej dłoni; nie tworzy samodzielnego regionu. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path979",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Mały detal prawej dłoni poza zakresem regionów V047. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path995",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Detal palca prawej dłoni; brak regionu do przypisania. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path1803",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Złożony obrys całej prawej dłoni; mimo większego kształtu nie odpowiada regionowi V047. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path1779",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Drobny detal palca prawej dłoni; klasyfikacja referencyjna. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path1751",
+      "reviewStatus": "AMBIGUOUS",
+      "geometryRole": "INTERACTIVE",
+      "view": "FRONT",
+      "laterality": "LEFT",
+      "confidence": "LOW",
+      "rationale": "Izolacja nie daje stabilnej, samodzielnej powierzchni; sąsiedztwo barku i ramienia nie pozwala bezpiecznie zatwierdzić jednego regionu."
+    },
+    {
+      "sourceElementId": "path1152",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "HIGH",
+      "rationale": "Drobny kontur głowy/twarzy; pełna sylwetka potwierdza funkcję referencyjną poza V047. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path1419",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "HIGH",
+      "rationale": "Drobny detal twarzy przy szyi, nieoddzielający regionu V047. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path1447",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "HIGH",
+      "rationale": "Kontur twarzy i szyi; brak samodzielnej powierzchni do podświetlania. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path1274",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "HIGH",
+      "rationale": "Detal głowy/twarzy w przedniej sylwetce; poza zakresem regionów V047. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path1245",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "HIGH",
+      "rationale": "Kontur twarzy; element referencyjny, nie geometria regionu. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path950",
+      "reviewStatus": "AMBIGUOUS",
+      "geometryRole": "INTERACTIVE",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Podświetlony długi płat leży na bocznym tułowiu od okolicy klatki do brzucha; przekracza potencjalne granice regionów."
+    },
+    {
+      "sourceElementId": "path1211",
+      "reviewStatus": "AMBIGUOUS",
+      "geometryRole": "INTERACTIVE",
+      "view": "FRONT",
+      "laterality": "LEFT",
+      "confidence": "LOW",
+      "rationale": "Geometria obejmuje przejście szyja–obręcz barkowa–górna klatka, więc kod THORACIC zawężałby podświetlenie błędnie."
+    },
+    {
+      "sourceElementId": "path1231",
+      "reviewStatus": "AMBIGUOUS",
+      "geometryRole": "INTERACTIVE",
+      "view": "FRONT",
+      "laterality": "LEFT",
+      "confidence": "LOW",
+      "rationale": "Mała warstwa przy obojczyku/szyi nie ma czytelnej granicy między obręczą barkową, szyją i klatką."
+    },
+    {
+      "sourceElementId": "path1109",
+      "reviewStatus": "APPROVED",
+      "geometryRole": "INTERACTIVE",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Czerwone podświetlenie izolowanej geometrii leży w całości na przedramieniu prawej strony anatomicznej; granice nie wchodzą w dłoń ani ramię.",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:FRONT:FOREARM_WRIST"
+    },
+    {
+      "sourceElementId": "path1122",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Geometria przejścia nadgarstek–dłoń po prawej stronie jest detalem granicznym, nie stabilną powierzchnią regionu. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path1065",
+      "reviewStatus": "APPROVED",
+      "geometryRole": "INTERACTIVE",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Izolowana, wydłużona powierzchnia przebiega wyłącznie przez przedramię prawej strony anatomicznej; sąsiednie linie potwierdzają granice regionu.",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:FRONT:FOREARM_WRIST"
+    },
+    {
+      "sourceElementId": "path1080",
+      "reviewStatus": "APPROVED",
+      "geometryRole": "INTERACTIVE",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Wąska powierzchnia mięśniowa pozostaje w granicach przedramienia prawej strony anatomicznej, bez przekroczenia stawu łokciowego lub nadgarstka.",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:FRONT:FOREARM_WRIST"
+    },
+    {
+      "sourceElementId": "path998",
+      "reviewStatus": "APPROVED",
+      "geometryRole": "INTERACTIVE",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Podświetlona powierzchnia jest ograniczona do przedramienia prawej strony anatomicznej i tworzy bezpieczną geometrię podświetlenia.",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:FRONT:FOREARM_WRIST"
+    },
+    {
+      "sourceElementId": "path861",
+      "reviewStatus": "AMBIGUOUS",
+      "geometryRole": "INTERACTIVE",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Szeroka geometria nakłada się na bark i górną klatkę; nie można przypisać jednego regionu bez ryzyka błędnego podświetlenia."
+    },
+    {
+      "sourceElementId": "path988",
+      "view": "FRONT",
+      "geometryRole": "SUPPORT",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Mały detal granicy tułowia; nie daje pewnej, samodzielnej anatomii.",
+      "rationale": "Mały detal granicy tułowia; nie daje pewnej, samodzielnej anatomii; propozycja nie jest wystarczająco pewna i pozostaje bez kodu regionu."
+    },
+    {
+      "sourceElementId": "path968",
+      "view": "FRONT",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Segment na granicy klatki piersiowej i brzucha; bez wymuszania jednego regionu.",
+      "rationale": "Segment na granicy klatki piersiowej i brzucha; bez wymuszania jednego regionu."
+    },
+    {
+      "sourceElementId": "path847",
+      "view": "FRONT",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "LEFT",
+      "confidence": "LOW",
+      "reviewerNote": "Duża nakładająca się geometria na styku klatki piersiowej i lewego barku/ramienia; wymaga ręcznej decyzji.",
+      "rationale": "Duża nakładająca się geometria na styku klatki piersiowej i lewego barku/ramienia; wymaga ręcznej decyzji."
+    },
+    {
+      "sourceElementId": "path928",
+      "reviewStatus": "APPROVED",
+      "geometryRole": "INTERACTIVE",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Niezależne podświetlenie ujawnia skośny segment przedramienia prawej strony anatomicznej, a nie brzuch; w całości mieści się w zakresie FOREARM_WRIST.",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:FRONT:FOREARM_WRIST"
+    },
+    {
+      "sourceElementId": "path948",
+      "reviewStatus": "APPROVED",
+      "geometryRole": "INTERACTIVE",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Izolowana powierzchnia jest fragmentem przedramienia prawej strony anatomicznej; granice są jednoznaczne wobec dłoni i łokcia.",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:FRONT:FOREARM_WRIST"
+    },
+    {
+      "sourceElementId": "path908",
+      "reviewStatus": "APPROVED",
+      "geometryRole": "INTERACTIVE",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Duża powierzchnia biegnie wyłącznie wzdłuż przedramienia prawej strony anatomicznej; pełny kontekst potwierdza bezpieczny zakres FOREARM_WRIST.",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:FRONT:FOREARM_WRIST"
+    },
+    {
+      "sourceElementId": "path881",
+      "view": "FRONT",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Geometria nakłada klatkę piersiową i boczną ścianę tułowia; region pozostaje niejednoznaczny.",
+      "rationale": "Geometria nakłada klatkę piersiową i boczną ścianę tułowia; region pozostaje niejednoznaczny."
+    },
+    {
+      "sourceElementId": "path1182",
+      "view": "FRONT",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Mały segment na granicy klatki piersiowej i tułowia; nie przypisano kodu.",
+      "rationale": "Mały segment na granicy klatki piersiowej i tułowia; nie przypisano kodu."
+    },
+    {
+      "sourceElementId": "path879",
+      "reviewStatus": "AMBIGUOUS",
+      "geometryRole": "INTERACTIVE",
+      "view": "FRONT",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Wąski płat przechodzi przez granicę barku i górnej klatki, dlatego propozycja THORACIC nie jest bezpieczna."
+    },
+    {
+      "sourceElementId": "path899",
+      "view": "FRONT",
+      "geometryRole": "SUPPORT",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Bardzo mały detal/linia podziału na tułowiu; element wspierający bez regionu.",
+      "rationale": "Bardzo mały detal/linia podziału na tułowiu; element wspierający bez regionu; propozycja nie jest wystarczająco pewna i pozostaje bez kodu regionu."
+    },
+    {
+      "sourceElementId": "path919",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Drobna geometria twarzy lub szyi; brak bezpiecznej identyfikacji mięśnia.",
+      "rationale": "Drobna geometria twarzy lub szyi; brak bezpiecznej identyfikacji mięśnia."
+    },
+    {
+      "sourceElementId": "path970",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Mały detal przedniej sylwetki; nie rozstrzyga regionu.",
+      "rationale": "Mały detal przedniej sylwetki; nie rozstrzyga regionu."
+    },
+    {
+      "sourceElementId": "path974",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Mały detal przedniej sylwetki; nie rozstrzyga regionu.",
+      "rationale": "Mały detal przedniej sylwetki; nie rozstrzyga regionu."
+    },
+    {
+      "sourceElementId": "path978",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Mały detal przedniej sylwetki; nie rozstrzyga regionu.",
+      "rationale": "Mały detal przedniej sylwetki; nie rozstrzyga regionu."
+    },
+    {
+      "sourceElementId": "path1012",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Wąska geometria przy bocznej części tułowia; region niepewny.",
+      "rationale": "Wąska geometria przy bocznej części tułowia; region niepewny."
+    },
+    {
+      "sourceElementId": "path1172",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Detal głowy/twarzy poza zakresem regionów V047.",
+      "rationale": "Detal głowy/twarzy poza zakresem regionów V047."
+    },
+    {
+      "sourceElementId": "path1202",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Linia/detal twarzy poza zakresem regionów V047.",
+      "rationale": "Linia/detal twarzy poza zakresem regionów V047."
+    },
+    {
+      "sourceElementId": "path1192",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Linia/detal twarzy poza zakresem regionów V047.",
+      "rationale": "Linia/detal twarzy poza zakresem regionów V047."
+    },
+    {
+      "sourceElementId": "path1326",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Detal głowy/twarzy poza zakresem regionów V047.",
+      "rationale": "Detal głowy/twarzy poza zakresem regionów V047."
+    },
+    {
+      "sourceElementId": "path1390",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Drobny detal twarzy poza zakresem regionów V047.",
+      "rationale": "Drobny detal twarzy poza zakresem regionów V047."
+    },
+    {
+      "sourceElementId": "path1799",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Drobna geometria dłoni; nie jest regionem interaktywnym V047.",
+      "rationale": "Drobna geometria dłoni; nie jest regionem interaktywnym V047."
+    },
+    {
+      "sourceElementId": "path2345",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Drobna linia/detal w obrębie kończyny górnej.",
+      "rationale": "Drobna linia/detal w obrębie kończyny górnej."
+    },
+    {
+      "sourceElementId": "path2349",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Drobna linia/detal w obrębie kończyny górnej.",
+      "rationale": "Drobna linia/detal w obrębie kończyny górnej."
+    },
+    {
+      "sourceElementId": "path2353",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Drobna linia/detal w obrębie kończyny górnej.",
+      "rationale": "Drobna linia/detal w obrębie kończyny górnej."
+    },
+    {
+      "sourceElementId": "path2357",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Drobna linia/detal w obrębie kończyny górnej.",
+      "rationale": "Drobna linia/detal w obrębie kończyny górnej."
+    },
+    {
+      "sourceElementId": "path1721",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Detal twarzy/szyi; brak jednoznacznej anatomii.",
+      "rationale": "Detal twarzy/szyi; brak jednoznacznej anatomii."
+    },
+    {
+      "sourceElementId": "path1476",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Detal twarzy/szyi; brak jednoznacznej anatomii.",
+      "rationale": "Detal twarzy/szyi; brak jednoznacznej anatomii."
+    },
+    {
+      "sourceElementId": "path1506",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Drobny detal twarzy/szyi.",
+      "rationale": "Drobny detal twarzy/szyi."
+    },
+    {
+      "sourceElementId": "path1681",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Linia podziału/detal twarzy lub szyi.",
+      "rationale": "Linia podziału/detal twarzy lub szyi."
+    },
+    {
+      "sourceElementId": "path1633",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Drobny detal twarzy/szyi.",
+      "rationale": "Drobny detal twarzy/szyi."
+    },
+    {
+      "sourceElementId": "path1612",
+      "view": "FRONT",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Drobny detal twarzy/szyi.",
+      "rationale": "Drobny detal twarzy/szyi."
+    },
+    {
+      "sourceElementId": "path3288",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "APPROVED",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:BACK:LOWER_LEG",
+      "laterality": "LEFT",
+      "confidence": "HIGH",
+      "rationale": "Izolowany, zamknięty płat obejmuje tylną część łydki aż do jej dystalnej granicy; na pełnej sylwetce leży w całości poniżej kolana i ponad stopą. W widoku tylnym prawa strona obrazu odpowiada anatomicznej lewej kończynie."
+    },
+    {
+      "sourceElementId": "path3322",
+      "view": "BACK",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "reviewerNote": "Drobny detal stopy/stawu skokowego.",
+      "rationale": "Drobny detal stopy/stawu skokowego."
+    },
+    {
+      "sourceElementId": "path3268",
+      "view": "BACK",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "reviewerNote": "Geometria stopy/stawu skokowego poza bezpiecznym mapowaniem mięśni.",
+      "rationale": "Geometria stopy/stawu skokowego poza bezpiecznym mapowaniem mięśni."
+    },
+    {
+      "sourceElementId": "path3254",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "APPROVED",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:BACK:LOWER_LEG",
+      "laterality": "LEFT",
+      "confidence": "HIGH",
+      "rationale": "Długi, odrębnie ograniczony płat biegnie po tylno-bocznej części podudzia od poniżej kolana do okolicy kostki. Nie wchodzi w geometrię stopy ani uda; położenie na sylwetce potwierdza lewą stronę anatomiczną."
+    },
+    {
+      "sourceElementId": "path3216",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "APPROVED",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:BACK:LOWER_LEG",
+      "laterality": "LEFT",
+      "confidence": "HIGH",
+      "rationale": "Wąski, lecz ciągły płat mięśniowy jest ograniczony do tylnego podudzia: zaczyna się poniżej stawu kolanowego i kończy przed stopą. Sąsiednie granice oddzielają go od uda oraz stawu skokowego; strona anatomiczna jest lewa."
+    },
+    {
+      "sourceElementId": "path3176",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "reviewerNote": "Geometria okolicy kolana; niepewne odróżnienie od uda/podudzia.",
+      "rationale": "Geometria okolicy kolana; niepewne odróżnienie od uda/podudzia."
+    },
+    {
+      "sourceElementId": "path3162",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "reviewerNote": "Geometria okolicy kolana; niepewne odróżnienie od uda/podudzia.",
+      "rationale": "Geometria okolicy kolana; niepewne odróżnienie od uda/podudzia."
+    },
+    {
+      "sourceElementId": "path3104",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "reviewerNote": "Wąski detal styku uda i kolana; region niejednoznaczny.",
+      "rationale": "Wąski detal styku uda i kolana; region niejednoznaczny."
+    },
+    {
+      "sourceElementId": "path2990",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "APPROVED",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:BACK:THIGH",
+      "laterality": "LEFT",
+      "confidence": "HIGH",
+      "rationale": "Izolowana pionowa forma leży między fałdem pośladkowym a górną granicą kolana i pozostaje w obrębie tylnej części uda. Sąsiednie ścieżki podudzia zaczynają się niżej; w widoku tylnym jest to kończyna anatomicznie lewa."
+    },
+    {
+      "sourceElementId": "path3511",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "LEFT",
+      "confidence": "MEDIUM",
+      "rationale": "Mały płat styka się bezpośrednio z fałdem pośladkowym i górną granicą uda. Izolowany kształt nie pozwala bezpiecznie rozstrzygnąć, czy podświetlenie powinno należeć do uda czy okolicy biodrowo‑miednicznej, dlatego nie przypisano kodu V047."
+    },
+    {
+      "sourceElementId": "path2962",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "APPROVED",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:BACK:THIGH",
+      "laterality": "LEFT",
+      "confidence": "HIGH",
+      "rationale": "Odrębny płat tylno-bocznej części uda jest w całości ograniczony powyżej kolana i poniżej okolicy pośladkowej. Pełna sylwetka oraz granice z sąsiadami potwierdzają region BACK:THIGH po stronie anatomicznie lewej."
+    },
+    {
+      "sourceElementId": "path2931",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "APPROVED",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:BACK:THIGH",
+      "laterality": "LEFT",
+      "confidence": "HIGH",
+      "rationale": "Duży, zamknięty płat przebiega wyłącznie po tylnej powierzchni uda, od jego części górnej do granicy kolana. Nie przecina miednicy ani podudzia; w tylnej projekcji należy do lewej kończyny anatomicznej."
+    },
+    {
+      "sourceElementId": "path2803",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "APPROVED",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:BACK:THIGH",
+      "laterality": "LEFT",
+      "confidence": "HIGH",
+      "rationale": "Wydłużona forma mięśniowa leży pomiędzy pośladkiem a kolanem i jest wyraźnie odcięta od geometrii podudzia. Położenie w pełnej sylwetce potwierdza tylną, anatomicznie lewą część uda."
+    },
+    {
+      "sourceElementId": "path2900",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "APPROVED",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:BACK:THIGH",
+      "laterality": "LEFT",
+      "confidence": "HIGH",
+      "rationale": "Wąski centralno-tylny segment jest całkowicie zawarty w obrysie uda, z czytelnymi granicami wobec sąsiednich płatów i kolana. Jest to lewa strona anatomiczna w widoku BACK."
+    },
+    {
+      "sourceElementId": "path2290",
+      "view": "BACK",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Geometria dłoni; poza regionami interaktywnymi V047.",
+      "rationale": "Geometria dłoni; poza regionami interaktywnymi V047."
+    },
+    {
+      "sourceElementId": "path2352",
+      "view": "BACK",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Drobny detal dłoni.",
+      "rationale": "Drobny detal dłoni."
+    },
+    {
+      "sourceElementId": "path2338",
+      "view": "BACK",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Drobny detal dłoni.",
+      "rationale": "Drobny detal dłoni."
+    },
+    {
+      "sourceElementId": "path2378",
+      "view": "BACK",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Linia/detal dłoni.",
+      "rationale": "Linia/detal dłoni."
+    },
+    {
+      "sourceElementId": "path2324",
+      "view": "BACK",
+      "geometryRole": "DECORATIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "LOW",
+      "reviewerNote": "Drobny detal dłoni.",
+      "rationale": "Drobny detal dłoni."
+    },
+    {
+      "sourceElementId": "path2744",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "APPROVED",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:BACK:UPPER_ARM",
+      "laterality": "LEFT",
+      "confidence": "HIGH",
+      "rationale": "Duży, zamknięty płat obejmuje tylną część ramienia od barku do granicy łokcia; nie obejmuje łopatki ani przedramienia. Na sylwetce tylnej prawa strona obrazu odpowiada anatomicznie lewemu ramieniu."
+    },
+    {
+      "sourceElementId": "path2024",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "reviewerNote": "Mały detal na przejściu barku i ramienia; niepewna granica regionu.",
+      "rationale": "Mały detal na przejściu barku i ramienia; niepewna granica regionu."
+    },
+    {
+      "sourceElementId": "path2004",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "reviewerNote": "Geometria okolicy barku/łopatki; wymaga rozstrzygnięcia ręcznego.",
+      "rationale": "Geometria okolicy barku/łopatki; wymaga rozstrzygnięcia ręcznego."
+    },
+    {
+      "sourceElementId": "path1955",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "reviewerNote": "Widoczna tylna geometria barkowo-szyjna; roboczo przypisana do obręczy barkowej, wymaga weryfikacji.",
+      "rationale": "Widoczna tylna geometria barkowo-szyjna; roboczo przypisana do obręczy barkowej, wymaga weryfikacji; propozycja nie jest wystarczająco pewna i pozostaje bez kodu regionu."
+    },
+    {
+      "sourceElementId": "path2234",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "LEFT",
+      "confidence": "LOW",
+      "reviewerNote": "Drobna forma w obrębie łopatkowo-grzbietowym; region V047 nie jest rozróżnialny.",
+      "rationale": "Drobna forma w obrębie łopatkowo-grzbietowym; region V047 nie jest rozróżnialny."
+    },
+    {
+      "sourceElementId": "path2163",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "LEFT",
+      "confidence": "LOW",
+      "reviewerNote": "Niewielki segment mięśniowy górnej części grzbietu, bez pewnej granicy regionu.",
+      "rationale": "Niewielki segment mięśniowy górnej części grzbietu, bez pewnej granicy regionu."
+    },
+    {
+      "sourceElementId": "path2115",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "LEFT",
+      "confidence": "LOW",
+      "reviewerNote": "Wąski segment przy łopatce; niepewne rozróżnienie obręczy barkowej i odcinka piersiowego.",
+      "rationale": "Wąski segment przy łopatce; niepewne rozróżnienie obręczy barkowej i odcinka piersiowego."
+    },
+    {
+      "sourceElementId": "path2085",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "LEFT",
+      "confidence": "LOW",
+      "reviewerNote": "Forma górnego grzbietu przy łopatce; wymaga weryfikacji ręcznej regionu.",
+      "rationale": "Forma górnego grzbietu przy łopatce; wymaga weryfikacji ręcznej regionu."
+    },
+    {
+      "sourceElementId": "path2220",
+      "reviewStatus": "APPROVED",
+      "geometryRole": "INTERACTIVE",
+      "view": "BACK",
+      "laterality": "LEFT",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:BACK:THORACIC",
+      "confidence": "HIGH",
+      "rationale": "Duże, zwarte pole mięśniowe górno-środkowej części pleców; region piersiowy jest jednoznaczny."
+    },
+    {
+      "sourceElementId": "path1867",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "reviewerNote": "Podłużna forma grzbietu obejmuje granicę piersiowo-lędźwiową; bez wymuszenia regionu.",
+      "rationale": "Podłużna forma grzbietu obejmuje granicę piersiowo-lędźwiową; bez wymuszenia regionu."
+    },
+    {
+      "sourceElementId": "path3733",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "SUPPORT",
+      "view": "BACK",
+      "laterality": "LEFT",
+      "confidence": "HIGH",
+      "rationale": "Kontur tej samej powierzchni pleców, bez samodzielnego pola interaktywnego. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem wspierającym."
+    },
+    {
+      "sourceElementId": "path1797",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "LEFT",
+      "confidence": "LOW",
+      "reviewerNote": "Fragment dalszej części kończyny górnej, granica ramienia i przedramienia jest nieczytelna.",
+      "rationale": "Fragment dalszej części kończyny górnej, granica ramienia i przedramienia jest nieczytelna."
+    },
+    {
+      "sourceElementId": "path2358",
+      "reviewStatus": "AMBIGUOUS",
+      "geometryRole": "DECORATIVE",
+      "view": "BACK",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "rationale": "Bardzo mały detal przy kończynie górnej; izolacja nie pozwala pewnie odróżnić linii od drobnego pola."
+    },
+    {
+      "sourceElementId": "path1725",
+      "reviewStatus": "APPROVED",
+      "geometryRole": "INTERACTIVE",
+      "view": "BACK",
+      "laterality": "RIGHT",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:BACK:UPPER_LIMB",
+      "confidence": "HIGH",
+      "rationale": "Długi wypełniony obszar całej kończyny górnej po prawej stronie tylnej sylwetki."
+    },
+    {
+      "sourceElementId": "path2364",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "DECORATIVE",
+      "view": "BACK",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Pojedyncza cienka linia pomocnicza przy kończynie górnej. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem dekoracyjnym."
+    },
+    {
+      "sourceElementId": "path1697",
+      "reviewStatus": "APPROVED",
+      "geometryRole": "INTERACTIVE",
+      "view": "BACK",
+      "laterality": "RIGHT",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:BACK:UPPER_ARM",
+      "confidence": "HIGH",
+      "rationale": "Wypełnione pole mięśniowe tylnej strony prawego ramienia."
+    },
+    {
+      "sourceElementId": "path1598",
+      "reviewStatus": "APPROVED",
+      "geometryRole": "INTERACTIVE",
+      "view": "BACK",
+      "laterality": "RIGHT",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:BACK:UPPER_ARM",
+      "confidence": "HIGH",
+      "rationale": "Wypełnione pole mięśniowe w obrębie prawego ramienia w widoku tylnym."
+    },
+    {
+      "sourceElementId": "path2254",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "LEFT",
+      "confidence": "LOW",
+      "reviewerNote": "Wąski element kończyny górnej; niepewne przypisanie do ramienia albo przedramienia.",
+      "rationale": "Wąski element kończyny górnej; niepewne przypisanie do ramienia albo przedramienia."
+    },
+    {
+      "sourceElementId": "path1648",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "LEFT",
+      "confidence": "LOW",
+      "reviewerNote": "Mała forma na granicy barku i ramienia; wymaga ręcznej decyzji.",
+      "rationale": "Mała forma na granicy barku i ramienia; wymaga ręcznej decyzji."
+    },
+    {
+      "sourceElementId": "path1652",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "SUPPORT",
+      "view": "BACK",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Mały jasny detal konstrukcyjny ramienia. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem wspierającym."
+    },
+    {
+      "sourceElementId": "path1627",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "SUPPORT",
+      "view": "BACK",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Mały jasny detal konstrukcyjny ramienia. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem wspierającym."
+    },
+    {
+      "sourceElementId": "path1542",
+      "reviewStatus": "APPROVED",
+      "geometryRole": "INTERACTIVE",
+      "view": "BACK",
+      "laterality": "RIGHT",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:BACK:SHOULDER_GIRDLE",
+      "confidence": "HIGH",
+      "rationale": "Wypełniony obszar tylnej obręczy barkowej po prawej stronie."
+    },
+    {
+      "sourceElementId": "path1513",
+      "reviewStatus": "APPROVED",
+      "geometryRole": "INTERACTIVE",
+      "view": "BACK",
+      "laterality": "RIGHT",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:BACK:SHOULDER_GIRDLE",
+      "confidence": "HIGH",
+      "rationale": "Wypełniony segment mięśniowy prawej obręczy barkowej."
+    },
+    {
+      "sourceElementId": "path1486",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "DECORATIVE",
+      "view": "BACK",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Krótka linia podziału w okolicy barku. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem dekoracyjnym."
+    },
+    {
+      "sourceElementId": "path1452",
+      "reviewStatus": "APPROVED",
+      "geometryRole": "INTERACTIVE",
+      "view": "BACK",
+      "laterality": "LEFT",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:BACK:SHOULDER_GIRDLE",
+      "confidence": "HIGH",
+      "rationale": "Wypełniony segment obręczy barkowej po lewej stronie tylnej sylwetki."
+    },
+    {
+      "sourceElementId": "path1432",
+      "reviewStatus": "APPROVED",
+      "geometryRole": "INTERACTIVE",
+      "view": "BACK",
+      "laterality": "CENTRAL",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:BACK:CERVICAL",
+      "confidence": "HIGH",
+      "rationale": "Zwarte pole w środkowej okolicy karku."
+    },
+    {
+      "sourceElementId": "path1304-3",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "DECORATIVE",
+      "view": "BACK",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "HIGH",
+      "rationale": "Element obrysu głowy/twarzy, poza regionami interaktywnymi. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem dekoracyjnym."
+    },
+    {
+      "sourceElementId": "path1212",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "DECORATIVE",
+      "view": "BACK",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "HIGH",
+      "rationale": "Detal głowy/twarzy, klasyfikowany jako dekoracyjny. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem dekoracyjnym."
+    },
+    {
+      "sourceElementId": "path1191",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "DECORATIVE",
+      "view": "BACK",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "HIGH",
+      "rationale": "Detal głowy/twarzy, klasyfikowany jako dekoracyjny. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem dekoracyjnym."
+    },
+    {
+      "sourceElementId": "path3496",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "SUPPORT",
+      "view": "BACK",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "HIGH",
+      "rationale": "Jasna konstrukcja czaszki wspierająca ilustrację. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem wspierającym."
+    },
+    {
+      "sourceElementId": "path1327",
+      "reviewStatus": "APPROVED",
+      "geometryRole": "INTERACTIVE",
+      "view": "BACK",
+      "laterality": "CENTRAL",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:BACK:CERVICAL",
+      "confidence": "HIGH",
+      "rationale": "Pole mięśniowe karku w osi tylnej sylwetki."
+    },
+    {
+      "sourceElementId": "path1339",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "SUPPORT",
+      "view": "BACK",
+      "laterality": "CENTRAL",
+      "confidence": "HIGH",
+      "rationale": "Mały jasny detal konstrukcyjny karku. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem wspierającym."
+    },
+    {
+      "sourceElementId": "path1343",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "SUPPORT",
+      "view": "BACK",
+      "laterality": "CENTRAL",
+      "confidence": "HIGH",
+      "rationale": "Mały jasny detal konstrukcyjny karku. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem wspierającym."
+    },
+    {
+      "sourceElementId": "path1347",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "SUPPORT",
+      "view": "BACK",
+      "laterality": "CENTRAL",
+      "confidence": "HIGH",
+      "rationale": "Mały jasny detal konstrukcyjny karku. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem wspierającym."
+    },
+    {
+      "sourceElementId": "path1238",
+      "reviewStatus": "APPROVED",
+      "geometryRole": "INTERACTIVE",
+      "view": "BACK",
+      "laterality": "CENTRAL",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:BACK:CERVICAL",
+      "confidence": "HIGH",
+      "rationale": "Wypełniony pionowy segment karku."
+    },
+    {
+      "sourceElementId": "path1268",
+      "reviewStatus": "APPROVED",
+      "geometryRole": "INTERACTIVE",
+      "view": "BACK",
+      "laterality": "CENTRAL",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:BACK:THORACIC",
+      "confidence": "HIGH",
+      "rationale": "Duża centralna powierzchnia mięśniowa górnych pleców."
+    },
+    {
+      "sourceElementId": "path1376",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "SUPPORT",
+      "view": "BACK",
+      "laterality": "LEFT",
+      "confidence": "HIGH",
+      "rationale": "Jasna warstwa konstrukcyjna po lewej stronie tylnej sylwetki. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem wspierającym."
+    },
+    {
+      "sourceElementId": "path1556",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "LEFT",
+      "confidence": "LOW",
+      "reviewerNote": "Niewielka forma na granicy barku i ramienia; region wymaga sprawdzenia.",
+      "rationale": "Niewielka forma na granicy barku i ramienia; region wymaga sprawdzenia."
+    },
+    {
+      "sourceElementId": "path2775",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "SUPPORT",
+      "view": "BACK",
+      "laterality": "LEFT",
+      "confidence": "HIGH",
+      "rationale": "Pojedyncza linia podziału mięśniowego; nie jest obszarem klikanym. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem wspierającym."
+    },
+    {
+      "sourceElementId": "path3075",
+      "reviewStatus": "APPROVED",
+      "geometryRole": "INTERACTIVE",
+      "view": "BACK",
+      "laterality": "RIGHT",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:BACK:LOWER_LEG",
+      "confidence": "HIGH",
+      "rationale": "Duże wypełnione pole prawego podudzia w widoku tylnym."
+    },
+    {
+      "sourceElementId": "path3022",
+      "reviewStatus": "APPROVED",
+      "geometryRole": "INTERACTIVE",
+      "view": "BACK",
+      "laterality": "LEFT",
+      "visualRegionCode": "ANATOMY_VISUAL_MAP_V1:BACK:LOWER_LEG",
+      "confidence": "HIGH",
+      "rationale": "Duże wypełnione pole lewego podudzia w widoku tylnym."
+    },
+    {
+      "sourceElementId": "path3341",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "DECORATIVE",
+      "view": "BACK",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Drobny detal stopy, poza regionami interaktywnymi. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem dekoracyjnym."
+    },
+    {
+      "sourceElementId": "path3196",
+      "view": "BACK",
+      "geometryRole": "INTERACTIVE",
+      "reviewStatus": "AMBIGUOUS",
+      "laterality": "RIGHT",
+      "confidence": "LOW",
+      "reviewerNote": "Forma od łydki do kostki; niepewna granica podudzia i stopy.",
+      "rationale": "Forma od łydki do kostki; niepewna granica podudzia i stopy."
+    },
+    {
+      "sourceElementId": "path3355",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "DECORATIVE",
+      "view": "BACK",
+      "laterality": "RIGHT",
+      "confidence": "HIGH",
+      "rationale": "Jasny detal stopy, klasyfikowany jako dekoracyjny. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem dekoracyjnym."
+    },
+    {
+      "sourceElementId": "path1152-2",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "DECORATIVE",
+      "view": "BACK",
+      "laterality": "NOT_APPLICABLE",
+      "confidence": "HIGH",
+      "rationale": "Drobny element twarzy/głowy, bez wizualnego regionu. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem dekoracyjnym."
+    },
+    {
+      "sourceElementId": "path1919",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "SUPPORT",
+      "view": "BACK",
+      "laterality": "BILATERAL",
+      "confidence": "HIGH",
+      "rationale": "Rozległy kontur wspierający rysunek pleców, bez wypełnionego pola interaktywnego. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem wspierającym."
+    },
+    {
+      "sourceElementId": "path1379",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "BACK",
+      "laterality": "CENTRAL",
+      "confidence": "HIGH",
+      "rationale": "Wąska pionowa oś techniczna sylwetki. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    },
+    {
+      "sourceElementId": "path1381",
+      "reviewStatus": "REJECTED",
+      "geometryRole": "REFERENCE_ONLY",
+      "view": "BACK",
+      "laterality": "CENTRAL",
+      "confidence": "HIGH",
+      "rationale": "Wąski pionowy detal techniczny osi sylwetki. W SET-07A3 odrzucono go jako geometrię interaktywną V047; pozostaje wyłącznie elementem referencyjnym."
+    }
+  ]
+}
