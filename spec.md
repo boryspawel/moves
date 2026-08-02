@@ -353,6 +353,12 @@ Planowanie
 
 TrainingPlan, TrainingCycle, Microcycle, PlannedSession, ExercisePrescription
 
+> **Uwaga kompatybilności (SET-01):** powyższe pojęcia opisują obowiązujący, legacy model
+> planowania. Kanonicznym celem dla nowego, niezależnego i wersjonowanego zestawu jest
+> [docs/architecture/exercise-set-model.md](docs/architecture/exercise-set-model.md).
+> `ExerciseSet` nie należy do uczestnika, daty ani wykonania; integracja nastąpi
+> przyrostowo, bez zmiany znaczenia danych historycznych.
+
 Wykonanie
 
 SessionExecution, ExerciseResult, PainDifficultyReport, ExecutionCorrection

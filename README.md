@@ -18,8 +18,11 @@ cp .env.example .env
 Wartości w `.env.example` są wyłącznie demonstracyjne i nie nadają się do środowiska współdzielonego ani produkcyjnego. Następnie uruchom cały stos jednym poleceniem:
 
 ```bash
-docker compose up --build
+bash scripts/dev-env-up.sh
 ```
+
+Pełne instrukcje środowiska, diagnostyki, resetu wolumenów i zmiennych znajdują się
+w [dokumentacji środowiska deweloperskiego](docs/development/environment.md).
 
 Adresy:
 
@@ -31,6 +34,21 @@ Adresy:
 Realm `motion-local` i klient `motion-web` są importowane przy pierwszym uruchomieniu. Lokalny użytkownik demonstracyjny ma już profil, zgody i dostępność w bazie aplikacji: `demo.participant` / `demo-participant-local-only`. Hasło jest jawnie demonstracyjne i nie może być używane poza lokalnym środowiskiem. Na ekranie logowania przycisk **Utwórz konto** uruchamia standardową rejestrację Keycloak; profil aplikacji jest następnie tworzony podczas onboardingu.
 
 Lokalny przepływ importu jest dostępny dla `demo.editor` / `demo-editor-local-only` pod `/admin/exercise-import`. Przed importem fixture należy utworzyć i opublikować odpowiadające mu fikcyjne struktury anatomii przez API administracyjne. Format, endpointy, wznowienie i retencję opisuje [dokument importu](docs/exercise-import.md); decyzję architektoniczną zapisuje [ADR-010](docs/adr/ADR-010-mass-exercise-import.md).
+
+Model wielokrotnie używalnych zestawów ćwiczeń oraz wdrożony backendowy pion SET-02–SET-05
+opisuje [model Exercise Set](docs/architecture/exercise-set-model.md) i
+[ADR-013](docs/adr/ADR-013-independent-versioned-exercise-sets.md). Deterministyczną
+analizę snapshotu publikacji SET-05 opisują [analiza Exercise Set](docs/architecture/exercise-set-analysis.md)
+i [ADR-015](docs/adr/ADR-015-deterministic-versioned-exercise-set-analysis.md). Katalogowy picker
+SET-03, oparty o PostgreSQL, opisują [wyszukiwanie katalogu](docs/architecture/exercise-catalog-search.md)
+i [ADR-014](docs/adr/ADR-014-postgresql-catalog-search.md). Bieżący status oraz zakres
+kolejnego etapu znajdują się w [statusie projektu](docs/status/current-state.md).
+
+SET-06 dodaje do buildera odczyt kanałów i wzorców ekspozycji anatomicznej z
+niezmiennego snapshotu publikacji; nie jest to ocena kliniczna ani pomiar siły.
+Granice, ograniczenia oraz dostępność opisuje [ekspozycja anatomiczna zestawu](docs/architecture/exercise-set-anatomy-exposure.md).
+SET-06A dodaje wyłącznie diagnostykę kompletności wersjonowanego mapowania wizualnego
+i metadanych aktywnych regionów; frontend nie zawiera mapy ciała ani słownika anatomii.
 
 Zatrzymanie bez kasowania danych:
 

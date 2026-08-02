@@ -198,7 +198,7 @@ Aktualne API nie przechowuje `source_type`, osobnej flagi `redistribution_allowe
 - `scripts/validate-moves-starter-exercises-v1.py` — walidator statyczny.
 - `src/test/java/com/motionecosystem/exerciseimport/MovesStarterExercisesV1IntegrationTest.java` — test realnego pipeline’u do uruchomienia w repo.
 - `docs/moves-starter-exercises-v1.md` — ten raport.
-- `docs/contracts/exercise-import-1.0.schema.json` — kopia kontraktu użyta przez walidację pakietu.
+- `docs/contracts/exercise-import.json` — kontrakt użyty przez walidację pakietu.
 
 ## 9. Ograniczenia V1
 

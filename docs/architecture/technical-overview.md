@@ -62,6 +62,8 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
   dostępu jest wyłącznym przejściem do konta. Moduły nieprzeniesione korzystają
   wyłącznie z kontrolowanych, lokalnych mostów legacy `*AccountId`.
 - `GET /api/v1/specialist/today?date=YYYY-MM-DD` wyznacza dzień w utrwalonej strefie specjalisty i zwraca terminy, dostępność oraz sprawy worklisty; wolne sloty są wyliczane z dostępności pomniejszonej o zajęte terminy przy skonfigurowanym kroku. Dla bieżącego dnia slot jest możliwy do działania tylko, gdy leży w przyszłości; `operationalTasks` jest obecnie zwracane jako puste.
+- Cykliczne okna dostępności nie są slotami terminów. Frontend przy tworzeniu terminu domyślnie proponuje 60 minut i oferuje 15/30/45/60/90/120 minut albo własny czas; koniec jest wyliczany automatycznie, dopóki specjalista nie nadpisze go ręcznie. Dokładne terminy mogą zaczynać się o dowolnej porze i mieć dowolny czas trwania, lecz muszą w całości mieścić się w odpowiednim oknie dostępności.
+- Nakładające się cykliczne okna dostępności są akceptowane i sygnalizowane w UI jedynie jako miękkie ostrzeżenie. Konflikt aktywnych terminów pozostaje twardą regułą serwera (`409`); terminy anulowane nie blokują nowego terminu.
 - `POST /api/v1/specialist/appointments`, `PUT /api/v1/specialist/appointments/{id}`, `POST /api/v1/specialist/appointments/{id}/cancel` i `POST /api/v1/specialist/appointments/{id}/no-show` wymagają `Idempotency-Key`.
 - Operacje podatne na retry używają klucza idempotencji i unikalnego ograniczenia w bazie.
 

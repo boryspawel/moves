@@ -3,10 +3,12 @@ target/
 *.iml
 .env
 !.env.example
+!.env.e2e.example
 node_modules/
 dist/
 test-results/
 playwright-report/
+web/.auth/
 
 # OpenAPI generator documentation and implementation metadata. The generated
 # TypeScript client under web/src/app/api/generated/src remains versioned.

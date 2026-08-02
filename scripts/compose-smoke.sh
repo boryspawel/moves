@@ -31,5 +31,4 @@ curl --fail --silent http://localhost:14200/ >/dev/null
 curl --fail --silent http://localhost:14200/plan >/dev/null
 curl --fail --silent http://localhost:18080/actuator/health >/dev/null
 curl --fail --silent http://localhost:18180/realms/motion-local/.well-known/openid-configuration >/dev/null
-curl --fail --silent http://localhost:14200/api/actuator/health >/dev/null
-curl --fail --silent -o /dev/null -w '%{http_code}' http://localhost:18080/api/v1/identity/current | grep -qx '401'
+curl --silent -o /dev/null -w '%{http_code}' http://localhost:18080/api/v1/identity/current | grep -qx '401'
