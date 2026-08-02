@@ -30,13 +30,13 @@ export interface SlotRequest {
    * @type {string}
    * @memberof SlotRequest
    */
-  startTime?: string;
+  endTime?: string;
   /**
    *
    * @type {string}
    * @memberof SlotRequest
    */
-  endTime?: string;
+  startTime?: string;
   /**
    *
    * @type {string}
@@ -77,8 +77,8 @@ export function SlotRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean
   }
   return {
     dayOfWeek: json['dayOfWeek'] == null ? undefined : json['dayOfWeek'],
-    startTime: json['startTime'] == null ? undefined : json['startTime'],
     endTime: json['endTime'] == null ? undefined : json['endTime'],
+    startTime: json['startTime'] == null ? undefined : json['startTime'],
     timeZone: json['timeZone'] == null ? undefined : json['timeZone'],
   };
 }
@@ -97,8 +97,8 @@ export function SlotRequestToJSONTyped(
 
   return {
     dayOfWeek: value['dayOfWeek'],
-    startTime: value['startTime'],
     endTime: value['endTime'],
+    startTime: value['startTime'],
     timeZone: value['timeZone'],
   };
 }

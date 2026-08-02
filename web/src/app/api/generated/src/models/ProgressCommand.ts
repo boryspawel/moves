@@ -21,16 +21,16 @@ import { mapValues } from '../runtime';
 export interface ProgressCommand {
   /**
    *
-   * @type {string}
-   * @memberof ProgressCommand
-   */
-  exercisePrescriptionId?: string;
-  /**
-   *
    * @type {boolean}
    * @memberof ProgressCommand
    */
   completed?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof ProgressCommand
+   */
+  exercisePrescriptionId?: string;
 }
 
 /**
@@ -52,9 +52,9 @@ export function ProgressCommandFromJSONTyped(
     return json;
   }
   return {
+    completed: json['completed'] == null ? undefined : json['completed'],
     exercisePrescriptionId:
       json['exercisePrescriptionId'] == null ? undefined : json['exercisePrescriptionId'],
-    completed: json['completed'] == null ? undefined : json['completed'],
   };
 }
 
@@ -71,7 +71,7 @@ export function ProgressCommandToJSONTyped(
   }
 
   return {
-    exercisePrescriptionId: value['exercisePrescriptionId'],
     completed: value['completed'],
+    exercisePrescriptionId: value['exercisePrescriptionId'],
   };
 }

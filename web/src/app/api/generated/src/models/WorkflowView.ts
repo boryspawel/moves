@@ -36,16 +36,16 @@ import {
 export interface WorkflowView {
   /**
    *
-   * @type {WorkflowState}
-   * @memberof WorkflowView
-   */
-  state?: WorkflowState;
-  /**
-   *
    * @type {AssessmentSnapshot}
    * @memberof WorkflowView
    */
   assessment?: AssessmentSnapshot;
+  /**
+   *
+   * @type {WorkflowState}
+   * @memberof WorkflowView
+   */
+  state?: WorkflowState;
 }
 
 /**
@@ -64,9 +64,9 @@ export function WorkflowViewFromJSONTyped(json: any, ignoreDiscriminator: boolea
     return json;
   }
   return {
-    state: json['state'] == null ? undefined : WorkflowStateFromJSON(json['state']),
     assessment:
       json['assessment'] == null ? undefined : AssessmentSnapshotFromJSON(json['assessment']),
+    state: json['state'] == null ? undefined : WorkflowStateFromJSON(json['state']),
   };
 }
 
@@ -83,7 +83,7 @@ export function WorkflowViewToJSONTyped(
   }
 
   return {
-    state: WorkflowStateToJSON(value['state']),
     assessment: AssessmentSnapshotToJSON(value['assessment']),
+    state: WorkflowStateToJSON(value['state']),
   };
 }

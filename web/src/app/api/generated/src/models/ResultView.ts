@@ -21,36 +21,6 @@ import { mapValues } from '../runtime';
 export interface ResultView {
   /**
    *
-   * @type {string}
-   * @memberof ResultView
-   */
-  exercisePrescriptionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ResultView
-   */
-  exerciseVersionId?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof ResultView
-   */
-  actualSets?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof ResultView
-   */
-  actualRepetitions?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof ResultView
-   */
-  actualDurationSeconds?: number;
-  /**
-   *
    * @type {number}
    * @memberof ResultView
    */
@@ -66,19 +36,19 @@ export interface ResultView {
    * @type {number}
    * @memberof ResultView
    */
-  actualLoadKg?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof ResultView
-   */
-  actualExternalLoadValue?: number;
+  actualDurationSeconds?: number;
   /**
    *
    * @type {string}
    * @memberof ResultView
    */
   actualExternalLoadUnit?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof ResultView
+   */
+  actualExternalLoadValue?: number;
   /**
    *
    * @type {string}
@@ -99,6 +69,48 @@ export interface ResultView {
   actualIntensityZone?: string;
   /**
    *
+   * @type {number}
+   * @memberof ResultView
+   */
+  actualLoadKg?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof ResultView
+   */
+  actualRepetitions?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof ResultView
+   */
+  actualSets?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof ResultView
+   */
+  exercisePrescriptionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ResultView
+   */
+  exerciseVersionId?: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof ResultView
+   */
+  modified?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof ResultView
+   */
+  observationMode?: string;
+  /**
+   *
    * @type {string}
    * @memberof ResultView
    */
@@ -108,19 +120,7 @@ export interface ResultView {
    * @type {boolean}
    * @memberof ResultView
    */
-  modified?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof ResultView
-   */
   skipped?: boolean;
-  /**
-   *
-   * @type {string}
-   * @memberof ResultView
-   */
-  observationMode?: string;
 }
 
 /**
@@ -139,31 +139,31 @@ export function ResultViewFromJSONTyped(json: any, ignoreDiscriminator: boolean)
     return json;
   }
   return {
-    exercisePrescriptionId:
-      json['exercisePrescriptionId'] == null ? undefined : json['exercisePrescriptionId'],
-    exerciseVersionId: json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
-    actualSets: json['actualSets'] == null ? undefined : json['actualSets'],
-    actualRepetitions: json['actualRepetitions'] == null ? undefined : json['actualRepetitions'],
-    actualDurationSeconds:
-      json['actualDurationSeconds'] == null ? undefined : json['actualDurationSeconds'],
     actualContacts: json['actualContacts'] == null ? undefined : json['actualContacts'],
     actualDistanceMeters:
       json['actualDistanceMeters'] == null ? undefined : json['actualDistanceMeters'],
-    actualLoadKg: json['actualLoadKg'] == null ? undefined : json['actualLoadKg'],
-    actualExternalLoadValue:
-      json['actualExternalLoadValue'] == null ? undefined : json['actualExternalLoadValue'],
+    actualDurationSeconds:
+      json['actualDurationSeconds'] == null ? undefined : json['actualDurationSeconds'],
     actualExternalLoadUnit:
       json['actualExternalLoadUnit'] == null ? undefined : json['actualExternalLoadUnit'],
+    actualExternalLoadValue:
+      json['actualExternalLoadValue'] == null ? undefined : json['actualExternalLoadValue'],
     actualIntensityType:
       json['actualIntensityType'] == null ? undefined : json['actualIntensityType'],
     actualIntensityValue:
       json['actualIntensityValue'] == null ? undefined : json['actualIntensityValue'],
     actualIntensityZone:
       json['actualIntensityZone'] == null ? undefined : json['actualIntensityZone'],
-    side: json['side'] == null ? undefined : json['side'],
+    actualLoadKg: json['actualLoadKg'] == null ? undefined : json['actualLoadKg'],
+    actualRepetitions: json['actualRepetitions'] == null ? undefined : json['actualRepetitions'],
+    actualSets: json['actualSets'] == null ? undefined : json['actualSets'],
+    exercisePrescriptionId:
+      json['exercisePrescriptionId'] == null ? undefined : json['exercisePrescriptionId'],
+    exerciseVersionId: json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
     modified: json['modified'] == null ? undefined : json['modified'],
-    skipped: json['skipped'] == null ? undefined : json['skipped'],
     observationMode: json['observationMode'] == null ? undefined : json['observationMode'],
+    side: json['side'] == null ? undefined : json['side'],
+    skipped: json['skipped'] == null ? undefined : json['skipped'],
   };
 }
 
@@ -180,22 +180,22 @@ export function ResultViewToJSONTyped(
   }
 
   return {
-    exercisePrescriptionId: value['exercisePrescriptionId'],
-    exerciseVersionId: value['exerciseVersionId'],
-    actualSets: value['actualSets'],
-    actualRepetitions: value['actualRepetitions'],
-    actualDurationSeconds: value['actualDurationSeconds'],
     actualContacts: value['actualContacts'],
     actualDistanceMeters: value['actualDistanceMeters'],
-    actualLoadKg: value['actualLoadKg'],
-    actualExternalLoadValue: value['actualExternalLoadValue'],
+    actualDurationSeconds: value['actualDurationSeconds'],
     actualExternalLoadUnit: value['actualExternalLoadUnit'],
+    actualExternalLoadValue: value['actualExternalLoadValue'],
     actualIntensityType: value['actualIntensityType'],
     actualIntensityValue: value['actualIntensityValue'],
     actualIntensityZone: value['actualIntensityZone'],
-    side: value['side'],
+    actualLoadKg: value['actualLoadKg'],
+    actualRepetitions: value['actualRepetitions'],
+    actualSets: value['actualSets'],
+    exercisePrescriptionId: value['exercisePrescriptionId'],
+    exerciseVersionId: value['exerciseVersionId'],
     modified: value['modified'],
-    skipped: value['skipped'],
     observationMode: value['observationMode'],
+    side: value['side'],
+    skipped: value['skipped'],
   };
 }

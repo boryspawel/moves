@@ -21,6 +21,18 @@ import { mapValues } from '../runtime';
 export interface AddMicrocycleCommand {
   /**
    *
+   * @type {string}
+   * @memberof AddMicrocycleCommand
+   */
+  cycleId?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof AddMicrocycleCommand
+   */
+  endDate?: Date;
+  /**
+   *
    * @type {number}
    * @memberof AddMicrocycleCommand
    */
@@ -30,31 +42,13 @@ export interface AddMicrocycleCommand {
    * @type {string}
    * @memberof AddMicrocycleCommand
    */
-  cycleId?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof AddMicrocycleCommand
-   */
-  sequenceNumber?: number;
+  name?: string;
   /**
    *
    * @type {string}
    * @memberof AddMicrocycleCommand
    */
-  name?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof AddMicrocycleCommand
-   */
-  startDate?: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof AddMicrocycleCommand
-   */
-  endDate?: Date;
+  phaseGoal?: string;
   /**
    *
    * @type {string}
@@ -63,10 +57,16 @@ export interface AddMicrocycleCommand {
   phaseIntent?: string;
   /**
    *
-   * @type {string}
+   * @type {number}
    * @memberof AddMicrocycleCommand
    */
-  phaseGoal?: string;
+  sequenceNumber?: number;
+  /**
+   *
+   * @type {Date}
+   * @memberof AddMicrocycleCommand
+   */
+  startDate?: Date;
 }
 
 /**
@@ -88,14 +88,14 @@ export function AddMicrocycleCommandFromJSONTyped(
     return json;
   }
   return {
-    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
     cycleId: json['cycleId'] == null ? undefined : json['cycleId'],
-    sequenceNumber: json['sequenceNumber'] == null ? undefined : json['sequenceNumber'],
-    name: json['name'] == null ? undefined : json['name'],
-    startDate: json['startDate'] == null ? undefined : new Date(json['startDate']),
     endDate: json['endDate'] == null ? undefined : new Date(json['endDate']),
-    phaseIntent: json['phaseIntent'] == null ? undefined : json['phaseIntent'],
+    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
+    name: json['name'] == null ? undefined : json['name'],
     phaseGoal: json['phaseGoal'] == null ? undefined : json['phaseGoal'],
+    phaseIntent: json['phaseIntent'] == null ? undefined : json['phaseIntent'],
+    sequenceNumber: json['sequenceNumber'] == null ? undefined : json['sequenceNumber'],
+    startDate: json['startDate'] == null ? undefined : new Date(json['startDate']),
   };
 }
 
@@ -112,17 +112,17 @@ export function AddMicrocycleCommandToJSONTyped(
   }
 
   return {
-    expectedVersion: value['expectedVersion'],
     cycleId: value['cycleId'],
-    sequenceNumber: value['sequenceNumber'],
+    endDate:
+      value['endDate'] == null ? value['endDate'] : value['endDate'].toISOString().substring(0, 10),
+    expectedVersion: value['expectedVersion'],
     name: value['name'],
+    phaseGoal: value['phaseGoal'],
+    phaseIntent: value['phaseIntent'],
+    sequenceNumber: value['sequenceNumber'],
     startDate:
       value['startDate'] == null
         ? value['startDate']
         : value['startDate'].toISOString().substring(0, 10),
-    endDate:
-      value['endDate'] == null ? value['endDate'] : value['endDate'].toISOString().substring(0, 10),
-    phaseIntent: value['phaseIntent'],
-    phaseGoal: value['phaseGoal'],
   };
 }

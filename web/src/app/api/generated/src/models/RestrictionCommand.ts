@@ -29,10 +29,28 @@ import {
 export interface RestrictionCommand {
   /**
    *
+   * @type {string}
+   * @memberof RestrictionCommand
+   */
+  clinicalRationaleRef?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RestrictionCommand
+   */
+  participantExplanation?: string;
+  /**
+   *
    * @type {RestrictionCommandSemanticTypeEnum}
    * @memberof RestrictionCommand
    */
   semanticType?: RestrictionCommandSemanticTypeEnum;
+  /**
+   *
+   * @type {TargetCommand}
+   * @memberof RestrictionCommand
+   */
+  target?: TargetCommand;
   /**
    *
    * @type {Date}
@@ -45,24 +63,6 @@ export interface RestrictionCommand {
    * @memberof RestrictionCommand
    */
   validTo?: Date;
-  /**
-   *
-   * @type {string}
-   * @memberof RestrictionCommand
-   */
-  participantExplanation?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RestrictionCommand
-   */
-  clinicalRationaleRef?: string;
-  /**
-   *
-   * @type {TargetCommand}
-   * @memberof RestrictionCommand
-   */
-  target?: TargetCommand;
 }
 
 /**
@@ -96,14 +96,14 @@ export function RestrictionCommandFromJSONTyped(
     return json;
   }
   return {
-    semanticType: json['semanticType'] == null ? undefined : json['semanticType'],
-    validFrom: json['validFrom'] == null ? undefined : new Date(json['validFrom']),
-    validTo: json['validTo'] == null ? undefined : new Date(json['validTo']),
-    participantExplanation:
-      json['participantExplanation'] == null ? undefined : json['participantExplanation'],
     clinicalRationaleRef:
       json['clinicalRationaleRef'] == null ? undefined : json['clinicalRationaleRef'],
+    participantExplanation:
+      json['participantExplanation'] == null ? undefined : json['participantExplanation'],
+    semanticType: json['semanticType'] == null ? undefined : json['semanticType'],
     target: json['target'] == null ? undefined : TargetCommandFromJSON(json['target']),
+    validFrom: json['validFrom'] == null ? undefined : new Date(json['validFrom']),
+    validTo: json['validTo'] == null ? undefined : new Date(json['validTo']),
   };
 }
 
@@ -120,11 +120,11 @@ export function RestrictionCommandToJSONTyped(
   }
 
   return {
+    clinicalRationaleRef: value['clinicalRationaleRef'],
+    participantExplanation: value['participantExplanation'],
     semanticType: value['semanticType'],
+    target: TargetCommandToJSON(value['target']),
     validFrom: value['validFrom'] == null ? value['validFrom'] : value['validFrom'].toISOString(),
     validTo: value['validTo'] == null ? value['validTo'] : value['validTo'].toISOString(),
-    participantExplanation: value['participantExplanation'],
-    clinicalRationaleRef: value['clinicalRationaleRef'],
-    target: TargetCommandToJSON(value['target']),
   };
 }

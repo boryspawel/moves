@@ -32,37 +32,13 @@ export interface AttemptDetailView {
    * @type {string}
    * @memberof AttemptDetailView
    */
+  abandonmentReason?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AttemptDetailView
+   */
   attemptId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AttemptDetailView
-   */
-  plannedSessionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AttemptDetailView
-   */
-  planRevisionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AttemptDetailView
-   */
-  selectedVariantType?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AttemptDetailView
-   */
-  state?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof AttemptDetailView
-   */
-  startedAt?: Date;
   /**
    *
    * @type {Date}
@@ -74,13 +50,37 @@ export interface AttemptDetailView {
    * @type {string}
    * @memberof AttemptDetailView
    */
-  abandonmentReason?: string;
+  planRevisionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AttemptDetailView
+   */
+  plannedSessionId?: string;
   /**
    *
    * @type {Array<ProgressView>}
    * @memberof AttemptDetailView
    */
   progress?: Array<ProgressView>;
+  /**
+   *
+   * @type {string}
+   * @memberof AttemptDetailView
+   */
+  selectedVariantType?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof AttemptDetailView
+   */
+  startedAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof AttemptDetailView
+   */
+  state?: string;
 }
 
 /**
@@ -102,19 +102,19 @@ export function AttemptDetailViewFromJSONTyped(
     return json;
   }
   return {
-    attemptId: json['attemptId'] == null ? undefined : json['attemptId'],
-    plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
-    planRevisionId: json['planRevisionId'] == null ? undefined : json['planRevisionId'],
-    selectedVariantType:
-      json['selectedVariantType'] == null ? undefined : json['selectedVariantType'],
-    state: json['state'] == null ? undefined : json['state'],
-    startedAt: json['startedAt'] == null ? undefined : new Date(json['startedAt']),
-    lastActivityAt: json['lastActivityAt'] == null ? undefined : new Date(json['lastActivityAt']),
     abandonmentReason: json['abandonmentReason'] == null ? undefined : json['abandonmentReason'],
+    attemptId: json['attemptId'] == null ? undefined : json['attemptId'],
+    lastActivityAt: json['lastActivityAt'] == null ? undefined : new Date(json['lastActivityAt']),
+    planRevisionId: json['planRevisionId'] == null ? undefined : json['planRevisionId'],
+    plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
     progress:
       json['progress'] == null
         ? undefined
         : (json['progress'] as Array<any>).map(ProgressViewFromJSON),
+    selectedVariantType:
+      json['selectedVariantType'] == null ? undefined : json['selectedVariantType'],
+    startedAt: json['startedAt'] == null ? undefined : new Date(json['startedAt']),
+    state: json['state'] == null ? undefined : json['state'],
   };
 }
 
@@ -131,20 +131,20 @@ export function AttemptDetailViewToJSONTyped(
   }
 
   return {
+    abandonmentReason: value['abandonmentReason'],
     attemptId: value['attemptId'],
-    plannedSessionId: value['plannedSessionId'],
-    planRevisionId: value['planRevisionId'],
-    selectedVariantType: value['selectedVariantType'],
-    state: value['state'],
-    startedAt: value['startedAt'] == null ? value['startedAt'] : value['startedAt'].toISOString(),
     lastActivityAt:
       value['lastActivityAt'] == null
         ? value['lastActivityAt']
         : value['lastActivityAt'].toISOString(),
-    abandonmentReason: value['abandonmentReason'],
+    planRevisionId: value['planRevisionId'],
+    plannedSessionId: value['plannedSessionId'],
     progress:
       value['progress'] == null
         ? undefined
         : (value['progress'] as Array<any>).map(ProgressViewToJSON),
+    selectedVariantType: value['selectedVariantType'],
+    startedAt: value['startedAt'] == null ? value['startedAt'] : value['startedAt'].toISOString(),
+    state: value['state'],
   };
 }

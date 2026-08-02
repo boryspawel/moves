@@ -21,30 +21,6 @@ import { mapValues } from '../runtime';
 export interface AgendaSessionView {
   /**
    *
-   * @type {string}
-   * @memberof AgendaSessionView
-   */
-  sessionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AgendaSessionView
-   */
-  title?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof AgendaSessionView
-   */
-  expectedDurationMinutes?: number;
-  /**
-   *
-   * @type {Date}
-   * @memberof AgendaSessionView
-   */
-  scheduledDate?: Date;
-  /**
-   *
    * @type {Date}
    * @memberof AgendaSessionView
    */
@@ -60,19 +36,19 @@ export interface AgendaSessionView {
    * @type {string}
    * @memberof AgendaSessionView
    */
-  executionState?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AgendaSessionView
-   */
   doseSummary?: string;
   /**
    *
    * @type {string}
    * @memberof AgendaSessionView
    */
-  safetyState?: string;
+  executionState?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof AgendaSessionView
+   */
+  expectedDurationMinutes?: number;
   /**
    *
    * @type {string}
@@ -81,10 +57,34 @@ export interface AgendaSessionView {
   nextAction?: string;
   /**
    *
+   * @type {string}
+   * @memberof AgendaSessionView
+   */
+  safetyState?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof AgendaSessionView
+   */
+  scheduledDate?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof AgendaSessionView
+   */
+  sessionId?: string;
+  /**
+   *
    * @type {Date}
    * @memberof AgendaSessionView
    */
   sortAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof AgendaSessionView
+   */
+  title?: string;
 }
 
 /**
@@ -106,18 +106,18 @@ export function AgendaSessionViewFromJSONTyped(
     return json;
   }
   return {
-    sessionId: json['sessionId'] == null ? undefined : json['sessionId'],
-    title: json['title'] == null ? undefined : json['title'],
-    expectedDurationMinutes:
-      json['expectedDurationMinutes'] == null ? undefined : json['expectedDurationMinutes'],
-    scheduledDate: json['scheduledDate'] == null ? undefined : new Date(json['scheduledDate']),
     availableFrom: json['availableFrom'] == null ? undefined : new Date(json['availableFrom']),
     availableTo: json['availableTo'] == null ? undefined : new Date(json['availableTo']),
-    executionState: json['executionState'] == null ? undefined : json['executionState'],
     doseSummary: json['doseSummary'] == null ? undefined : json['doseSummary'],
-    safetyState: json['safetyState'] == null ? undefined : json['safetyState'],
+    executionState: json['executionState'] == null ? undefined : json['executionState'],
+    expectedDurationMinutes:
+      json['expectedDurationMinutes'] == null ? undefined : json['expectedDurationMinutes'],
     nextAction: json['nextAction'] == null ? undefined : json['nextAction'],
+    safetyState: json['safetyState'] == null ? undefined : json['safetyState'],
+    scheduledDate: json['scheduledDate'] == null ? undefined : new Date(json['scheduledDate']),
+    sessionId: json['sessionId'] == null ? undefined : json['sessionId'],
     sortAt: json['sortAt'] == null ? undefined : new Date(json['sortAt']),
+    title: json['title'] == null ? undefined : json['title'],
   };
 }
 
@@ -134,23 +134,23 @@ export function AgendaSessionViewToJSONTyped(
   }
 
   return {
-    sessionId: value['sessionId'],
-    title: value['title'],
-    expectedDurationMinutes: value['expectedDurationMinutes'],
-    scheduledDate:
-      value['scheduledDate'] == null
-        ? value['scheduledDate']
-        : value['scheduledDate'].toISOString().substring(0, 10),
     availableFrom:
       value['availableFrom'] == null
         ? value['availableFrom']
         : value['availableFrom'].toISOString(),
     availableTo:
       value['availableTo'] == null ? value['availableTo'] : value['availableTo'].toISOString(),
-    executionState: value['executionState'],
     doseSummary: value['doseSummary'],
-    safetyState: value['safetyState'],
+    executionState: value['executionState'],
+    expectedDurationMinutes: value['expectedDurationMinutes'],
     nextAction: value['nextAction'],
+    safetyState: value['safetyState'],
+    scheduledDate:
+      value['scheduledDate'] == null
+        ? value['scheduledDate']
+        : value['scheduledDate'].toISOString().substring(0, 10),
+    sessionId: value['sessionId'],
     sortAt: value['sortAt'] == null ? value['sortAt'] : value['sortAt'].toISOString(),
+    title: value['title'],
   };
 }

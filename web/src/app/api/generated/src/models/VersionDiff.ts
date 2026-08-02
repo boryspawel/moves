@@ -24,25 +24,7 @@ export interface VersionDiff {
    * @type {string}
    * @memberof VersionDiff
    */
-  versionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof VersionDiff
-   */
-  exerciseId?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof VersionDiff
-   */
-  versionNumber?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof VersionDiff
-   */
-  status?: string;
+  currentPublishedSemanticSha256?: string;
   /**
    *
    * @type {string}
@@ -54,7 +36,25 @@ export interface VersionDiff {
    * @type {string}
    * @memberof VersionDiff
    */
-  currentPublishedSemanticSha256?: string;
+  exerciseId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof VersionDiff
+   */
+  status?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof VersionDiff
+   */
+  versionId?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof VersionDiff
+   */
+  versionNumber?: number;
 }
 
 /**
@@ -73,16 +73,16 @@ export function VersionDiffFromJSONTyped(json: any, ignoreDiscriminator: boolean
     return json;
   }
   return {
-    versionId: json['versionId'] == null ? undefined : json['versionId'],
-    exerciseId: json['exerciseId'] == null ? undefined : json['exerciseId'],
-    versionNumber: json['versionNumber'] == null ? undefined : json['versionNumber'],
-    status: json['status'] == null ? undefined : json['status'],
-    draftSemanticSha256:
-      json['draftSemanticSha256'] == null ? undefined : json['draftSemanticSha256'],
     currentPublishedSemanticSha256:
       json['currentPublishedSemanticSha256'] == null
         ? undefined
         : json['currentPublishedSemanticSha256'],
+    draftSemanticSha256:
+      json['draftSemanticSha256'] == null ? undefined : json['draftSemanticSha256'],
+    exerciseId: json['exerciseId'] == null ? undefined : json['exerciseId'],
+    status: json['status'] == null ? undefined : json['status'],
+    versionId: json['versionId'] == null ? undefined : json['versionId'],
+    versionNumber: json['versionNumber'] == null ? undefined : json['versionNumber'],
   };
 }
 
@@ -99,11 +99,11 @@ export function VersionDiffToJSONTyped(
   }
 
   return {
-    versionId: value['versionId'],
-    exerciseId: value['exerciseId'],
-    versionNumber: value['versionNumber'],
-    status: value['status'],
-    draftSemanticSha256: value['draftSemanticSha256'],
     currentPublishedSemanticSha256: value['currentPublishedSemanticSha256'],
+    draftSemanticSha256: value['draftSemanticSha256'],
+    exerciseId: value['exerciseId'],
+    status: value['status'],
+    versionId: value['versionId'],
+    versionNumber: value['versionNumber'],
   };
 }

@@ -35,16 +35,10 @@ export interface ReviewResult {
   exerciseVersionId?: string;
   /**
    *
-   * @type {string}
+   * @type {Array<string>}
    * @memberof ReviewResult
    */
-  status?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof ReviewResult
-   */
-  version?: number;
+  requiredAreas?: Array<string>;
   /**
    *
    * @type {Array<ReviewItem>}
@@ -53,16 +47,22 @@ export interface ReviewResult {
   reviews?: Array<ReviewItem>;
   /**
    *
+   * @type {string}
+   * @memberof ReviewResult
+   */
+  status?: string;
+  /**
+   *
    * @type {Array<string>}
    * @memberof ReviewResult
    */
   unmetRequirements?: Array<string>;
   /**
    *
-   * @type {Array<string>}
+   * @type {number}
    * @memberof ReviewResult
    */
-  requiredAreas?: Array<string>;
+  version?: number;
 }
 
 /**
@@ -82,12 +82,12 @@ export function ReviewResultFromJSONTyped(json: any, ignoreDiscriminator: boolea
   }
   return {
     exerciseVersionId: json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
-    status: json['status'] == null ? undefined : json['status'],
-    version: json['version'] == null ? undefined : json['version'],
+    requiredAreas: json['requiredAreas'] == null ? undefined : json['requiredAreas'],
     reviews:
       json['reviews'] == null ? undefined : (json['reviews'] as Array<any>).map(ReviewItemFromJSON),
+    status: json['status'] == null ? undefined : json['status'],
     unmetRequirements: json['unmetRequirements'] == null ? undefined : json['unmetRequirements'],
-    requiredAreas: json['requiredAreas'] == null ? undefined : json['requiredAreas'],
+    version: json['version'] == null ? undefined : json['version'],
   };
 }
 
@@ -105,11 +105,11 @@ export function ReviewResultToJSONTyped(
 
   return {
     exerciseVersionId: value['exerciseVersionId'],
-    status: value['status'],
-    version: value['version'],
+    requiredAreas: value['requiredAreas'],
     reviews:
       value['reviews'] == null ? undefined : (value['reviews'] as Array<any>).map(ReviewItemToJSON),
+    status: value['status'],
     unmetRequirements: value['unmetRequirements'],
-    requiredAreas: value['requiredAreas'],
+    version: value['version'],
   };
 }

@@ -27,10 +27,10 @@ export interface RecoveryView {
   episodeId?: string;
   /**
    *
-   * @type {string}
+   * @type {number}
    * @memberof RecoveryView
    */
-  state?: string;
+  gapDays?: number;
   /**
    *
    * @type {string}
@@ -42,31 +42,13 @@ export interface RecoveryView {
    * @type {string}
    * @memberof RecoveryView
    */
-  policyVersion?: string;
+  offerId?: string;
   /**
    *
    * @type {Date}
    * @memberof RecoveryView
    */
   openedAt?: Date;
-  /**
-   *
-   * @type {number}
-   * @memberof RecoveryView
-   */
-  gapDays?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof RecoveryView
-   */
-  targetSessionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RecoveryView
-   */
-  offerId?: string;
   /**
    *
    * @type {Array<string>}
@@ -78,13 +60,31 @@ export interface RecoveryView {
    * @type {string}
    * @memberof RecoveryView
    */
-  selectedPath?: string;
+  policyVersion?: string;
   /**
    *
    * @type {string}
    * @memberof RecoveryView
    */
   returnState?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RecoveryView
+   */
+  selectedPath?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RecoveryView
+   */
+  state?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RecoveryView
+   */
+  targetSessionId?: string;
   /**
    *
    * @type {number}
@@ -110,16 +110,16 @@ export function RecoveryViewFromJSONTyped(json: any, ignoreDiscriminator: boolea
   }
   return {
     episodeId: json['episodeId'] == null ? undefined : json['episodeId'],
-    state: json['state'] == null ? undefined : json['state'],
-    messageCode: json['messageCode'] == null ? undefined : json['messageCode'],
-    policyVersion: json['policyVersion'] == null ? undefined : json['policyVersion'],
-    openedAt: json['openedAt'] == null ? undefined : new Date(json['openedAt']),
     gapDays: json['gapDays'] == null ? undefined : json['gapDays'],
-    targetSessionId: json['targetSessionId'] == null ? undefined : json['targetSessionId'],
+    messageCode: json['messageCode'] == null ? undefined : json['messageCode'],
     offerId: json['offerId'] == null ? undefined : json['offerId'],
+    openedAt: json['openedAt'] == null ? undefined : new Date(json['openedAt']),
     options: json['options'] == null ? undefined : json['options'],
-    selectedPath: json['selectedPath'] == null ? undefined : json['selectedPath'],
+    policyVersion: json['policyVersion'] == null ? undefined : json['policyVersion'],
     returnState: json['returnState'] == null ? undefined : json['returnState'],
+    selectedPath: json['selectedPath'] == null ? undefined : json['selectedPath'],
+    state: json['state'] == null ? undefined : json['state'],
+    targetSessionId: json['targetSessionId'] == null ? undefined : json['targetSessionId'],
     version: json['version'] == null ? undefined : json['version'],
   };
 }
@@ -138,16 +138,16 @@ export function RecoveryViewToJSONTyped(
 
   return {
     episodeId: value['episodeId'],
-    state: value['state'],
-    messageCode: value['messageCode'],
-    policyVersion: value['policyVersion'],
-    openedAt: value['openedAt'] == null ? value['openedAt'] : value['openedAt'].toISOString(),
     gapDays: value['gapDays'],
-    targetSessionId: value['targetSessionId'],
+    messageCode: value['messageCode'],
     offerId: value['offerId'],
+    openedAt: value['openedAt'] == null ? value['openedAt'] : value['openedAt'].toISOString(),
     options: value['options'],
-    selectedPath: value['selectedPath'],
+    policyVersion: value['policyVersion'],
     returnState: value['returnState'],
+    selectedPath: value['selectedPath'],
+    state: value['state'],
+    targetSessionId: value['targetSessionId'],
     version: value['version'],
   };
 }

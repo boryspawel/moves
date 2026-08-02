@@ -21,40 +21,10 @@ import { mapValues } from '../runtime';
 export interface AttentionItemView {
   /**
    *
-   * @type {string}
+   * @type {Array<string>}
    * @memberof AttentionItemView
    */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AttentionItemView
-   */
-  type?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AttentionItemView
-   */
-  priority?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AttentionItemView
-   */
-  participantLabel?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AttentionItemView
-   */
-  title?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AttentionItemView
-   */
-  neutralReason?: string;
+  availableActions?: Array<string>;
   /**
    *
    * @type {Date}
@@ -72,19 +42,49 @@ export interface AttentionItemView {
    * @type {string}
    * @memberof AttentionItemView
    */
-  status?: string;
-  /**
-   *
-   * @type {Array<string>}
-   * @memberof AttentionItemView
-   */
-  availableActions?: Array<string>;
+  id?: string;
   /**
    *
    * @type {string}
    * @memberof AttentionItemView
    */
   navigationReference?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AttentionItemView
+   */
+  neutralReason?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AttentionItemView
+   */
+  participantLabel?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AttentionItemView
+   */
+  priority?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AttentionItemView
+   */
+  status?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AttentionItemView
+   */
+  title?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AttentionItemView
+   */
+  type?: string;
 }
 
 /**
@@ -106,18 +106,18 @@ export function AttentionItemViewFromJSONTyped(
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
-    type: json['type'] == null ? undefined : json['type'],
-    priority: json['priority'] == null ? undefined : json['priority'],
-    participantLabel: json['participantLabel'] == null ? undefined : json['participantLabel'],
-    title: json['title'] == null ? undefined : json['title'],
-    neutralReason: json['neutralReason'] == null ? undefined : json['neutralReason'],
+    availableActions: json['availableActions'] == null ? undefined : json['availableActions'],
     createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
     dueAt: json['dueAt'] == null ? undefined : new Date(json['dueAt']),
-    status: json['status'] == null ? undefined : json['status'],
-    availableActions: json['availableActions'] == null ? undefined : json['availableActions'],
+    id: json['id'] == null ? undefined : json['id'],
     navigationReference:
       json['navigationReference'] == null ? undefined : json['navigationReference'],
+    neutralReason: json['neutralReason'] == null ? undefined : json['neutralReason'],
+    participantLabel: json['participantLabel'] == null ? undefined : json['participantLabel'],
+    priority: json['priority'] == null ? undefined : json['priority'],
+    status: json['status'] == null ? undefined : json['status'],
+    title: json['title'] == null ? undefined : json['title'],
+    type: json['type'] == null ? undefined : json['type'],
   };
 }
 
@@ -134,16 +134,16 @@ export function AttentionItemViewToJSONTyped(
   }
 
   return {
-    id: value['id'],
-    type: value['type'],
-    priority: value['priority'],
-    participantLabel: value['participantLabel'],
-    title: value['title'],
-    neutralReason: value['neutralReason'],
+    availableActions: value['availableActions'],
     createdAt: value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
     dueAt: value['dueAt'] == null ? value['dueAt'] : value['dueAt'].toISOString(),
-    status: value['status'],
-    availableActions: value['availableActions'],
+    id: value['id'],
     navigationReference: value['navigationReference'],
+    neutralReason: value['neutralReason'],
+    participantLabel: value['participantLabel'],
+    priority: value['priority'],
+    status: value['status'],
+    title: value['title'],
+    type: value['type'],
   };
 }

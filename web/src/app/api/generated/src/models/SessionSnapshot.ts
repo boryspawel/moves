@@ -36,24 +36,6 @@ import {
 export interface SessionSnapshot {
   /**
    *
-   * @type {string}
-   * @memberof SessionSnapshot
-   */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof SessionSnapshot
-   */
-  title?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof SessionSnapshot
-   */
-  scheduledDate?: Date;
-  /**
-   *
    * @type {Date}
    * @memberof SessionSnapshot
    */
@@ -75,13 +57,31 @@ export interface SessionSnapshot {
    * @type {string}
    * @memberof SessionSnapshot
    */
-  status?: string;
+  id?: string;
   /**
    *
    * @type {Array<PrescriptionSnapshot>}
    * @memberof SessionSnapshot
    */
   prescriptions?: Array<PrescriptionSnapshot>;
+  /**
+   *
+   * @type {Date}
+   * @memberof SessionSnapshot
+   */
+  scheduledDate?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof SessionSnapshot
+   */
+  status?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof SessionSnapshot
+   */
+  title?: string;
   /**
    *
    * @type {Array<SessionVariantSnapshot>}
@@ -109,18 +109,18 @@ export function SessionSnapshotFromJSONTyped(
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
-    title: json['title'] == null ? undefined : json['title'],
-    scheduledDate: json['scheduledDate'] == null ? undefined : new Date(json['scheduledDate']),
     availableFrom: json['availableFrom'] == null ? undefined : new Date(json['availableFrom']),
     availableTo: json['availableTo'] == null ? undefined : new Date(json['availableTo']),
     expectedDurationMinutes:
       json['expectedDurationMinutes'] == null ? undefined : json['expectedDurationMinutes'],
-    status: json['status'] == null ? undefined : json['status'],
+    id: json['id'] == null ? undefined : json['id'],
     prescriptions:
       json['prescriptions'] == null
         ? undefined
         : (json['prescriptions'] as Array<any>).map(PrescriptionSnapshotFromJSON),
+    scheduledDate: json['scheduledDate'] == null ? undefined : new Date(json['scheduledDate']),
+    status: json['status'] == null ? undefined : json['status'],
+    title: json['title'] == null ? undefined : json['title'],
     variants:
       json['variants'] == null
         ? undefined
@@ -141,12 +141,6 @@ export function SessionSnapshotToJSONTyped(
   }
 
   return {
-    id: value['id'],
-    title: value['title'],
-    scheduledDate:
-      value['scheduledDate'] == null
-        ? value['scheduledDate']
-        : value['scheduledDate'].toISOString().substring(0, 10),
     availableFrom:
       value['availableFrom'] == null
         ? value['availableFrom']
@@ -154,11 +148,17 @@ export function SessionSnapshotToJSONTyped(
     availableTo:
       value['availableTo'] == null ? value['availableTo'] : value['availableTo'].toISOString(),
     expectedDurationMinutes: value['expectedDurationMinutes'],
-    status: value['status'],
+    id: value['id'],
     prescriptions:
       value['prescriptions'] == null
         ? undefined
         : (value['prescriptions'] as Array<any>).map(PrescriptionSnapshotToJSON),
+    scheduledDate:
+      value['scheduledDate'] == null
+        ? value['scheduledDate']
+        : value['scheduledDate'].toISOString().substring(0, 10),
+    status: value['status'],
+    title: value['title'],
     variants:
       value['variants'] == null
         ? undefined

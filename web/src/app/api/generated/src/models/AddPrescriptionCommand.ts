@@ -24,31 +24,13 @@ export interface AddPrescriptionCommand {
    * @type {number}
    * @memberof AddPrescriptionCommand
    */
-  expectedVersion?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof AddPrescriptionCommand
-   */
-  sessionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AddPrescriptionCommand
-   */
-  exerciseVersionId?: string;
+  contacts?: number;
   /**
    *
    * @type {number}
    * @memberof AddPrescriptionCommand
    */
-  position?: number;
-  /**
-   *
-   * @type {AddPrescriptionCommandSideEnum}
-   * @memberof AddPrescriptionCommand
-   */
-  side?: AddPrescriptionCommandSideEnum;
+  distanceMeters?: number;
   /**
    *
    * @type {AddPrescriptionCommandDoseTypeEnum}
@@ -60,43 +42,31 @@ export interface AddPrescriptionCommand {
    * @type {number}
    * @memberof AddPrescriptionCommand
    */
-  sets?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof AddPrescriptionCommand
-   */
-  repetitions?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof AddPrescriptionCommand
-   */
   durationSeconds?: number;
   /**
    *
-   * @type {number}
+   * @type {string}
    * @memberof AddPrescriptionCommand
    */
-  distanceMeters?: number;
+  exerciseVersionId?: string;
   /**
    *
    * @type {number}
    * @memberof AddPrescriptionCommand
    */
-  contacts?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof AddPrescriptionCommand
-   */
-  externalLoadValue?: number;
+  expectedVersion?: number;
   /**
    *
    * @type {string}
    * @memberof AddPrescriptionCommand
    */
   externalLoadUnit?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof AddPrescriptionCommand
+   */
+  externalLoadValue?: number;
   /**
    *
    * @type {AddPrescriptionCommandIntensityTypeEnum}
@@ -120,7 +90,13 @@ export interface AddPrescriptionCommand {
    * @type {string}
    * @memberof AddPrescriptionCommand
    */
-  tempo?: string;
+  notes?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof AddPrescriptionCommand
+   */
+  position?: number;
   /**
    *
    * @type {string}
@@ -132,7 +108,31 @@ export interface AddPrescriptionCommand {
    * @type {number}
    * @memberof AddPrescriptionCommand
    */
+  repetitions?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof AddPrescriptionCommand
+   */
   restSeconds?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof AddPrescriptionCommand
+   */
+  sessionId?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof AddPrescriptionCommand
+   */
+  sets?: number;
+  /**
+   *
+   * @type {AddPrescriptionCommandSideEnum}
+   * @memberof AddPrescriptionCommand
+   */
+  side?: AddPrescriptionCommandSideEnum;
   /**
    *
    * @type {string}
@@ -144,20 +144,8 @@ export interface AddPrescriptionCommand {
    * @type {string}
    * @memberof AddPrescriptionCommand
    */
-  notes?: string;
+  tempo?: string;
 }
-
-/**
- * @export
- */
-export const AddPrescriptionCommandSideEnum = {
-  Left: 'LEFT',
-  Right: 'RIGHT',
-  Bilateral: 'BILATERAL',
-  NotApplicable: 'NOT_APPLICABLE',
-} as const;
-export type AddPrescriptionCommandSideEnum =
-  (typeof AddPrescriptionCommandSideEnum)[keyof typeof AddPrescriptionCommandSideEnum];
 
 /**
  * @export
@@ -185,6 +173,18 @@ export type AddPrescriptionCommandIntensityTypeEnum =
   (typeof AddPrescriptionCommandIntensityTypeEnum)[keyof typeof AddPrescriptionCommandIntensityTypeEnum];
 
 /**
+ * @export
+ */
+export const AddPrescriptionCommandSideEnum = {
+  Left: 'LEFT',
+  Right: 'RIGHT',
+  Bilateral: 'BILATERAL',
+  NotApplicable: 'NOT_APPLICABLE',
+} as const;
+export type AddPrescriptionCommandSideEnum =
+  (typeof AddPrescriptionCommandSideEnum)[keyof typeof AddPrescriptionCommandSideEnum];
+
+/**
  * Check if a given object implements the AddPrescriptionCommand interface.
  */
 export function instanceOfAddPrescriptionCommand(value: object): value is AddPrescriptionCommand {
@@ -203,27 +203,27 @@ export function AddPrescriptionCommandFromJSONTyped(
     return json;
   }
   return {
-    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
-    sessionId: json['sessionId'] == null ? undefined : json['sessionId'],
-    exerciseVersionId: json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
-    position: json['position'] == null ? undefined : json['position'],
-    side: json['side'] == null ? undefined : json['side'],
-    doseType: json['doseType'] == null ? undefined : json['doseType'],
-    sets: json['sets'] == null ? undefined : json['sets'],
-    repetitions: json['repetitions'] == null ? undefined : json['repetitions'],
-    durationSeconds: json['durationSeconds'] == null ? undefined : json['durationSeconds'],
-    distanceMeters: json['distanceMeters'] == null ? undefined : json['distanceMeters'],
     contacts: json['contacts'] == null ? undefined : json['contacts'],
-    externalLoadValue: json['externalLoadValue'] == null ? undefined : json['externalLoadValue'],
+    distanceMeters: json['distanceMeters'] == null ? undefined : json['distanceMeters'],
+    doseType: json['doseType'] == null ? undefined : json['doseType'],
+    durationSeconds: json['durationSeconds'] == null ? undefined : json['durationSeconds'],
+    exerciseVersionId: json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
+    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
     externalLoadUnit: json['externalLoadUnit'] == null ? undefined : json['externalLoadUnit'],
+    externalLoadValue: json['externalLoadValue'] == null ? undefined : json['externalLoadValue'],
     intensityType: json['intensityType'] == null ? undefined : json['intensityType'],
     intensityValue: json['intensityValue'] == null ? undefined : json['intensityValue'],
     intensityZone: json['intensityZone'] == null ? undefined : json['intensityZone'],
-    tempo: json['tempo'] == null ? undefined : json['tempo'],
-    rangeOfMotion: json['rangeOfMotion'] == null ? undefined : json['rangeOfMotion'],
-    restSeconds: json['restSeconds'] == null ? undefined : json['restSeconds'],
-    substituteGroup: json['substituteGroup'] == null ? undefined : json['substituteGroup'],
     notes: json['notes'] == null ? undefined : json['notes'],
+    position: json['position'] == null ? undefined : json['position'],
+    rangeOfMotion: json['rangeOfMotion'] == null ? undefined : json['rangeOfMotion'],
+    repetitions: json['repetitions'] == null ? undefined : json['repetitions'],
+    restSeconds: json['restSeconds'] == null ? undefined : json['restSeconds'],
+    sessionId: json['sessionId'] == null ? undefined : json['sessionId'],
+    sets: json['sets'] == null ? undefined : json['sets'],
+    side: json['side'] == null ? undefined : json['side'],
+    substituteGroup: json['substituteGroup'] == null ? undefined : json['substituteGroup'],
+    tempo: json['tempo'] == null ? undefined : json['tempo'],
   };
 }
 
@@ -240,26 +240,26 @@ export function AddPrescriptionCommandToJSONTyped(
   }
 
   return {
-    expectedVersion: value['expectedVersion'],
-    sessionId: value['sessionId'],
-    exerciseVersionId: value['exerciseVersionId'],
-    position: value['position'],
-    side: value['side'],
-    doseType: value['doseType'],
-    sets: value['sets'],
-    repetitions: value['repetitions'],
-    durationSeconds: value['durationSeconds'],
-    distanceMeters: value['distanceMeters'],
     contacts: value['contacts'],
-    externalLoadValue: value['externalLoadValue'],
+    distanceMeters: value['distanceMeters'],
+    doseType: value['doseType'],
+    durationSeconds: value['durationSeconds'],
+    exerciseVersionId: value['exerciseVersionId'],
+    expectedVersion: value['expectedVersion'],
     externalLoadUnit: value['externalLoadUnit'],
+    externalLoadValue: value['externalLoadValue'],
     intensityType: value['intensityType'],
     intensityValue: value['intensityValue'],
     intensityZone: value['intensityZone'],
-    tempo: value['tempo'],
-    rangeOfMotion: value['rangeOfMotion'],
-    restSeconds: value['restSeconds'],
-    substituteGroup: value['substituteGroup'],
     notes: value['notes'],
+    position: value['position'],
+    rangeOfMotion: value['rangeOfMotion'],
+    repetitions: value['repetitions'],
+    restSeconds: value['restSeconds'],
+    sessionId: value['sessionId'],
+    sets: value['sets'],
+    side: value['side'],
+    substituteGroup: value['substituteGroup'],
+    tempo: value['tempo'],
   };
 }

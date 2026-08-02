@@ -27,16 +27,10 @@ export interface LedgerView {
   id?: string;
   /**
    *
-   * @type {string}
+   * @type {Date}
    * @memberof LedgerView
    */
-  sourceExecutionId?: string;
-  /**
-   *
-   * @type {LedgerViewTypeEnum}
-   * @memberof LedgerView
-   */
-  type?: LedgerViewTypeEnum;
+  occurredAt?: Date;
   /**
    *
    * @type {number}
@@ -57,20 +51,17 @@ export interface LedgerView {
   reversesEntryId?: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof LedgerView
    */
-  occurredAt?: Date;
+  sourceExecutionId?: string;
+  /**
+   *
+   * @type {LedgerViewTypeEnum}
+   * @memberof LedgerView
+   */
+  type?: LedgerViewTypeEnum;
 }
-
-/**
- * @export
- */
-export const LedgerViewTypeEnum = {
-  Award: 'AWARD',
-  Reversal: 'REVERSAL',
-} as const;
-export type LedgerViewTypeEnum = (typeof LedgerViewTypeEnum)[keyof typeof LedgerViewTypeEnum];
 
 /**
  * @export
@@ -84,6 +75,15 @@ export const LedgerViewReasonEnum = {
   Reversal: 'REVERSAL',
 } as const;
 export type LedgerViewReasonEnum = (typeof LedgerViewReasonEnum)[keyof typeof LedgerViewReasonEnum];
+
+/**
+ * @export
+ */
+export const LedgerViewTypeEnum = {
+  Award: 'AWARD',
+  Reversal: 'REVERSAL',
+} as const;
+export type LedgerViewTypeEnum = (typeof LedgerViewTypeEnum)[keyof typeof LedgerViewTypeEnum];
 
 /**
  * Check if a given object implements the LedgerView interface.
@@ -102,12 +102,12 @@ export function LedgerViewFromJSONTyped(json: any, ignoreDiscriminator: boolean)
   }
   return {
     id: json['id'] == null ? undefined : json['id'],
-    sourceExecutionId: json['sourceExecutionId'] == null ? undefined : json['sourceExecutionId'],
-    type: json['type'] == null ? undefined : json['type'],
+    occurredAt: json['occurredAt'] == null ? undefined : new Date(json['occurredAt']),
     points: json['points'] == null ? undefined : json['points'],
     reason: json['reason'] == null ? undefined : json['reason'],
     reversesEntryId: json['reversesEntryId'] == null ? undefined : json['reversesEntryId'],
-    occurredAt: json['occurredAt'] == null ? undefined : new Date(json['occurredAt']),
+    sourceExecutionId: json['sourceExecutionId'] == null ? undefined : json['sourceExecutionId'],
+    type: json['type'] == null ? undefined : json['type'],
   };
 }
 
@@ -125,12 +125,12 @@ export function LedgerViewToJSONTyped(
 
   return {
     id: value['id'],
-    sourceExecutionId: value['sourceExecutionId'],
-    type: value['type'],
+    occurredAt:
+      value['occurredAt'] == null ? value['occurredAt'] : value['occurredAt'].toISOString(),
     points: value['points'],
     reason: value['reason'],
     reversesEntryId: value['reversesEntryId'],
-    occurredAt:
-      value['occurredAt'] == null ? value['occurredAt'] : value['occurredAt'].toISOString(),
+    sourceExecutionId: value['sourceExecutionId'],
+    type: value['type'],
   };
 }

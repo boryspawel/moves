@@ -64,6 +64,24 @@ import {
 export interface EditorialDetail {
   /**
    *
+   * @type {boolean}
+   * @memberof EditorialDetail
+   */
+  actionNeeded?: boolean;
+  /**
+   *
+   * @type {Array<AnatomyContributionSnapshot>}
+   * @memberof EditorialDetail
+   */
+  anatomyContributions?: Array<AnatomyContributionSnapshot>;
+  /**
+   *
+   * @type {VersionDiff}
+   * @memberof EditorialDetail
+   */
+  diff?: VersionDiff;
+  /**
+   *
    * @type {EditorView}
    * @memberof EditorialDetail
    */
@@ -82,34 +100,16 @@ export interface EditorialDetail {
   importProblems?: Array<ImportProblem>;
   /**
    *
-   * @type {ReviewResult}
-   * @memberof EditorialDetail
-   */
-  review?: ReviewResult;
-  /**
-   *
-   * @type {VersionDiff}
-   * @memberof EditorialDetail
-   */
-  diff?: VersionDiff;
-  /**
-   *
-   * @type {Array<AnatomyContributionSnapshot>}
-   * @memberof EditorialDetail
-   */
-  anatomyContributions?: Array<AnatomyContributionSnapshot>;
-  /**
-   *
    * @type {boolean}
    * @memberof EditorialDetail
    */
   readyToPublish?: boolean;
   /**
    *
-   * @type {boolean}
+   * @type {ReviewResult}
    * @memberof EditorialDetail
    */
-  actionNeeded?: boolean;
+  review?: ReviewResult;
 }
 
 /**
@@ -131,6 +131,12 @@ export function EditorialDetailFromJSONTyped(
     return json;
   }
   return {
+    actionNeeded: json['actionNeeded'] == null ? undefined : json['actionNeeded'],
+    anatomyContributions:
+      json['anatomyContributions'] == null
+        ? undefined
+        : (json['anatomyContributions'] as Array<any>).map(AnatomyContributionSnapshotFromJSON),
+    diff: json['diff'] == null ? undefined : VersionDiffFromJSON(json['diff']),
     editor: json['editor'] == null ? undefined : EditorViewFromJSON(json['editor']),
     importMetadata:
       json['importMetadata'] == null ? undefined : ImportMetadataFromJSON(json['importMetadata']),
@@ -138,14 +144,8 @@ export function EditorialDetailFromJSONTyped(
       json['importProblems'] == null
         ? undefined
         : (json['importProblems'] as Array<any>).map(ImportProblemFromJSON),
-    review: json['review'] == null ? undefined : ReviewResultFromJSON(json['review']),
-    diff: json['diff'] == null ? undefined : VersionDiffFromJSON(json['diff']),
-    anatomyContributions:
-      json['anatomyContributions'] == null
-        ? undefined
-        : (json['anatomyContributions'] as Array<any>).map(AnatomyContributionSnapshotFromJSON),
     readyToPublish: json['readyToPublish'] == null ? undefined : json['readyToPublish'],
-    actionNeeded: json['actionNeeded'] == null ? undefined : json['actionNeeded'],
+    review: json['review'] == null ? undefined : ReviewResultFromJSON(json['review']),
   };
 }
 
@@ -162,19 +162,19 @@ export function EditorialDetailToJSONTyped(
   }
 
   return {
+    actionNeeded: value['actionNeeded'],
+    anatomyContributions:
+      value['anatomyContributions'] == null
+        ? undefined
+        : (value['anatomyContributions'] as Array<any>).map(AnatomyContributionSnapshotToJSON),
+    diff: VersionDiffToJSON(value['diff']),
     editor: EditorViewToJSON(value['editor']),
     importMetadata: ImportMetadataToJSON(value['importMetadata']),
     importProblems:
       value['importProblems'] == null
         ? undefined
         : (value['importProblems'] as Array<any>).map(ImportProblemToJSON),
-    review: ReviewResultToJSON(value['review']),
-    diff: VersionDiffToJSON(value['diff']),
-    anatomyContributions:
-      value['anatomyContributions'] == null
-        ? undefined
-        : (value['anatomyContributions'] as Array<any>).map(AnatomyContributionSnapshotToJSON),
     readyToPublish: value['readyToPublish'],
-    actionNeeded: value['actionNeeded'],
+    review: ReviewResultToJSON(value['review']),
   };
 }

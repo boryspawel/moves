@@ -32,25 +32,25 @@ export interface GoalSnapshot {
    * @type {string}
    * @memberof GoalSnapshot
    */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof GoalSnapshot
-   */
-  perspective?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof GoalSnapshot
-   */
   category?: string;
   /**
    *
    * @type {string}
    * @memberof GoalSnapshot
    */
-  title?: string;
+  id?: string;
+  /**
+   *
+   * @type {Array<GoalOutcomeSnapshot>}
+   * @memberof GoalSnapshot
+   */
+  outcomes?: Array<GoalOutcomeSnapshot>;
+  /**
+   *
+   * @type {string}
+   * @memberof GoalSnapshot
+   */
+  perspective?: string;
   /**
    *
    * @type {number}
@@ -71,10 +71,10 @@ export interface GoalSnapshot {
   targetDate?: Date;
   /**
    *
-   * @type {Array<GoalOutcomeSnapshot>}
+   * @type {string}
    * @memberof GoalSnapshot
    */
-  outcomes?: Array<GoalOutcomeSnapshot>;
+  title?: string;
 }
 
 /**
@@ -93,17 +93,17 @@ export function GoalSnapshotFromJSONTyped(json: any, ignoreDiscriminator: boolea
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
-    perspective: json['perspective'] == null ? undefined : json['perspective'],
     category: json['category'] == null ? undefined : json['category'],
-    title: json['title'] == null ? undefined : json['title'],
-    priority: json['priority'] == null ? undefined : json['priority'],
-    status: json['status'] == null ? undefined : json['status'],
-    targetDate: json['targetDate'] == null ? undefined : new Date(json['targetDate']),
+    id: json['id'] == null ? undefined : json['id'],
     outcomes:
       json['outcomes'] == null
         ? undefined
         : (json['outcomes'] as Array<any>).map(GoalOutcomeSnapshotFromJSON),
+    perspective: json['perspective'] == null ? undefined : json['perspective'],
+    priority: json['priority'] == null ? undefined : json['priority'],
+    status: json['status'] == null ? undefined : json['status'],
+    targetDate: json['targetDate'] == null ? undefined : new Date(json['targetDate']),
+    title: json['title'] == null ? undefined : json['title'],
   };
 }
 
@@ -120,19 +120,19 @@ export function GoalSnapshotToJSONTyped(
   }
 
   return {
-    id: value['id'],
-    perspective: value['perspective'],
     category: value['category'],
-    title: value['title'],
+    id: value['id'],
+    outcomes:
+      value['outcomes'] == null
+        ? undefined
+        : (value['outcomes'] as Array<any>).map(GoalOutcomeSnapshotToJSON),
+    perspective: value['perspective'],
     priority: value['priority'],
     status: value['status'],
     targetDate:
       value['targetDate'] == null
         ? value['targetDate']
         : value['targetDate'].toISOString().substring(0, 10),
-    outcomes:
-      value['outcomes'] == null
-        ? undefined
-        : (value['outcomes'] as Array<any>).map(GoalOutcomeSnapshotToJSON),
+    title: value['title'],
   };
 }

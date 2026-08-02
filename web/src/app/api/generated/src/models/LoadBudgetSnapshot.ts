@@ -24,7 +24,7 @@ export interface LoadBudgetSnapshot {
    * @type {string}
    * @memberof LoadBudgetSnapshot
    */
-  id?: string;
+  action?: string;
   /**
    *
    * @type {string}
@@ -36,25 +36,25 @@ export interface LoadBudgetSnapshot {
    * @type {number}
    * @memberof LoadBudgetSnapshot
    */
-  low?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof LoadBudgetSnapshot
-   */
   high?: number;
   /**
    *
    * @type {string}
    * @memberof LoadBudgetSnapshot
    */
-  unit?: string;
+  id?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof LoadBudgetSnapshot
+   */
+  low?: number;
   /**
    *
    * @type {string}
    * @memberof LoadBudgetSnapshot
    */
-  action?: string;
+  unit?: string;
 }
 
 /**
@@ -76,12 +76,12 @@ export function LoadBudgetSnapshotFromJSONTyped(
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
-    channel: json['channel'] == null ? undefined : json['channel'],
-    low: json['low'] == null ? undefined : json['low'],
-    high: json['high'] == null ? undefined : json['high'],
-    unit: json['unit'] == null ? undefined : json['unit'],
     action: json['action'] == null ? undefined : json['action'],
+    channel: json['channel'] == null ? undefined : json['channel'],
+    high: json['high'] == null ? undefined : json['high'],
+    id: json['id'] == null ? undefined : json['id'],
+    low: json['low'] == null ? undefined : json['low'],
+    unit: json['unit'] == null ? undefined : json['unit'],
   };
 }
 
@@ -98,11 +98,11 @@ export function LoadBudgetSnapshotToJSONTyped(
   }
 
   return {
-    id: value['id'],
-    channel: value['channel'],
-    low: value['low'],
-    high: value['high'],
-    unit: value['unit'],
     action: value['action'],
+    channel: value['channel'],
+    high: value['high'],
+    id: value['id'],
+    low: value['low'],
+    unit: value['unit'],
   };
 }

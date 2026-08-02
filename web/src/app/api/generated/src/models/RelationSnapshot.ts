@@ -24,6 +24,12 @@ export interface RelationSnapshot {
    * @type {string}
    * @memberof RelationSnapshot
    */
+  childId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RelationSnapshot
+   */
   id?: string;
   /**
    *
@@ -31,12 +37,6 @@ export interface RelationSnapshot {
    * @memberof RelationSnapshot
    */
   parentId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RelationSnapshot
-   */
-  childId?: string;
   /**
    *
    * @type {RelationSnapshotRelationTypeEnum}
@@ -75,9 +75,9 @@ export function RelationSnapshotFromJSONTyped(
     return json;
   }
   return {
+    childId: json['childId'] == null ? undefined : json['childId'],
     id: json['id'] == null ? undefined : json['id'],
     parentId: json['parentId'] == null ? undefined : json['parentId'],
-    childId: json['childId'] == null ? undefined : json['childId'],
     relationType: json['relationType'] == null ? undefined : json['relationType'],
   };
 }
@@ -95,9 +95,9 @@ export function RelationSnapshotToJSONTyped(
   }
 
   return {
+    childId: value['childId'],
     id: value['id'],
     parentId: value['parentId'],
-    childId: value['childId'],
     relationType: value['relationType'],
   };
 }

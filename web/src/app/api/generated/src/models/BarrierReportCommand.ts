@@ -24,25 +24,25 @@ export interface BarrierReportCommand {
    * @type {string}
    * @memberof BarrierReportCommand
    */
-  plannedSessionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof BarrierReportCommand
-   */
-  sessionAttemptId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof BarrierReportCommand
-   */
   category?: string;
   /**
    *
    * @type {string}
    * @memberof BarrierReportCommand
    */
+  plannedSessionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BarrierReportCommand
+   */
   selectedAction?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BarrierReportCommand
+   */
+  sessionAttemptId?: string;
 }
 
 /**
@@ -64,10 +64,10 @@ export function BarrierReportCommandFromJSONTyped(
     return json;
   }
   return {
-    plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
-    sessionAttemptId: json['sessionAttemptId'] == null ? undefined : json['sessionAttemptId'],
     category: json['category'] == null ? undefined : json['category'],
+    plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
     selectedAction: json['selectedAction'] == null ? undefined : json['selectedAction'],
+    sessionAttemptId: json['sessionAttemptId'] == null ? undefined : json['sessionAttemptId'],
   };
 }
 
@@ -84,9 +84,9 @@ export function BarrierReportCommandToJSONTyped(
   }
 
   return {
-    plannedSessionId: value['plannedSessionId'],
-    sessionAttemptId: value['sessionAttemptId'],
     category: value['category'],
+    plannedSessionId: value['plannedSessionId'],
     selectedAction: value['selectedAction'],
+    sessionAttemptId: value['sessionAttemptId'],
   };
 }

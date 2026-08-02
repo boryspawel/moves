@@ -21,12 +21,6 @@ import { mapValues } from '../runtime';
 export interface StructuralValidationView {
   /**
    *
-   * @type {string}
-   * @memberof StructuralValidationView
-   */
-  revisionId?: string;
-  /**
-   *
    * @type {number}
    * @memberof StructuralValidationView
    */
@@ -43,6 +37,12 @@ export interface StructuralValidationView {
    * @memberof StructuralValidationView
    */
   result?: StructuralValidationViewResultEnum;
+  /**
+   *
+   * @type {string}
+   * @memberof StructuralValidationView
+   */
+  revisionId?: string;
   /**
    *
    * @type {Array<string>}
@@ -82,10 +82,10 @@ export function StructuralValidationViewFromJSONTyped(
     return json;
   }
   return {
-    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
     draftVersion: json['draftVersion'] == null ? undefined : json['draftVersion'],
     inputChecksum: json['inputChecksum'] == null ? undefined : json['inputChecksum'],
     result: json['result'] == null ? undefined : json['result'],
+    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
     violations: json['violations'] == null ? undefined : json['violations'],
   };
 }
@@ -103,10 +103,10 @@ export function StructuralValidationViewToJSONTyped(
   }
 
   return {
-    revisionId: value['revisionId'],
     draftVersion: value['draftVersion'],
     inputChecksum: value['inputChecksum'],
     result: value['result'],
+    revisionId: value['revisionId'],
     violations: value['violations'],
   };
 }

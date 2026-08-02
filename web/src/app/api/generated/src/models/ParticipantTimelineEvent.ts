@@ -53,13 +53,13 @@ export interface ParticipantTimelineEvent {
    * @type {string}
    * @memberof ParticipantTimelineEvent
    */
-  eventId?: string;
+  actor?: string;
   /**
    *
-   * @type {string}
+   * @type {Array<string>}
    * @memberof ParticipantTimelineEvent
    */
-  eventType?: string;
+  availableActions?: Array<string>;
   /**
    *
    * @type {string}
@@ -68,10 +68,10 @@ export interface ParticipantTimelineEvent {
   category?: string;
   /**
    *
-   * @type {string}
+   * @type {EventDetail}
    * @memberof ParticipantTimelineEvent
    */
-  status?: string;
+  detail?: EventDetail;
   /**
    *
    * @type {Date}
@@ -86,28 +86,16 @@ export interface ParticipantTimelineEvent {
   effectiveTo?: Date;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof ParticipantTimelineEvent
    */
-  recordedAt?: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof ParticipantTimelineEvent
-   */
-  updatedAt?: Date;
+  eventId?: string;
   /**
    *
    * @type {string}
    * @memberof ParticipantTimelineEvent
    */
-  title?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ParticipantTimelineEvent
-   */
-  summary?: string;
+  eventType?: string;
   /**
    *
    * @type {string}
@@ -116,22 +104,28 @@ export interface ParticipantTimelineEvent {
   importance?: string;
   /**
    *
-   * @type {string}
+   * @type {Measurement}
    * @memberof ParticipantTimelineEvent
    */
-  sensitivity?: string;
+  measurement?: Measurement;
   /**
    *
-   * @type {string}
+   * @type {PlannedExecutionComparison}
    * @memberof ParticipantTimelineEvent
    */
-  actor?: string;
+  plannedExecutionComparison?: PlannedExecutionComparison;
   /**
    *
-   * @type {string}
+   * @type {Problem}
    * @memberof ParticipantTimelineEvent
    */
-  source?: string;
+  problem?: Problem;
+  /**
+   *
+   * @type {Date}
+   * @memberof ParticipantTimelineEvent
+   */
+  recordedAt?: Date;
   /**
    *
    * @type {Array<string>}
@@ -146,34 +140,40 @@ export interface ParticipantTimelineEvent {
   relatedPlanRevisionId?: string;
   /**
    *
-   * @type {PlannedExecutionComparison}
+   * @type {string}
    * @memberof ParticipantTimelineEvent
    */
-  plannedExecutionComparison?: PlannedExecutionComparison;
+  sensitivity?: string;
   /**
    *
-   * @type {Measurement}
+   * @type {string}
    * @memberof ParticipantTimelineEvent
    */
-  measurement?: Measurement;
+  source?: string;
   /**
    *
-   * @type {Problem}
+   * @type {string}
    * @memberof ParticipantTimelineEvent
    */
-  problem?: Problem;
+  status?: string;
   /**
    *
-   * @type {Array<string>}
+   * @type {string}
    * @memberof ParticipantTimelineEvent
    */
-  availableActions?: Array<string>;
+  summary?: string;
   /**
    *
-   * @type {EventDetail}
+   * @type {string}
    * @memberof ParticipantTimelineEvent
    */
-  detail?: EventDetail;
+  title?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof ParticipantTimelineEvent
+   */
+  updatedAt?: Date;
 }
 
 /**
@@ -197,31 +197,31 @@ export function ParticipantTimelineEventFromJSONTyped(
     return json;
   }
   return {
-    eventId: json['eventId'] == null ? undefined : json['eventId'],
-    eventType: json['eventType'] == null ? undefined : json['eventType'],
+    actor: json['actor'] == null ? undefined : json['actor'],
+    availableActions: json['availableActions'] == null ? undefined : json['availableActions'],
     category: json['category'] == null ? undefined : json['category'],
-    status: json['status'] == null ? undefined : json['status'],
+    detail: json['detail'] == null ? undefined : EventDetailFromJSON(json['detail']),
     effectiveFrom: json['effectiveFrom'] == null ? undefined : new Date(json['effectiveFrom']),
     effectiveTo: json['effectiveTo'] == null ? undefined : new Date(json['effectiveTo']),
-    recordedAt: json['recordedAt'] == null ? undefined : new Date(json['recordedAt']),
-    updatedAt: json['updatedAt'] == null ? undefined : new Date(json['updatedAt']),
-    title: json['title'] == null ? undefined : json['title'],
-    summary: json['summary'] == null ? undefined : json['summary'],
+    eventId: json['eventId'] == null ? undefined : json['eventId'],
+    eventType: json['eventType'] == null ? undefined : json['eventType'],
     importance: json['importance'] == null ? undefined : json['importance'],
-    sensitivity: json['sensitivity'] == null ? undefined : json['sensitivity'],
-    actor: json['actor'] == null ? undefined : json['actor'],
-    source: json['source'] == null ? undefined : json['source'],
-    relatedGoalIds: json['relatedGoalIds'] == null ? undefined : json['relatedGoalIds'],
-    relatedPlanRevisionId:
-      json['relatedPlanRevisionId'] == null ? undefined : json['relatedPlanRevisionId'],
+    measurement: json['measurement'] == null ? undefined : MeasurementFromJSON(json['measurement']),
     plannedExecutionComparison:
       json['plannedExecutionComparison'] == null
         ? undefined
         : PlannedExecutionComparisonFromJSON(json['plannedExecutionComparison']),
-    measurement: json['measurement'] == null ? undefined : MeasurementFromJSON(json['measurement']),
     problem: json['problem'] == null ? undefined : ProblemFromJSON(json['problem']),
-    availableActions: json['availableActions'] == null ? undefined : json['availableActions'],
-    detail: json['detail'] == null ? undefined : EventDetailFromJSON(json['detail']),
+    recordedAt: json['recordedAt'] == null ? undefined : new Date(json['recordedAt']),
+    relatedGoalIds: json['relatedGoalIds'] == null ? undefined : json['relatedGoalIds'],
+    relatedPlanRevisionId:
+      json['relatedPlanRevisionId'] == null ? undefined : json['relatedPlanRevisionId'],
+    sensitivity: json['sensitivity'] == null ? undefined : json['sensitivity'],
+    source: json['source'] == null ? undefined : json['source'],
+    status: json['status'] == null ? undefined : json['status'],
+    summary: json['summary'] == null ? undefined : json['summary'],
+    title: json['title'] == null ? undefined : json['title'],
+    updatedAt: json['updatedAt'] == null ? undefined : new Date(json['updatedAt']),
   };
 }
 
@@ -238,33 +238,33 @@ export function ParticipantTimelineEventToJSONTyped(
   }
 
   return {
-    eventId: value['eventId'],
-    eventType: value['eventType'],
+    actor: value['actor'],
+    availableActions: value['availableActions'],
     category: value['category'],
-    status: value['status'],
+    detail: EventDetailToJSON(value['detail']),
     effectiveFrom:
       value['effectiveFrom'] == null
         ? value['effectiveFrom']
         : value['effectiveFrom'].toISOString(),
     effectiveTo:
       value['effectiveTo'] == null ? value['effectiveTo'] : value['effectiveTo'].toISOString(),
-    recordedAt:
-      value['recordedAt'] == null ? value['recordedAt'] : value['recordedAt'].toISOString(),
-    updatedAt: value['updatedAt'] == null ? value['updatedAt'] : value['updatedAt'].toISOString(),
-    title: value['title'],
-    summary: value['summary'],
+    eventId: value['eventId'],
+    eventType: value['eventType'],
     importance: value['importance'],
-    sensitivity: value['sensitivity'],
-    actor: value['actor'],
-    source: value['source'],
-    relatedGoalIds: value['relatedGoalIds'],
-    relatedPlanRevisionId: value['relatedPlanRevisionId'],
+    measurement: MeasurementToJSON(value['measurement']),
     plannedExecutionComparison: PlannedExecutionComparisonToJSON(
       value['plannedExecutionComparison'],
     ),
-    measurement: MeasurementToJSON(value['measurement']),
     problem: ProblemToJSON(value['problem']),
-    availableActions: value['availableActions'],
-    detail: EventDetailToJSON(value['detail']),
+    recordedAt:
+      value['recordedAt'] == null ? value['recordedAt'] : value['recordedAt'].toISOString(),
+    relatedGoalIds: value['relatedGoalIds'],
+    relatedPlanRevisionId: value['relatedPlanRevisionId'],
+    sensitivity: value['sensitivity'],
+    source: value['source'],
+    status: value['status'],
+    summary: value['summary'],
+    title: value['title'],
+    updatedAt: value['updatedAt'] == null ? value['updatedAt'] : value['updatedAt'].toISOString(),
   };
 }

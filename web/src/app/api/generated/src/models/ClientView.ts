@@ -46,43 +46,7 @@ export interface ClientView {
    * @type {string}
    * @memberof ClientView
    */
-  participantId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ClientView
-   */
-  displayName?: string;
-  /**
-   *
-   * @type {ClientViewRelationshipContextEnum}
-   * @memberof ClientView
-   */
-  relationshipContext?: ClientViewRelationshipContextEnum;
-  /**
-   *
-   * @type {ClientViewRecordStatusEnum}
-   * @memberof ClientView
-   */
-  recordStatus?: ClientViewRecordStatusEnum;
-  /**
-   *
-   * @type {string}
-   * @memberof ClientView
-   */
   accessStatus?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ClientView
-   */
-  consentStatus?: string;
-  /**
-   *
-   * @type {ClientAppointmentView}
-   * @memberof ClientView
-   */
-  nextAppointment?: ClientAppointmentView;
   /**
    *
    * @type {ClientActivePlanView}
@@ -103,11 +67,57 @@ export interface ClientView {
   availableActions?: Array<string>;
   /**
    *
+   * @type {string}
+   * @memberof ClientView
+   */
+  consentStatus?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ClientView
+   */
+  displayName?: string;
+  /**
+   *
+   * @type {ClientAppointmentView}
+   * @memberof ClientView
+   */
+  nextAppointment?: ClientAppointmentView;
+  /**
+   *
+   * @type {string}
+   * @memberof ClientView
+   */
+  participantId?: string;
+  /**
+   *
+   * @type {ClientViewRecordStatusEnum}
+   * @memberof ClientView
+   */
+  recordStatus?: ClientViewRecordStatusEnum;
+  /**
+   *
+   * @type {ClientViewRelationshipContextEnum}
+   * @memberof ClientView
+   */
+  relationshipContext?: ClientViewRelationshipContextEnum;
+  /**
+   *
    * @type {number}
    * @memberof ClientView
    */
   version?: number;
 }
+
+/**
+ * @export
+ */
+export const ClientViewRecordStatusEnum = {
+  Active: 'ACTIVE',
+  Archived: 'ARCHIVED',
+} as const;
+export type ClientViewRecordStatusEnum =
+  (typeof ClientViewRecordStatusEnum)[keyof typeof ClientViewRecordStatusEnum];
 
 /**
  * @export
@@ -119,16 +129,6 @@ export const ClientViewRelationshipContextEnum = {
 } as const;
 export type ClientViewRelationshipContextEnum =
   (typeof ClientViewRelationshipContextEnum)[keyof typeof ClientViewRelationshipContextEnum];
-
-/**
- * @export
- */
-export const ClientViewRecordStatusEnum = {
-  Active: 'ACTIVE',
-  Archived: 'ARCHIVED',
-} as const;
-export type ClientViewRecordStatusEnum =
-  (typeof ClientViewRecordStatusEnum)[keyof typeof ClientViewRecordStatusEnum];
 
 /**
  * Check if a given object implements the ClientView interface.
@@ -146,17 +146,7 @@ export function ClientViewFromJSONTyped(json: any, ignoreDiscriminator: boolean)
     return json;
   }
   return {
-    participantId: json['participantId'] == null ? undefined : json['participantId'],
-    displayName: json['displayName'] == null ? undefined : json['displayName'],
-    relationshipContext:
-      json['relationshipContext'] == null ? undefined : json['relationshipContext'],
-    recordStatus: json['recordStatus'] == null ? undefined : json['recordStatus'],
     accessStatus: json['accessStatus'] == null ? undefined : json['accessStatus'],
-    consentStatus: json['consentStatus'] == null ? undefined : json['consentStatus'],
-    nextAppointment:
-      json['nextAppointment'] == null
-        ? undefined
-        : ClientAppointmentViewFromJSON(json['nextAppointment']),
     activePlan:
       json['activePlan'] == null ? undefined : ClientActivePlanViewFromJSON(json['activePlan']),
     attentionItems:
@@ -164,6 +154,16 @@ export function ClientViewFromJSONTyped(json: any, ignoreDiscriminator: boolean)
         ? undefined
         : (json['attentionItems'] as Array<any>).map(ClientAttentionViewFromJSON),
     availableActions: json['availableActions'] == null ? undefined : json['availableActions'],
+    consentStatus: json['consentStatus'] == null ? undefined : json['consentStatus'],
+    displayName: json['displayName'] == null ? undefined : json['displayName'],
+    nextAppointment:
+      json['nextAppointment'] == null
+        ? undefined
+        : ClientAppointmentViewFromJSON(json['nextAppointment']),
+    participantId: json['participantId'] == null ? undefined : json['participantId'],
+    recordStatus: json['recordStatus'] == null ? undefined : json['recordStatus'],
+    relationshipContext:
+      json['relationshipContext'] == null ? undefined : json['relationshipContext'],
     version: json['version'] == null ? undefined : json['version'],
   };
 }
@@ -181,19 +181,19 @@ export function ClientViewToJSONTyped(
   }
 
   return {
-    participantId: value['participantId'],
-    displayName: value['displayName'],
-    relationshipContext: value['relationshipContext'],
-    recordStatus: value['recordStatus'],
     accessStatus: value['accessStatus'],
-    consentStatus: value['consentStatus'],
-    nextAppointment: ClientAppointmentViewToJSON(value['nextAppointment']),
     activePlan: ClientActivePlanViewToJSON(value['activePlan']),
     attentionItems:
       value['attentionItems'] == null
         ? undefined
         : (value['attentionItems'] as Array<any>).map(ClientAttentionViewToJSON),
     availableActions: value['availableActions'],
+    consentStatus: value['consentStatus'],
+    displayName: value['displayName'],
+    nextAppointment: ClientAppointmentViewToJSON(value['nextAppointment']),
+    participantId: value['participantId'],
+    recordStatus: value['recordStatus'],
+    relationshipContext: value['relationshipContext'],
     version: value['version'],
   };
 }

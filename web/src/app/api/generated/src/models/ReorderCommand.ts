@@ -27,16 +27,16 @@ export interface ReorderCommand {
   expectedVersion?: number;
   /**
    *
-   * @type {string}
-   * @memberof ReorderCommand
-   */
-  sessionId?: string;
-  /**
-   *
    * @type {Array<string>}
    * @memberof ReorderCommand
    */
   prescriptionIds?: Array<string>;
+  /**
+   *
+   * @type {string}
+   * @memberof ReorderCommand
+   */
+  sessionId?: string;
 }
 
 /**
@@ -59,8 +59,8 @@ export function ReorderCommandFromJSONTyped(
   }
   return {
     expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
-    sessionId: json['sessionId'] == null ? undefined : json['sessionId'],
     prescriptionIds: json['prescriptionIds'] == null ? undefined : json['prescriptionIds'],
+    sessionId: json['sessionId'] == null ? undefined : json['sessionId'],
   };
 }
 
@@ -78,7 +78,7 @@ export function ReorderCommandToJSONTyped(
 
   return {
     expectedVersion: value['expectedVersion'],
-    sessionId: value['sessionId'],
     prescriptionIds: value['prescriptionIds'],
+    sessionId: value['sessionId'],
   };
 }

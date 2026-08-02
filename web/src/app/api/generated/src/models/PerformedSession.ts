@@ -24,6 +24,12 @@ export interface PerformedSession {
    * @type {string}
    * @memberof PerformedSession
    */
+  detailResourceId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PerformedSession
+   */
   plannedSessionId?: string;
   /**
    *
@@ -31,12 +37,6 @@ export interface PerformedSession {
    * @memberof PerformedSession
    */
   selectedVariant?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof PerformedSession
-   */
-  detailResourceId?: string;
 }
 
 /**
@@ -58,9 +58,9 @@ export function PerformedSessionFromJSONTyped(
     return json;
   }
   return {
+    detailResourceId: json['detailResourceId'] == null ? undefined : json['detailResourceId'],
     plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
     selectedVariant: json['selectedVariant'] == null ? undefined : json['selectedVariant'],
-    detailResourceId: json['detailResourceId'] == null ? undefined : json['detailResourceId'],
   };
 }
 
@@ -77,8 +77,8 @@ export function PerformedSessionToJSONTyped(
   }
 
   return {
+    detailResourceId: value['detailResourceId'],
     plannedSessionId: value['plannedSessionId'],
     selectedVariant: value['selectedVariant'],
-    detailResourceId: value['detailResourceId'],
   };
 }

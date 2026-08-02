@@ -43,10 +43,76 @@ import {
 export interface ExerciseCatalogDetailView {
   /**
    *
+   * @type {Array<PublicAnatomyContributionView>}
+   * @memberof ExerciseCatalogDetailView
+   */
+  anatomyContributions?: Array<PublicAnatomyContributionView>;
+  /**
+   *
+   * @type {string}
+   * @memberof ExerciseCatalogDetailView
+   */
+  canonicalName?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ExerciseCatalogDetailView
+   */
+  environment?: string;
+  /**
+   *
+   * @type {Array<PublicEvidenceView>}
+   * @memberof ExerciseCatalogDetailView
+   */
+  evidence?: Array<PublicEvidenceView>;
+  /**
+   *
    * @type {string}
    * @memberof ExerciseCatalogDetailView
    */
   exerciseId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ExerciseCatalogDetailView
+   */
+  fatigueProfile?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ExerciseCatalogDetailView
+   */
+  instruction?: string;
+  /**
+   *
+   * @type {Array<PublicLoadCharacteristicView>}
+   * @memberof ExerciseCatalogDetailView
+   */
+  loadCharacteristics?: Array<PublicLoadCharacteristicView>;
+  /**
+   *
+   * @type {Array<string>}
+   * @memberof ExerciseCatalogDetailView
+   */
+  movementPatterns?: Array<string>;
+  /**
+   *
+   * @type {Array<string>}
+   * @memberof ExerciseCatalogDetailView
+   */
+  requiredEquipment?: Array<string>;
+  /**
+   *
+   * @type {string}
+   * @memberof ExerciseCatalogDetailView
+   */
+  stimulusType?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ExerciseCatalogDetailView
+   */
+  technicalLevel?: string;
   /**
    *
    * @type {string}
@@ -59,72 +125,6 @@ export interface ExerciseCatalogDetailView {
    * @memberof ExerciseCatalogDetailView
    */
   versionNumber?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof ExerciseCatalogDetailView
-   */
-  canonicalName?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ExerciseCatalogDetailView
-   */
-  instruction?: string;
-  /**
-   *
-   * @type {Array<string>}
-   * @memberof ExerciseCatalogDetailView
-   */
-  movementPatterns?: Array<string>;
-  /**
-   *
-   * @type {string}
-   * @memberof ExerciseCatalogDetailView
-   */
-  stimulusType?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ExerciseCatalogDetailView
-   */
-  fatigueProfile?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ExerciseCatalogDetailView
-   */
-  technicalLevel?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ExerciseCatalogDetailView
-   */
-  environment?: string;
-  /**
-   *
-   * @type {Array<string>}
-   * @memberof ExerciseCatalogDetailView
-   */
-  requiredEquipment?: Array<string>;
-  /**
-   *
-   * @type {Array<PublicLoadCharacteristicView>}
-   * @memberof ExerciseCatalogDetailView
-   */
-  loadCharacteristics?: Array<PublicLoadCharacteristicView>;
-  /**
-   *
-   * @type {Array<PublicAnatomyContributionView>}
-   * @memberof ExerciseCatalogDetailView
-   */
-  anatomyContributions?: Array<PublicAnatomyContributionView>;
-  /**
-   *
-   * @type {Array<PublicEvidenceView>}
-   * @memberof ExerciseCatalogDetailView
-   */
-  evidence?: Array<PublicEvidenceView>;
 }
 
 /**
@@ -148,29 +148,29 @@ export function ExerciseCatalogDetailViewFromJSONTyped(
     return json;
   }
   return {
-    exerciseId: json['exerciseId'] == null ? undefined : json['exerciseId'],
-    versionId: json['versionId'] == null ? undefined : json['versionId'],
-    versionNumber: json['versionNumber'] == null ? undefined : json['versionNumber'],
-    canonicalName: json['canonicalName'] == null ? undefined : json['canonicalName'],
-    instruction: json['instruction'] == null ? undefined : json['instruction'],
-    movementPatterns: json['movementPatterns'] == null ? undefined : json['movementPatterns'],
-    stimulusType: json['stimulusType'] == null ? undefined : json['stimulusType'],
-    fatigueProfile: json['fatigueProfile'] == null ? undefined : json['fatigueProfile'],
-    technicalLevel: json['technicalLevel'] == null ? undefined : json['technicalLevel'],
-    environment: json['environment'] == null ? undefined : json['environment'],
-    requiredEquipment: json['requiredEquipment'] == null ? undefined : json['requiredEquipment'],
-    loadCharacteristics:
-      json['loadCharacteristics'] == null
-        ? undefined
-        : (json['loadCharacteristics'] as Array<any>).map(PublicLoadCharacteristicViewFromJSON),
     anatomyContributions:
       json['anatomyContributions'] == null
         ? undefined
         : (json['anatomyContributions'] as Array<any>).map(PublicAnatomyContributionViewFromJSON),
+    canonicalName: json['canonicalName'] == null ? undefined : json['canonicalName'],
+    environment: json['environment'] == null ? undefined : json['environment'],
     evidence:
       json['evidence'] == null
         ? undefined
         : (json['evidence'] as Array<any>).map(PublicEvidenceViewFromJSON),
+    exerciseId: json['exerciseId'] == null ? undefined : json['exerciseId'],
+    fatigueProfile: json['fatigueProfile'] == null ? undefined : json['fatigueProfile'],
+    instruction: json['instruction'] == null ? undefined : json['instruction'],
+    loadCharacteristics:
+      json['loadCharacteristics'] == null
+        ? undefined
+        : (json['loadCharacteristics'] as Array<any>).map(PublicLoadCharacteristicViewFromJSON),
+    movementPatterns: json['movementPatterns'] == null ? undefined : json['movementPatterns'],
+    requiredEquipment: json['requiredEquipment'] == null ? undefined : json['requiredEquipment'],
+    stimulusType: json['stimulusType'] == null ? undefined : json['stimulusType'],
+    technicalLevel: json['technicalLevel'] == null ? undefined : json['technicalLevel'],
+    versionId: json['versionId'] == null ? undefined : json['versionId'],
+    versionNumber: json['versionNumber'] == null ? undefined : json['versionNumber'],
   };
 }
 
@@ -187,28 +187,28 @@ export function ExerciseCatalogDetailViewToJSONTyped(
   }
 
   return {
-    exerciseId: value['exerciseId'],
-    versionId: value['versionId'],
-    versionNumber: value['versionNumber'],
-    canonicalName: value['canonicalName'],
-    instruction: value['instruction'],
-    movementPatterns: value['movementPatterns'],
-    stimulusType: value['stimulusType'],
-    fatigueProfile: value['fatigueProfile'],
-    technicalLevel: value['technicalLevel'],
-    environment: value['environment'],
-    requiredEquipment: value['requiredEquipment'],
-    loadCharacteristics:
-      value['loadCharacteristics'] == null
-        ? undefined
-        : (value['loadCharacteristics'] as Array<any>).map(PublicLoadCharacteristicViewToJSON),
     anatomyContributions:
       value['anatomyContributions'] == null
         ? undefined
         : (value['anatomyContributions'] as Array<any>).map(PublicAnatomyContributionViewToJSON),
+    canonicalName: value['canonicalName'],
+    environment: value['environment'],
     evidence:
       value['evidence'] == null
         ? undefined
         : (value['evidence'] as Array<any>).map(PublicEvidenceViewToJSON),
+    exerciseId: value['exerciseId'],
+    fatigueProfile: value['fatigueProfile'],
+    instruction: value['instruction'],
+    loadCharacteristics:
+      value['loadCharacteristics'] == null
+        ? undefined
+        : (value['loadCharacteristics'] as Array<any>).map(PublicLoadCharacteristicViewToJSON),
+    movementPatterns: value['movementPatterns'],
+    requiredEquipment: value['requiredEquipment'],
+    stimulusType: value['stimulusType'],
+    technicalLevel: value['technicalLevel'],
+    versionId: value['versionId'],
+    versionNumber: value['versionNumber'],
   };
 }

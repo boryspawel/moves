@@ -21,10 +21,58 @@ import { mapValues } from '../runtime';
 export interface GoalView {
   /**
    *
+   * @type {Array<string>}
+   * @memberof GoalView
+   */
+  availableActions?: Array<string>;
+  /**
+   *
+   * @type {number}
+   * @memberof GoalView
+   */
+  baseline?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof GoalView
+   */
+  dataQuality?: string;
+  /**
+   *
    * @type {string}
    * @memberof GoalView
    */
   goalId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof GoalView
+   */
+  improvementDirection?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof GoalView
+   */
+  latestValue?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof GoalView
+   */
+  status?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof GoalView
+   */
+  target?: number;
+  /**
+   *
+   * @type {Date}
+   * @memberof GoalView
+   */
+  targetDate?: Date;
   /**
    *
    * @type {string}
@@ -42,55 +90,7 @@ export interface GoalView {
    * @type {string}
    * @memberof GoalView
    */
-  status?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof GoalView
-   */
-  targetDate?: Date;
-  /**
-   *
-   * @type {number}
-   * @memberof GoalView
-   */
-  baseline?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof GoalView
-   */
-  target?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof GoalView
-   */
-  latestValue?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof GoalView
-   */
   unit?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof GoalView
-   */
-  improvementDirection?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof GoalView
-   */
-  dataQuality?: string;
-  /**
-   *
-   * @type {Array<string>}
-   * @memberof GoalView
-   */
-  availableActions?: Array<string>;
 }
 
 /**
@@ -109,19 +109,19 @@ export function GoalViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): 
     return json;
   }
   return {
-    goalId: json['goalId'] == null ? undefined : json['goalId'],
-    title: json['title'] == null ? undefined : json['title'],
-    type: json['type'] == null ? undefined : json['type'],
-    status: json['status'] == null ? undefined : json['status'],
-    targetDate: json['targetDate'] == null ? undefined : new Date(json['targetDate']),
+    availableActions: json['availableActions'] == null ? undefined : json['availableActions'],
     baseline: json['baseline'] == null ? undefined : json['baseline'],
-    target: json['target'] == null ? undefined : json['target'],
-    latestValue: json['latestValue'] == null ? undefined : json['latestValue'],
-    unit: json['unit'] == null ? undefined : json['unit'],
+    dataQuality: json['dataQuality'] == null ? undefined : json['dataQuality'],
+    goalId: json['goalId'] == null ? undefined : json['goalId'],
     improvementDirection:
       json['improvementDirection'] == null ? undefined : json['improvementDirection'],
-    dataQuality: json['dataQuality'] == null ? undefined : json['dataQuality'],
-    availableActions: json['availableActions'] == null ? undefined : json['availableActions'],
+    latestValue: json['latestValue'] == null ? undefined : json['latestValue'],
+    status: json['status'] == null ? undefined : json['status'],
+    target: json['target'] == null ? undefined : json['target'],
+    targetDate: json['targetDate'] == null ? undefined : new Date(json['targetDate']),
+    title: json['title'] == null ? undefined : json['title'],
+    type: json['type'] == null ? undefined : json['type'],
+    unit: json['unit'] == null ? undefined : json['unit'],
   };
 }
 
@@ -138,20 +138,20 @@ export function GoalViewToJSONTyped(
   }
 
   return {
+    availableActions: value['availableActions'],
+    baseline: value['baseline'],
+    dataQuality: value['dataQuality'],
     goalId: value['goalId'],
-    title: value['title'],
-    type: value['type'],
+    improvementDirection: value['improvementDirection'],
+    latestValue: value['latestValue'],
     status: value['status'],
+    target: value['target'],
     targetDate:
       value['targetDate'] == null
         ? value['targetDate']
         : value['targetDate'].toISOString().substring(0, 10),
-    baseline: value['baseline'],
-    target: value['target'],
-    latestValue: value['latestValue'],
+    title: value['title'],
+    type: value['type'],
     unit: value['unit'],
-    improvementDirection: value['improvementDirection'],
-    dataQuality: value['dataQuality'],
-    availableActions: value['availableActions'],
   };
 }

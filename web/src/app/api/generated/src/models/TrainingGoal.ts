@@ -21,16 +21,22 @@ import { mapValues } from '../runtime';
 export interface TrainingGoal {
   /**
    *
-   * @type {string}
+   * @type {Date}
    * @memberof TrainingGoal
    */
-  id?: string;
+  createdAt?: Date;
   /**
    *
    * @type {string}
    * @memberof TrainingGoal
    */
-  participantAccountId?: string;
+  createdByAccountId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof TrainingGoal
+   */
+  id?: string;
   /**
    *
    * @type {string}
@@ -42,13 +48,7 @@ export interface TrainingGoal {
    * @type {string}
    * @memberof TrainingGoal
    */
-  createdByAccountId?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof TrainingGoal
-   */
-  createdAt?: Date;
+  participantAccountId?: string;
 }
 
 /**
@@ -67,12 +67,12 @@ export function TrainingGoalFromJSONTyped(json: any, ignoreDiscriminator: boolea
     return json;
   }
   return {
+    createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
+    createdByAccountId: json['createdByAccountId'] == null ? undefined : json['createdByAccountId'],
     id: json['id'] == null ? undefined : json['id'],
+    name: json['name'] == null ? undefined : json['name'],
     participantAccountId:
       json['participantAccountId'] == null ? undefined : json['participantAccountId'],
-    name: json['name'] == null ? undefined : json['name'],
-    createdByAccountId: json['createdByAccountId'] == null ? undefined : json['createdByAccountId'],
-    createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
   };
 }
 
@@ -89,10 +89,10 @@ export function TrainingGoalToJSONTyped(
   }
 
   return {
-    id: value['id'],
-    participantAccountId: value['participantAccountId'],
-    name: value['name'],
-    createdByAccountId: value['createdByAccountId'],
     createdAt: value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
+    createdByAccountId: value['createdByAccountId'],
+    id: value['id'],
+    name: value['name'],
+    participantAccountId: value['participantAccountId'],
   };
 }

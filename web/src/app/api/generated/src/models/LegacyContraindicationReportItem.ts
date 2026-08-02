@@ -24,6 +24,12 @@ export interface LegacyContraindicationReportItem {
    * @type {string}
    * @memberof LegacyContraindicationReportItem
    */
+  disposition?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof LegacyContraindicationReportItem
+   */
   tag?: string;
   /**
    *
@@ -31,12 +37,6 @@ export interface LegacyContraindicationReportItem {
    * @memberof LegacyContraindicationReportItem
    */
   versionCount?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof LegacyContraindicationReportItem
-   */
-  disposition?: string;
 }
 
 /**
@@ -62,9 +62,9 @@ export function LegacyContraindicationReportItemFromJSONTyped(
     return json;
   }
   return {
+    disposition: json['disposition'] == null ? undefined : json['disposition'],
     tag: json['tag'] == null ? undefined : json['tag'],
     versionCount: json['versionCount'] == null ? undefined : json['versionCount'],
-    disposition: json['disposition'] == null ? undefined : json['disposition'],
   };
 }
 
@@ -83,8 +83,8 @@ export function LegacyContraindicationReportItemToJSONTyped(
   }
 
   return {
+    disposition: value['disposition'],
     tag: value['tag'],
     versionCount: value['versionCount'],
-    disposition: value['disposition'],
   };
 }

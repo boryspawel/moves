@@ -21,6 +21,12 @@ import { mapValues } from '../runtime';
 export interface CheckInRequest {
   /**
    *
+   * @type {string}
+   * @memberof CheckInRequest
+   */
+  painArea?: string;
+  /**
+   *
    * @type {number}
    * @memberof CheckInRequest
    */
@@ -31,12 +37,6 @@ export interface CheckInRequest {
    * @memberof CheckInRequest
    */
   readinessLevel?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof CheckInRequest
-   */
-  painArea?: string;
 }
 
 /**
@@ -58,9 +58,9 @@ export function CheckInRequestFromJSONTyped(
     return json;
   }
   return {
+    painArea: json['painArea'] == null ? undefined : json['painArea'],
     painLevel: json['painLevel'] == null ? undefined : json['painLevel'],
     readinessLevel: json['readinessLevel'] == null ? undefined : json['readinessLevel'],
-    painArea: json['painArea'] == null ? undefined : json['painArea'],
   };
 }
 
@@ -77,8 +77,8 @@ export function CheckInRequestToJSONTyped(
   }
 
   return {
+    painArea: value['painArea'],
     painLevel: value['painLevel'],
     readinessLevel: value['readinessLevel'],
-    painArea: value['painArea'],
   };
 }

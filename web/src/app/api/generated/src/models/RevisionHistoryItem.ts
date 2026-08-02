@@ -24,6 +24,30 @@ export interface RevisionHistoryItem {
    * @type {string}
    * @memberof RevisionHistoryItem
    */
+  assessmentStatus?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RevisionHistoryItem
+   */
+  basedOnRevisionId?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof RevisionHistoryItem
+   */
+  createdAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof RevisionHistoryItem
+   */
+  migrationOrigin?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RevisionHistoryItem
+   */
   revisionId?: string;
   /**
    *
@@ -36,37 +60,13 @@ export interface RevisionHistoryItem {
    * @type {string}
    * @memberof RevisionHistoryItem
    */
-  basedOnRevisionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RevisionHistoryItem
-   */
   status?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RevisionHistoryItem
-   */
-  migrationOrigin?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RevisionHistoryItem
-   */
-  assessmentStatus?: string;
   /**
    *
    * @type {number}
    * @memberof RevisionHistoryItem
    */
   version?: number;
-  /**
-   *
-   * @type {Date}
-   * @memberof RevisionHistoryItem
-   */
-  createdAt?: Date;
 }
 
 /**
@@ -88,14 +88,14 @@ export function RevisionHistoryItemFromJSONTyped(
     return json;
   }
   return {
+    assessmentStatus: json['assessmentStatus'] == null ? undefined : json['assessmentStatus'],
+    basedOnRevisionId: json['basedOnRevisionId'] == null ? undefined : json['basedOnRevisionId'],
+    createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
+    migrationOrigin: json['migrationOrigin'] == null ? undefined : json['migrationOrigin'],
     revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
     revisionNumber: json['revisionNumber'] == null ? undefined : json['revisionNumber'],
-    basedOnRevisionId: json['basedOnRevisionId'] == null ? undefined : json['basedOnRevisionId'],
     status: json['status'] == null ? undefined : json['status'],
-    migrationOrigin: json['migrationOrigin'] == null ? undefined : json['migrationOrigin'],
-    assessmentStatus: json['assessmentStatus'] == null ? undefined : json['assessmentStatus'],
     version: json['version'] == null ? undefined : json['version'],
-    createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
   };
 }
 
@@ -112,13 +112,13 @@ export function RevisionHistoryItemToJSONTyped(
   }
 
   return {
+    assessmentStatus: value['assessmentStatus'],
+    basedOnRevisionId: value['basedOnRevisionId'],
+    createdAt: value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
+    migrationOrigin: value['migrationOrigin'],
     revisionId: value['revisionId'],
     revisionNumber: value['revisionNumber'],
-    basedOnRevisionId: value['basedOnRevisionId'],
     status: value['status'],
-    migrationOrigin: value['migrationOrigin'],
-    assessmentStatus: value['assessmentStatus'],
     version: value['version'],
-    createdAt: value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
   };
 }

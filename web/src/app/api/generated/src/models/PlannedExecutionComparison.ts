@@ -43,18 +43,6 @@ import {
 export interface PlannedExecutionComparison {
   /**
    *
-   * @type {PlannedSession}
-   * @memberof PlannedExecutionComparison
-   */
-  planned?: PlannedSession;
-  /**
-   *
-   * @type {PerformedSession}
-   * @memberof PlannedExecutionComparison
-   */
-  performed?: PerformedSession;
-  /**
-   *
    * @type {string}
    * @memberof PlannedExecutionComparison
    */
@@ -65,6 +53,18 @@ export interface PlannedExecutionComparison {
    * @memberof PlannedExecutionComparison
    */
   deviations?: Array<ExecutionDeviation>;
+  /**
+   *
+   * @type {PerformedSession}
+   * @memberof PlannedExecutionComparison
+   */
+  performed?: PerformedSession;
+  /**
+   *
+   * @type {PlannedSession}
+   * @memberof PlannedExecutionComparison
+   */
+  planned?: PlannedSession;
 }
 
 /**
@@ -88,13 +88,13 @@ export function PlannedExecutionComparisonFromJSONTyped(
     return json;
   }
   return {
-    planned: json['planned'] == null ? undefined : PlannedSessionFromJSON(json['planned']),
-    performed: json['performed'] == null ? undefined : PerformedSessionFromJSON(json['performed']),
     completionState: json['completionState'] == null ? undefined : json['completionState'],
     deviations:
       json['deviations'] == null
         ? undefined
         : (json['deviations'] as Array<any>).map(ExecutionDeviationFromJSON),
+    performed: json['performed'] == null ? undefined : PerformedSessionFromJSON(json['performed']),
+    planned: json['planned'] == null ? undefined : PlannedSessionFromJSON(json['planned']),
   };
 }
 
@@ -111,12 +111,12 @@ export function PlannedExecutionComparisonToJSONTyped(
   }
 
   return {
-    planned: PlannedSessionToJSON(value['planned']),
-    performed: PerformedSessionToJSON(value['performed']),
     completionState: value['completionState'],
     deviations:
       value['deviations'] == null
         ? undefined
         : (value['deviations'] as Array<any>).map(ExecutionDeviationToJSON),
+    performed: PerformedSessionToJSON(value['performed']),
+    planned: PlannedSessionToJSON(value['planned']),
   };
 }

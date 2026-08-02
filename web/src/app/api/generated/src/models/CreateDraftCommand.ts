@@ -29,22 +29,10 @@ import {
 export interface CreateDraftCommand {
   /**
    *
-   * @type {string}
+   * @type {ActingContext}
    * @memberof CreateDraftCommand
    */
-  participantId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof CreateDraftCommand
-   */
-  name?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof CreateDraftCommand
-   */
-  purpose?: string;
+  actingContext?: ActingContext;
   /**
    *
    * @type {CreateDraftCommandModeEnum}
@@ -56,7 +44,25 @@ export interface CreateDraftCommand {
    * @type {string}
    * @memberof CreateDraftCommand
    */
+  name?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof CreateDraftCommand
+   */
+  participantId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof CreateDraftCommand
+   */
   phaseIntent?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof CreateDraftCommand
+   */
+  purpose?: string;
   /**
    *
    * @type {Date}
@@ -69,12 +75,6 @@ export interface CreateDraftCommand {
    * @memberof CreateDraftCommand
    */
   validTo?: Date;
-  /**
-   *
-   * @type {ActingContext}
-   * @memberof CreateDraftCommand
-   */
-  actingContext?: ActingContext;
 }
 
 /**
@@ -107,15 +107,15 @@ export function CreateDraftCommandFromJSONTyped(
     return json;
   }
   return {
-    participantId: json['participantId'] == null ? undefined : json['participantId'],
-    name: json['name'] == null ? undefined : json['name'],
-    purpose: json['purpose'] == null ? undefined : json['purpose'],
-    mode: json['mode'] == null ? undefined : json['mode'],
-    phaseIntent: json['phaseIntent'] == null ? undefined : json['phaseIntent'],
-    validFrom: json['validFrom'] == null ? undefined : new Date(json['validFrom']),
-    validTo: json['validTo'] == null ? undefined : new Date(json['validTo']),
     actingContext:
       json['actingContext'] == null ? undefined : ActingContextFromJSON(json['actingContext']),
+    mode: json['mode'] == null ? undefined : json['mode'],
+    name: json['name'] == null ? undefined : json['name'],
+    participantId: json['participantId'] == null ? undefined : json['participantId'],
+    phaseIntent: json['phaseIntent'] == null ? undefined : json['phaseIntent'],
+    purpose: json['purpose'] == null ? undefined : json['purpose'],
+    validFrom: json['validFrom'] == null ? undefined : new Date(json['validFrom']),
+    validTo: json['validTo'] == null ? undefined : new Date(json['validTo']),
   };
 }
 
@@ -132,17 +132,17 @@ export function CreateDraftCommandToJSONTyped(
   }
 
   return {
-    participantId: value['participantId'],
-    name: value['name'],
-    purpose: value['purpose'],
+    actingContext: ActingContextToJSON(value['actingContext']),
     mode: value['mode'],
+    name: value['name'],
+    participantId: value['participantId'],
     phaseIntent: value['phaseIntent'],
+    purpose: value['purpose'],
     validFrom:
       value['validFrom'] == null
         ? value['validFrom']
         : value['validFrom'].toISOString().substring(0, 10),
     validTo:
       value['validTo'] == null ? value['validTo'] : value['validTo'].toISOString().substring(0, 10),
-    actingContext: ActingContextToJSON(value['actingContext']),
   };
 }

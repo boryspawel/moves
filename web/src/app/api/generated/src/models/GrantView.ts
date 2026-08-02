@@ -33,16 +33,16 @@ export interface GrantView {
   participantId?: string;
   /**
    *
-   * @type {string}
-   * @memberof GrantView
-   */
-  recipientId?: string;
-  /**
-   *
    * @type {GrantViewPurposeEnum}
    * @memberof GrantView
    */
   purpose?: GrantViewPurposeEnum;
+  /**
+   *
+   * @type {string}
+   * @memberof GrantView
+   */
+  recipientId?: string;
   /**
    *
    * @type {Set<GrantViewScopesEnum>}
@@ -108,8 +108,8 @@ export function GrantViewFromJSONTyped(json: any, ignoreDiscriminator: boolean):
   return {
     id: json['id'] == null ? undefined : json['id'],
     participantId: json['participantId'] == null ? undefined : json['participantId'],
-    recipientId: json['recipientId'] == null ? undefined : json['recipientId'],
     purpose: json['purpose'] == null ? undefined : json['purpose'],
+    recipientId: json['recipientId'] == null ? undefined : json['recipientId'],
     scopes: json['scopes'] == null ? undefined : new Set(json['scopes']),
     status: json['status'] == null ? undefined : json['status'],
     validFrom: json['validFrom'] == null ? undefined : new Date(json['validFrom']),
@@ -132,8 +132,8 @@ export function GrantViewToJSONTyped(
   return {
     id: value['id'],
     participantId: value['participantId'],
-    recipientId: value['recipientId'],
     purpose: value['purpose'],
+    recipientId: value['recipientId'],
     scopes: value['scopes'] == null ? undefined : Array.from(value['scopes'] as Set<any>),
     status: value['status'],
     validFrom: value['validFrom'] == null ? value['validFrom'] : value['validFrom'].toISOString(),

@@ -30,13 +30,13 @@ export interface ReviewCommand {
    * @type {string}
    * @memberof ReviewCommand
    */
-  decision?: string;
+  comment?: string;
   /**
    *
    * @type {string}
    * @memberof ReviewCommand
    */
-  comment?: string;
+  decision?: string;
   /**
    *
    * @type {number}
@@ -62,8 +62,8 @@ export function ReviewCommandFromJSONTyped(json: any, ignoreDiscriminator: boole
   }
   return {
     area: json['area'] == null ? undefined : json['area'],
-    decision: json['decision'] == null ? undefined : json['decision'],
     comment: json['comment'] == null ? undefined : json['comment'],
+    decision: json['decision'] == null ? undefined : json['decision'],
     expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
   };
 }
@@ -82,8 +82,8 @@ export function ReviewCommandToJSONTyped(
 
   return {
     area: value['area'],
-    decision: value['decision'],
     comment: value['comment'],
+    decision: value['decision'],
     expectedVersion: value['expectedVersion'],
   };
 }

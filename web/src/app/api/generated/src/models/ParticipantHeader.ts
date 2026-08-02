@@ -21,16 +21,10 @@ import { mapValues } from '../runtime';
 export interface ParticipantHeader {
   /**
    *
-   * @type {string}
+   * @type {Array<string>}
    * @memberof ParticipantHeader
    */
-  participantId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ParticipantHeader
-   */
-  displayName?: string;
+  availableActions?: Array<string>;
   /**
    *
    * @type {string}
@@ -48,13 +42,19 @@ export interface ParticipantHeader {
    * @type {string}
    * @memberof ParticipantHeader
    */
-  timeZoneId?: string;
+  displayName?: string;
   /**
    *
-   * @type {Array<string>}
+   * @type {string}
    * @memberof ParticipantHeader
    */
-  availableActions?: Array<string>;
+  participantId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ParticipantHeader
+   */
+  timeZoneId?: string;
 }
 
 /**
@@ -76,12 +76,12 @@ export function ParticipantHeaderFromJSONTyped(
     return json;
   }
   return {
-    participantId: json['participantId'] == null ? undefined : json['participantId'],
-    displayName: json['displayName'] == null ? undefined : json['displayName'],
+    availableActions: json['availableActions'] == null ? undefined : json['availableActions'],
     avatarReference: json['avatarReference'] == null ? undefined : json['avatarReference'],
     contextLabel: json['contextLabel'] == null ? undefined : json['contextLabel'],
+    displayName: json['displayName'] == null ? undefined : json['displayName'],
+    participantId: json['participantId'] == null ? undefined : json['participantId'],
     timeZoneId: json['timeZoneId'] == null ? undefined : json['timeZoneId'],
-    availableActions: json['availableActions'] == null ? undefined : json['availableActions'],
   };
 }
 
@@ -98,11 +98,11 @@ export function ParticipantHeaderToJSONTyped(
   }
 
   return {
-    participantId: value['participantId'],
-    displayName: value['displayName'],
+    availableActions: value['availableActions'],
     avatarReference: value['avatarReference'],
     contextLabel: value['contextLabel'],
+    displayName: value['displayName'],
+    participantId: value['participantId'],
     timeZoneId: value['timeZoneId'],
-    availableActions: value['availableActions'],
   };
 }

@@ -27,6 +27,12 @@ export interface ImportMetadata {
   batchId?: string;
   /**
    *
+   * @type {string}
+   * @memberof ImportMetadata
+   */
+  recordStatus?: string;
+  /**
+   *
    * @type {number}
    * @memberof ImportMetadata
    */
@@ -37,12 +43,6 @@ export interface ImportMetadata {
    * @memberof ImportMetadata
    */
   sourceRecordKey?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ImportMetadata
-   */
-  recordStatus?: string;
 }
 
 /**
@@ -65,9 +65,9 @@ export function ImportMetadataFromJSONTyped(
   }
   return {
     batchId: json['batchId'] == null ? undefined : json['batchId'],
+    recordStatus: json['recordStatus'] == null ? undefined : json['recordStatus'],
     rowNumber: json['rowNumber'] == null ? undefined : json['rowNumber'],
     sourceRecordKey: json['sourceRecordKey'] == null ? undefined : json['sourceRecordKey'],
-    recordStatus: json['recordStatus'] == null ? undefined : json['recordStatus'],
   };
 }
 
@@ -85,8 +85,8 @@ export function ImportMetadataToJSONTyped(
 
   return {
     batchId: value['batchId'],
+    recordStatus: value['recordStatus'],
     rowNumber: value['rowNumber'],
     sourceRecordKey: value['sourceRecordKey'],
-    recordStatus: value['recordStatus'],
   };
 }

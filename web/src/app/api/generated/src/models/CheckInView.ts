@@ -27,6 +27,12 @@ export interface CheckInView {
   id?: string;
   /**
    *
+   * @type {string}
+   * @memberof CheckInView
+   */
+  painArea?: string;
+  /**
+   *
    * @type {number}
    * @memberof CheckInView
    */
@@ -37,12 +43,6 @@ export interface CheckInView {
    * @memberof CheckInView
    */
   readinessLevel?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof CheckInView
-   */
-  painArea?: string;
   /**
    *
    * @type {Date}
@@ -68,9 +68,9 @@ export function CheckInViewFromJSONTyped(json: any, ignoreDiscriminator: boolean
   }
   return {
     id: json['id'] == null ? undefined : json['id'],
+    painArea: json['painArea'] == null ? undefined : json['painArea'],
     painLevel: json['painLevel'] == null ? undefined : json['painLevel'],
     readinessLevel: json['readinessLevel'] == null ? undefined : json['readinessLevel'],
-    painArea: json['painArea'] == null ? undefined : json['painArea'],
     recordedAt: json['recordedAt'] == null ? undefined : new Date(json['recordedAt']),
   };
 }
@@ -89,9 +89,9 @@ export function CheckInViewToJSONTyped(
 
   return {
     id: value['id'],
+    painArea: value['painArea'],
     painLevel: value['painLevel'],
     readinessLevel: value['readinessLevel'],
-    painArea: value['painArea'],
     recordedAt:
       value['recordedAt'] == null ? value['recordedAt'] : value['recordedAt'].toISOString(),
   };

@@ -27,22 +27,10 @@ export interface CreateStructureRequest {
   code: string;
   /**
    *
-   * @type {CreateStructureRequestTypeEnum}
-   * @memberof CreateStructureRequest
-   */
-  type: CreateStructureRequestTypeEnum;
-  /**
-   *
    * @type {string}
    * @memberof CreateStructureRequest
    */
   displayName: string;
-  /**
-   *
-   * @type {CreateStructureRequestSidePolicyEnum}
-   * @memberof CreateStructureRequest
-   */
-  sidePolicy: CreateStructureRequestSidePolicyEnum;
   /**
    *
    * @type {string}
@@ -57,11 +45,33 @@ export interface CreateStructureRequest {
   externalOntologyId?: string;
   /**
    *
+   * @type {CreateStructureRequestSidePolicyEnum}
+   * @memberof CreateStructureRequest
+   */
+  sidePolicy: CreateStructureRequestSidePolicyEnum;
+  /**
+   *
    * @type {number}
    * @memberof CreateStructureRequest
    */
   taxonomyVersion?: number;
+  /**
+   *
+   * @type {CreateStructureRequestTypeEnum}
+   * @memberof CreateStructureRequest
+   */
+  type: CreateStructureRequestTypeEnum;
 }
+
+/**
+ * @export
+ */
+export const CreateStructureRequestSidePolicyEnum = {
+  None: 'NONE',
+  LeftRight: 'LEFT_RIGHT',
+} as const;
+export type CreateStructureRequestSidePolicyEnum =
+  (typeof CreateStructureRequestSidePolicyEnum)[keyof typeof CreateStructureRequestSidePolicyEnum];
 
 /**
  * @export
@@ -77,23 +87,13 @@ export type CreateStructureRequestTypeEnum =
   (typeof CreateStructureRequestTypeEnum)[keyof typeof CreateStructureRequestTypeEnum];
 
 /**
- * @export
- */
-export const CreateStructureRequestSidePolicyEnum = {
-  None: 'NONE',
-  LeftRight: 'LEFT_RIGHT',
-} as const;
-export type CreateStructureRequestSidePolicyEnum =
-  (typeof CreateStructureRequestSidePolicyEnum)[keyof typeof CreateStructureRequestSidePolicyEnum];
-
-/**
  * Check if a given object implements the CreateStructureRequest interface.
  */
 export function instanceOfCreateStructureRequest(value: object): value is CreateStructureRequest {
   if (!('code' in value) || value['code'] === undefined) return false;
-  if (!('type' in value) || value['type'] === undefined) return false;
   if (!('displayName' in value) || value['displayName'] === undefined) return false;
   if (!('sidePolicy' in value) || value['sidePolicy'] === undefined) return false;
+  if (!('type' in value) || value['type'] === undefined) return false;
   return true;
 }
 
@@ -110,12 +110,12 @@ export function CreateStructureRequestFromJSONTyped(
   }
   return {
     code: json['code'],
-    type: json['type'],
     displayName: json['displayName'],
-    sidePolicy: json['sidePolicy'],
     externalOntology: json['externalOntology'] == null ? undefined : json['externalOntology'],
     externalOntologyId: json['externalOntologyId'] == null ? undefined : json['externalOntologyId'],
+    sidePolicy: json['sidePolicy'],
     taxonomyVersion: json['taxonomyVersion'] == null ? undefined : json['taxonomyVersion'],
+    type: json['type'],
   };
 }
 
@@ -133,11 +133,11 @@ export function CreateStructureRequestToJSONTyped(
 
   return {
     code: value['code'],
-    type: value['type'],
     displayName: value['displayName'],
-    sidePolicy: value['sidePolicy'],
     externalOntology: value['externalOntology'],
     externalOntologyId: value['externalOntologyId'],
+    sidePolicy: value['sidePolicy'],
     taxonomyVersion: value['taxonomyVersion'],
+    type: value['type'],
   };
 }

@@ -24,25 +24,19 @@ export interface CatalogItem {
    * @type {string}
    * @memberof CatalogItem
    */
-  exerciseId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof CatalogItem
-   */
   canonicalName?: string;
   /**
    *
+   * @type {CatalogItemEnvironmentEnum}
+   * @memberof CatalogItem
+   */
+  environment?: CatalogItemEnvironmentEnum;
+  /**
+   *
    * @type {string}
    * @memberof CatalogItem
    */
-  versionId?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof CatalogItem
-   */
-  versionNumber?: number;
+  exerciseId?: string;
   /**
    *
    * @type {CatalogItemPrimaryMovementPatternEnum}
@@ -57,11 +51,30 @@ export interface CatalogItem {
   technicalLevel?: CatalogItemTechnicalLevelEnum;
   /**
    *
-   * @type {CatalogItemEnvironmentEnum}
+   * @type {string}
    * @memberof CatalogItem
    */
-  environment?: CatalogItemEnvironmentEnum;
+  versionId?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof CatalogItem
+   */
+  versionNumber?: number;
 }
+
+/**
+ * @export
+ */
+export const CatalogItemEnvironmentEnum = {
+  Home: 'HOME',
+  Gym: 'GYM',
+  Outdoor: 'OUTDOOR',
+  Clinic: 'CLINIC',
+  Any: 'ANY',
+} as const;
+export type CatalogItemEnvironmentEnum =
+  (typeof CatalogItemEnvironmentEnum)[keyof typeof CatalogItemEnvironmentEnum];
 
 /**
  * @export
@@ -94,19 +107,6 @@ export type CatalogItemTechnicalLevelEnum =
   (typeof CatalogItemTechnicalLevelEnum)[keyof typeof CatalogItemTechnicalLevelEnum];
 
 /**
- * @export
- */
-export const CatalogItemEnvironmentEnum = {
-  Home: 'HOME',
-  Gym: 'GYM',
-  Outdoor: 'OUTDOOR',
-  Clinic: 'CLINIC',
-  Any: 'ANY',
-} as const;
-export type CatalogItemEnvironmentEnum =
-  (typeof CatalogItemEnvironmentEnum)[keyof typeof CatalogItemEnvironmentEnum];
-
-/**
  * Check if a given object implements the CatalogItem interface.
  */
 export function instanceOfCatalogItem(value: object): value is CatalogItem {
@@ -122,14 +122,14 @@ export function CatalogItemFromJSONTyped(json: any, ignoreDiscriminator: boolean
     return json;
   }
   return {
-    exerciseId: json['exerciseId'] == null ? undefined : json['exerciseId'],
     canonicalName: json['canonicalName'] == null ? undefined : json['canonicalName'],
-    versionId: json['versionId'] == null ? undefined : json['versionId'],
-    versionNumber: json['versionNumber'] == null ? undefined : json['versionNumber'],
+    environment: json['environment'] == null ? undefined : json['environment'],
+    exerciseId: json['exerciseId'] == null ? undefined : json['exerciseId'],
     primaryMovementPattern:
       json['primaryMovementPattern'] == null ? undefined : json['primaryMovementPattern'],
     technicalLevel: json['technicalLevel'] == null ? undefined : json['technicalLevel'],
-    environment: json['environment'] == null ? undefined : json['environment'],
+    versionId: json['versionId'] == null ? undefined : json['versionId'],
+    versionNumber: json['versionNumber'] == null ? undefined : json['versionNumber'],
   };
 }
 
@@ -146,12 +146,12 @@ export function CatalogItemToJSONTyped(
   }
 
   return {
-    exerciseId: value['exerciseId'],
     canonicalName: value['canonicalName'],
-    versionId: value['versionId'],
-    versionNumber: value['versionNumber'],
+    environment: value['environment'],
+    exerciseId: value['exerciseId'],
     primaryMovementPattern: value['primaryMovementPattern'],
     technicalLevel: value['technicalLevel'],
-    environment: value['environment'],
+    versionId: value['versionId'],
+    versionNumber: value['versionNumber'],
   };
 }

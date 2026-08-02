@@ -40,7 +40,7 @@ export interface CancelRequest {
   versionCommand: VersionCommand;
 }
 
-export interface Create1Request {
+export interface Create2Request {
   idempotencyKey: string;
   createCommand: CreateCommand;
 }
@@ -51,7 +51,7 @@ export interface NoShowRequest {
   versionCommand: VersionCommand;
 }
 
-export interface UpdateRequest {
+export interface Update1Request {
   id: string;
   idempotencyKey: string;
   updateCommand: UpdateCommand;
@@ -133,20 +133,20 @@ export class AppointmentControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for create1 without sending the request
+   * Creates request options for create2 without sending the request
    */
-  async create1RequestOpts(requestParameters: Create1Request): Promise<runtime.RequestOpts> {
+  async create2RequestOpts(requestParameters: Create2Request): Promise<runtime.RequestOpts> {
     if (requestParameters['idempotencyKey'] == null) {
       throw new runtime.RequiredError(
         'idempotencyKey',
-        'Required parameter "idempotencyKey" was null or undefined when calling create1().',
+        'Required parameter "idempotencyKey" was null or undefined when calling create2().',
       );
     }
 
     if (requestParameters['createCommand'] == null) {
       throw new runtime.RequiredError(
         'createCommand',
-        'Required parameter "createCommand" was null or undefined when calling create1().',
+        'Required parameter "createCommand" was null or undefined when calling create2().',
       );
     }
 
@@ -174,11 +174,11 @@ export class AppointmentControllerApi extends runtime.BaseAPI {
   /**
    * Create a specialist appointment
    */
-  async create1Raw(
-    requestParameters: Create1Request,
+  async create2Raw(
+    requestParameters: Create2Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AppointmentView>> {
-    const requestOptions = await this.create1RequestOpts(requestParameters);
+    const requestOptions = await this.create2RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) => AppointmentViewFromJSON(jsonValue));
@@ -187,11 +187,11 @@ export class AppointmentControllerApi extends runtime.BaseAPI {
   /**
    * Create a specialist appointment
    */
-  async create1(
-    requestParameters: Create1Request,
+  async create2(
+    requestParameters: Create2Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<AppointmentView> {
-    const response = await this.create1Raw(requestParameters, initOverrides);
+    const response = await this.create2Raw(requestParameters, initOverrides);
     return await response.value();
   }
 
@@ -267,27 +267,27 @@ export class AppointmentControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for update without sending the request
+   * Creates request options for update1 without sending the request
    */
-  async updateRequestOpts(requestParameters: UpdateRequest): Promise<runtime.RequestOpts> {
+  async update1RequestOpts(requestParameters: Update1Request): Promise<runtime.RequestOpts> {
     if (requestParameters['id'] == null) {
       throw new runtime.RequiredError(
         'id',
-        'Required parameter "id" was null or undefined when calling update().',
+        'Required parameter "id" was null or undefined when calling update1().',
       );
     }
 
     if (requestParameters['idempotencyKey'] == null) {
       throw new runtime.RequiredError(
         'idempotencyKey',
-        'Required parameter "idempotencyKey" was null or undefined when calling update().',
+        'Required parameter "idempotencyKey" was null or undefined when calling update1().',
       );
     }
 
     if (requestParameters['updateCommand'] == null) {
       throw new runtime.RequiredError(
         'updateCommand',
-        'Required parameter "updateCommand" was null or undefined when calling update().',
+        'Required parameter "updateCommand" was null or undefined when calling update1().',
       );
     }
 
@@ -316,11 +316,11 @@ export class AppointmentControllerApi extends runtime.BaseAPI {
   /**
    * Update a specialist appointment
    */
-  async updateRaw(
-    requestParameters: UpdateRequest,
+  async update1Raw(
+    requestParameters: Update1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AppointmentView>> {
-    const requestOptions = await this.updateRequestOpts(requestParameters);
+    const requestOptions = await this.update1RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) => AppointmentViewFromJSON(jsonValue));
@@ -329,11 +329,11 @@ export class AppointmentControllerApi extends runtime.BaseAPI {
   /**
    * Update a specialist appointment
    */
-  async update(
-    requestParameters: UpdateRequest,
+  async update1(
+    requestParameters: Update1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<AppointmentView> {
-    const response = await this.updateRaw(requestParameters, initOverrides);
+    const response = await this.update1Raw(requestParameters, initOverrides);
     return await response.value();
   }
 }

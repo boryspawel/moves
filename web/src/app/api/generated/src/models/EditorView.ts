@@ -32,31 +32,7 @@ export interface EditorView {
    * @type {string}
    * @memberof EditorView
    */
-  planId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof EditorView
-   */
-  participantId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof EditorView
-   */
-  name?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof EditorView
-   */
-  purpose?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof EditorView
-   */
-  ownerAccountId?: string;
+  currentRevisionId?: string;
   /**
    *
    * @type {string}
@@ -68,13 +44,37 @@ export interface EditorView {
    * @type {string}
    * @memberof EditorView
    */
+  name?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof EditorView
+   */
+  ownerAccountId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof EditorView
+   */
+  participantId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof EditorView
+   */
+  planId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof EditorView
+   */
   planStatus?: string;
   /**
    *
    * @type {string}
    * @memberof EditorView
    */
-  currentRevisionId?: string;
+  purpose?: string;
   /**
    *
    * @type {PlanRevisionSnapshot}
@@ -99,14 +99,14 @@ export function EditorViewFromJSONTyped(json: any, ignoreDiscriminator: boolean)
     return json;
   }
   return {
-    planId: json['planId'] == null ? undefined : json['planId'],
-    participantId: json['participantId'] == null ? undefined : json['participantId'],
-    name: json['name'] == null ? undefined : json['name'],
-    purpose: json['purpose'] == null ? undefined : json['purpose'],
-    ownerAccountId: json['ownerAccountId'] == null ? undefined : json['ownerAccountId'],
-    mode: json['mode'] == null ? undefined : json['mode'],
-    planStatus: json['planStatus'] == null ? undefined : json['planStatus'],
     currentRevisionId: json['currentRevisionId'] == null ? undefined : json['currentRevisionId'],
+    mode: json['mode'] == null ? undefined : json['mode'],
+    name: json['name'] == null ? undefined : json['name'],
+    ownerAccountId: json['ownerAccountId'] == null ? undefined : json['ownerAccountId'],
+    participantId: json['participantId'] == null ? undefined : json['participantId'],
+    planId: json['planId'] == null ? undefined : json['planId'],
+    planStatus: json['planStatus'] == null ? undefined : json['planStatus'],
+    purpose: json['purpose'] == null ? undefined : json['purpose'],
     revision: json['revision'] == null ? undefined : PlanRevisionSnapshotFromJSON(json['revision']),
   };
 }
@@ -124,14 +124,14 @@ export function EditorViewToJSONTyped(
   }
 
   return {
-    planId: value['planId'],
-    participantId: value['participantId'],
-    name: value['name'],
-    purpose: value['purpose'],
-    ownerAccountId: value['ownerAccountId'],
-    mode: value['mode'],
-    planStatus: value['planStatus'],
     currentRevisionId: value['currentRevisionId'],
+    mode: value['mode'],
+    name: value['name'],
+    ownerAccountId: value['ownerAccountId'],
+    participantId: value['participantId'],
+    planId: value['planId'],
+    planStatus: value['planStatus'],
+    purpose: value['purpose'],
     revision: PlanRevisionSnapshotToJSON(value['revision']),
   };
 }

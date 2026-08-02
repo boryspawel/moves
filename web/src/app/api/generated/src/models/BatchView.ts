@@ -29,52 +29,16 @@ import {
 export interface BatchView {
   /**
    *
-   * @type {string}
+   * @type {ArtifactView}
    * @memberof BatchView
    */
-  id?: string;
+  artifact?: ArtifactView;
   /**
    *
-   * @type {string}
+   * @type {number}
    * @memberof BatchView
    */
-  sourceId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof BatchView
-   */
-  requestKey?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof BatchView
-   */
-  status?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof BatchView
-   */
-  forcedFromBatchId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof BatchView
-   */
-  submittedBySubject?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof BatchView
-   */
-  submittedAt?: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof BatchView
-   */
-  startedAt?: Date;
+  blockedCount?: number;
   /**
    *
    * @type {Date}
@@ -86,13 +50,19 @@ export interface BatchView {
    * @type {number}
    * @memberof BatchView
    */
-  totalCount?: number;
+  draftedCount?: number;
   /**
    *
-   * @type {number}
+   * @type {string}
    * @memberof BatchView
    */
-  validCount?: number;
+  forcedFromBatchId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BatchView
+   */
+  id?: string;
   /**
    *
    * @type {number}
@@ -101,16 +71,46 @@ export interface BatchView {
   invalidCount?: number;
   /**
    *
-   * @type {number}
+   * @type {string}
    * @memberof BatchView
    */
-  blockedCount?: number;
+  requestKey?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BatchView
+   */
+  sourceId?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof BatchView
+   */
+  startedAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof BatchView
+   */
+  status?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof BatchView
+   */
+  submittedAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof BatchView
+   */
+  submittedBySubject?: string;
   /**
    *
    * @type {number}
    * @memberof BatchView
    */
-  draftedCount?: number;
+  totalCount?: number;
   /**
    *
    * @type {number}
@@ -122,13 +122,13 @@ export interface BatchView {
    * @type {number}
    * @memberof BatchView
    */
-  version?: number;
+  validCount?: number;
   /**
    *
-   * @type {ArtifactView}
+   * @type {number}
    * @memberof BatchView
    */
-  artifact?: ArtifactView;
+  version?: number;
 }
 
 /**
@@ -147,23 +147,23 @@ export function BatchViewFromJSONTyped(json: any, ignoreDiscriminator: boolean):
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
-    sourceId: json['sourceId'] == null ? undefined : json['sourceId'],
-    requestKey: json['requestKey'] == null ? undefined : json['requestKey'],
-    status: json['status'] == null ? undefined : json['status'],
-    forcedFromBatchId: json['forcedFromBatchId'] == null ? undefined : json['forcedFromBatchId'],
-    submittedBySubject: json['submittedBySubject'] == null ? undefined : json['submittedBySubject'],
-    submittedAt: json['submittedAt'] == null ? undefined : new Date(json['submittedAt']),
-    startedAt: json['startedAt'] == null ? undefined : new Date(json['startedAt']),
-    completedAt: json['completedAt'] == null ? undefined : new Date(json['completedAt']),
-    totalCount: json['totalCount'] == null ? undefined : json['totalCount'],
-    validCount: json['validCount'] == null ? undefined : json['validCount'],
-    invalidCount: json['invalidCount'] == null ? undefined : json['invalidCount'],
-    blockedCount: json['blockedCount'] == null ? undefined : json['blockedCount'],
-    draftedCount: json['draftedCount'] == null ? undefined : json['draftedCount'],
-    unchangedCount: json['unchangedCount'] == null ? undefined : json['unchangedCount'],
-    version: json['version'] == null ? undefined : json['version'],
     artifact: json['artifact'] == null ? undefined : ArtifactViewFromJSON(json['artifact']),
+    blockedCount: json['blockedCount'] == null ? undefined : json['blockedCount'],
+    completedAt: json['completedAt'] == null ? undefined : new Date(json['completedAt']),
+    draftedCount: json['draftedCount'] == null ? undefined : json['draftedCount'],
+    forcedFromBatchId: json['forcedFromBatchId'] == null ? undefined : json['forcedFromBatchId'],
+    id: json['id'] == null ? undefined : json['id'],
+    invalidCount: json['invalidCount'] == null ? undefined : json['invalidCount'],
+    requestKey: json['requestKey'] == null ? undefined : json['requestKey'],
+    sourceId: json['sourceId'] == null ? undefined : json['sourceId'],
+    startedAt: json['startedAt'] == null ? undefined : new Date(json['startedAt']),
+    status: json['status'] == null ? undefined : json['status'],
+    submittedAt: json['submittedAt'] == null ? undefined : new Date(json['submittedAt']),
+    submittedBySubject: json['submittedBySubject'] == null ? undefined : json['submittedBySubject'],
+    totalCount: json['totalCount'] == null ? undefined : json['totalCount'],
+    unchangedCount: json['unchangedCount'] == null ? undefined : json['unchangedCount'],
+    validCount: json['validCount'] == null ? undefined : json['validCount'],
+    version: json['version'] == null ? undefined : json['version'],
   };
 }
 
@@ -180,24 +180,24 @@ export function BatchViewToJSONTyped(
   }
 
   return {
-    id: value['id'],
-    sourceId: value['sourceId'],
-    requestKey: value['requestKey'],
-    status: value['status'],
-    forcedFromBatchId: value['forcedFromBatchId'],
-    submittedBySubject: value['submittedBySubject'],
-    submittedAt:
-      value['submittedAt'] == null ? value['submittedAt'] : value['submittedAt'].toISOString(),
-    startedAt: value['startedAt'] == null ? value['startedAt'] : value['startedAt'].toISOString(),
+    artifact: ArtifactViewToJSON(value['artifact']),
+    blockedCount: value['blockedCount'],
     completedAt:
       value['completedAt'] == null ? value['completedAt'] : value['completedAt'].toISOString(),
-    totalCount: value['totalCount'],
-    validCount: value['validCount'],
-    invalidCount: value['invalidCount'],
-    blockedCount: value['blockedCount'],
     draftedCount: value['draftedCount'],
+    forcedFromBatchId: value['forcedFromBatchId'],
+    id: value['id'],
+    invalidCount: value['invalidCount'],
+    requestKey: value['requestKey'],
+    sourceId: value['sourceId'],
+    startedAt: value['startedAt'] == null ? value['startedAt'] : value['startedAt'].toISOString(),
+    status: value['status'],
+    submittedAt:
+      value['submittedAt'] == null ? value['submittedAt'] : value['submittedAt'].toISOString(),
+    submittedBySubject: value['submittedBySubject'],
+    totalCount: value['totalCount'],
     unchangedCount: value['unchangedCount'],
+    validCount: value['validCount'],
     version: value['version'],
-    artifact: ArtifactViewToJSON(value['artifact']),
   };
 }

@@ -29,16 +29,16 @@ import {
 export interface CreateRevisionCommand {
   /**
    *
-   * @type {string}
-   * @memberof CreateRevisionCommand
-   */
-  basedOnRevisionId?: string;
-  /**
-   *
    * @type {ActingContext}
    * @memberof CreateRevisionCommand
    */
   actingContext?: ActingContext;
+  /**
+   *
+   * @type {string}
+   * @memberof CreateRevisionCommand
+   */
+  basedOnRevisionId?: string;
 }
 
 /**
@@ -60,9 +60,9 @@ export function CreateRevisionCommandFromJSONTyped(
     return json;
   }
   return {
-    basedOnRevisionId: json['basedOnRevisionId'] == null ? undefined : json['basedOnRevisionId'],
     actingContext:
       json['actingContext'] == null ? undefined : ActingContextFromJSON(json['actingContext']),
+    basedOnRevisionId: json['basedOnRevisionId'] == null ? undefined : json['basedOnRevisionId'],
   };
 }
 
@@ -79,7 +79,7 @@ export function CreateRevisionCommandToJSONTyped(
   }
 
   return {
-    basedOnRevisionId: value['basedOnRevisionId'],
     actingContext: ActingContextToJSON(value['actingContext']),
+    basedOnRevisionId: value['basedOnRevisionId'],
   };
 }

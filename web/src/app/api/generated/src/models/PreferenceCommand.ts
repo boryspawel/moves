@@ -24,43 +24,13 @@ export interface PreferenceCommand {
    * @type {string}
    * @memberof PreferenceCommand
    */
-  timeZone?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof PreferenceCommand
-   */
-  preferredWindowStart?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof PreferenceCommand
-   */
-  preferredWindowEnd?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof PreferenceCommand
-   */
   channel?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof PreferenceCommand
-   */
-  quietHoursStart?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof PreferenceCommand
-   */
-  quietHoursEnd?: string;
   /**
    *
    * @type {boolean}
    * @memberof PreferenceCommand
    */
-  muted?: boolean;
+  gentleReturnConsent?: boolean;
   /**
    *
    * @type {number}
@@ -72,13 +42,43 @@ export interface PreferenceCommand {
    * @type {boolean}
    * @memberof PreferenceCommand
    */
-  remindersEnabled?: boolean;
+  muted?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof PreferenceCommand
+   */
+  preferredWindowEnd?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PreferenceCommand
+   */
+  preferredWindowStart?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PreferenceCommand
+   */
+  quietHoursEnd?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PreferenceCommand
+   */
+  quietHoursStart?: string;
   /**
    *
    * @type {boolean}
    * @memberof PreferenceCommand
    */
-  gentleReturnConsent?: boolean;
+  remindersEnabled?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof PreferenceCommand
+   */
+  timeZone?: string;
 }
 
 /**
@@ -100,18 +100,18 @@ export function PreferenceCommandFromJSONTyped(
     return json;
   }
   return {
-    timeZone: json['timeZone'] == null ? undefined : json['timeZone'],
-    preferredWindowStart:
-      json['preferredWindowStart'] == null ? undefined : json['preferredWindowStart'],
-    preferredWindowEnd: json['preferredWindowEnd'] == null ? undefined : json['preferredWindowEnd'],
     channel: json['channel'] == null ? undefined : json['channel'],
-    quietHoursStart: json['quietHoursStart'] == null ? undefined : json['quietHoursStart'],
-    quietHoursEnd: json['quietHoursEnd'] == null ? undefined : json['quietHoursEnd'],
-    muted: json['muted'] == null ? undefined : json['muted'],
-    maxMessagesPerWeek: json['maxMessagesPerWeek'] == null ? undefined : json['maxMessagesPerWeek'],
-    remindersEnabled: json['remindersEnabled'] == null ? undefined : json['remindersEnabled'],
     gentleReturnConsent:
       json['gentleReturnConsent'] == null ? undefined : json['gentleReturnConsent'],
+    maxMessagesPerWeek: json['maxMessagesPerWeek'] == null ? undefined : json['maxMessagesPerWeek'],
+    muted: json['muted'] == null ? undefined : json['muted'],
+    preferredWindowEnd: json['preferredWindowEnd'] == null ? undefined : json['preferredWindowEnd'],
+    preferredWindowStart:
+      json['preferredWindowStart'] == null ? undefined : json['preferredWindowStart'],
+    quietHoursEnd: json['quietHoursEnd'] == null ? undefined : json['quietHoursEnd'],
+    quietHoursStart: json['quietHoursStart'] == null ? undefined : json['quietHoursStart'],
+    remindersEnabled: json['remindersEnabled'] == null ? undefined : json['remindersEnabled'],
+    timeZone: json['timeZone'] == null ? undefined : json['timeZone'],
   };
 }
 
@@ -128,15 +128,15 @@ export function PreferenceCommandToJSONTyped(
   }
 
   return {
-    timeZone: value['timeZone'],
-    preferredWindowStart: value['preferredWindowStart'],
-    preferredWindowEnd: value['preferredWindowEnd'],
     channel: value['channel'],
-    quietHoursStart: value['quietHoursStart'],
-    quietHoursEnd: value['quietHoursEnd'],
-    muted: value['muted'],
-    maxMessagesPerWeek: value['maxMessagesPerWeek'],
-    remindersEnabled: value['remindersEnabled'],
     gentleReturnConsent: value['gentleReturnConsent'],
+    maxMessagesPerWeek: value['maxMessagesPerWeek'],
+    muted: value['muted'],
+    preferredWindowEnd: value['preferredWindowEnd'],
+    preferredWindowStart: value['preferredWindowStart'],
+    quietHoursEnd: value['quietHoursEnd'],
+    quietHoursStart: value['quietHoursStart'],
+    remindersEnabled: value['remindersEnabled'],
+    timeZone: value['timeZone'],
   };
 }

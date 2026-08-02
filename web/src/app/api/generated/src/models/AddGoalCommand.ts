@@ -29,18 +29,6 @@ import {
 export interface AddGoalCommand {
   /**
    *
-   * @type {number}
-   * @memberof AddGoalCommand
-   */
-  expectedVersion?: number;
-  /**
-   *
-   * @type {AddGoalCommandPerspectiveEnum}
-   * @memberof AddGoalCommand
-   */
-  perspective?: AddGoalCommandPerspectiveEnum;
-  /**
-   *
    * @type {string}
    * @memberof AddGoalCommand
    */
@@ -50,13 +38,25 @@ export interface AddGoalCommand {
    * @type {string}
    * @memberof AddGoalCommand
    */
-  title?: string;
+  description?: string;
   /**
    *
-   * @type {string}
+   * @type {number}
    * @memberof AddGoalCommand
    */
-  description?: string;
+  expectedVersion?: number;
+  /**
+   *
+   * @type {Array<OutcomeCommand>}
+   * @memberof AddGoalCommand
+   */
+  outcomes?: Array<OutcomeCommand>;
+  /**
+   *
+   * @type {AddGoalCommandPerspectiveEnum}
+   * @memberof AddGoalCommand
+   */
+  perspective?: AddGoalCommandPerspectiveEnum;
   /**
    *
    * @type {number}
@@ -77,10 +77,10 @@ export interface AddGoalCommand {
   targetDate?: Date;
   /**
    *
-   * @type {Array<OutcomeCommand>}
+   * @type {string}
    * @memberof AddGoalCommand
    */
-  outcomes?: Array<OutcomeCommand>;
+  title?: string;
 }
 
 /**
@@ -124,18 +124,18 @@ export function AddGoalCommandFromJSONTyped(
     return json;
   }
   return {
-    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
-    perspective: json['perspective'] == null ? undefined : json['perspective'],
     category: json['category'] == null ? undefined : json['category'],
-    title: json['title'] == null ? undefined : json['title'],
     description: json['description'] == null ? undefined : json['description'],
-    priority: json['priority'] == null ? undefined : json['priority'],
-    status: json['status'] == null ? undefined : json['status'],
-    targetDate: json['targetDate'] == null ? undefined : new Date(json['targetDate']),
+    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
     outcomes:
       json['outcomes'] == null
         ? undefined
         : (json['outcomes'] as Array<any>).map(OutcomeCommandFromJSON),
+    perspective: json['perspective'] == null ? undefined : json['perspective'],
+    priority: json['priority'] == null ? undefined : json['priority'],
+    status: json['status'] == null ? undefined : json['status'],
+    targetDate: json['targetDate'] == null ? undefined : new Date(json['targetDate']),
+    title: json['title'] == null ? undefined : json['title'],
   };
 }
 
@@ -152,20 +152,20 @@ export function AddGoalCommandToJSONTyped(
   }
 
   return {
-    expectedVersion: value['expectedVersion'],
-    perspective: value['perspective'],
     category: value['category'],
-    title: value['title'],
     description: value['description'],
+    expectedVersion: value['expectedVersion'],
+    outcomes:
+      value['outcomes'] == null
+        ? undefined
+        : (value['outcomes'] as Array<any>).map(OutcomeCommandToJSON),
+    perspective: value['perspective'],
     priority: value['priority'],
     status: value['status'],
     targetDate:
       value['targetDate'] == null
         ? value['targetDate']
         : value['targetDate'].toISOString().substring(0, 10),
-    outcomes:
-      value['outcomes'] == null
-        ? undefined
-        : (value['outcomes'] as Array<any>).map(OutcomeCommandToJSON),
+    title: value['title'],
   };
 }

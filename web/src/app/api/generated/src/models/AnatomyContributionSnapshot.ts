@@ -30,25 +30,7 @@ export interface AnatomyContributionSnapshot {
    * @type {string}
    * @memberof AnatomyContributionSnapshot
    */
-  displayName?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AnatomyContributionSnapshot
-   */
-  structureType?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AnatomyContributionSnapshot
-   */
-  role?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AnatomyContributionSnapshot
-   */
-  loadChannel?: string;
+  confidenceClass?: string;
   /**
    *
    * @type {string}
@@ -60,13 +42,31 @@ export interface AnatomyContributionSnapshot {
    * @type {string}
    * @memberof AnatomyContributionSnapshot
    */
-  confidenceClass?: string;
+  displayName?: string;
   /**
    *
    * @type {string}
    * @memberof AnatomyContributionSnapshot
    */
   evidenceGrade?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AnatomyContributionSnapshot
+   */
+  loadChannel?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AnatomyContributionSnapshot
+   */
+  role?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AnatomyContributionSnapshot
+   */
+  structureType?: string;
 }
 
 /**
@@ -91,13 +91,13 @@ export function AnatomyContributionSnapshotFromJSONTyped(
   }
   return {
     code: json['code'] == null ? undefined : json['code'],
-    displayName: json['displayName'] == null ? undefined : json['displayName'],
-    structureType: json['structureType'] == null ? undefined : json['structureType'],
-    role: json['role'] == null ? undefined : json['role'],
-    loadChannel: json['loadChannel'] == null ? undefined : json['loadChannel'],
-    contributionBand: json['contributionBand'] == null ? undefined : json['contributionBand'],
     confidenceClass: json['confidenceClass'] == null ? undefined : json['confidenceClass'],
+    contributionBand: json['contributionBand'] == null ? undefined : json['contributionBand'],
+    displayName: json['displayName'] == null ? undefined : json['displayName'],
     evidenceGrade: json['evidenceGrade'] == null ? undefined : json['evidenceGrade'],
+    loadChannel: json['loadChannel'] == null ? undefined : json['loadChannel'],
+    role: json['role'] == null ? undefined : json['role'],
+    structureType: json['structureType'] == null ? undefined : json['structureType'],
   };
 }
 
@@ -115,12 +115,12 @@ export function AnatomyContributionSnapshotToJSONTyped(
 
   return {
     code: value['code'],
-    displayName: value['displayName'],
-    structureType: value['structureType'],
-    role: value['role'],
-    loadChannel: value['loadChannel'],
-    contributionBand: value['contributionBand'],
     confidenceClass: value['confidenceClass'],
+    contributionBand: value['contributionBand'],
+    displayName: value['displayName'],
     evidenceGrade: value['evidenceGrade'],
+    loadChannel: value['loadChannel'],
+    role: value['role'],
+    structureType: value['structureType'],
   };
 }

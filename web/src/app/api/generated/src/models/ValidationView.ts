@@ -29,16 +29,10 @@ import {
 export interface ValidationView {
   /**
    *
-   * @type {string}
+   * @type {AssessmentSnapshot}
    * @memberof ValidationView
    */
-  revisionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ValidationView
-   */
-  status?: string;
+  assessment?: AssessmentSnapshot;
   /**
    *
    * @type {string}
@@ -53,10 +47,16 @@ export interface ValidationView {
   loadSnapshotId?: string;
   /**
    *
-   * @type {AssessmentSnapshot}
+   * @type {string}
    * @memberof ValidationView
    */
-  assessment?: AssessmentSnapshot;
+  revisionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ValidationView
+   */
+  status?: string;
 }
 
 /**
@@ -78,12 +78,12 @@ export function ValidationViewFromJSONTyped(
     return json;
   }
   return {
-    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
-    status: json['status'] == null ? undefined : json['status'],
-    checksum: json['checksum'] == null ? undefined : json['checksum'],
-    loadSnapshotId: json['loadSnapshotId'] == null ? undefined : json['loadSnapshotId'],
     assessment:
       json['assessment'] == null ? undefined : AssessmentSnapshotFromJSON(json['assessment']),
+    checksum: json['checksum'] == null ? undefined : json['checksum'],
+    loadSnapshotId: json['loadSnapshotId'] == null ? undefined : json['loadSnapshotId'],
+    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
+    status: json['status'] == null ? undefined : json['status'],
   };
 }
 
@@ -100,10 +100,10 @@ export function ValidationViewToJSONTyped(
   }
 
   return {
-    revisionId: value['revisionId'],
-    status: value['status'],
+    assessment: AssessmentSnapshotToJSON(value['assessment']),
     checksum: value['checksum'],
     loadSnapshotId: value['loadSnapshotId'],
-    assessment: AssessmentSnapshotToJSON(value['assessment']),
+    revisionId: value['revisionId'],
+    status: value['status'],
   };
 }

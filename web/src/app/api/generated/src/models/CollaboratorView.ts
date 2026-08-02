@@ -21,6 +21,18 @@ import { mapValues } from '../runtime';
 export interface CollaboratorView {
   /**
    *
+   * @type {CollaboratorViewActingRoleEnum}
+   * @memberof CollaboratorView
+   */
+  actingRole?: CollaboratorViewActingRoleEnum;
+  /**
+   *
+   * @type {Date}
+   * @memberof CollaboratorView
+   */
+  addedAt?: Date;
+  /**
+   *
    * @type {string}
    * @memberof CollaboratorView
    */
@@ -33,18 +45,6 @@ export interface CollaboratorView {
   planId?: string;
   /**
    *
-   * @type {string}
-   * @memberof CollaboratorView
-   */
-  specialistAccountId?: string;
-  /**
-   *
-   * @type {CollaboratorViewActingRoleEnum}
-   * @memberof CollaboratorView
-   */
-  actingRole?: CollaboratorViewActingRoleEnum;
-  /**
-   *
    * @type {Set<CollaboratorViewScopesEnum>}
    * @memberof CollaboratorView
    */
@@ -54,13 +54,13 @@ export interface CollaboratorView {
    * @type {string}
    * @memberof CollaboratorView
    */
-  status?: string;
+  specialistAccountId?: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof CollaboratorView
    */
-  addedAt?: Date;
+  status?: string;
 }
 
 /**
@@ -103,14 +103,14 @@ export function CollaboratorViewFromJSONTyped(
     return json;
   }
   return {
+    actingRole: json['actingRole'] == null ? undefined : json['actingRole'],
+    addedAt: json['addedAt'] == null ? undefined : new Date(json['addedAt']),
     id: json['id'] == null ? undefined : json['id'],
     planId: json['planId'] == null ? undefined : json['planId'],
+    scopes: json['scopes'] == null ? undefined : new Set(json['scopes']),
     specialistAccountId:
       json['specialistAccountId'] == null ? undefined : json['specialistAccountId'],
-    actingRole: json['actingRole'] == null ? undefined : json['actingRole'],
-    scopes: json['scopes'] == null ? undefined : new Set(json['scopes']),
     status: json['status'] == null ? undefined : json['status'],
-    addedAt: json['addedAt'] == null ? undefined : new Date(json['addedAt']),
   };
 }
 
@@ -127,12 +127,12 @@ export function CollaboratorViewToJSONTyped(
   }
 
   return {
+    actingRole: value['actingRole'],
+    addedAt: value['addedAt'] == null ? value['addedAt'] : value['addedAt'].toISOString(),
     id: value['id'],
     planId: value['planId'],
-    specialistAccountId: value['specialistAccountId'],
-    actingRole: value['actingRole'],
     scopes: value['scopes'] == null ? undefined : Array.from(value['scopes'] as Set<any>),
+    specialistAccountId: value['specialistAccountId'],
     status: value['status'],
-    addedAt: value['addedAt'] == null ? value['addedAt'] : value['addedAt'].toISOString(),
   };
 }

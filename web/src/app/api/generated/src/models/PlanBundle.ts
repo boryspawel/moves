@@ -64,22 +64,16 @@ import {
 export interface PlanBundle {
   /**
    *
-   * @type {TrainingGoal}
-   * @memberof PlanBundle
-   */
-  goal?: TrainingGoal;
-  /**
-   *
-   * @type {TrainingPlan}
-   * @memberof PlanBundle
-   */
-  plan?: TrainingPlan;
-  /**
-   *
    * @type {TrainingCycle}
    * @memberof PlanBundle
    */
   cycle?: TrainingCycle;
+  /**
+   *
+   * @type {TrainingGoal}
+   * @memberof PlanBundle
+   */
+  goal?: TrainingGoal;
   /**
    *
    * @type {Microcycle}
@@ -88,16 +82,22 @@ export interface PlanBundle {
   microcycle?: Microcycle;
   /**
    *
-   * @type {PlannedSession}
+   * @type {TrainingPlan}
    * @memberof PlanBundle
    */
-  session?: PlannedSession;
+  plan?: TrainingPlan;
   /**
    *
    * @type {Array<ExercisePrescription>}
    * @memberof PlanBundle
    */
   prescriptions?: Array<ExercisePrescription>;
+  /**
+   *
+   * @type {PlannedSession}
+   * @memberof PlanBundle
+   */
+  session?: PlannedSession;
 }
 
 /**
@@ -116,15 +116,15 @@ export function PlanBundleFromJSONTyped(json: any, ignoreDiscriminator: boolean)
     return json;
   }
   return {
-    goal: json['goal'] == null ? undefined : TrainingGoalFromJSON(json['goal']),
-    plan: json['plan'] == null ? undefined : TrainingPlanFromJSON(json['plan']),
     cycle: json['cycle'] == null ? undefined : TrainingCycleFromJSON(json['cycle']),
+    goal: json['goal'] == null ? undefined : TrainingGoalFromJSON(json['goal']),
     microcycle: json['microcycle'] == null ? undefined : MicrocycleFromJSON(json['microcycle']),
-    session: json['session'] == null ? undefined : PlannedSessionFromJSON(json['session']),
+    plan: json['plan'] == null ? undefined : TrainingPlanFromJSON(json['plan']),
     prescriptions:
       json['prescriptions'] == null
         ? undefined
         : (json['prescriptions'] as Array<any>).map(ExercisePrescriptionFromJSON),
+    session: json['session'] == null ? undefined : PlannedSessionFromJSON(json['session']),
   };
 }
 
@@ -141,14 +141,14 @@ export function PlanBundleToJSONTyped(
   }
 
   return {
-    goal: TrainingGoalToJSON(value['goal']),
-    plan: TrainingPlanToJSON(value['plan']),
     cycle: TrainingCycleToJSON(value['cycle']),
+    goal: TrainingGoalToJSON(value['goal']),
     microcycle: MicrocycleToJSON(value['microcycle']),
-    session: PlannedSessionToJSON(value['session']),
+    plan: TrainingPlanToJSON(value['plan']),
     prescriptions:
       value['prescriptions'] == null
         ? undefined
         : (value['prescriptions'] as Array<any>).map(ExercisePrescriptionToJSON),
+    session: PlannedSessionToJSON(value['session']),
   };
 }

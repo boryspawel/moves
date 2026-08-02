@@ -21,6 +21,24 @@ import { mapValues } from '../runtime';
 export interface ActivationOutcome {
   /**
    *
+   * @type {Date}
+   * @memberof ActivationOutcome
+   */
+  activatedAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof ActivationOutcome
+   */
+  planId?: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof ActivationOutcome
+   */
+  repeated?: boolean;
+  /**
+   *
    * @type {string}
    * @memberof ActivationOutcome
    */
@@ -30,25 +48,7 @@ export interface ActivationOutcome {
    * @type {string}
    * @memberof ActivationOutcome
    */
-  planId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ActivationOutcome
-   */
   supersededRevisionId?: string;
-  /**
-   *
-   * @type {boolean}
-   * @memberof ActivationOutcome
-   */
-  repeated?: boolean;
-  /**
-   *
-   * @type {Date}
-   * @memberof ActivationOutcome
-   */
-  activatedAt?: Date;
 }
 
 /**
@@ -70,12 +70,12 @@ export function ActivationOutcomeFromJSONTyped(
     return json;
   }
   return {
-    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
+    activatedAt: json['activatedAt'] == null ? undefined : new Date(json['activatedAt']),
     planId: json['planId'] == null ? undefined : json['planId'],
+    repeated: json['repeated'] == null ? undefined : json['repeated'],
+    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
     supersededRevisionId:
       json['supersededRevisionId'] == null ? undefined : json['supersededRevisionId'],
-    repeated: json['repeated'] == null ? undefined : json['repeated'],
-    activatedAt: json['activatedAt'] == null ? undefined : new Date(json['activatedAt']),
   };
 }
 
@@ -92,11 +92,11 @@ export function ActivationOutcomeToJSONTyped(
   }
 
   return {
-    revisionId: value['revisionId'],
-    planId: value['planId'],
-    supersededRevisionId: value['supersededRevisionId'],
-    repeated: value['repeated'],
     activatedAt:
       value['activatedAt'] == null ? value['activatedAt'] : value['activatedAt'].toISOString(),
+    planId: value['planId'],
+    repeated: value['repeated'],
+    revisionId: value['revisionId'],
+    supersededRevisionId: value['supersededRevisionId'],
   };
 }

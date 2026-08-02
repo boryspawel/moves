@@ -98,8 +98,8 @@ describe('OnboardingPage', () => {
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Konto gotowe');
   });
 
-  it('edits prefilled availability for a ready account and returns to today after saving', async () => {
-    route.snapshot.queryParamMap = convertToParamMap({ availabilityEdit: 'true' });
+  it('edits prefilled availability for a ready account and returns to the validated selected date after saving', async () => {
+    route.snapshot.queryParamMap = convertToParamMap({ availabilityEdit: 'true', date: '2026-08-03' });
     api.state.mockResolvedValue({ stage: 'READY', availability: [{ dayOfWeek: 'WEDNESDAY', startTime: '12:00', endTime: '14:00', timeZone: 'Europe/Warsaw' }] });
     api.availability.mockResolvedValue({ stage: 'READY' });
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
@@ -111,7 +111,18 @@ describe('OnboardingPage', () => {
     expect(slot.controls.startTime.value).toBe('12:00');
     instance.saveAvailability(); await settle(fixture);
     expect(api.availability).toHaveBeenCalledWith({ availabilityRequest: { slots: [{ dayOfWeek: 'WEDNESDAY', startTime: '12:00', endTime: '14:00', timeZone: 'Europe/Warsaw' }] } });
-    expect(navigate).toHaveBeenCalledWith(['/specialist/today']);
+    expect(navigate).toHaveBeenCalledWith(['/specialist/today'], { queryParams: { date: '2026-08-03' } });
+  });
+
+  it('returns to today with the selected date when weekly availability editing is cancelled', async () => {
+    route.snapshot.queryParamMap = convertToParamMap({ availabilityEdit: 'true', date: '2026-08-03' });
+    api.state.mockResolvedValue({ stage: 'READY', availability: [] });
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const fixture = TestBed.createComponent(OnboardingPage); fixture.detectChanges(); await settle(fixture);
+
+    (fixture.componentInstance as any).cancelAvailabilityEdit();
+
+    expect(navigate).toHaveBeenCalledWith(['/specialist/today'], { queryParams: { date: '2026-08-03' } });
   });
 
   it('revalidates the entire time range whenever either time changes', () => {
@@ -136,5 +147,34 @@ describe('OnboardingPage', () => {
     slots.at(0).controls.startTime.setValue('12:00');
     slots.at(0).controls.endTime.setValue('11:00');
     expect(slots.at(0).invalid).toBe(true);
+  });
+
+  it('sends one weekly availability record per selected day, including overlapping ranges', async () => {
+    api.state.mockResolvedValue({ stage: 'AVAILABILITY_REQUIRED', profileType: 'SPECIALIST' });
+    api.availability.mockResolvedValue({ stage: 'READY' });
+    const fixture = TestBed.createComponent(OnboardingPage); fixture.detectChanges(); await settle(fixture);
+    const instance = fixture.componentInstance as any;
+    const first = instance.availabilityForm.controls.slots.at(0);
+    first.controls.dayOfWeek.setValue('MONDAY');
+    first.controls.startTime.setValue('09:00');
+    first.controls.endTime.setValue('11:00');
+    instance.addSlot();
+    const second = instance.availabilityForm.controls.slots.at(1);
+    second.controls.dayOfWeek.setValue('MONDAY');
+    second.controls.startTime.setValue('10:00');
+    second.controls.endTime.setValue('12:00');
+    instance.addSlot();
+    const third = instance.availabilityForm.controls.slots.at(2);
+    third.controls.dayOfWeek.setValue('WEDNESDAY');
+    third.controls.startTime.setValue('09:00');
+    third.controls.endTime.setValue('11:00');
+
+    instance.saveAvailability(); await settle(fixture);
+
+    expect(api.availability).toHaveBeenCalledWith({ availabilityRequest: { slots: [
+      { dayOfWeek: 'MONDAY', startTime: '09:00', endTime: '11:00', timeZone: expect.any(String) },
+      { dayOfWeek: 'MONDAY', startTime: '10:00', endTime: '12:00', timeZone: expect.any(String) },
+      { dayOfWeek: 'WEDNESDAY', startTime: '09:00', endTime: '11:00', timeZone: expect.any(String) },
+    ] } });
   });
 });

@@ -21,28 +21,16 @@ import { mapValues } from '../runtime';
 export interface UpdateCommand {
   /**
    *
-   * @type {string}
-   * @memberof UpdateCommand
-   */
-  participantId?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof UpdateCommand
-   */
-  startsAt?: Date;
-  /**
-   *
    * @type {Date}
    * @memberof UpdateCommand
    */
   endsAt?: Date;
   /**
    *
-   * @type {UpdateCommandTypeEnum}
+   * @type {string}
    * @memberof UpdateCommand
    */
-  type?: UpdateCommandTypeEnum;
+  location?: string;
   /**
    *
    * @type {UpdateCommandLocationModeEnum}
@@ -54,7 +42,7 @@ export interface UpdateCommand {
    * @type {string}
    * @memberof UpdateCommand
    */
-  location?: string;
+  participantId?: string;
   /**
    *
    * @type {string}
@@ -63,11 +51,34 @@ export interface UpdateCommand {
   shortPurpose?: string;
   /**
    *
+   * @type {Date}
+   * @memberof UpdateCommand
+   */
+  startsAt?: Date;
+  /**
+   *
+   * @type {UpdateCommandTypeEnum}
+   * @memberof UpdateCommand
+   */
+  type?: UpdateCommandTypeEnum;
+  /**
+   *
    * @type {number}
    * @memberof UpdateCommand
    */
   version?: number;
 }
+
+/**
+ * @export
+ */
+export const UpdateCommandLocationModeEnum = {
+  InPerson: 'IN_PERSON',
+  Remote: 'REMOTE',
+  Phone: 'PHONE',
+} as const;
+export type UpdateCommandLocationModeEnum =
+  (typeof UpdateCommandLocationModeEnum)[keyof typeof UpdateCommandLocationModeEnum];
 
 /**
  * @export
@@ -80,17 +91,6 @@ export const UpdateCommandTypeEnum = {
 } as const;
 export type UpdateCommandTypeEnum =
   (typeof UpdateCommandTypeEnum)[keyof typeof UpdateCommandTypeEnum];
-
-/**
- * @export
- */
-export const UpdateCommandLocationModeEnum = {
-  InPerson: 'IN_PERSON',
-  Remote: 'REMOTE',
-  Phone: 'PHONE',
-} as const;
-export type UpdateCommandLocationModeEnum =
-  (typeof UpdateCommandLocationModeEnum)[keyof typeof UpdateCommandLocationModeEnum];
 
 /**
  * Check if a given object implements the UpdateCommand interface.
@@ -108,13 +108,13 @@ export function UpdateCommandFromJSONTyped(json: any, ignoreDiscriminator: boole
     return json;
   }
   return {
-    participantId: json['participantId'] == null ? undefined : json['participantId'],
-    startsAt: json['startsAt'] == null ? undefined : new Date(json['startsAt']),
     endsAt: json['endsAt'] == null ? undefined : new Date(json['endsAt']),
-    type: json['type'] == null ? undefined : json['type'],
-    locationMode: json['locationMode'] == null ? undefined : json['locationMode'],
     location: json['location'] == null ? undefined : json['location'],
+    locationMode: json['locationMode'] == null ? undefined : json['locationMode'],
+    participantId: json['participantId'] == null ? undefined : json['participantId'],
     shortPurpose: json['shortPurpose'] == null ? undefined : json['shortPurpose'],
+    startsAt: json['startsAt'] == null ? undefined : new Date(json['startsAt']),
+    type: json['type'] == null ? undefined : json['type'],
     version: json['version'] == null ? undefined : json['version'],
   };
 }
@@ -132,13 +132,13 @@ export function UpdateCommandToJSONTyped(
   }
 
   return {
-    participantId: value['participantId'],
-    startsAt: value['startsAt'] == null ? value['startsAt'] : value['startsAt'].toISOString(),
     endsAt: value['endsAt'] == null ? value['endsAt'] : value['endsAt'].toISOString(),
-    type: value['type'],
-    locationMode: value['locationMode'],
     location: value['location'],
+    locationMode: value['locationMode'],
+    participantId: value['participantId'],
     shortPurpose: value['shortPurpose'],
+    startsAt: value['startsAt'] == null ? value['startsAt'] : value['startsAt'].toISOString(),
+    type: value['type'],
     version: value['version'],
   };
 }

@@ -29,16 +29,16 @@ import {
 export interface ValidateWorkflowCommand {
   /**
    *
-   * @type {number}
-   * @memberof ValidateWorkflowCommand
-   */
-  expectedVersion?: number;
-  /**
-   *
    * @type {ActingContext}
    * @memberof ValidateWorkflowCommand
    */
   actingContext?: ActingContext;
+  /**
+   *
+   * @type {number}
+   * @memberof ValidateWorkflowCommand
+   */
+  expectedVersion?: number;
 }
 
 /**
@@ -60,9 +60,9 @@ export function ValidateWorkflowCommandFromJSONTyped(
     return json;
   }
   return {
-    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
     actingContext:
       json['actingContext'] == null ? undefined : ActingContextFromJSON(json['actingContext']),
+    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
   };
 }
 
@@ -79,7 +79,7 @@ export function ValidateWorkflowCommandToJSONTyped(
   }
 
   return {
-    expectedVersion: value['expectedVersion'],
     actingContext: ActingContextToJSON(value['actingContext']),
+    expectedVersion: value['expectedVersion'],
   };
 }

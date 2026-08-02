@@ -7,7 +7,7 @@ import { ApiFacade } from '../../core/api.facade';
 import { ExerciseSetEditorPage } from './exercise-set-editor.page';
 
 describe('ExerciseSetEditorPage ordering', () => {
-  it('renders anatomy channels, evidence, patterns and the clinical limitation without mapping diagnostics', async () => {
+  it('keeps map and movement patterns in one compact anatomy module without a second channel selector', async () => {
     const anatomy = vi
       .fn()
       .mockResolvedValue({
@@ -116,16 +116,45 @@ describe('ExerciseSetEditorPage ordering', () => {
     const text = fixture.nativeElement.textContent;
     expect(anatomy).toHaveBeenCalledWith({ setId: 'set', versionId: 'version' }, expect.anything());
     expect(activeVisualRegions).not.toHaveBeenCalled();
-    expect(text).toContain('Ekspozycja i wzorce');
-    expect(text).toContain('MUSCULAR');
-    expect(text).toContain('SQUAT');
-    expect(text).toContain('Źródło');
+    expect(text).toContain('Zaangażowane obszary ciała');
+    expect(text).toContain('Obszar ciała');
     expect(text).not.toContain('Kompletność mapowania');
     expect(text).not.toContain('Polityka techniczna');
     expect(text).not.toContain('Wersja mapowania:');
-    expect(text).toContain(
-      'Ekspozycja anatomiczna jest opisem jakościowym i nie stanowi oceny klinicznej ani pomiaru siły.',
-    );
+    expect(text).not.toContain('Wybierz kanał ekspozycji');
+  });
+
+  it('renders a task-focused empty builder with one add action, compact phases, and a sidebar preview', async () => {
+    const version = {
+      id: 'version',
+      exerciseSetId: 'set',
+      status: 'DRAFT' as const,
+      lockVersion: 4,
+      items: [],
+    };
+    await TestBed.configureTestingModule({
+      imports: [ExerciseSetEditorPage],
+      providers: [
+        provideRouter([]),
+        { provide: ApiFacade, useValue: { exerciseSets: { version: vi.fn().mockResolvedValue(version) } } },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { paramMap: convertToParamMap({ exerciseSetId: 'set', versionId: 'version' }) } },
+        },
+      ],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(ExerciseSetEditorPage);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelectorAll('.primary-add')).toHaveLength(1);
+    expect(host.querySelectorAll('.phase-list .phase')).toHaveLength(4);
+    expect(host.querySelector('.builder-empty')?.textContent).toContain('Dodaj pierwsze ćwiczenie');
+    expect(host.querySelector('.summary')?.textContent).toContain('StatusSzkic');
+    expect(host.querySelector('.summary')?.textContent).not.toContain('DRAFT');
+    expect(host.textContent?.indexOf('Ćwiczenia')).toBeLessThan(host.textContent?.indexOf('Zaangażowane obszary ciała') ?? 0);
   });
 
   it('summarizes mobility duration when repetitions are absent', async () => {
@@ -357,7 +386,7 @@ describe('ExerciseSetEditorPage ordering', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     const text = fixture.nativeElement.textContent;
-    expect(text).toContain('Sugestie do zestawu');
+    expect(text).toContain('Sugestie');
     expect(text).toContain('Zestaw nie ma jeszcze tytułu.');
     expect(text).toContain('W zestawie często zmienia się wymagany sprzęt.');
     expect(text).toContain('Szacowany czas wykonania jest niedostępny.');
@@ -558,8 +587,18 @@ describe('ExerciseSetEditorPage ordering', () => {
     fixture.componentInstance.analysisStale.set(false);
     fixture.detectChanges();
     expect(fixture.componentInstance.canPublish()).toBe(true);
-    expect(fixture.nativeElement.textContent).toContain('Zestaw bez nazwy');
+    expect(fixture.nativeElement.querySelector('input[placeholder="Zestaw bez nazwy"]')).toBeTruthy();
     expect(fixture.nativeElement.textContent).toContain('Nie określono');
+    expect(fixture.nativeElement.textContent).toContain('Ten zestaw nie zawiera ćwiczeń. Możesz go mimo to opublikować.');
+    expect(fixture.nativeElement.textContent).toContain('Szkic');
+    const phaseIndex = fixture.nativeElement.textContent.indexOf('Przygotowanie');
+    const mapIndex = fixture.nativeElement.textContent.indexOf('Zaangażowane obszary ciała');
+    const suggestionsIndex = fixture.nativeElement.textContent.lastIndexOf('Sugestie');
+    expect(phaseIndex).toBeLessThan(mapIndex);
+    expect(mapIndex).toBeLessThan(suggestionsIndex);
+    expect(fixture.componentInstance.suggestionAction({ code: 'ITEMS_REQUIRED' })).toBe('Dodaj ćwiczenie');
+    expect(fixture.componentInstance.suggestionAction({ code: 'PROFILE_REQUIRED' })).toBe('Uzupełnij profil');
+    expect(fixture.componentInstance.suggestionAction({ code: 'TITLE_REQUIRED' })).toBe('Dodaj tytuł');
     expect(fixture.nativeElement.textContent).not.toContain('Zablokowany');
   });
 

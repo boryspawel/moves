@@ -85,64 +85,22 @@ import {
 export interface SpecialistParticipantWorkspaceView {
   /**
    *
-   * @type {Date}
-   * @memberof SpecialistParticipantWorkspaceView
-   */
-  generatedAt?: Date;
-  /**
-   *
-   * @type {ParticipantHeader}
-   * @memberof SpecialistParticipantWorkspaceView
-   */
-  participant?: ParticipantHeader;
-  /**
-   *
-   * @type {RelationshipView}
-   * @memberof SpecialistParticipantWorkspaceView
-   */
-  relationship?: RelationshipView;
-  /**
-   *
-   * @type {Array<string>}
-   * @memberof SpecialistParticipantWorkspaceView
-   */
-  capabilities?: Array<string>;
-  /**
-   *
-   * @type {AppointmentView}
-   * @memberof SpecialistParticipantWorkspaceView
-   */
-  nextAppointment?: AppointmentView;
-  /**
-   *
    * @type {ActivePlanView}
    * @memberof SpecialistParticipantWorkspaceView
    */
   activePlan?: ActivePlanView;
   /**
    *
-   * @type {Array<GoalView>}
+   * @type {Array<ActiveProblemView>}
    * @memberof SpecialistParticipantWorkspaceView
    */
-  goals?: Array<GoalView>;
+  activeProblems?: Array<ActiveProblemView>;
   /**
    *
    * @type {AdherenceSummaryView}
    * @memberof SpecialistParticipantWorkspaceView
    */
   adherenceSummary?: AdherenceSummaryView;
-  /**
-   *
-   * @type {RecentProgressView}
-   * @memberof SpecialistParticipantWorkspaceView
-   */
-  recentProgress?: RecentProgressView;
-  /**
-   *
-   * @type {Array<ActiveProblemView>}
-   * @memberof SpecialistParticipantWorkspaceView
-   */
-  activeProblems?: Array<ActiveProblemView>;
   /**
    *
    * @type {Array<AttentionItemView>}
@@ -154,7 +112,49 @@ export interface SpecialistParticipantWorkspaceView {
    * @type {Array<string>}
    * @memberof SpecialistParticipantWorkspaceView
    */
+  capabilities?: Array<string>;
+  /**
+   *
+   * @type {Date}
+   * @memberof SpecialistParticipantWorkspaceView
+   */
+  generatedAt?: Date;
+  /**
+   *
+   * @type {Array<GoalView>}
+   * @memberof SpecialistParticipantWorkspaceView
+   */
+  goals?: Array<GoalView>;
+  /**
+   *
+   * @type {AppointmentView}
+   * @memberof SpecialistParticipantWorkspaceView
+   */
+  nextAppointment?: AppointmentView;
+  /**
+   *
+   * @type {ParticipantHeader}
+   * @memberof SpecialistParticipantWorkspaceView
+   */
+  participant?: ParticipantHeader;
+  /**
+   *
+   * @type {Array<string>}
+   * @memberof SpecialistParticipantWorkspaceView
+   */
   quickActions?: Array<string>;
+  /**
+   *
+   * @type {RecentProgressView}
+   * @memberof SpecialistParticipantWorkspaceView
+   */
+  recentProgress?: RecentProgressView;
+  /**
+   *
+   * @type {RelationshipView}
+   * @memberof SpecialistParticipantWorkspaceView
+   */
+  relationship?: RelationshipView;
 }
 
 /**
@@ -180,35 +180,35 @@ export function SpecialistParticipantWorkspaceViewFromJSONTyped(
     return json;
   }
   return {
-    generatedAt: json['generatedAt'] == null ? undefined : new Date(json['generatedAt']),
-    participant:
-      json['participant'] == null ? undefined : ParticipantHeaderFromJSON(json['participant']),
-    relationship:
-      json['relationship'] == null ? undefined : RelationshipViewFromJSON(json['relationship']),
-    capabilities: json['capabilities'] == null ? undefined : json['capabilities'],
-    nextAppointment:
-      json['nextAppointment'] == null
-        ? undefined
-        : AppointmentViewFromJSON(json['nextAppointment']),
     activePlan: json['activePlan'] == null ? undefined : ActivePlanViewFromJSON(json['activePlan']),
-    goals: json['goals'] == null ? undefined : (json['goals'] as Array<any>).map(GoalViewFromJSON),
-    adherenceSummary:
-      json['adherenceSummary'] == null
-        ? undefined
-        : AdherenceSummaryViewFromJSON(json['adherenceSummary']),
-    recentProgress:
-      json['recentProgress'] == null
-        ? undefined
-        : RecentProgressViewFromJSON(json['recentProgress']),
     activeProblems:
       json['activeProblems'] == null
         ? undefined
         : (json['activeProblems'] as Array<any>).map(ActiveProblemViewFromJSON),
+    adherenceSummary:
+      json['adherenceSummary'] == null
+        ? undefined
+        : AdherenceSummaryViewFromJSON(json['adherenceSummary']),
     attentionItems:
       json['attentionItems'] == null
         ? undefined
         : (json['attentionItems'] as Array<any>).map(AttentionItemViewFromJSON),
+    capabilities: json['capabilities'] == null ? undefined : json['capabilities'],
+    generatedAt: json['generatedAt'] == null ? undefined : new Date(json['generatedAt']),
+    goals: json['goals'] == null ? undefined : (json['goals'] as Array<any>).map(GoalViewFromJSON),
+    nextAppointment:
+      json['nextAppointment'] == null
+        ? undefined
+        : AppointmentViewFromJSON(json['nextAppointment']),
+    participant:
+      json['participant'] == null ? undefined : ParticipantHeaderFromJSON(json['participant']),
     quickActions: json['quickActions'] == null ? undefined : json['quickActions'],
+    recentProgress:
+      json['recentProgress'] == null
+        ? undefined
+        : RecentProgressViewFromJSON(json['recentProgress']),
+    relationship:
+      json['relationship'] == null ? undefined : RelationshipViewFromJSON(json['relationship']),
   };
 }
 
@@ -227,24 +227,24 @@ export function SpecialistParticipantWorkspaceViewToJSONTyped(
   }
 
   return {
-    generatedAt:
-      value['generatedAt'] == null ? value['generatedAt'] : value['generatedAt'].toISOString(),
-    participant: ParticipantHeaderToJSON(value['participant']),
-    relationship: RelationshipViewToJSON(value['relationship']),
-    capabilities: value['capabilities'],
-    nextAppointment: AppointmentViewToJSON(value['nextAppointment']),
     activePlan: ActivePlanViewToJSON(value['activePlan']),
-    goals: value['goals'] == null ? undefined : (value['goals'] as Array<any>).map(GoalViewToJSON),
-    adherenceSummary: AdherenceSummaryViewToJSON(value['adherenceSummary']),
-    recentProgress: RecentProgressViewToJSON(value['recentProgress']),
     activeProblems:
       value['activeProblems'] == null
         ? undefined
         : (value['activeProblems'] as Array<any>).map(ActiveProblemViewToJSON),
+    adherenceSummary: AdherenceSummaryViewToJSON(value['adherenceSummary']),
     attentionItems:
       value['attentionItems'] == null
         ? undefined
         : (value['attentionItems'] as Array<any>).map(AttentionItemViewToJSON),
+    capabilities: value['capabilities'],
+    generatedAt:
+      value['generatedAt'] == null ? value['generatedAt'] : value['generatedAt'].toISOString(),
+    goals: value['goals'] == null ? undefined : (value['goals'] as Array<any>).map(GoalViewToJSON),
+    nextAppointment: AppointmentViewToJSON(value['nextAppointment']),
+    participant: ParticipantHeaderToJSON(value['participant']),
     quickActions: value['quickActions'],
+    recentProgress: RecentProgressViewToJSON(value['recentProgress']),
+    relationship: RelationshipViewToJSON(value['relationship']),
   };
 }

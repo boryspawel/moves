@@ -27,28 +27,10 @@ export interface ContributionCommand {
   anatomicalStructureId?: string;
   /**
    *
-   * @type {ContributionCommandRoleEnum}
+   * @type {ContributionCommandCalculationRoleEnum}
    * @memberof ContributionCommand
    */
-  role?: ContributionCommandRoleEnum;
-  /**
-   *
-   * @type {ContributionCommandLoadChannelEnum}
-   * @memberof ContributionCommand
-   */
-  loadChannel?: ContributionCommandLoadChannelEnum;
-  /**
-   *
-   * @type {ContributionCommandContributionBandEnum}
-   * @memberof ContributionCommand
-   */
-  contributionBand?: ContributionCommandContributionBandEnum;
-  /**
-   *
-   * @type {number}
-   * @memberof ContributionCommand
-   */
-  coefficientLow?: number;
+  calculationRole?: ContributionCommandCalculationRoleEnum;
   /**
    *
    * @type {number}
@@ -57,10 +39,22 @@ export interface ContributionCommand {
   coefficientHigh?: number;
   /**
    *
+   * @type {number}
+   * @memberof ContributionCommand
+   */
+  coefficientLow?: number;
+  /**
+   *
    * @type {string}
    * @memberof ContributionCommand
    */
   confidenceClass?: string;
+  /**
+   *
+   * @type {ContributionCommandContributionBandEnum}
+   * @memberof ContributionCommand
+   */
+  contributionBand?: ContributionCommandContributionBandEnum;
   /**
    *
    * @type {string}
@@ -69,16 +63,22 @@ export interface ContributionCommand {
   evidenceGrade?: string;
   /**
    *
-   * @type {ContributionCommandCalculationRoleEnum}
+   * @type {Set<string>}
    * @memberof ContributionCommand
    */
-  calculationRole?: ContributionCommandCalculationRoleEnum;
+  evidenceSourceIds?: Set<string>;
   /**
    *
-   * @type {string}
+   * @type {ContributionCommandLoadChannelEnum}
    * @memberof ContributionCommand
    */
-  variantCondition?: string;
+  loadChannel?: ContributionCommandLoadChannelEnum;
+  /**
+   *
+   * @type {ContributionCommandRoleEnum}
+   * @memberof ContributionCommand
+   */
+  role?: ContributionCommandRoleEnum;
   /**
    *
    * @type {ContributionCommandSideRuleEnum}
@@ -87,22 +87,32 @@ export interface ContributionCommand {
   sideRule?: ContributionCommandSideRuleEnum;
   /**
    *
-   * @type {Set<string>}
+   * @type {string}
    * @memberof ContributionCommand
    */
-  evidenceSourceIds?: Set<string>;
+  variantCondition?: string;
 }
 
 /**
  * @export
  */
-export const ContributionCommandRoleEnum = {
-  Primary: 'PRIMARY',
-  Secondary: 'SECONDARY',
-  Stabilizer: 'STABILIZER',
+export const ContributionCommandCalculationRoleEnum = {
+  Allocation: 'ALLOCATION',
+  DescriptiveOnly: 'DESCRIPTIVE_ONLY',
 } as const;
-export type ContributionCommandRoleEnum =
-  (typeof ContributionCommandRoleEnum)[keyof typeof ContributionCommandRoleEnum];
+export type ContributionCommandCalculationRoleEnum =
+  (typeof ContributionCommandCalculationRoleEnum)[keyof typeof ContributionCommandCalculationRoleEnum];
+
+/**
+ * @export
+ */
+export const ContributionCommandContributionBandEnum = {
+  Low: 'LOW',
+  Moderate: 'MODERATE',
+  High: 'HIGH',
+} as const;
+export type ContributionCommandContributionBandEnum =
+  (typeof ContributionCommandContributionBandEnum)[keyof typeof ContributionCommandContributionBandEnum];
 
 /**
  * @export
@@ -119,23 +129,13 @@ export type ContributionCommandLoadChannelEnum =
 /**
  * @export
  */
-export const ContributionCommandContributionBandEnum = {
-  Low: 'LOW',
-  Moderate: 'MODERATE',
-  High: 'HIGH',
+export const ContributionCommandRoleEnum = {
+  Primary: 'PRIMARY',
+  Secondary: 'SECONDARY',
+  Stabilizer: 'STABILIZER',
 } as const;
-export type ContributionCommandContributionBandEnum =
-  (typeof ContributionCommandContributionBandEnum)[keyof typeof ContributionCommandContributionBandEnum];
-
-/**
- * @export
- */
-export const ContributionCommandCalculationRoleEnum = {
-  Allocation: 'ALLOCATION',
-  DescriptiveOnly: 'DESCRIPTIVE_ONLY',
-} as const;
-export type ContributionCommandCalculationRoleEnum =
-  (typeof ContributionCommandCalculationRoleEnum)[keyof typeof ContributionCommandCalculationRoleEnum];
+export type ContributionCommandRoleEnum =
+  (typeof ContributionCommandRoleEnum)[keyof typeof ContributionCommandRoleEnum];
 
 /**
  * @export
@@ -171,18 +171,18 @@ export function ContributionCommandFromJSONTyped(
   return {
     anatomicalStructureId:
       json['anatomicalStructureId'] == null ? undefined : json['anatomicalStructureId'],
-    role: json['role'] == null ? undefined : json['role'],
-    loadChannel: json['loadChannel'] == null ? undefined : json['loadChannel'],
-    contributionBand: json['contributionBand'] == null ? undefined : json['contributionBand'],
-    coefficientLow: json['coefficientLow'] == null ? undefined : json['coefficientLow'],
-    coefficientHigh: json['coefficientHigh'] == null ? undefined : json['coefficientHigh'],
-    confidenceClass: json['confidenceClass'] == null ? undefined : json['confidenceClass'],
-    evidenceGrade: json['evidenceGrade'] == null ? undefined : json['evidenceGrade'],
     calculationRole: json['calculationRole'] == null ? undefined : json['calculationRole'],
-    variantCondition: json['variantCondition'] == null ? undefined : json['variantCondition'],
-    sideRule: json['sideRule'] == null ? undefined : json['sideRule'],
+    coefficientHigh: json['coefficientHigh'] == null ? undefined : json['coefficientHigh'],
+    coefficientLow: json['coefficientLow'] == null ? undefined : json['coefficientLow'],
+    confidenceClass: json['confidenceClass'] == null ? undefined : json['confidenceClass'],
+    contributionBand: json['contributionBand'] == null ? undefined : json['contributionBand'],
+    evidenceGrade: json['evidenceGrade'] == null ? undefined : json['evidenceGrade'],
     evidenceSourceIds:
       json['evidenceSourceIds'] == null ? undefined : new Set(json['evidenceSourceIds']),
+    loadChannel: json['loadChannel'] == null ? undefined : json['loadChannel'],
+    role: json['role'] == null ? undefined : json['role'],
+    sideRule: json['sideRule'] == null ? undefined : json['sideRule'],
+    variantCondition: json['variantCondition'] == null ? undefined : json['variantCondition'],
   };
 }
 
@@ -200,19 +200,19 @@ export function ContributionCommandToJSONTyped(
 
   return {
     anatomicalStructureId: value['anatomicalStructureId'],
-    role: value['role'],
-    loadChannel: value['loadChannel'],
-    contributionBand: value['contributionBand'],
-    coefficientLow: value['coefficientLow'],
-    coefficientHigh: value['coefficientHigh'],
-    confidenceClass: value['confidenceClass'],
-    evidenceGrade: value['evidenceGrade'],
     calculationRole: value['calculationRole'],
-    variantCondition: value['variantCondition'],
-    sideRule: value['sideRule'],
+    coefficientHigh: value['coefficientHigh'],
+    coefficientLow: value['coefficientLow'],
+    confidenceClass: value['confidenceClass'],
+    contributionBand: value['contributionBand'],
+    evidenceGrade: value['evidenceGrade'],
     evidenceSourceIds:
       value['evidenceSourceIds'] == null
         ? undefined
         : Array.from(value['evidenceSourceIds'] as Set<any>),
+    loadChannel: value['loadChannel'],
+    role: value['role'],
+    sideRule: value['sideRule'],
+    variantCondition: value['variantCondition'],
   };
 }

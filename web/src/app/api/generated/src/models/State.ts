@@ -33,28 +33,10 @@ import {
 export interface State {
   /**
    *
-   * @type {StateStageEnum}
+   * @type {Array<Slot>}
    * @memberof State
    */
-  stage?: StateStageEnum;
-  /**
-   *
-   * @type {Array<StateMissingStepsEnum>}
-   * @memberof State
-   */
-  missingSteps?: Array<StateMissingStepsEnum>;
-  /**
-   *
-   * @type {StateProfileTypeEnum}
-   * @memberof State
-   */
-  profileType?: StateProfileTypeEnum;
-  /**
-   *
-   * @type {ProfileSummary}
-   * @memberof State
-   */
-  profile?: ProfileSummary;
+  availability?: Array<Slot>;
   /**
    *
    * @type {Array<View>}
@@ -63,23 +45,29 @@ export interface State {
   currentLegalAcknowledgements?: Array<View>;
   /**
    *
-   * @type {Array<Slot>}
+   * @type {Array<StateMissingStepsEnum>}
    * @memberof State
    */
-  availability?: Array<Slot>;
+  missingSteps?: Array<StateMissingStepsEnum>;
+  /**
+   *
+   * @type {ProfileSummary}
+   * @memberof State
+   */
+  profile?: ProfileSummary;
+  /**
+   *
+   * @type {StateProfileTypeEnum}
+   * @memberof State
+   */
+  profileType?: StateProfileTypeEnum;
+  /**
+   *
+   * @type {StateStageEnum}
+   * @memberof State
+   */
+  stage?: StateStageEnum;
 }
-
-/**
- * @export
- */
-export const StateStageEnum = {
-  ProfileTypeRequired: 'PROFILE_TYPE_REQUIRED',
-  LegalRequired: 'LEGAL_REQUIRED',
-  ProfileRequired: 'PROFILE_REQUIRED',
-  AvailabilityRequired: 'AVAILABILITY_REQUIRED',
-  Ready: 'READY',
-} as const;
-export type StateStageEnum = (typeof StateStageEnum)[keyof typeof StateStageEnum];
 
 /**
  * @export
@@ -103,6 +91,18 @@ export const StateProfileTypeEnum = {
 export type StateProfileTypeEnum = (typeof StateProfileTypeEnum)[keyof typeof StateProfileTypeEnum];
 
 /**
+ * @export
+ */
+export const StateStageEnum = {
+  ProfileTypeRequired: 'PROFILE_TYPE_REQUIRED',
+  LegalRequired: 'LEGAL_REQUIRED',
+  ProfileRequired: 'PROFILE_REQUIRED',
+  AvailabilityRequired: 'AVAILABILITY_REQUIRED',
+  Ready: 'READY',
+} as const;
+export type StateStageEnum = (typeof StateStageEnum)[keyof typeof StateStageEnum];
+
+/**
  * Check if a given object implements the State interface.
  */
 export function instanceOfState(value: object): value is State {
@@ -118,18 +118,18 @@ export function StateFromJSONTyped(json: any, ignoreDiscriminator: boolean): Sta
     return json;
   }
   return {
-    stage: json['stage'] == null ? undefined : json['stage'],
-    missingSteps: json['missingSteps'] == null ? undefined : json['missingSteps'],
-    profileType: json['profileType'] == null ? undefined : json['profileType'],
-    profile: json['profile'] == null ? undefined : ProfileSummaryFromJSON(json['profile']),
-    currentLegalAcknowledgements:
-      json['currentLegalAcknowledgements'] == null
-        ? undefined
-        : (json['currentLegalAcknowledgements'] as Array<any>).map(ViewFromJSON),
     availability:
       json['availability'] == null
         ? undefined
         : (json['availability'] as Array<any>).map(SlotFromJSON),
+    currentLegalAcknowledgements:
+      json['currentLegalAcknowledgements'] == null
+        ? undefined
+        : (json['currentLegalAcknowledgements'] as Array<any>).map(ViewFromJSON),
+    missingSteps: json['missingSteps'] == null ? undefined : json['missingSteps'],
+    profile: json['profile'] == null ? undefined : ProfileSummaryFromJSON(json['profile']),
+    profileType: json['profileType'] == null ? undefined : json['profileType'],
+    stage: json['stage'] == null ? undefined : json['stage'],
   };
 }
 
@@ -143,17 +143,17 @@ export function StateToJSONTyped(value?: State | null, ignoreDiscriminator: bool
   }
 
   return {
-    stage: value['stage'],
-    missingSteps: value['missingSteps'],
-    profileType: value['profileType'],
-    profile: ProfileSummaryToJSON(value['profile']),
-    currentLegalAcknowledgements:
-      value['currentLegalAcknowledgements'] == null
-        ? undefined
-        : (value['currentLegalAcknowledgements'] as Array<any>).map(ViewToJSON),
     availability:
       value['availability'] == null
         ? undefined
         : (value['availability'] as Array<any>).map(SlotToJSON),
+    currentLegalAcknowledgements:
+      value['currentLegalAcknowledgements'] == null
+        ? undefined
+        : (value['currentLegalAcknowledgements'] as Array<any>).map(ViewToJSON),
+    missingSteps: value['missingSteps'],
+    profile: ProfileSummaryToJSON(value['profile']),
+    profileType: value['profileType'],
+    stage: value['stage'],
   };
 }

@@ -21,10 +21,10 @@ import { mapValues } from '../runtime';
 export interface View {
   /**
    *
-   * @type {string}
+   * @type {Date}
    * @memberof View
    */
-  type?: string;
+  acceptedAt?: Date;
   /**
    *
    * @type {string}
@@ -33,10 +33,10 @@ export interface View {
   documentVersion?: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof View
    */
-  acceptedAt?: Date;
+  type?: string;
 }
 
 /**
@@ -55,9 +55,9 @@ export function ViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): View
     return json;
   }
   return {
-    type: json['type'] == null ? undefined : json['type'],
-    documentVersion: json['documentVersion'] == null ? undefined : json['documentVersion'],
     acceptedAt: json['acceptedAt'] == null ? undefined : new Date(json['acceptedAt']),
+    documentVersion: json['documentVersion'] == null ? undefined : json['documentVersion'],
+    type: json['type'] == null ? undefined : json['type'],
   };
 }
 
@@ -71,9 +71,9 @@ export function ViewToJSONTyped(value?: View | null, ignoreDiscriminator: boolea
   }
 
   return {
-    type: value['type'],
-    documentVersion: value['documentVersion'],
     acceptedAt:
       value['acceptedAt'] == null ? value['acceptedAt'] : value['acceptedAt'].toISOString(),
+    documentVersion: value['documentVersion'],
+    type: value['type'],
   };
 }

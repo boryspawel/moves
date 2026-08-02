@@ -21,16 +21,28 @@ import { mapValues } from '../runtime';
 export interface SourceView {
   /**
    *
-   * @type {string}
+   * @type {boolean}
    * @memberof SourceView
    */
-  id?: string;
+  active?: boolean;
   /**
    *
    * @type {string}
    * @memberof SourceView
    */
   code?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof SourceView
+   */
+  createdAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof SourceView
+   */
+  defaultLocale?: string;
   /**
    *
    * @type {string}
@@ -42,7 +54,7 @@ export interface SourceView {
    * @type {string}
    * @memberof SourceView
    */
-  defaultLocale?: string;
+  id?: string;
   /**
    *
    * @type {string}
@@ -55,18 +67,6 @@ export interface SourceView {
    * @memberof SourceView
    */
   licenseVerified?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof SourceView
-   */
-  active?: boolean;
-  /**
-   *
-   * @type {Date}
-   * @memberof SourceView
-   */
-  createdAt?: Date;
   /**
    *
    * @type {number}
@@ -91,14 +91,14 @@ export function SourceViewFromJSONTyped(json: any, ignoreDiscriminator: boolean)
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
+    active: json['active'] == null ? undefined : json['active'],
     code: json['code'] == null ? undefined : json['code'],
-    displayName: json['displayName'] == null ? undefined : json['displayName'],
+    createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
     defaultLocale: json['defaultLocale'] == null ? undefined : json['defaultLocale'],
+    displayName: json['displayName'] == null ? undefined : json['displayName'],
+    id: json['id'] == null ? undefined : json['id'],
     licenseCode: json['licenseCode'] == null ? undefined : json['licenseCode'],
     licenseVerified: json['licenseVerified'] == null ? undefined : json['licenseVerified'],
-    active: json['active'] == null ? undefined : json['active'],
-    createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
     version: json['version'] == null ? undefined : json['version'],
   };
 }
@@ -116,14 +116,14 @@ export function SourceViewToJSONTyped(
   }
 
   return {
-    id: value['id'],
+    active: value['active'],
     code: value['code'],
-    displayName: value['displayName'],
+    createdAt: value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
     defaultLocale: value['defaultLocale'],
+    displayName: value['displayName'],
+    id: value['id'],
     licenseCode: value['licenseCode'],
     licenseVerified: value['licenseVerified'],
-    active: value['active'],
-    createdAt: value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
     version: value['version'],
   };
 }

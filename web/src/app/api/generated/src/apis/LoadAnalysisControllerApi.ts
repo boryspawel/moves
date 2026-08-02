@@ -15,7 +15,7 @@
 import * as runtime from '../runtime';
 import { type LoadProfile, LoadProfileFromJSON, LoadProfileToJSON } from '../models/LoadProfile';
 
-export interface PreviewRequest {
+export interface Preview1Request {
   revisionId: string;
   algorithmVersion?: string;
   configurationVersion?: string;
@@ -26,13 +26,13 @@ export interface PreviewRequest {
  */
 export class LoadAnalysisControllerApi extends runtime.BaseAPI {
   /**
-   * Creates request options for preview without sending the request
+   * Creates request options for preview1 without sending the request
    */
-  async previewRequestOpts(requestParameters: PreviewRequest): Promise<runtime.RequestOpts> {
+  async preview1RequestOpts(requestParameters: Preview1Request): Promise<runtime.RequestOpts> {
     if (requestParameters['revisionId'] == null) {
       throw new runtime.RequiredError(
         'revisionId',
-        'Required parameter "revisionId" was null or undefined when calling preview().',
+        'Required parameter "revisionId" was null or undefined when calling preview1().',
       );
     }
 
@@ -64,11 +64,11 @@ export class LoadAnalysisControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async previewRaw(
-    requestParameters: PreviewRequest,
+  async preview1Raw(
+    requestParameters: Preview1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<LoadProfile>> {
-    const requestOptions = await this.previewRequestOpts(requestParameters);
+    const requestOptions = await this.preview1RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) => LoadProfileFromJSON(jsonValue));
@@ -76,11 +76,11 @@ export class LoadAnalysisControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async preview(
-    requestParameters: PreviewRequest,
+  async preview1(
+    requestParameters: Preview1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<LoadProfile> {
-    const response = await this.previewRaw(requestParameters, initOverrides);
+    const response = await this.preview1Raw(requestParameters, initOverrides);
     return await response.value();
   }
 }

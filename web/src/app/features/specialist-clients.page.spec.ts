@@ -6,7 +6,7 @@ import { SpecialistClientsPage } from './specialist-clients.page';
 
 describe('SpecialistClientsPage', () => {
   it('renders client details and opens the existing workspace route', async () => {
-    const specialistClients = { list: vi.fn().mockResolvedValue([{ participantId: 'participant-1', displayName: 'Anna Kowalska', recordStatus: 'ACTIVE', relationshipContext: 'PATIENT', accessStatus: 'NO_ACCOUNT', attentionItems: [{ id: 'attention-1' }] }]), create: vi.fn() };
+    const specialistClients = { list1: vi.fn().mockResolvedValue([{ participantId: 'participant-1', displayName: 'Anna Kowalska', recordStatus: 'ACTIVE', relationshipContext: 'PATIENT', accessStatus: 'NO_ACCOUNT', attentionItems: [{ id: 'attention-1' }] }]), create1: vi.fn() };
     await TestBed.configureTestingModule({ imports: [SpecialistClientsPage], providers: [provideRouter([]), { provide: ApiFacade, useValue: { specialistClients } }] }).compileComponents();
     const fixture = TestBed.createComponent(SpecialistClientsPage); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
     const root = fixture.nativeElement as HTMLElement;
@@ -18,7 +18,7 @@ describe('SpecialistClientsPage', () => {
 
   it('creates a client once and navigates to its workspace', async () => {
     let resolveCreate!: (value: { participantId: string }) => void;
-    const specialistClients = { list: vi.fn().mockResolvedValue([]), create: vi.fn(() => new Promise<{ participantId: string }>(resolve => { resolveCreate = resolve; })) };
+    const specialistClients = { list1: vi.fn().mockResolvedValue([]), create1: vi.fn(() => new Promise<{ participantId: string }>(resolve => { resolveCreate = resolve; })) };
     await TestBed.configureTestingModule({ imports: [SpecialistClientsPage], providers: [provideRouter([]), { provide: ApiFacade, useValue: { specialistClients } }] }).compileComponents();
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(SpecialistClientsPage); fixture.detectChanges(); await fixture.whenStable();
@@ -27,13 +27,13 @@ describe('SpecialistClientsPage', () => {
     const first = page.create(); const second = page.create();
     resolveCreate({ participantId: 'participant-2' });
     await Promise.all([first, second]);
-    expect(specialistClients.create).toHaveBeenCalledTimes(1);
-    expect(specialistClients.create).toHaveBeenCalledWith(expect.objectContaining({ clientCommand: expect.objectContaining({ displayName: 'Nowa kartoteka' }) }));
+    expect(specialistClients.create1).toHaveBeenCalledTimes(1);
+    expect(specialistClients.create1).toHaveBeenCalledWith(expect.objectContaining({ clientCommand: expect.objectContaining({ displayName: 'Nowa kartoteka' }) }));
     expect(navigate).toHaveBeenCalledWith(['/specialist/clients', 'participant-2']);
   });
 
   it('closes the form and navigates after a successful create without reloading the list', async () => {
-    const specialistClients = { list: vi.fn().mockResolvedValueOnce([]).mockRejectedValueOnce(new Error('reload failed')), create: vi.fn().mockResolvedValue({ participantId: 'participant-2' }) };
+    const specialistClients = { list1: vi.fn().mockResolvedValueOnce([]).mockRejectedValueOnce(new Error('reload failed')), create1: vi.fn().mockResolvedValue({ participantId: 'participant-2' }) };
     await TestBed.configureTestingModule({ imports: [SpecialistClientsPage], providers: [provideRouter([]), { provide: ApiFacade, useValue: { specialistClients } }] }).compileComponents();
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(SpecialistClientsPage); fixture.detectChanges(); await fixture.whenStable();
@@ -42,14 +42,14 @@ describe('SpecialistClientsPage', () => {
 
     await page.create();
 
-    expect(specialistClients.list).toHaveBeenCalledTimes(1);
+    expect(specialistClients.list1).toHaveBeenCalledTimes(1);
     expect(page.creating()).toBe(false);
     expect(page.createError()).toBe('');
     expect(navigate).toHaveBeenCalledWith(['/specialist/clients', 'participant-2']);
   });
 
   it('keeps the form available and shows an error when creating a client fails', async () => {
-    const specialistClients = { list: vi.fn().mockResolvedValue([]), create: vi.fn().mockRejectedValue(new Error('create failed')) };
+    const specialistClients = { list1: vi.fn().mockResolvedValue([]), create1: vi.fn().mockRejectedValue(new Error('create failed')) };
     await TestBed.configureTestingModule({ imports: [SpecialistClientsPage], providers: [provideRouter([]), { provide: ApiFacade, useValue: { specialistClients } }] }).compileComponents();
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(SpecialistClientsPage); fixture.detectChanges(); await fixture.whenStable();

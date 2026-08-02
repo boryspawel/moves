@@ -29,6 +29,24 @@ import {
 export interface AssessmentSnapshot {
   /**
    *
+   * @type {Date}
+   * @memberof AssessmentSnapshot
+   */
+  assessedAt?: Date;
+  /**
+   *
+   * @type {AssessmentSnapshotEffectiveResultEnum}
+   * @memberof AssessmentSnapshot
+   */
+  effectiveResult?: AssessmentSnapshotEffectiveResultEnum;
+  /**
+   *
+   * @type {Array<FactorSnapshot>}
+   * @memberof AssessmentSnapshot
+   */
+  factors?: Array<FactorSnapshot>;
+  /**
+   *
    * @type {string}
    * @memberof AssessmentSnapshot
    */
@@ -38,13 +56,7 @@ export interface AssessmentSnapshot {
    * @type {string}
    * @memberof AssessmentSnapshot
    */
-  participantAccountId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AssessmentSnapshot
-   */
-  revisionId?: string;
+  loadCalculationVersion?: string;
   /**
    *
    * @type {string}
@@ -56,7 +68,19 @@ export interface AssessmentSnapshot {
    * @type {string}
    * @memberof AssessmentSnapshot
    */
-  loadCalculationVersion?: string;
+  participantAccountId?: string;
+  /**
+   *
+   * @type {AssessmentSnapshotRecordedResultEnum}
+   * @memberof AssessmentSnapshot
+   */
+  recordedResult?: AssessmentSnapshotRecordedResultEnum;
+  /**
+   *
+   * @type {string}
+   * @memberof AssessmentSnapshot
+   */
+  revisionId?: string;
   /**
    *
    * @type {string}
@@ -69,43 +93,7 @@ export interface AssessmentSnapshot {
    * @memberof AssessmentSnapshot
    */
   rulesetVersion?: number;
-  /**
-   *
-   * @type {AssessmentSnapshotRecordedResultEnum}
-   * @memberof AssessmentSnapshot
-   */
-  recordedResult?: AssessmentSnapshotRecordedResultEnum;
-  /**
-   *
-   * @type {AssessmentSnapshotEffectiveResultEnum}
-   * @memberof AssessmentSnapshot
-   */
-  effectiveResult?: AssessmentSnapshotEffectiveResultEnum;
-  /**
-   *
-   * @type {Date}
-   * @memberof AssessmentSnapshot
-   */
-  assessedAt?: Date;
-  /**
-   *
-   * @type {Array<FactorSnapshot>}
-   * @memberof AssessmentSnapshot
-   */
-  factors?: Array<FactorSnapshot>;
 }
-
-/**
- * @export
- */
-export const AssessmentSnapshotRecordedResultEnum = {
-  Pass: 'PASS',
-  Info: 'INFO',
-  Warning: 'WARNING',
-  HardBlock: 'HARD_BLOCK',
-} as const;
-export type AssessmentSnapshotRecordedResultEnum =
-  (typeof AssessmentSnapshotRecordedResultEnum)[keyof typeof AssessmentSnapshotRecordedResultEnum];
 
 /**
  * @export
@@ -118,6 +106,18 @@ export const AssessmentSnapshotEffectiveResultEnum = {
 } as const;
 export type AssessmentSnapshotEffectiveResultEnum =
   (typeof AssessmentSnapshotEffectiveResultEnum)[keyof typeof AssessmentSnapshotEffectiveResultEnum];
+
+/**
+ * @export
+ */
+export const AssessmentSnapshotRecordedResultEnum = {
+  Pass: 'PASS',
+  Info: 'INFO',
+  Warning: 'WARNING',
+  HardBlock: 'HARD_BLOCK',
+} as const;
+export type AssessmentSnapshotRecordedResultEnum =
+  (typeof AssessmentSnapshotRecordedResultEnum)[keyof typeof AssessmentSnapshotRecordedResultEnum];
 
 /**
  * Check if a given object implements the AssessmentSnapshot interface.
@@ -138,22 +138,22 @@ export function AssessmentSnapshotFromJSONTyped(
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
-    participantAccountId:
-      json['participantAccountId'] == null ? undefined : json['participantAccountId'],
-    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
-    loadSnapshotId: json['loadSnapshotId'] == null ? undefined : json['loadSnapshotId'],
-    loadCalculationVersion:
-      json['loadCalculationVersion'] == null ? undefined : json['loadCalculationVersion'],
-    rulesetCode: json['rulesetCode'] == null ? undefined : json['rulesetCode'],
-    rulesetVersion: json['rulesetVersion'] == null ? undefined : json['rulesetVersion'],
-    recordedResult: json['recordedResult'] == null ? undefined : json['recordedResult'],
-    effectiveResult: json['effectiveResult'] == null ? undefined : json['effectiveResult'],
     assessedAt: json['assessedAt'] == null ? undefined : new Date(json['assessedAt']),
+    effectiveResult: json['effectiveResult'] == null ? undefined : json['effectiveResult'],
     factors:
       json['factors'] == null
         ? undefined
         : (json['factors'] as Array<any>).map(FactorSnapshotFromJSON),
+    id: json['id'] == null ? undefined : json['id'],
+    loadCalculationVersion:
+      json['loadCalculationVersion'] == null ? undefined : json['loadCalculationVersion'],
+    loadSnapshotId: json['loadSnapshotId'] == null ? undefined : json['loadSnapshotId'],
+    participantAccountId:
+      json['participantAccountId'] == null ? undefined : json['participantAccountId'],
+    recordedResult: json['recordedResult'] == null ? undefined : json['recordedResult'],
+    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
+    rulesetCode: json['rulesetCode'] == null ? undefined : json['rulesetCode'],
+    rulesetVersion: json['rulesetVersion'] == null ? undefined : json['rulesetVersion'],
   };
 }
 
@@ -170,20 +170,20 @@ export function AssessmentSnapshotToJSONTyped(
   }
 
   return {
-    id: value['id'],
-    participantAccountId: value['participantAccountId'],
-    revisionId: value['revisionId'],
-    loadSnapshotId: value['loadSnapshotId'],
-    loadCalculationVersion: value['loadCalculationVersion'],
-    rulesetCode: value['rulesetCode'],
-    rulesetVersion: value['rulesetVersion'],
-    recordedResult: value['recordedResult'],
-    effectiveResult: value['effectiveResult'],
     assessedAt:
       value['assessedAt'] == null ? value['assessedAt'] : value['assessedAt'].toISOString(),
+    effectiveResult: value['effectiveResult'],
     factors:
       value['factors'] == null
         ? undefined
         : (value['factors'] as Array<any>).map(FactorSnapshotToJSON),
+    id: value['id'],
+    loadCalculationVersion: value['loadCalculationVersion'],
+    loadSnapshotId: value['loadSnapshotId'],
+    participantAccountId: value['participantAccountId'],
+    recordedResult: value['recordedResult'],
+    revisionId: value['revisionId'],
+    rulesetCode: value['rulesetCode'],
+    rulesetVersion: value['rulesetVersion'],
   };
 }

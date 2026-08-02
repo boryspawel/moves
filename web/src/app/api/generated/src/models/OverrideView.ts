@@ -24,12 +24,6 @@ export interface OverrideView {
    * @type {string}
    * @memberof OverrideView
    */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof OverrideView
-   */
   assessmentId?: string;
   /**
    *
@@ -37,6 +31,12 @@ export interface OverrideView {
    * @memberof OverrideView
    */
   factorId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof OverrideView
+   */
+  id?: string;
   /**
    *
    * @type {string}
@@ -79,9 +79,9 @@ export function OverrideViewFromJSONTyped(json: any, ignoreDiscriminator: boolea
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
     assessmentId: json['assessmentId'] == null ? undefined : json['assessmentId'],
     factorId: json['factorId'] == null ? undefined : json['factorId'],
+    id: json['id'] == null ? undefined : json['id'],
     reasonCode: json['reasonCode'] == null ? undefined : json['reasonCode'],
     scope: json['scope'] == null ? undefined : json['scope'],
     validFrom: json['validFrom'] == null ? undefined : new Date(json['validFrom']),
@@ -102,9 +102,9 @@ export function OverrideViewToJSONTyped(
   }
 
   return {
-    id: value['id'],
     assessmentId: value['assessmentId'],
     factorId: value['factorId'],
+    id: value['id'],
     reasonCode: value['reasonCode'],
     scope: value['scope'],
     validFrom: value['validFrom'] == null ? value['validFrom'] : value['validFrom'].toISOString(),

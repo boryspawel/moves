@@ -32,13 +32,25 @@ export interface RestrictionView {
    * @type {string}
    * @memberof RestrictionView
    */
+  authorCapability?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RestrictionView
+   */
   id?: string;
   /**
    *
    * @type {string}
    * @memberof RestrictionView
    */
-  rootId?: string;
+  participantExplanation?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RestrictionView
+   */
+  participantId?: string;
   /**
    *
    * @type {number}
@@ -50,19 +62,7 @@ export interface RestrictionView {
    * @type {string}
    * @memberof RestrictionView
    */
-  supersedesRestrictionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RestrictionView
-   */
-  participantId?: string;
-  /**
-   *
-   * @type {RestrictionViewSourceTypeEnum}
-   * @memberof RestrictionView
-   */
-  sourceType?: RestrictionViewSourceTypeEnum;
+  rootId?: string;
   /**
    *
    * @type {RestrictionViewSemanticTypeEnum}
@@ -71,10 +71,28 @@ export interface RestrictionView {
   semanticType?: RestrictionViewSemanticTypeEnum;
   /**
    *
+   * @type {RestrictionViewSourceTypeEnum}
+   * @memberof RestrictionView
+   */
+  sourceType?: RestrictionViewSourceTypeEnum;
+  /**
+   *
    * @type {string}
    * @memberof RestrictionView
    */
   status?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RestrictionView
+   */
+  supersedesRestrictionId?: string;
+  /**
+   *
+   * @type {TargetView}
+   * @memberof RestrictionView
+   */
+  target?: TargetView;
   /**
    *
    * @type {Date}
@@ -87,36 +105,7 @@ export interface RestrictionView {
    * @memberof RestrictionView
    */
   validTo?: Date;
-  /**
-   *
-   * @type {string}
-   * @memberof RestrictionView
-   */
-  authorCapability?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RestrictionView
-   */
-  participantExplanation?: string;
-  /**
-   *
-   * @type {TargetView}
-   * @memberof RestrictionView
-   */
-  target?: TargetView;
 }
-
-/**
- * @export
- */
-export const RestrictionViewSourceTypeEnum = {
-  ParticipantDeclared: 'PARTICIPANT_DECLARED',
-  Physiotherapist: 'PHYSIOTHERAPIST',
-  SystemOperational: 'SYSTEM_OPERATIONAL',
-} as const;
-export type RestrictionViewSourceTypeEnum =
-  (typeof RestrictionViewSourceTypeEnum)[keyof typeof RestrictionViewSourceTypeEnum];
 
 /**
  * @export
@@ -129,6 +118,17 @@ export const RestrictionViewSemanticTypeEnum = {
 } as const;
 export type RestrictionViewSemanticTypeEnum =
   (typeof RestrictionViewSemanticTypeEnum)[keyof typeof RestrictionViewSemanticTypeEnum];
+
+/**
+ * @export
+ */
+export const RestrictionViewSourceTypeEnum = {
+  ParticipantDeclared: 'PARTICIPANT_DECLARED',
+  Physiotherapist: 'PHYSIOTHERAPIST',
+  SystemOperational: 'SYSTEM_OPERATIONAL',
+} as const;
+export type RestrictionViewSourceTypeEnum =
+  (typeof RestrictionViewSourceTypeEnum)[keyof typeof RestrictionViewSourceTypeEnum];
 
 /**
  * Check if a given object implements the RestrictionView interface.
@@ -149,21 +149,21 @@ export function RestrictionViewFromJSONTyped(
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
-    rootId: json['rootId'] == null ? undefined : json['rootId'],
-    revisionNumber: json['revisionNumber'] == null ? undefined : json['revisionNumber'],
-    supersedesRestrictionId:
-      json['supersedesRestrictionId'] == null ? undefined : json['supersedesRestrictionId'],
-    participantId: json['participantId'] == null ? undefined : json['participantId'],
-    sourceType: json['sourceType'] == null ? undefined : json['sourceType'],
-    semanticType: json['semanticType'] == null ? undefined : json['semanticType'],
-    status: json['status'] == null ? undefined : json['status'],
-    validFrom: json['validFrom'] == null ? undefined : new Date(json['validFrom']),
-    validTo: json['validTo'] == null ? undefined : new Date(json['validTo']),
     authorCapability: json['authorCapability'] == null ? undefined : json['authorCapability'],
+    id: json['id'] == null ? undefined : json['id'],
     participantExplanation:
       json['participantExplanation'] == null ? undefined : json['participantExplanation'],
+    participantId: json['participantId'] == null ? undefined : json['participantId'],
+    revisionNumber: json['revisionNumber'] == null ? undefined : json['revisionNumber'],
+    rootId: json['rootId'] == null ? undefined : json['rootId'],
+    semanticType: json['semanticType'] == null ? undefined : json['semanticType'],
+    sourceType: json['sourceType'] == null ? undefined : json['sourceType'],
+    status: json['status'] == null ? undefined : json['status'],
+    supersedesRestrictionId:
+      json['supersedesRestrictionId'] == null ? undefined : json['supersedesRestrictionId'],
     target: json['target'] == null ? undefined : TargetViewFromJSON(json['target']),
+    validFrom: json['validFrom'] == null ? undefined : new Date(json['validFrom']),
+    validTo: json['validTo'] == null ? undefined : new Date(json['validTo']),
   };
 }
 
@@ -180,18 +180,18 @@ export function RestrictionViewToJSONTyped(
   }
 
   return {
+    authorCapability: value['authorCapability'],
     id: value['id'],
-    rootId: value['rootId'],
-    revisionNumber: value['revisionNumber'],
-    supersedesRestrictionId: value['supersedesRestrictionId'],
+    participantExplanation: value['participantExplanation'],
     participantId: value['participantId'],
-    sourceType: value['sourceType'],
+    revisionNumber: value['revisionNumber'],
+    rootId: value['rootId'],
     semanticType: value['semanticType'],
+    sourceType: value['sourceType'],
     status: value['status'],
+    supersedesRestrictionId: value['supersedesRestrictionId'],
+    target: TargetViewToJSON(value['target']),
     validFrom: value['validFrom'] == null ? value['validFrom'] : value['validFrom'].toISOString(),
     validTo: value['validTo'] == null ? value['validTo'] : value['validTo'].toISOString(),
-    authorCapability: value['authorCapability'],
-    participantExplanation: value['participantExplanation'],
-    target: TargetViewToJSON(value['target']),
   };
 }

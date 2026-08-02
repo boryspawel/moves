@@ -24,13 +24,13 @@ export interface ActiveParticipantView {
    * @type {string}
    * @memberof ActiveParticipantView
    */
-  participantId?: string;
+  label?: string;
   /**
    *
    * @type {string}
    * @memberof ActiveParticipantView
    */
-  label?: string;
+  participantId?: string;
 }
 
 /**
@@ -52,8 +52,8 @@ export function ActiveParticipantViewFromJSONTyped(
     return json;
   }
   return {
-    participantId: json['participantId'] == null ? undefined : json['participantId'],
     label: json['label'] == null ? undefined : json['label'],
+    participantId: json['participantId'] == null ? undefined : json['participantId'],
   };
 }
 
@@ -70,7 +70,7 @@ export function ActiveParticipantViewToJSONTyped(
   }
 
   return {
-    participantId: value['participantId'],
     label: value['label'],
+    participantId: value['participantId'],
   };
 }

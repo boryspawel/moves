@@ -24,6 +24,18 @@ export interface BarrierReportView {
    * @type {string}
    * @memberof BarrierReportView
    */
+  actionOutcome?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BarrierReportView
+   */
+  category?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BarrierReportView
+   */
   id?: string;
   /**
    *
@@ -33,22 +45,22 @@ export interface BarrierReportView {
   plannedSessionId?: string;
   /**
    *
-   * @type {string}
-   * @memberof BarrierReportView
-   */
-  sessionAttemptId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof BarrierReportView
-   */
-  category?: string;
-  /**
-   *
    * @type {Array<string>}
    * @memberof BarrierReportView
    */
   proposedOptions?: Array<string>;
+  /**
+   *
+   * @type {Date}
+   * @memberof BarrierReportView
+   */
+  reportedAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof BarrierReportView
+   */
+  ruleVersion?: string;
   /**
    *
    * @type {string}
@@ -60,19 +72,7 @@ export interface BarrierReportView {
    * @type {string}
    * @memberof BarrierReportView
    */
-  actionOutcome?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof BarrierReportView
-   */
-  ruleVersion?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof BarrierReportView
-   */
-  reportedAt?: Date;
+  sessionAttemptId?: string;
 }
 
 /**
@@ -94,15 +94,15 @@ export function BarrierReportViewFromJSONTyped(
     return json;
   }
   return {
+    actionOutcome: json['actionOutcome'] == null ? undefined : json['actionOutcome'],
+    category: json['category'] == null ? undefined : json['category'],
     id: json['id'] == null ? undefined : json['id'],
     plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
-    sessionAttemptId: json['sessionAttemptId'] == null ? undefined : json['sessionAttemptId'],
-    category: json['category'] == null ? undefined : json['category'],
     proposedOptions: json['proposedOptions'] == null ? undefined : json['proposedOptions'],
-    selectedAction: json['selectedAction'] == null ? undefined : json['selectedAction'],
-    actionOutcome: json['actionOutcome'] == null ? undefined : json['actionOutcome'],
-    ruleVersion: json['ruleVersion'] == null ? undefined : json['ruleVersion'],
     reportedAt: json['reportedAt'] == null ? undefined : new Date(json['reportedAt']),
+    ruleVersion: json['ruleVersion'] == null ? undefined : json['ruleVersion'],
+    selectedAction: json['selectedAction'] == null ? undefined : json['selectedAction'],
+    sessionAttemptId: json['sessionAttemptId'] == null ? undefined : json['sessionAttemptId'],
   };
 }
 
@@ -119,15 +119,15 @@ export function BarrierReportViewToJSONTyped(
   }
 
   return {
+    actionOutcome: value['actionOutcome'],
+    category: value['category'],
     id: value['id'],
     plannedSessionId: value['plannedSessionId'],
-    sessionAttemptId: value['sessionAttemptId'],
-    category: value['category'],
     proposedOptions: value['proposedOptions'],
-    selectedAction: value['selectedAction'],
-    actionOutcome: value['actionOutcome'],
-    ruleVersion: value['ruleVersion'],
     reportedAt:
       value['reportedAt'] == null ? value['reportedAt'] : value['reportedAt'].toISOString(),
+    ruleVersion: value['ruleVersion'],
+    selectedAction: value['selectedAction'],
+    sessionAttemptId: value['sessionAttemptId'],
   };
 }

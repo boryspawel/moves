@@ -22,6 +22,7 @@ import type {
   ItemView,
   MetadataRequest,
   MetadataRequestProfileEnum,
+  VisualRegionExposure,
   VersionView,
 } from '../../api/generated/src';
 import { ApiFacade } from '../../core/api.facade';
@@ -55,7 +56,10 @@ const phases: ItemRequestPhaseEnum[] = ['PREPARATION', 'MAIN', 'ACCESSORY', 'COO
     } @else if (version(); as current) {
       <header class="page-header">
         <div>
-          <h1>{{ current.title || 'Zestaw bez nazwy' }}</h1>
+          <label class="title-editor">
+            <span class="sr-only">Tytuł zestawu</span>
+            <input #titleInput [formControl]="title" [readonly]="readOnly()" placeholder="Zestaw bez nazwy" />
+          </label>
           <p>
             {{
               readOnly()
@@ -71,12 +75,11 @@ const phases: ItemRequestPhaseEnum[] = ['PREPARATION', 'MAIN', 'ACCESSORY', 'COO
         }
       </header>
       <p class="sr-only" aria-live="polite">{{ announcement() }}</p>
-      <div class="editor-grid">
-        <section class="metadata">
-          <h2>Metadane</h2>
-          <label>Tytuł<input #titleInput [formControl]="title" [readonly]="readOnly()" /></label
-          ><label
-            >Profil<select [formControl]="profile" [disabled]="readOnly()">
+      <details class="set-settings">
+        <summary>Ustawienia zestawu</summary>
+        <div class="settings-fields">
+          <label
+            >Profil<select #profileInput [formControl]="profile" [disabled]="readOnly()">
               <option value="">Nie określono</option>
               <option value="FULL_SELF_GUIDED">Pełny zestaw</option>
               <option value="WARMUP_MODULE">Rozgrzewka</option>
@@ -86,215 +89,72 @@ const phases: ItemRequestPhaseEnum[] = ['PREPARATION', 'MAIN', 'ACCESSORY', 'COO
             </select></label
           ><label
             >Opis<textarea [formControl]="description" [readonly]="readOnly()"></textarea></label
-          ><label
-            >Poziom docelowy<input [formControl]="targetLevel" [readonly]="readOnly()" /></label
-          ><label
-            >Tagi (oddziel przecinkami)<input [formControl]="tags" [readonly]="readOnly()"
-          /></label>
-          @if (conflict()) {
-            <section class="conflict" role="alert">
-              Ktoś zmienił ten szkic.
-              <button mat-button (click)="reloadAfterConflict()">Odśwież</button
-              ><button mat-button (click)="cancelConflict()">Anuluj moje zmiany</button>
-            </section>
-          }
-        </section>
-        <aside class="summary">
-          <h2>Podsumowanie</h2>
-          <p>{{ current.items?.length || 0 }} ćwiczeń</p>
-          <p>Profil: {{ current.profile || 'Nie określono' }}</p>
-          <p>Wersja {{ current.versionNumber || '—' }} · {{ current.status }}</p>
-          <p>{{ saveState() }}</p>
-        </aside>
-      </div>
-      <section class="analysis" aria-labelledby="analysis-heading">
-        <header>
-          <h2 id="analysis-heading">Sugestie do zestawu</h2>
-          @if (!readOnly()) {
-            <button mat-stroked-button [disabled]="analysisLoading()" (click)="retryAnalysis()">
-              {{ analysisStale() ? 'Odśwież sugestie' : 'Odśwież' }}
-            </button>
-          }
-        </header>
-        @if (analysisLoading()) {
-          <p role="status">Sprawdzanie zestawu…</p>
-        } @else if (analysisError()) {
-          <p class="error" role="alert">Sugestie są chwilowo niedostępne.</p>
-          <button mat-stroked-button (click)="retryAnalysis()">Spróbuj ponownie</button>
-        } @else if (analysis(); as result) {
-          @if (suggestions().length) {
-            <ul>
-              @for (finding of suggestions(); track $index) {
-                <li>
-                  {{ suggestionText(finding) }}
-                  @if (finding.phase || finding.itemIds?.length || finding.field) {
-                    <button mat-button (click)="navigateFinding(finding)">Przejdź do pola</button>
-                  }
-                </li>
-              }
-            </ul>
-          } @else {
-            <p>Brak sugestii do zestawu.</p>
-          }
-        } @else {
-          <p>Sugestie nie są jeszcze dostępne.</p>
-        }
-      </section>
-      <section class="analysis anatomy" aria-labelledby="anatomy-heading">
-        <header>
-          <h2 id="anatomy-heading">Ekspozycja i wzorce</h2>
-          @if (!readOnly()) {
-            <button mat-stroked-button [disabled]="anatomyLoading()" (click)="retryAnatomy()">
-              {{ anatomyStale() ? 'Odśwież ekspozycję' : 'Odśwież' }}
-            </button>
-          }
-        </header>
-        @if (anatomyLoading()) {
-          <p role="status">Ładowanie ekspozycji anatomicznej…</p>
-        } @else if (anatomyError()) {
-          <p class="error" role="alert">Nie udało się pobrać ekspozycji anatomicznej.</p>
-          <button mat-stroked-button (click)="retryAnatomy()">Spróbuj ponownie</button>
-        } @else if (anatomy(); as result) {
-          <p class="muted">
-            Ekspozycja anatomiczna jest opisem jakościowym i nie stanowi oceny klinicznej ani
-            pomiaru siły.
-          </p>
-          <label
-            >Wybierz kanał ekspozycji<select
-              [value]="selectedAnatomyChannel()"
-              (change)="selectedAnatomyChannel.set($any($event.target).value)"
-            >
-              <option value="">Wszystkie kanały</option>
-              @for (channel of result.channels || []; track channel.loadChannel) {
-                <option [value]="channel.loadChannel">
-                  {{ channel.loadChannel || 'Nieokreślony kanał' }}
-                </option>
-              }
-            </select></label
-          >
-          <h3>Kanały i udziały</h3>
-          @if (visibleAnatomyChannels(result).length) {
-            <div class="anatomy-channels">
-              @for (channel of visibleAnatomyChannels(result); track channel.loadChannel) {
-                <section>
-                  <h4>{{ channel.loadChannel || 'Nieokreślony kanał' }}</h4>
-                  <ul>
-                    @for (
-                      exposure of channel.structureExposures || [];
-                      track exposure.anatomicalStructureId;
-                      let rank = $index
-                    ) {
-                      <li>
-                        <strong>#{{ rank + 1 }} · {{ exposure.anatomicalStructureId }}</strong
-                        >: {{ exposure.coefficientLow ?? 0 }}–{{ exposure.coefficientHigh ?? 0 }} j.
-                        <details>
-                          <summary>Rozbicie i dowody</summary>
-                          <ul>
-                            @for (
-                              breakdown of exposure.breakdowns || [];
-                              track breakdown.contributionId
-                            ) {
-                              <li>
-                                {{ breakdown.role || 'Brak roli' }} ·
-                                {{ breakdown.coefficientLow ?? 0 }}–{{
-                                  breakdown.coefficientHigh ?? 0
-                                }}
-                                j. · {{ breakdown.confidenceClass || 'brak pewności' }} ·
-                                {{ breakdown.evidenceGrade || 'brak oceny dowodów' }}
-                                @if (breakdown.laterality) {
-                                  · {{ breakdown.laterality }}
-                                }
-                                @if (breakdown.evidence?.length) {
-                                  <ul>
-                                    @for (evidence of breakdown.evidence || []; track evidence.id) {
-                                      <li>
-                                        {{
-                                          evidence.citation ||
-                                            evidence.sourceUri ||
-                                            'Brak opisu dowodu'
-                                        }}
-                                        @if (evidence.evidenceGrade) {
-                                          ({{ evidence.evidenceGrade }})
-                                        }
-                                      </li>
-                                    }
-                                  </ul>
-                                }
-                              </li>
-                            }
-                          </ul>
-                        </details>
-                      </li>
-                    }
-                  </ul>
-                </section>
-              }
-            </div>
-          } @else {
-            <p>Brak ekspozycji do pokazania.</p>
-          }
-          <h3>Wzorce ruchu</h3>
-          @if (result.movementPatterns?.length) {
-            <ul>
-              @for (pattern of result.movementPatterns; track pattern.pattern) {
-                <li>{{ pattern.pattern }} ({{ pattern.itemIds?.length || 0 }} ćw.)</li>
-              }
-            </ul>
-          } @else {
-            <p>Brak wzorców ruchu do pokazania.</p>
-          }
-          @if (result.findings?.length || result.missing?.length) {
-            <h3>Ustalenia i braki danych</h3>
-            <ul>
-              @for (finding of result.findings || []; track finding.code) {
-                <li>
-                  <strong>{{ finding.code }}</strong
-                  >: {{ finding.message || 'Brak opisu' }}
-                </li>
-              }
-              @for (missing of result.missing || []; track missing.itemId) {
-                <li>
-                  <strong>{{ missing.code }}</strong> — ćwiczenie {{ missing.itemId }}
-                </li>
-              }
-            </ul>
-          }
-          <app-body-map [analysis]="result" [loading]="anatomyLoading()" [error]="anatomyError()" />
-        }
-      </section>
-      @for (phase of phases; track phase) {
-        <section class="phase" [id]="'phase-' + phase" tabindex="-1">
-          <h2>{{ phaseLabel(phase) }}</h2>
-          @for (item of itemsIn(phase); track item.id) {
-            <article class="item" [id]="'item-' + item.id" tabindex="-1">
-              <header>
-                <div>
-                  <h3>{{ item.snapshot?.canonicalName || 'Ćwiczenie' }}</h3>
-                  <p class="muted">{{ doseSummary(item.dose) }}</p>
-                </div>
-                @if (!readOnly() && item.id) {
-                  <div class="item-actions">
-                    <button mat-button (click)="editing.set(item); dose.set(undefined)">
-                      Edytuj dawkowanie</button
-                    ><button mat-button (click)="move(item, -1)" [disabled]="item.position === 1">
-                      W górę</button
-                    ><button
-                      mat-button
-                      (click)="move(item, 1)"
-                      [disabled]="item.position === current.items!.length"
-                    >
-                      W dół</button
-                    ><button mat-button (click)="remove(item)">Usuń</button>
-                  </div>
-                }
-              </header>
-            </article>
-          }
-          @if (!readOnly()) {
-            <button mat-stroked-button (click)="openPicker(phase)">Dodaj ćwiczenie</button>
-          }
+          ><details class="more-settings">
+            <summary>Więcej ustawień</summary>
+            <label>Poziom docelowy<input [formControl]="targetLevel" [readonly]="readOnly()" /></label
+            ><label>Tagi (oddziel przecinkami)<input [formControl]="tags" [readonly]="readOnly()" /></label>
+          </details>
+        </div>
+      </details>
+      @if (conflict()) {
+        <section class="conflict" role="alert">
+          Ktoś zmienił ten szkic.
+          <button mat-button (click)="reloadAfterConflict()">Odśwież</button
+          ><button mat-button (click)="cancelConflict()">Anuluj moje zmiany</button>
         </section>
       }
+      <div class="builder-layout">
+        <section class="exercise-builder" aria-labelledby="exercises-heading">
+          <header class="builder-heading"><div><h2 id="exercises-heading">Ćwiczenia</h2><p>Ułóż zestaw w fazach.</p></div></header>
+          @if (!(current.items?.length)) {
+            <section class="builder-empty" aria-label="Pusty zestaw"><h3>Dodaj pierwsze ćwiczenie</h3><p>Wybierz ćwiczenie, aby rozpocząć układanie zestawu.</p></section>
+          }
+          @if (!readOnly()) { <button class="primary-add" mat-flat-button type="button" (click)="openPicker('MAIN')">Dodaj ćwiczenie</button> }
+          <div class="phase-list">
+            @for (phase of phases; track phase) {
+              <details class="phase" [id]="'phase-' + phase" tabindex="-1" [open]="itemsIn(phase).length > 0">
+                <summary><span>{{ phaseLabel(phase) }}</span><span class="phase-count">{{ itemsIn(phase).length }}</span></summary>
+                @if (itemsIn(phase).length) {
+                  @for (item of itemsIn(phase); track item.id) {
+                    <article class="item" [id]="'item-' + item.id" tabindex="-1">
+                      <header><div><h3>{{ item.snapshot?.canonicalName || 'Ćwiczenie' }}</h3><p class="muted">{{ doseSummary(item.dose) }}</p></div>
+                        @if (!readOnly() && item.id) { <div class="item-actions"><button mat-button (click)="editing.set(item); dose.set(undefined)">Edytuj dawkowanie</button><button mat-button (click)="move(item, -1)" [disabled]="item.position === 1">W górę</button><button mat-button (click)="move(item, 1)" [disabled]="item.position === current.items!.length">W dół</button><button mat-button (click)="remove(item)">Usuń</button></div> }
+                      </header>
+                    </article>
+                  }
+                } @else { <p class="phase-empty">Brak ćwiczeń w tej fazie.</p> }
+              </details>
+            }
+          </div>
+        </section>
+        <aside class="builder-sidebar" aria-label="Podgląd zestawu">
+          <section class="summary" aria-label="Podsumowanie zestawu">
+            <h2>Podgląd</h2>
+            <dl>
+              <div><dt>Ćwiczenia</dt><dd>{{ current.items?.length || 0 }}</dd></div>
+              <div><dt>Czas</dt><dd>{{ estimatedTime() }}</dd></div>
+              <div><dt>Status</dt><dd>{{ statusLabel(current.status) }}</dd></div>
+              <div><dt>Sugestie</dt><dd>{{ suggestions().length }}</dd></div>
+            </dl>
+            @if (saveState()) { <p>{{ saveState() }}</p> }
+          </section>
+          <section class="anatomy-module" aria-label="Zaangażowane obszary ciała">
+            <app-body-map [analysis]="anatomy()" [loading]="anatomyLoading()" [error]="anatomyError()" (geometryCodesChange)="anatomyGeometryCodes.set($event)" />
+            @if (anatomyError() || anatomyStale()) { <button mat-button [disabled]="anatomyLoading()" (click)="retryAnatomy()">Odśwież</button> }
+          </section>
+        </aside>
+      </div>
+      <section class="anatomy-details" aria-labelledby="region-list-heading">
+        <h2 id="region-list-heading">Zaangażowane obszary ciała</h2>
+        @if (anatomyExposures().length) {
+          <ul class="region-summary-list">@for (exposure of mappedAnatomyExposures(); track exposureKey(exposure)) { <li><strong>{{ regionName(exposure) }}</strong><span>{{ anatomyBandLabel(exposure) }} · {{ anatomyShare(exposure) }}%</span></li> }</ul>
+          @if (unmappedAnatomyExposures().length) { <section class="additional-regions"><h3>Dodatkowe obszary dostępne na liście</h3><ul>@for (exposure of unmappedAnatomyExposures(); track exposureKey(exposure)) { <li><strong>{{ regionName(exposure) }}</strong><span>{{ anatomyBandLabel(exposure) }} · {{ anatomyShare(exposure) }}%</span></li> }</ul></section> }
+        } @else { <p>Dodaj ćwiczenia, aby zobaczyć zaangażowane obszary.</p> }
+      </section>
+      <section class="analysis" aria-labelledby="analysis-heading">
+        <header><h2 id="analysis-heading">Sugestie</h2>@if (analysisError() || analysisStale()) { <button mat-button [disabled]="analysisLoading()" (click)="retryAnalysis()">Odśwież</button> }</header>
+        @if (analysisLoading()) { <p role="status">Sprawdzanie zestawu…</p> } @else if (analysisError()) { <p class="error" role="alert">Sugestie są chwilowo niedostępne.</p><button mat-stroked-button (click)="retryAnalysis()">Spróbuj ponownie</button> } @else if (suggestions().length) { <ul>@for (finding of suggestions(); track $index) { <li>{{ suggestionText(finding) }} @if (finding.phase || finding.itemIds?.length || finding.field) { <button mat-button (click)="navigateFinding(finding)">{{ suggestionAction(finding) }}</button> }</li> }</ul> } @else { <p>Brak sugestii do zestawu.</p> }
+      </section>
       @if (!readOnly() && addingPhase()) {
         <section class="picker-wrap" tabindex="-1" #picker>
           <h2>Dodaj do: {{ phaseLabel(addingPhase()!) }}</h2>
@@ -333,6 +193,7 @@ const phases: ItemRequestPhaseEnum[] = ['PREPARATION', 'MAIN', 'ACCESSORY', 'COO
       <dialog #publishDialog>
         <h2>Opublikować wersję?</h2>
         <p>Po publikacji wersja będzie tylko do odczytu.</p>
+        @if (!(current.items?.length)) { <p>Ten zestaw nie zawiera ćwiczeń. Możesz go mimo to opublikować.</p> }
         <button mat-flat-button (click)="publishDialog.close(); publish()">
           Potwierdzam publikację</button
         ><button mat-button (click)="publishDialog.close()">Anuluj</button>
@@ -356,6 +217,7 @@ export class ExerciseSetEditorPage {
   @ViewChild('publishDialog') publishDialog?: ElementRef<HTMLDialogElement>;
   @ViewChild('picker') picker?: ElementRef<HTMLElement>;
   @ViewChild('titleInput') titleInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('profileInput') profileInput?: ElementRef<HTMLSelectElement>;
   readonly phases = phases;
   readonly version = signal<VersionView | undefined>(undefined);
   readonly loading = signal(true);
@@ -377,6 +239,7 @@ export class ExerciseSetEditorPage {
   readonly anatomyLoading = signal(false);
   readonly anatomyError = signal(false);
   readonly anatomyStale = signal(false);
+  readonly anatomyGeometryCodes = signal<readonly string[]>([]);
   readonly title = new FormControl('', { nonNullable: true });
   readonly profile = new FormControl<MetadataRequestProfileEnum | ''>('', { nonNullable: true });
   readonly description = new FormControl('', { nonNullable: true });
@@ -733,8 +596,41 @@ export class ExerciseSetEditorPage {
       COOLDOWN: 'Wyciszenie',
     }[phase];
   }
+  statusLabel(status?: VersionView['status']) {
+    return status === 'DRAFT' ? 'Szkic' : status === 'PUBLISHED' ? 'Opublikowany' : 'Status niedostępny';
+  }
   suggestions() {
     return this.analysis()?.findings || [];
+  }
+  anatomyExposures(): VisualRegionExposure[] {
+    return this.anatomy()?.visualRegionExposures || [];
+  }
+  mappedAnatomyExposures() {
+    const geometryCodes = new Set(this.anatomyGeometryCodes());
+    return this.anatomyExposures().filter((exposure) => geometryCodes.has(exposure.visualRegionCode));
+  }
+  unmappedAnatomyExposures() {
+    const geometryCodes = new Set(this.anatomyGeometryCodes());
+    return this.anatomyExposures().filter((exposure) => !geometryCodes.has(exposure.visualRegionCode));
+  }
+  exposureKey(exposure: VisualRegionExposure) {
+    return `${exposure.visualRegionCode}:${exposure.channel}:${exposure.view}:${exposure.layer}`;
+  }
+  regionName(exposure: VisualRegionExposure) {
+    return exposure.displayName?.trim() || 'Obszar ciała';
+  }
+  anatomyBandLabel(exposure: VisualRegionExposure) {
+    return { NO_DATA: 'Brak danych', LOW: 'Niski', SIGNIFICANT: 'Istotny', DOMINANT: 'Dominujący' }[
+      exposure.concentrationBand
+    ] || 'Brak danych';
+  }
+  anatomyShare(exposure: VisualRegionExposure) {
+    return Number(exposure.shareWithinChannel || 0).toFixed(1).replace('.0', '');
+  }
+  estimatedTime() {
+    const seconds = this.analysis()?.metrics?.estimatedSeconds;
+    if (seconds == null || seconds < 0) return 'Niedostępny';
+    return `${Math.round(seconds / 60)} min`;
   }
   suggestionText(finding: AnalysisFinding) {
     switch (finding.code) {
@@ -764,12 +660,20 @@ export class ExerciseSetEditorPage {
         return 'Warto sprawdzić układ zestawu.';
     }
   }
+  suggestionAction(finding: AnalysisFinding) {
+    if (finding.code === 'ITEMS_REQUIRED') return 'Dodaj ćwiczenie';
+    if (finding.code === 'PROFILE_REQUIRED') return 'Uzupełnij profil';
+    if (finding.code === 'TITLE_REQUIRED') return 'Dodaj tytuł';
+    return 'Przejdź do pola';
+  }
   navigateFinding(finding: AnalysisFinding) {
     const itemId = finding.itemIds?.[0];
     const target = itemId
       ? document.getElementById(`item-${itemId}`)
       : finding.phase
         ? document.getElementById(`phase-${finding.phase}`)
+        : finding.code === 'PROFILE_REQUIRED'
+          ? this.profileInput?.nativeElement
         : finding.field
           ? this.titleInput?.nativeElement
           : undefined;
@@ -778,7 +682,8 @@ export class ExerciseSetEditorPage {
       target.focus();
       return;
     }
-    if (!this.readOnly() && finding.phase === 'PREPARATION') this.openPicker('PREPARATION');
+    if (!this.readOnly() && finding.code === 'ITEMS_REQUIRED') this.openPicker('MAIN');
+    else if (!this.readOnly() && finding.phase === 'PREPARATION') this.openPicker('PREPARATION');
   }
   doseSummary(dose?: Dose) {
     if (!dose) return 'Brak prawidłowego dawkowania';

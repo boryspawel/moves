@@ -24,12 +24,6 @@ export interface Post24hCommand {
    * @type {number}
    * @memberof Post24hCommand
    */
-  painLevel?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof Post24hCommand
-   */
   difficultyLevel?: number;
   /**
    *
@@ -43,6 +37,12 @@ export interface Post24hCommand {
    * @memberof Post24hCommand
    */
   observationMode?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof Post24hCommand
+   */
+  painLevel?: number;
 }
 
 /**
@@ -64,10 +64,10 @@ export function Post24hCommandFromJSONTyped(
     return json;
   }
   return {
-    painLevel: json['painLevel'] == null ? undefined : json['painLevel'],
     difficultyLevel: json['difficultyLevel'] == null ? undefined : json['difficultyLevel'],
     note: json['note'] == null ? undefined : json['note'],
     observationMode: json['observationMode'] == null ? undefined : json['observationMode'],
+    painLevel: json['painLevel'] == null ? undefined : json['painLevel'],
   };
 }
 
@@ -84,9 +84,9 @@ export function Post24hCommandToJSONTyped(
   }
 
   return {
-    painLevel: value['painLevel'],
     difficultyLevel: value['difficultyLevel'],
     note: value['note'],
     observationMode: value['observationMode'],
+    painLevel: value['painLevel'],
   };
 }

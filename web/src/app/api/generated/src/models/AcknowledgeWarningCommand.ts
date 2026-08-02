@@ -29,6 +29,12 @@ import {
 export interface AcknowledgeWarningCommand {
   /**
    *
+   * @type {ActingContext}
+   * @memberof AcknowledgeWarningCommand
+   */
+  actingContext?: ActingContext;
+  /**
+   *
    * @type {Set<string>}
    * @memberof AcknowledgeWarningCommand
    */
@@ -39,12 +45,6 @@ export interface AcknowledgeWarningCommand {
    * @memberof AcknowledgeWarningCommand
    */
   rationale?: string;
-  /**
-   *
-   * @type {ActingContext}
-   * @memberof AcknowledgeWarningCommand
-   */
-  actingContext?: ActingContext;
 }
 
 /**
@@ -68,10 +68,10 @@ export function AcknowledgeWarningCommandFromJSONTyped(
     return json;
   }
   return {
-    factorIds: json['factorIds'] == null ? undefined : new Set(json['factorIds']),
-    rationale: json['rationale'] == null ? undefined : json['rationale'],
     actingContext:
       json['actingContext'] == null ? undefined : ActingContextFromJSON(json['actingContext']),
+    factorIds: json['factorIds'] == null ? undefined : new Set(json['factorIds']),
+    rationale: json['rationale'] == null ? undefined : json['rationale'],
   };
 }
 
@@ -88,8 +88,8 @@ export function AcknowledgeWarningCommandToJSONTyped(
   }
 
   return {
+    actingContext: ActingContextToJSON(value['actingContext']),
     factorIds: value['factorIds'] == null ? undefined : Array.from(value['factorIds'] as Set<any>),
     rationale: value['rationale'],
-    actingContext: ActingContextToJSON(value['actingContext']),
   };
 }

@@ -13,6 +13,21 @@
  */
 
 import { mapValues } from '../runtime';
+import type { ItemView } from './ItemView';
+import {
+  ItemViewFromJSON,
+  ItemViewFromJSONTyped,
+  ItemViewToJSON,
+  ItemViewToJSONTyped,
+} from './ItemView';
+import type { AnalysisView } from './AnalysisView';
+import {
+  AnalysisViewFromJSON,
+  AnalysisViewFromJSONTyped,
+  AnalysisViewToJSON,
+  AnalysisViewToJSONTyped,
+} from './AnalysisView';
+
 /**
  *
  * @export
@@ -21,100 +36,52 @@ import { mapValues } from '../runtime';
 export interface VersionView {
   /**
    *
-   * @type {string}
+   * @type {AnalysisView}
    * @memberof VersionView
    */
-  exerciseId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof VersionView
-   */
-  canonicalName?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof VersionView
-   */
-  versionId?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof VersionView
-   */
-  versionNumber?: number;
-  /**
-   *
-   * @type {VersionViewStatusEnum}
-   * @memberof VersionView
-   */
-  status?: VersionViewStatusEnum;
-  /**
-   *
-   * @type {Set<VersionViewMovementPatternsEnum>}
-   * @memberof VersionView
-   */
-  movementPatterns?: Set<VersionViewMovementPatternsEnum>;
-  /**
-   *
-   * @type {string}
-   * @memberof VersionView
-   */
-  instruction?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof VersionView
-   */
-  mediaReference?: string;
-  /**
-   *
-   * @type {VersionViewStimulusTypeEnum}
-   * @memberof VersionView
-   */
-  stimulusType?: VersionViewStimulusTypeEnum;
-  /**
-   *
-   * @type {VersionViewFatigueProfileEnum}
-   * @memberof VersionView
-   */
-  fatigueProfile?: VersionViewFatigueProfileEnum;
-  /**
-   *
-   * @type {VersionViewTechnicalLevelEnum}
-   * @memberof VersionView
-   */
-  technicalLevel?: VersionViewTechnicalLevelEnum;
-  /**
-   *
-   * @type {VersionViewEnvironmentEnum}
-   * @memberof VersionView
-   */
-  environment?: VersionViewEnvironmentEnum;
-  /**
-   *
-   * @type {Set<string>}
-   * @memberof VersionView
-   */
-  requiredEquipment?: Set<string>;
-  /**
-   *
-   * @type {number}
-   * @memberof VersionView
-   */
-  profileSchemaVersion?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof VersionView
-   */
-  reviewedBySubject?: string;
+  analysis?: AnalysisView;
   /**
    *
    * @type {Date}
    * @memberof VersionView
    */
-  reviewedAt?: Date;
+  createdAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof VersionView
+   */
+  description?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof VersionView
+   */
+  exerciseSetId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof VersionView
+   */
+  id?: string;
+  /**
+   *
+   * @type {Array<ItemView>}
+   * @memberof VersionView
+   */
+  items?: Array<ItemView>;
+  /**
+   *
+   * @type {number}
+   * @memberof VersionView
+   */
+  lockVersion?: number;
+  /**
+   *
+   * @type {VersionViewProfileEnum}
+   * @memberof VersionView
+   */
+  profile?: VersionViewProfileEnum;
   /**
    *
    * @type {Date}
@@ -126,19 +93,76 @@ export interface VersionView {
    * @type {Date}
    * @memberof VersionView
    */
-  withdrawnAt?: Date;
+  retiredAt?: Date;
+  /**
+   *
+   * @type {VersionViewStatusEnum}
+   * @memberof VersionView
+   */
+  status?: VersionViewStatusEnum;
+  /**
+   *
+   * @type {Array<string>}
+   * @memberof VersionView
+   */
+  tags?: Array<string>;
+  /**
+   *
+   * @type {string}
+   * @memberof VersionView
+   */
+  targetLevel?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof VersionView
+   */
+  title?: string;
+  /**
+   *
+   * @type {VersionViewVariantKindEnum}
+   * @memberof VersionView
+   */
+  variantKind?: VersionViewVariantKindEnum;
+  /**
+   *
+   * @type {string}
+   * @memberof VersionView
+   */
+  variantOfVersionId?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof VersionView
+   */
+  versionNumber?: number;
 }
+
+/**
+ * @export
+ */
+export const VersionViewProfileEnum = {
+  FullSelfGuided: 'FULL_SELF_GUIDED',
+  WarmupModule: 'WARMUP_MODULE',
+  MainModule: 'MAIN_MODULE',
+  AccessoryModule: 'ACCESSORY_MODULE',
+  CooldownModule: 'COOLDOWN_MODULE',
+  Home: 'HOME',
+  Therapeutic: 'THERAPEUTIC',
+  Mobility: 'MOBILITY',
+  Stretching: 'STRETCHING',
+  Breathing: 'BREATHING',
+} as const;
+export type VersionViewProfileEnum =
+  (typeof VersionViewProfileEnum)[keyof typeof VersionViewProfileEnum];
 
 /**
  * @export
  */
 export const VersionViewStatusEnum = {
   Draft: 'DRAFT',
-  InReview: 'IN_REVIEW',
-  ChangesRequested: 'CHANGES_REQUESTED',
-  Approved: 'APPROVED',
   Published: 'PUBLISHED',
-  Withdrawn: 'WITHDRAWN',
+  Retired: 'RETIRED',
 } as const;
 export type VersionViewStatusEnum =
   (typeof VersionViewStatusEnum)[keyof typeof VersionViewStatusEnum];
@@ -146,71 +170,13 @@ export type VersionViewStatusEnum =
 /**
  * @export
  */
-export const VersionViewMovementPatternsEnum = {
-  Squat: 'SQUAT',
-  Hinge: 'HINGE',
-  Push: 'PUSH',
-  Pull: 'PULL',
-  Lunge: 'LUNGE',
-  Carry: 'CARRY',
-  Rotation: 'ROTATION',
-  Locomotion: 'LOCOMOTION',
-  Breathing: 'BREATHING',
-  Mobility: 'MOBILITY',
-  Other: 'OTHER',
+export const VersionViewVariantKindEnum = {
+  Base: 'BASE',
+  Short: 'SHORT',
+  Minimum: 'MINIMUM',
 } as const;
-export type VersionViewMovementPatternsEnum =
-  (typeof VersionViewMovementPatternsEnum)[keyof typeof VersionViewMovementPatternsEnum];
-
-/**
- * @export
- */
-export const VersionViewStimulusTypeEnum = {
-  Strength: 'STRENGTH',
-  Endurance: 'ENDURANCE',
-  Power: 'POWER',
-  Mobility: 'MOBILITY',
-  Balance: 'BALANCE',
-  MotorControl: 'MOTOR_CONTROL',
-  Recovery: 'RECOVERY',
-} as const;
-export type VersionViewStimulusTypeEnum =
-  (typeof VersionViewStimulusTypeEnum)[keyof typeof VersionViewStimulusTypeEnum];
-
-/**
- * @export
- */
-export const VersionViewFatigueProfileEnum = {
-  Low: 'LOW',
-  Moderate: 'MODERATE',
-  High: 'HIGH',
-} as const;
-export type VersionViewFatigueProfileEnum =
-  (typeof VersionViewFatigueProfileEnum)[keyof typeof VersionViewFatigueProfileEnum];
-
-/**
- * @export
- */
-export const VersionViewTechnicalLevelEnum = {
-  Foundational: 'FOUNDATIONAL',
-  Intermediate: 'INTERMEDIATE',
-  Advanced: 'ADVANCED',
-} as const;
-export type VersionViewTechnicalLevelEnum =
-  (typeof VersionViewTechnicalLevelEnum)[keyof typeof VersionViewTechnicalLevelEnum];
-
-/**
- * @export
- */
-export const VersionViewEnvironmentEnum = {
-  Home: 'HOME',
-  Gym: 'GYM',
-  Outdoor: 'OUTDOOR',
-  Clinic: 'CLINIC',
-  Any: 'ANY',
-} as const;
-export type VersionViewEnvironmentEnum =
-  (typeof VersionViewEnvironmentEnum)[keyof typeof VersionViewEnvironmentEnum];
+export type VersionViewVariantKindEnum =
+  (typeof VersionViewVariantKindEnum)[keyof typeof VersionViewVariantKindEnum];
 
 /**
  * Check if a given object implements the VersionView interface.
@@ -228,27 +194,23 @@ export function VersionViewFromJSONTyped(json: any, ignoreDiscriminator: boolean
     return json;
   }
   return {
-    exerciseId: json['exerciseId'] == null ? undefined : json['exerciseId'],
-    canonicalName: json['canonicalName'] == null ? undefined : json['canonicalName'],
-    versionId: json['versionId'] == null ? undefined : json['versionId'],
-    versionNumber: json['versionNumber'] == null ? undefined : json['versionNumber'],
-    status: json['status'] == null ? undefined : json['status'],
-    movementPatterns:
-      json['movementPatterns'] == null ? undefined : new Set(json['movementPatterns']),
-    instruction: json['instruction'] == null ? undefined : json['instruction'],
-    mediaReference: json['mediaReference'] == null ? undefined : json['mediaReference'],
-    stimulusType: json['stimulusType'] == null ? undefined : json['stimulusType'],
-    fatigueProfile: json['fatigueProfile'] == null ? undefined : json['fatigueProfile'],
-    technicalLevel: json['technicalLevel'] == null ? undefined : json['technicalLevel'],
-    environment: json['environment'] == null ? undefined : json['environment'],
-    requiredEquipment:
-      json['requiredEquipment'] == null ? undefined : new Set(json['requiredEquipment']),
-    profileSchemaVersion:
-      json['profileSchemaVersion'] == null ? undefined : json['profileSchemaVersion'],
-    reviewedBySubject: json['reviewedBySubject'] == null ? undefined : json['reviewedBySubject'],
-    reviewedAt: json['reviewedAt'] == null ? undefined : new Date(json['reviewedAt']),
+    analysis: json['analysis'] == null ? undefined : AnalysisViewFromJSON(json['analysis']),
+    createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
+    description: json['description'] == null ? undefined : json['description'],
+    exerciseSetId: json['exerciseSetId'] == null ? undefined : json['exerciseSetId'],
+    id: json['id'] == null ? undefined : json['id'],
+    items: json['items'] == null ? undefined : (json['items'] as Array<any>).map(ItemViewFromJSON),
+    lockVersion: json['lockVersion'] == null ? undefined : json['lockVersion'],
+    profile: json['profile'] == null ? undefined : json['profile'],
     publishedAt: json['publishedAt'] == null ? undefined : new Date(json['publishedAt']),
-    withdrawnAt: json['withdrawnAt'] == null ? undefined : new Date(json['withdrawnAt']),
+    retiredAt: json['retiredAt'] == null ? undefined : new Date(json['retiredAt']),
+    status: json['status'] == null ? undefined : json['status'],
+    tags: json['tags'] == null ? undefined : json['tags'],
+    targetLevel: json['targetLevel'] == null ? undefined : json['targetLevel'],
+    title: json['title'] == null ? undefined : json['title'],
+    variantKind: json['variantKind'] == null ? undefined : json['variantKind'],
+    variantOfVersionId: json['variantOfVersionId'] == null ? undefined : json['variantOfVersionId'],
+    versionNumber: json['versionNumber'] == null ? undefined : json['versionNumber'],
   };
 }
 
@@ -265,32 +227,23 @@ export function VersionViewToJSONTyped(
   }
 
   return {
-    exerciseId: value['exerciseId'],
-    canonicalName: value['canonicalName'],
-    versionId: value['versionId'],
-    versionNumber: value['versionNumber'],
-    status: value['status'],
-    movementPatterns:
-      value['movementPatterns'] == null
-        ? undefined
-        : Array.from(value['movementPatterns'] as Set<any>),
-    instruction: value['instruction'],
-    mediaReference: value['mediaReference'],
-    stimulusType: value['stimulusType'],
-    fatigueProfile: value['fatigueProfile'],
-    technicalLevel: value['technicalLevel'],
-    environment: value['environment'],
-    requiredEquipment:
-      value['requiredEquipment'] == null
-        ? undefined
-        : Array.from(value['requiredEquipment'] as Set<any>),
-    profileSchemaVersion: value['profileSchemaVersion'],
-    reviewedBySubject: value['reviewedBySubject'],
-    reviewedAt:
-      value['reviewedAt'] == null ? value['reviewedAt'] : value['reviewedAt'].toISOString(),
+    analysis: AnalysisViewToJSON(value['analysis']),
+    createdAt: value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
+    description: value['description'],
+    exerciseSetId: value['exerciseSetId'],
+    id: value['id'],
+    items: value['items'] == null ? undefined : (value['items'] as Array<any>).map(ItemViewToJSON),
+    lockVersion: value['lockVersion'],
+    profile: value['profile'],
     publishedAt:
       value['publishedAt'] == null ? value['publishedAt'] : value['publishedAt'].toISOString(),
-    withdrawnAt:
-      value['withdrawnAt'] == null ? value['withdrawnAt'] : value['withdrawnAt'].toISOString(),
+    retiredAt: value['retiredAt'] == null ? value['retiredAt'] : value['retiredAt'].toISOString(),
+    status: value['status'],
+    tags: value['tags'],
+    targetLevel: value['targetLevel'],
+    title: value['title'],
+    variantKind: value['variantKind'],
+    variantOfVersionId: value['variantOfVersionId'],
+    versionNumber: value['versionNumber'],
   };
 }

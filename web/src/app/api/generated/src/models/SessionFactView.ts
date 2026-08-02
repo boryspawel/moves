@@ -21,6 +21,12 @@ import { mapValues } from '../runtime';
 export interface SessionFactView {
   /**
    *
+   * @type {Date}
+   * @memberof SessionFactView
+   */
+  scheduledAt?: Date;
+  /**
+   *
    * @type {string}
    * @memberof SessionFactView
    */
@@ -31,12 +37,6 @@ export interface SessionFactView {
    * @memberof SessionFactView
    */
   title?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof SessionFactView
-   */
-  scheduledAt?: Date;
 }
 
 /**
@@ -58,9 +58,9 @@ export function SessionFactViewFromJSONTyped(
     return json;
   }
   return {
+    scheduledAt: json['scheduledAt'] == null ? undefined : new Date(json['scheduledAt']),
     sessionId: json['sessionId'] == null ? undefined : json['sessionId'],
     title: json['title'] == null ? undefined : json['title'],
-    scheduledAt: json['scheduledAt'] == null ? undefined : new Date(json['scheduledAt']),
   };
 }
 
@@ -77,9 +77,9 @@ export function SessionFactViewToJSONTyped(
   }
 
   return {
-    sessionId: value['sessionId'],
-    title: value['title'],
     scheduledAt:
       value['scheduledAt'] == null ? value['scheduledAt'] : value['scheduledAt'].toISOString(),
+    sessionId: value['sessionId'],
+    title: value['title'],
   };
 }

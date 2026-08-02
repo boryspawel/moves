@@ -29,16 +29,16 @@ import {
 export interface ClinicalRestrictionView {
   /**
    *
-   * @type {RestrictionView}
-   * @memberof ClinicalRestrictionView
-   */
-  restriction?: RestrictionView;
-  /**
-   *
    * @type {string}
    * @memberof ClinicalRestrictionView
    */
   clinicalRationaleRef?: string;
+  /**
+   *
+   * @type {RestrictionView}
+   * @memberof ClinicalRestrictionView
+   */
+  restriction?: RestrictionView;
 }
 
 /**
@@ -60,10 +60,10 @@ export function ClinicalRestrictionViewFromJSONTyped(
     return json;
   }
   return {
-    restriction:
-      json['restriction'] == null ? undefined : RestrictionViewFromJSON(json['restriction']),
     clinicalRationaleRef:
       json['clinicalRationaleRef'] == null ? undefined : json['clinicalRationaleRef'],
+    restriction:
+      json['restriction'] == null ? undefined : RestrictionViewFromJSON(json['restriction']),
   };
 }
 
@@ -80,7 +80,7 @@ export function ClinicalRestrictionViewToJSONTyped(
   }
 
   return {
-    restriction: RestrictionViewToJSON(value['restriction']),
     clinicalRationaleRef: value['clinicalRationaleRef'],
+    restriction: RestrictionViewToJSON(value['restriction']),
   };
 }

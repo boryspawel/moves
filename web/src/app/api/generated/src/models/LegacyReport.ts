@@ -21,16 +21,16 @@ import { mapValues } from '../runtime';
 export interface LegacyReport {
   /**
    *
-   * @type {number}
-   * @memberof LegacyReport
-   */
-  unmappedParticipantTags?: number;
-  /**
-   *
    * @type {string}
    * @memberof LegacyReport
    */
   notice?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof LegacyReport
+   */
+  unmappedParticipantTags?: number;
 }
 
 /**
@@ -49,9 +49,9 @@ export function LegacyReportFromJSONTyped(json: any, ignoreDiscriminator: boolea
     return json;
   }
   return {
+    notice: json['notice'] == null ? undefined : json['notice'],
     unmappedParticipantTags:
       json['unmappedParticipantTags'] == null ? undefined : json['unmappedParticipantTags'],
-    notice: json['notice'] == null ? undefined : json['notice'],
   };
 }
 
@@ -68,7 +68,7 @@ export function LegacyReportToJSONTyped(
   }
 
   return {
-    unmappedParticipantTags: value['unmappedParticipantTags'],
     notice: value['notice'],
+    unmappedParticipantTags: value['unmappedParticipantTags'],
   };
 }

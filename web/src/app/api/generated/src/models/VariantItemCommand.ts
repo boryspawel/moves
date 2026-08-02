@@ -30,19 +30,7 @@ export interface VariantItemCommand {
    * @type {number}
    * @memberof VariantItemCommand
    */
-  position?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof VariantItemCommand
-   */
-  overrideSets?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof VariantItemCommand
-   */
-  overrideRepetitions?: number;
+  overrideContacts?: number;
   /**
    *
    * @type {number}
@@ -54,7 +42,19 @@ export interface VariantItemCommand {
    * @type {number}
    * @memberof VariantItemCommand
    */
-  overrideContacts?: number;
+  overrideRepetitions?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof VariantItemCommand
+   */
+  overrideSets?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof VariantItemCommand
+   */
+  position?: number;
 }
 
 /**
@@ -77,13 +77,13 @@ export function VariantItemCommandFromJSONTyped(
   }
   return {
     basePrescriptionId: json['basePrescriptionId'] == null ? undefined : json['basePrescriptionId'],
-    position: json['position'] == null ? undefined : json['position'],
-    overrideSets: json['overrideSets'] == null ? undefined : json['overrideSets'],
-    overrideRepetitions:
-      json['overrideRepetitions'] == null ? undefined : json['overrideRepetitions'],
+    overrideContacts: json['overrideContacts'] == null ? undefined : json['overrideContacts'],
     overrideDurationSeconds:
       json['overrideDurationSeconds'] == null ? undefined : json['overrideDurationSeconds'],
-    overrideContacts: json['overrideContacts'] == null ? undefined : json['overrideContacts'],
+    overrideRepetitions:
+      json['overrideRepetitions'] == null ? undefined : json['overrideRepetitions'],
+    overrideSets: json['overrideSets'] == null ? undefined : json['overrideSets'],
+    position: json['position'] == null ? undefined : json['position'],
   };
 }
 
@@ -101,10 +101,10 @@ export function VariantItemCommandToJSONTyped(
 
   return {
     basePrescriptionId: value['basePrescriptionId'],
-    position: value['position'],
-    overrideSets: value['overrideSets'],
-    overrideRepetitions: value['overrideRepetitions'],
-    overrideDurationSeconds: value['overrideDurationSeconds'],
     overrideContacts: value['overrideContacts'],
+    overrideDurationSeconds: value['overrideDurationSeconds'],
+    overrideRepetitions: value['overrideRepetitions'],
+    overrideSets: value['overrideSets'],
+    position: value['position'],
   };
 }

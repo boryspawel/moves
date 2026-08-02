@@ -90,7 +90,7 @@ export interface ApproveRequest {
   versionId: string;
 }
 
-export interface Create2Request {
+export interface Create3Request {
   catalogCreateRequest: CatalogCreateRequest;
 }
 
@@ -121,7 +121,7 @@ export interface SubmitReviewRequest {
   versionId: string;
 }
 
-export interface Update1Request {
+export interface Update2Request {
   versionId: string;
   versionCommand: VersionCommand;
 }
@@ -323,13 +323,13 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for create2 without sending the request
+   * Creates request options for create3 without sending the request
    */
-  async create2RequestOpts(requestParameters: Create2Request): Promise<runtime.RequestOpts> {
+  async create3RequestOpts(requestParameters: Create3Request): Promise<runtime.RequestOpts> {
     if (requestParameters['catalogCreateRequest'] == null) {
       throw new runtime.RequiredError(
         'catalogCreateRequest',
-        'Required parameter "catalogCreateRequest" was null or undefined when calling create2().',
+        'Required parameter "catalogCreateRequest" was null or undefined when calling create3().',
       );
     }
 
@@ -352,11 +352,11 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async create2Raw(
-    requestParameters: Create2Request,
+  async create3Raw(
+    requestParameters: Create3Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<VersionView>> {
-    const requestOptions = await this.create2RequestOpts(requestParameters);
+    const requestOptions = await this.create3RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) => VersionViewFromJSON(jsonValue));
@@ -364,11 +364,11 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async create2(
-    requestParameters: Create2Request,
+  async create3(
+    requestParameters: Create3Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<VersionView> {
-    const response = await this.create2Raw(requestParameters, initOverrides);
+    const response = await this.create3Raw(requestParameters, initOverrides);
     return await response.value();
   }
 
@@ -761,20 +761,20 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for update1 without sending the request
+   * Creates request options for update2 without sending the request
    */
-  async update1RequestOpts(requestParameters: Update1Request): Promise<runtime.RequestOpts> {
+  async update2RequestOpts(requestParameters: Update2Request): Promise<runtime.RequestOpts> {
     if (requestParameters['versionId'] == null) {
       throw new runtime.RequiredError(
         'versionId',
-        'Required parameter "versionId" was null or undefined when calling update1().',
+        'Required parameter "versionId" was null or undefined when calling update2().',
       );
     }
 
     if (requestParameters['versionCommand'] == null) {
       throw new runtime.RequiredError(
         'versionCommand',
-        'Required parameter "versionCommand" was null or undefined when calling update1().',
+        'Required parameter "versionCommand" was null or undefined when calling update2().',
       );
     }
 
@@ -801,11 +801,11 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async update1Raw(
-    requestParameters: Update1Request,
+  async update2Raw(
+    requestParameters: Update2Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<VersionView>> {
-    const requestOptions = await this.update1RequestOpts(requestParameters);
+    const requestOptions = await this.update2RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) => VersionViewFromJSON(jsonValue));
@@ -813,11 +813,11 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async update1(
-    requestParameters: Update1Request,
+  async update2(
+    requestParameters: Update2Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<VersionView> {
-    const response = await this.update1Raw(requestParameters, initOverrides);
+    const response = await this.update2Raw(requestParameters, initOverrides);
     return await response.value();
   }
 

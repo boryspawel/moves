@@ -21,10 +21,10 @@ import { mapValues } from '../runtime';
 export interface LoadCharacteristicCommand {
   /**
    *
-   * @type {LoadCharacteristicCommandMovementPlaneEnum}
+   * @type {LoadCharacteristicCommandCharacteristicTypeEnum}
    * @memberof LoadCharacteristicCommand
    */
-  movementPlane?: LoadCharacteristicCommandMovementPlaneEnum;
+  characteristicType?: LoadCharacteristicCommandCharacteristicTypeEnum;
   /**
    *
    * @type {LoadCharacteristicCommandContractionTypeEnum}
@@ -33,52 +33,17 @@ export interface LoadCharacteristicCommand {
   contractionType?: LoadCharacteristicCommandContractionTypeEnum;
   /**
    *
+   * @type {LoadCharacteristicCommandMovementPlaneEnum}
+   * @memberof LoadCharacteristicCommand
+   */
+  movementPlane?: LoadCharacteristicCommandMovementPlaneEnum;
+  /**
+   *
    * @type {LoadCharacteristicCommandRangeOfMotionEnum}
    * @memberof LoadCharacteristicCommand
    */
   rangeOfMotion?: LoadCharacteristicCommandRangeOfMotionEnum;
-  /**
-   *
-   * @type {LoadCharacteristicCommandCharacteristicTypeEnum}
-   * @memberof LoadCharacteristicCommand
-   */
-  characteristicType?: LoadCharacteristicCommandCharacteristicTypeEnum;
 }
-
-/**
- * @export
- */
-export const LoadCharacteristicCommandMovementPlaneEnum = {
-  Sagittal: 'SAGITTAL',
-  Frontal: 'FRONTAL',
-  Transverse: 'TRANSVERSE',
-  Multiplanar: 'MULTIPLANAR',
-} as const;
-export type LoadCharacteristicCommandMovementPlaneEnum =
-  (typeof LoadCharacteristicCommandMovementPlaneEnum)[keyof typeof LoadCharacteristicCommandMovementPlaneEnum];
-
-/**
- * @export
- */
-export const LoadCharacteristicCommandContractionTypeEnum = {
-  Concentric: 'CONCENTRIC',
-  Eccentric: 'ECCENTRIC',
-  Isometric: 'ISOMETRIC',
-  Mixed: 'MIXED',
-} as const;
-export type LoadCharacteristicCommandContractionTypeEnum =
-  (typeof LoadCharacteristicCommandContractionTypeEnum)[keyof typeof LoadCharacteristicCommandContractionTypeEnum];
-
-/**
- * @export
- */
-export const LoadCharacteristicCommandRangeOfMotionEnum = {
-  Partial: 'PARTIAL',
-  Full: 'FULL',
-  Variable: 'VARIABLE',
-} as const;
-export type LoadCharacteristicCommandRangeOfMotionEnum =
-  (typeof LoadCharacteristicCommandRangeOfMotionEnum)[keyof typeof LoadCharacteristicCommandRangeOfMotionEnum];
 
 /**
  * @export
@@ -95,6 +60,41 @@ export const LoadCharacteristicCommandCharacteristicTypeEnum = {
 } as const;
 export type LoadCharacteristicCommandCharacteristicTypeEnum =
   (typeof LoadCharacteristicCommandCharacteristicTypeEnum)[keyof typeof LoadCharacteristicCommandCharacteristicTypeEnum];
+
+/**
+ * @export
+ */
+export const LoadCharacteristicCommandContractionTypeEnum = {
+  Concentric: 'CONCENTRIC',
+  Eccentric: 'ECCENTRIC',
+  Isometric: 'ISOMETRIC',
+  Mixed: 'MIXED',
+} as const;
+export type LoadCharacteristicCommandContractionTypeEnum =
+  (typeof LoadCharacteristicCommandContractionTypeEnum)[keyof typeof LoadCharacteristicCommandContractionTypeEnum];
+
+/**
+ * @export
+ */
+export const LoadCharacteristicCommandMovementPlaneEnum = {
+  Sagittal: 'SAGITTAL',
+  Frontal: 'FRONTAL',
+  Transverse: 'TRANSVERSE',
+  Multiplanar: 'MULTIPLANAR',
+} as const;
+export type LoadCharacteristicCommandMovementPlaneEnum =
+  (typeof LoadCharacteristicCommandMovementPlaneEnum)[keyof typeof LoadCharacteristicCommandMovementPlaneEnum];
+
+/**
+ * @export
+ */
+export const LoadCharacteristicCommandRangeOfMotionEnum = {
+  Partial: 'PARTIAL',
+  Full: 'FULL',
+  Variable: 'VARIABLE',
+} as const;
+export type LoadCharacteristicCommandRangeOfMotionEnum =
+  (typeof LoadCharacteristicCommandRangeOfMotionEnum)[keyof typeof LoadCharacteristicCommandRangeOfMotionEnum];
 
 /**
  * Check if a given object implements the LoadCharacteristicCommand interface.
@@ -117,10 +117,10 @@ export function LoadCharacteristicCommandFromJSONTyped(
     return json;
   }
   return {
-    movementPlane: json['movementPlane'] == null ? undefined : json['movementPlane'],
-    contractionType: json['contractionType'] == null ? undefined : json['contractionType'],
-    rangeOfMotion: json['rangeOfMotion'] == null ? undefined : json['rangeOfMotion'],
     characteristicType: json['characteristicType'] == null ? undefined : json['characteristicType'],
+    contractionType: json['contractionType'] == null ? undefined : json['contractionType'],
+    movementPlane: json['movementPlane'] == null ? undefined : json['movementPlane'],
+    rangeOfMotion: json['rangeOfMotion'] == null ? undefined : json['rangeOfMotion'],
   };
 }
 
@@ -137,9 +137,9 @@ export function LoadCharacteristicCommandToJSONTyped(
   }
 
   return {
-    movementPlane: value['movementPlane'],
-    contractionType: value['contractionType'],
-    rangeOfMotion: value['rangeOfMotion'],
     characteristicType: value['characteristicType'],
+    contractionType: value['contractionType'],
+    movementPlane: value['movementPlane'],
+    rangeOfMotion: value['rangeOfMotion'],
   };
 }

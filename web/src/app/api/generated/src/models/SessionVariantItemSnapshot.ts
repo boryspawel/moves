@@ -24,31 +24,19 @@ export interface SessionVariantItemSnapshot {
    * @type {string}
    * @memberof SessionVariantItemSnapshot
    */
-  id?: string;
+  basePrescriptionId?: string;
   /**
    *
    * @type {string}
    * @memberof SessionVariantItemSnapshot
    */
-  basePrescriptionId?: string;
+  id?: string;
   /**
    *
    * @type {number}
    * @memberof SessionVariantItemSnapshot
    */
-  position?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof SessionVariantItemSnapshot
-   */
-  overrideSets?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof SessionVariantItemSnapshot
-   */
-  overrideRepetitions?: number;
+  overrideContacts?: number;
   /**
    *
    * @type {number}
@@ -60,7 +48,19 @@ export interface SessionVariantItemSnapshot {
    * @type {number}
    * @memberof SessionVariantItemSnapshot
    */
-  overrideContacts?: number;
+  overrideRepetitions?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof SessionVariantItemSnapshot
+   */
+  overrideSets?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof SessionVariantItemSnapshot
+   */
+  position?: number;
 }
 
 /**
@@ -84,15 +84,15 @@ export function SessionVariantItemSnapshotFromJSONTyped(
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
     basePrescriptionId: json['basePrescriptionId'] == null ? undefined : json['basePrescriptionId'],
-    position: json['position'] == null ? undefined : json['position'],
-    overrideSets: json['overrideSets'] == null ? undefined : json['overrideSets'],
-    overrideRepetitions:
-      json['overrideRepetitions'] == null ? undefined : json['overrideRepetitions'],
+    id: json['id'] == null ? undefined : json['id'],
+    overrideContacts: json['overrideContacts'] == null ? undefined : json['overrideContacts'],
     overrideDurationSeconds:
       json['overrideDurationSeconds'] == null ? undefined : json['overrideDurationSeconds'],
-    overrideContacts: json['overrideContacts'] == null ? undefined : json['overrideContacts'],
+    overrideRepetitions:
+      json['overrideRepetitions'] == null ? undefined : json['overrideRepetitions'],
+    overrideSets: json['overrideSets'] == null ? undefined : json['overrideSets'],
+    position: json['position'] == null ? undefined : json['position'],
   };
 }
 
@@ -109,12 +109,12 @@ export function SessionVariantItemSnapshotToJSONTyped(
   }
 
   return {
-    id: value['id'],
     basePrescriptionId: value['basePrescriptionId'],
-    position: value['position'],
-    overrideSets: value['overrideSets'],
-    overrideRepetitions: value['overrideRepetitions'],
-    overrideDurationSeconds: value['overrideDurationSeconds'],
+    id: value['id'],
     overrideContacts: value['overrideContacts'],
+    overrideDurationSeconds: value['overrideDurationSeconds'],
+    overrideRepetitions: value['overrideRepetitions'],
+    overrideSets: value['overrideSets'],
+    position: value['position'],
   };
 }

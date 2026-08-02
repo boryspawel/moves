@@ -6,7 +6,7 @@ import { SpecialistAlertsPage } from './specialist-alerts.page';
 
 const api = {
   specialistParticipants: { activeParticipants: vi.fn().mockResolvedValue([{ participantId: 'participant-id', label: 'Uczestnik 1' }]) },
-  catalog: { list1: vi.fn().mockResolvedValue({ content: [{ versionId: 'exercise-id', canonicalName: 'Przysiad' }] }) },
+  catalog: { list3: vi.fn().mockResolvedValue({ content: [{ versionId: 'exercise-id', canonicalName: 'Przysiad' }] }) },
   worklist: { listWorklist: vi.fn().mockResolvedValue([{ id: 'item-id', category: 'PARTICIPANT_ISSUE', priority: 'HIGH', minimalData: 'question', issueText: 'Pomoc' }]), actOnWorklist: vi.fn(), replyToIssue: vi.fn() },
   planningV2: {}, planWorkflow: {}
 };
@@ -20,7 +20,7 @@ describe('specialist V2 screens', () => {
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     const instance = fixture.componentInstance as any;
     expect(api.specialistParticipants.activeParticipants).toHaveBeenCalled();
-    expect(api.catalog.list1).toHaveBeenCalledWith({ page: 0, size: 100 });
+    expect(api.catalog.list3).toHaveBeenCalledWith({ page: 0, size: 100 });
     expect(instance.participants()).toEqual([{ participantId: 'participant-id', label: 'Uczestnik 1' }]);
     expect(instance.exercises()).toEqual([{ versionId: 'exercise-id', canonicalName: 'Przysiad' }]);
     expect(text).not.toContain('participant-id'); expect(text).not.toContain('exercise-id');

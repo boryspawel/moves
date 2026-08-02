@@ -49,7 +49,7 @@ export class PlanPage {
     sets: new FormControl(3, { nonNullable: true, validators: Validators.min(1) }), repetitions: new FormControl(8, { nonNullable: true, validators: Validators.min(1) }), short: new FormControl(true, { nonNullable: true }), minimum: new FormControl(true, { nonNullable: true })
   });
   constructor() { void this.loadChoices(); }
-  private async loadChoices(): Promise<void> { try { const [participants, catalog] = await Promise.all([this.facade.specialistParticipants.activeParticipants(), this.facade.catalog.list1({ page: 0, size: 100 })]); this.participants.set(participants); this.exercises.set(catalog.content ?? []); } catch { this.failed.set(true); this.message.set('Nie udało się pobrać uczestników lub katalogu ćwiczeń.'); } }
+  private async loadChoices(): Promise<void> { try { const [participants, catalog] = await Promise.all([this.facade.specialistParticipants.activeParticipants(), this.facade.catalog.list3({ page: 0, size: 100 })]); this.participants.set(participants); this.exercises.set(catalog.content ?? []); } catch { this.failed.set(true); this.message.set('Nie udało się pobrać uczestników lub katalogu ćwiczeń.'); } }
   protected async build(): Promise<void> {
     if (this.form.invalid) return; this.busy.set(true); this.failed.set(false); this.safety.set([]);
     try {

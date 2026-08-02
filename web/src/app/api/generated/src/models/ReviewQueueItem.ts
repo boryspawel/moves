@@ -24,13 +24,13 @@ export interface ReviewQueueItem {
    * @type {string}
    * @memberof ReviewQueueItem
    */
-  exerciseVersionId?: string;
+  exerciseName?: string;
   /**
    *
    * @type {string}
    * @memberof ReviewQueueItem
    */
-  exerciseName?: string;
+  exerciseVersionId?: string;
   /**
    *
    * @type {string}
@@ -64,8 +64,8 @@ export function ReviewQueueItemFromJSONTyped(
     return json;
   }
   return {
-    exerciseVersionId: json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
     exerciseName: json['exerciseName'] == null ? undefined : json['exerciseName'],
+    exerciseVersionId: json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
     status: json['status'] == null ? undefined : json['status'],
     unmetRequirements: json['unmetRequirements'] == null ? undefined : json['unmetRequirements'],
   };
@@ -84,8 +84,8 @@ export function ReviewQueueItemToJSONTyped(
   }
 
   return {
-    exerciseVersionId: value['exerciseVersionId'],
     exerciseName: value['exerciseName'],
+    exerciseVersionId: value['exerciseVersionId'],
     status: value['status'],
     unmetRequirements: value['unmetRequirements'],
   };

@@ -56,7 +56,7 @@ export interface CompleteRequest {
   declareExecutionCommand: DeclareExecutionCommand;
 }
 
-export interface Get2Request {
+export interface Get3Request {
   attemptId: string;
 }
 
@@ -209,13 +209,13 @@ export class SessionExecutionAttemptControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for get2 without sending the request
+   * Creates request options for get3 without sending the request
    */
-  async get2RequestOpts(requestParameters: Get2Request): Promise<runtime.RequestOpts> {
+  async get3RequestOpts(requestParameters: Get3Request): Promise<runtime.RequestOpts> {
     if (requestParameters['attemptId'] == null) {
       throw new runtime.RequiredError(
         'attemptId',
-        'Required parameter "attemptId" was null or undefined when calling get2().',
+        'Required parameter "attemptId" was null or undefined when calling get3().',
       );
     }
 
@@ -239,11 +239,11 @@ export class SessionExecutionAttemptControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async get2Raw(
-    requestParameters: Get2Request,
+  async get3Raw(
+    requestParameters: Get3Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AttemptDetailView>> {
-    const requestOptions = await this.get2RequestOpts(requestParameters);
+    const requestOptions = await this.get3RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
@@ -253,11 +253,11 @@ export class SessionExecutionAttemptControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async get2(
-    requestParameters: Get2Request,
+  async get3(
+    requestParameters: Get3Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<AttemptDetailView> {
-    const response = await this.get2Raw(requestParameters, initOverrides);
+    const response = await this.get3Raw(requestParameters, initOverrides);
     return await response.value();
   }
 

@@ -24,79 +24,7 @@ export interface Observation {
    * @type {string}
    * @memberof Observation
    */
-  prescriptionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof Observation
-   */
-  exerciseVersionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof Observation
-   */
-  contributionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof Observation
-   */
-  sessionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof Observation
-   */
-  microcycleId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof Observation
-   */
-  cycleId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof Observation
-   */
-  structureId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof Observation
-   */
-  side?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof Observation
-   */
   channel?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof Observation
-   */
-  observationFamily?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof Observation
-   */
-  unit?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof Observation
-   */
-  low?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof Observation
-   */
-  high?: number;
   /**
    *
    * @type {string}
@@ -108,7 +36,13 @@ export interface Observation {
    * @type {string}
    * @memberof Observation
    */
-  evidenceGrade?: string;
+  contributionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Observation
+   */
+  cycleId?: string;
   /**
    *
    * @type {string}
@@ -120,7 +54,73 @@ export interface Observation {
    * @type {string}
    * @memberof Observation
    */
+  evidenceGrade?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Observation
+   */
+  exerciseVersionId?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof Observation
+   */
+  high?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof Observation
+   */
+  low?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof Observation
+   */
+  microcycleId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Observation
+   */
+  observationFamily?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Observation
+   */
   observationMode?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Observation
+   */
+  prescriptionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Observation
+   */
+  sessionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Observation
+   */
+  side?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Observation
+   */
+  structureId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Observation
+   */
+  unit?: string;
 }
 
 /**
@@ -139,23 +139,23 @@ export function ObservationFromJSONTyped(json: any, ignoreDiscriminator: boolean
     return json;
   }
   return {
-    prescriptionId: json['prescriptionId'] == null ? undefined : json['prescriptionId'],
-    exerciseVersionId: json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
-    contributionId: json['contributionId'] == null ? undefined : json['contributionId'],
-    sessionId: json['sessionId'] == null ? undefined : json['sessionId'],
-    microcycleId: json['microcycleId'] == null ? undefined : json['microcycleId'],
-    cycleId: json['cycleId'] == null ? undefined : json['cycleId'],
-    structureId: json['structureId'] == null ? undefined : json['structureId'],
-    side: json['side'] == null ? undefined : json['side'],
     channel: json['channel'] == null ? undefined : json['channel'],
-    observationFamily: json['observationFamily'] == null ? undefined : json['observationFamily'],
-    unit: json['unit'] == null ? undefined : json['unit'],
-    low: json['low'] == null ? undefined : json['low'],
-    high: json['high'] == null ? undefined : json['high'],
     confidence: json['confidence'] == null ? undefined : json['confidence'],
-    evidenceGrade: json['evidenceGrade'] == null ? undefined : json['evidenceGrade'],
+    contributionId: json['contributionId'] == null ? undefined : json['contributionId'],
+    cycleId: json['cycleId'] == null ? undefined : json['cycleId'],
     doseSource: json['doseSource'] == null ? undefined : json['doseSource'],
+    evidenceGrade: json['evidenceGrade'] == null ? undefined : json['evidenceGrade'],
+    exerciseVersionId: json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
+    high: json['high'] == null ? undefined : json['high'],
+    low: json['low'] == null ? undefined : json['low'],
+    microcycleId: json['microcycleId'] == null ? undefined : json['microcycleId'],
+    observationFamily: json['observationFamily'] == null ? undefined : json['observationFamily'],
     observationMode: json['observationMode'] == null ? undefined : json['observationMode'],
+    prescriptionId: json['prescriptionId'] == null ? undefined : json['prescriptionId'],
+    sessionId: json['sessionId'] == null ? undefined : json['sessionId'],
+    side: json['side'] == null ? undefined : json['side'],
+    structureId: json['structureId'] == null ? undefined : json['structureId'],
+    unit: json['unit'] == null ? undefined : json['unit'],
   };
 }
 
@@ -172,22 +172,22 @@ export function ObservationToJSONTyped(
   }
 
   return {
-    prescriptionId: value['prescriptionId'],
-    exerciseVersionId: value['exerciseVersionId'],
-    contributionId: value['contributionId'],
-    sessionId: value['sessionId'],
-    microcycleId: value['microcycleId'],
-    cycleId: value['cycleId'],
-    structureId: value['structureId'],
-    side: value['side'],
     channel: value['channel'],
-    observationFamily: value['observationFamily'],
-    unit: value['unit'],
-    low: value['low'],
-    high: value['high'],
     confidence: value['confidence'],
-    evidenceGrade: value['evidenceGrade'],
+    contributionId: value['contributionId'],
+    cycleId: value['cycleId'],
     doseSource: value['doseSource'],
+    evidenceGrade: value['evidenceGrade'],
+    exerciseVersionId: value['exerciseVersionId'],
+    high: value['high'],
+    low: value['low'],
+    microcycleId: value['microcycleId'],
+    observationFamily: value['observationFamily'],
     observationMode: value['observationMode'],
+    prescriptionId: value['prescriptionId'],
+    sessionId: value['sessionId'],
+    side: value['side'],
+    structureId: value['structureId'],
+    unit: value['unit'],
   };
 }

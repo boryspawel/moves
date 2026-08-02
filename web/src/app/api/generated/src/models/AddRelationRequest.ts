@@ -24,13 +24,13 @@ export interface AddRelationRequest {
    * @type {string}
    * @memberof AddRelationRequest
    */
-  parentId: string;
+  childId: string;
   /**
    *
    * @type {string}
    * @memberof AddRelationRequest
    */
-  childId: string;
+  parentId: string;
   /**
    *
    * @type {AddRelationRequestRelationTypeEnum}
@@ -54,8 +54,8 @@ export type AddRelationRequestRelationTypeEnum =
  * Check if a given object implements the AddRelationRequest interface.
  */
 export function instanceOfAddRelationRequest(value: object): value is AddRelationRequest {
-  if (!('parentId' in value) || value['parentId'] === undefined) return false;
   if (!('childId' in value) || value['childId'] === undefined) return false;
+  if (!('parentId' in value) || value['parentId'] === undefined) return false;
   if (!('relationType' in value) || value['relationType'] === undefined) return false;
   return true;
 }
@@ -72,8 +72,8 @@ export function AddRelationRequestFromJSONTyped(
     return json;
   }
   return {
-    parentId: json['parentId'],
     childId: json['childId'],
+    parentId: json['parentId'],
     relationType: json['relationType'],
   };
 }
@@ -91,8 +91,8 @@ export function AddRelationRequestToJSONTyped(
   }
 
   return {
-    parentId: value['parentId'],
     childId: value['childId'],
+    parentId: value['parentId'],
     relationType: value['relationType'],
   };
 }

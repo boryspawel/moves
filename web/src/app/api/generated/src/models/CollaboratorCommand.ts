@@ -21,12 +21,6 @@ import { mapValues } from '../runtime';
 export interface CollaboratorCommand {
   /**
    *
-   * @type {string}
-   * @memberof CollaboratorCommand
-   */
-  specialistAccountId?: string;
-  /**
-   *
    * @type {CollaboratorCommandActingRoleEnum}
    * @memberof CollaboratorCommand
    */
@@ -37,6 +31,12 @@ export interface CollaboratorCommand {
    * @memberof CollaboratorCommand
    */
   scopes?: Set<CollaboratorCommandScopesEnum>;
+  /**
+   *
+   * @type {string}
+   * @memberof CollaboratorCommand
+   */
+  specialistAccountId?: string;
 }
 
 /**
@@ -79,10 +79,10 @@ export function CollaboratorCommandFromJSONTyped(
     return json;
   }
   return {
-    specialistAccountId:
-      json['specialistAccountId'] == null ? undefined : json['specialistAccountId'],
     actingRole: json['actingRole'] == null ? undefined : json['actingRole'],
     scopes: json['scopes'] == null ? undefined : new Set(json['scopes']),
+    specialistAccountId:
+      json['specialistAccountId'] == null ? undefined : json['specialistAccountId'],
   };
 }
 
@@ -99,8 +99,8 @@ export function CollaboratorCommandToJSONTyped(
   }
 
   return {
-    specialistAccountId: value['specialistAccountId'],
     actingRole: value['actingRole'],
     scopes: value['scopes'] == null ? undefined : Array.from(value['scopes'] as Set<any>),
+    specialistAccountId: value['specialistAccountId'],
   };
 }

@@ -21,10 +21,10 @@ import { mapValues } from '../runtime';
 export interface ArtifactView {
   /**
    *
-   * @type {string}
+   * @type {number}
    * @memberof ArtifactView
    */
-  originalFilename?: string;
+  byteSize?: number;
   /**
    *
    * @type {string}
@@ -33,10 +33,10 @@ export interface ArtifactView {
   mediaType?: string;
   /**
    *
-   * @type {number}
+   * @type {string}
    * @memberof ArtifactView
    */
-  byteSize?: number;
+  originalFilename?: string;
   /**
    *
    * @type {string}
@@ -61,9 +61,9 @@ export function ArtifactViewFromJSONTyped(json: any, ignoreDiscriminator: boolea
     return json;
   }
   return {
-    originalFilename: json['originalFilename'] == null ? undefined : json['originalFilename'],
-    mediaType: json['mediaType'] == null ? undefined : json['mediaType'],
     byteSize: json['byteSize'] == null ? undefined : json['byteSize'],
+    mediaType: json['mediaType'] == null ? undefined : json['mediaType'],
+    originalFilename: json['originalFilename'] == null ? undefined : json['originalFilename'],
     sha256: json['sha256'] == null ? undefined : json['sha256'],
   };
 }
@@ -81,9 +81,9 @@ export function ArtifactViewToJSONTyped(
   }
 
   return {
-    originalFilename: value['originalFilename'],
-    mediaType: value['mediaType'],
     byteSize: value['byteSize'],
+    mediaType: value['mediaType'],
+    originalFilename: value['originalFilename'],
     sha256: value['sha256'],
   };
 }

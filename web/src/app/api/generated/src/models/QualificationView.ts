@@ -30,7 +30,7 @@ export interface QualificationView {
    * @type {string}
    * @memberof QualificationView
    */
-  sourceExecutionId?: string;
+  outcome?: string;
   /**
    *
    * @type {number}
@@ -42,13 +42,13 @@ export interface QualificationView {
    * @type {string}
    * @memberof QualificationView
    */
-  outcome?: string;
+  ruleVersion?: string;
   /**
    *
    * @type {string}
    * @memberof QualificationView
    */
-  ruleVersion?: string;
+  sourceExecutionId?: string;
 }
 
 /**
@@ -71,10 +71,10 @@ export function QualificationViewFromJSONTyped(
   }
   return {
     ledgerEntryId: json['ledgerEntryId'] == null ? undefined : json['ledgerEntryId'],
-    sourceExecutionId: json['sourceExecutionId'] == null ? undefined : json['sourceExecutionId'],
-    points: json['points'] == null ? undefined : json['points'],
     outcome: json['outcome'] == null ? undefined : json['outcome'],
+    points: json['points'] == null ? undefined : json['points'],
     ruleVersion: json['ruleVersion'] == null ? undefined : json['ruleVersion'],
+    sourceExecutionId: json['sourceExecutionId'] == null ? undefined : json['sourceExecutionId'],
   };
 }
 
@@ -92,9 +92,9 @@ export function QualificationViewToJSONTyped(
 
   return {
     ledgerEntryId: value['ledgerEntryId'],
-    sourceExecutionId: value['sourceExecutionId'],
-    points: value['points'],
     outcome: value['outcome'],
+    points: value['points'],
     ruleVersion: value['ruleVersion'],
+    sourceExecutionId: value['sourceExecutionId'],
   };
 }

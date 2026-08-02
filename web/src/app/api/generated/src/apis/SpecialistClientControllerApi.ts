@@ -24,7 +24,7 @@ export interface ArchiveRequest {
   participantId: string;
 }
 
-export interface CreateRequest {
+export interface Create1Request {
   idempotencyKey: string;
   clientCommand: ClientCommand;
 }
@@ -33,7 +33,7 @@ export interface Get1Request {
   participantId: string;
 }
 
-export interface Update2Request {
+export interface Update3Request {
   participantId: string;
   clientCommand: ClientCommand;
 }
@@ -94,20 +94,20 @@ export class SpecialistClientControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for create without sending the request
+   * Creates request options for create1 without sending the request
    */
-  async createRequestOpts(requestParameters: CreateRequest): Promise<runtime.RequestOpts> {
+  async create1RequestOpts(requestParameters: Create1Request): Promise<runtime.RequestOpts> {
     if (requestParameters['idempotencyKey'] == null) {
       throw new runtime.RequiredError(
         'idempotencyKey',
-        'Required parameter "idempotencyKey" was null or undefined when calling create().',
+        'Required parameter "idempotencyKey" was null or undefined when calling create1().',
       );
     }
 
     if (requestParameters['clientCommand'] == null) {
       throw new runtime.RequiredError(
         'clientCommand',
-        'Required parameter "clientCommand" was null or undefined when calling create().',
+        'Required parameter "clientCommand" was null or undefined when calling create1().',
       );
     }
 
@@ -135,11 +135,11 @@ export class SpecialistClientControllerApi extends runtime.BaseAPI {
   /**
    * Create a specialist client record
    */
-  async createRaw(
-    requestParameters: CreateRequest,
+  async create1Raw(
+    requestParameters: Create1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<ClientView>> {
-    const requestOptions = await this.createRequestOpts(requestParameters);
+    const requestOptions = await this.create1RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) => ClientViewFromJSON(jsonValue));
@@ -148,11 +148,11 @@ export class SpecialistClientControllerApi extends runtime.BaseAPI {
   /**
    * Create a specialist client record
    */
-  async create(
-    requestParameters: CreateRequest,
+  async create1(
+    requestParameters: Create1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<ClientView> {
-    const response = await this.createRaw(requestParameters, initOverrides);
+    const response = await this.create1Raw(requestParameters, initOverrides);
     return await response.value();
   }
 
@@ -208,9 +208,9 @@ export class SpecialistClientControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for list without sending the request
+   * Creates request options for list1 without sending the request
    */
-  async listRequestOpts(): Promise<runtime.RequestOpts> {
+  async list1RequestOpts(): Promise<runtime.RequestOpts> {
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -228,10 +228,10 @@ export class SpecialistClientControllerApi extends runtime.BaseAPI {
   /**
    * List specialist client records
    */
-  async listRaw(
+  async list1Raw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<Array<ClientView>>> {
-    const requestOptions = await this.listRequestOpts();
+    const requestOptions = await this.list1RequestOpts();
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ClientViewFromJSON));
@@ -240,28 +240,28 @@ export class SpecialistClientControllerApi extends runtime.BaseAPI {
   /**
    * List specialist client records
    */
-  async list(
+  async list1(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<Array<ClientView>> {
-    const response = await this.listRaw(initOverrides);
+    const response = await this.list1Raw(initOverrides);
     return await response.value();
   }
 
   /**
-   * Creates request options for update2 without sending the request
+   * Creates request options for update3 without sending the request
    */
-  async update2RequestOpts(requestParameters: Update2Request): Promise<runtime.RequestOpts> {
+  async update3RequestOpts(requestParameters: Update3Request): Promise<runtime.RequestOpts> {
     if (requestParameters['participantId'] == null) {
       throw new runtime.RequiredError(
         'participantId',
-        'Required parameter "participantId" was null or undefined when calling update2().',
+        'Required parameter "participantId" was null or undefined when calling update3().',
       );
     }
 
     if (requestParameters['clientCommand'] == null) {
       throw new runtime.RequiredError(
         'clientCommand',
-        'Required parameter "clientCommand" was null or undefined when calling update2().',
+        'Required parameter "clientCommand" was null or undefined when calling update3().',
       );
     }
 
@@ -288,11 +288,11 @@ export class SpecialistClientControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async update2Raw(
-    requestParameters: Update2Request,
+  async update3Raw(
+    requestParameters: Update3Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<ClientView>> {
-    const requestOptions = await this.update2RequestOpts(requestParameters);
+    const requestOptions = await this.update3RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) => ClientViewFromJSON(jsonValue));
@@ -300,11 +300,11 @@ export class SpecialistClientControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async update2(
-    requestParameters: Update2Request,
+  async update3(
+    requestParameters: Update3Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<ClientView> {
-    const response = await this.update2Raw(requestParameters, initOverrides);
+    const response = await this.update3Raw(requestParameters, initOverrides);
     return await response.value();
   }
 }

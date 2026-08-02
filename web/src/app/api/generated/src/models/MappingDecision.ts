@@ -24,13 +24,13 @@ export interface MappingDecision {
    * @type {string}
    * @memberof MappingDecision
    */
-  decision?: string;
+  canonicalValue?: string;
   /**
    *
    * @type {string}
    * @memberof MappingDecision
    */
-  canonicalValue?: string;
+  decision?: string;
 }
 
 /**
@@ -52,8 +52,8 @@ export function MappingDecisionFromJSONTyped(
     return json;
   }
   return {
-    decision: json['decision'] == null ? undefined : json['decision'],
     canonicalValue: json['canonicalValue'] == null ? undefined : json['canonicalValue'],
+    decision: json['decision'] == null ? undefined : json['decision'],
   };
 }
 
@@ -70,7 +70,7 @@ export function MappingDecisionToJSONTyped(
   }
 
   return {
-    decision: value['decision'],
     canonicalValue: value['canonicalValue'],
+    decision: value['decision'],
   };
 }

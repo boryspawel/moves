@@ -18,4 +18,15 @@ describe('specialist today geometry', () => {
     const layout = layoutOverlappingAppointments(items, range);
     expect(layout.map(item => [item.appointment.appointmentId, item.column, item.columns])).toEqual([['b', 0, 2], ['a', 1, 2], ['c', 0, 1]]);
   });
+
+  it('does not treat adjacent half-open intervals as overlapping', () => {
+    const layout = layoutOverlappingAppointments([
+      appointment('first', '2026-07-23T09:30:00Z', '2026-07-23T10:00:00Z'),
+      appointment('second', '2026-07-23T10:00:00Z', '2026-07-23T10:30:00Z'),
+    ], range);
+    expect(layout.map(item => [item.appointment.appointmentId, item.column, item.columns])).toEqual([
+      ['first', 0, 1],
+      ['second', 0, 1],
+    ]);
+  });
 });

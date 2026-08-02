@@ -30,12 +30,6 @@ export interface Problem {
    * @type {string}
    * @memberof Problem
    */
-  type?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof Problem
-   */
   status?: string;
   /**
    *
@@ -43,6 +37,12 @@ export interface Problem {
    * @memberof Problem
    */
   summary?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Problem
+   */
+  type?: string;
 }
 
 /**
@@ -62,9 +62,9 @@ export function ProblemFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
   }
   return {
     problemId: json['problemId'] == null ? undefined : json['problemId'],
-    type: json['type'] == null ? undefined : json['type'],
     status: json['status'] == null ? undefined : json['status'],
     summary: json['summary'] == null ? undefined : json['summary'],
+    type: json['type'] == null ? undefined : json['type'],
   };
 }
 
@@ -82,8 +82,8 @@ export function ProblemToJSONTyped(
 
   return {
     problemId: value['problemId'],
-    type: value['type'],
     status: value['status'],
     summary: value['summary'],
+    type: value['type'],
   };
 }

@@ -21,16 +21,16 @@ import { mapValues } from '../runtime';
 export interface ActiveProblemView {
   /**
    *
-   * @type {string}
+   * @type {Array<string>}
    * @memberof ActiveProblemView
    */
-  problemId?: string;
+  availableActions?: Array<string>;
   /**
    *
-   * @type {string}
+   * @type {Date}
    * @memberof ActiveProblemView
    */
-  type?: string;
+  effectiveAt?: Date;
   /**
    *
    * @type {string}
@@ -42,19 +42,7 @@ export interface ActiveProblemView {
    * @type {string}
    * @memberof ActiveProblemView
    */
-  status?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ActiveProblemView
-   */
-  shortDescription?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof ActiveProblemView
-   */
-  effectiveAt?: Date;
+  problemId?: string;
   /**
    *
    * @type {Date}
@@ -66,13 +54,25 @@ export interface ActiveProblemView {
    * @type {string}
    * @memberof ActiveProblemView
    */
+  shortDescription?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ActiveProblemView
+   */
   source?: string;
   /**
    *
-   * @type {Array<string>}
+   * @type {string}
    * @memberof ActiveProblemView
    */
-  availableActions?: Array<string>;
+  status?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ActiveProblemView
+   */
+  type?: string;
 }
 
 /**
@@ -94,15 +94,15 @@ export function ActiveProblemViewFromJSONTyped(
     return json;
   }
   return {
-    problemId: json['problemId'] == null ? undefined : json['problemId'],
-    type: json['type'] == null ? undefined : json['type'],
-    priority: json['priority'] == null ? undefined : json['priority'],
-    status: json['status'] == null ? undefined : json['status'],
-    shortDescription: json['shortDescription'] == null ? undefined : json['shortDescription'],
-    effectiveAt: json['effectiveAt'] == null ? undefined : new Date(json['effectiveAt']),
-    recordedAt: json['recordedAt'] == null ? undefined : new Date(json['recordedAt']),
-    source: json['source'] == null ? undefined : json['source'],
     availableActions: json['availableActions'] == null ? undefined : json['availableActions'],
+    effectiveAt: json['effectiveAt'] == null ? undefined : new Date(json['effectiveAt']),
+    priority: json['priority'] == null ? undefined : json['priority'],
+    problemId: json['problemId'] == null ? undefined : json['problemId'],
+    recordedAt: json['recordedAt'] == null ? undefined : new Date(json['recordedAt']),
+    shortDescription: json['shortDescription'] == null ? undefined : json['shortDescription'],
+    source: json['source'] == null ? undefined : json['source'],
+    status: json['status'] == null ? undefined : json['status'],
+    type: json['type'] == null ? undefined : json['type'],
   };
 }
 
@@ -119,16 +119,16 @@ export function ActiveProblemViewToJSONTyped(
   }
 
   return {
-    problemId: value['problemId'],
-    type: value['type'],
-    priority: value['priority'],
-    status: value['status'],
-    shortDescription: value['shortDescription'],
+    availableActions: value['availableActions'],
     effectiveAt:
       value['effectiveAt'] == null ? value['effectiveAt'] : value['effectiveAt'].toISOString(),
+    priority: value['priority'],
+    problemId: value['problemId'],
     recordedAt:
       value['recordedAt'] == null ? value['recordedAt'] : value['recordedAt'].toISOString(),
+    shortDescription: value['shortDescription'],
     source: value['source'],
-    availableActions: value['availableActions'],
+    status: value['status'],
+    type: value['type'],
   };
 }

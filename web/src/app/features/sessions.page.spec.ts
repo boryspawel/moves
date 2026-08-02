@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SessionsPage } from './sessions.page';
 import { ApiFacade } from '../core/api.facade';
 
@@ -13,7 +13,7 @@ const api = {
   today: { today: vi.fn().mockResolvedValue({ activePlan: { activeRevisionId: 'revision' }, sessions: [{ sessionId: 'session', title: 'Sesja', expectedDurationMinutes: 20 }] }) },
   planning: { sessions: vi.fn().mockResolvedValue([{ id: 'session', prescriptions: [{ id: 'prescription-1', position: 1, targetSets: 2, targetRepetitions: 8 }] }]) },
   safety: { checkIn: vi.fn().mockResolvedValue({}) },
-  attempts: { start: vi.fn(), get2: vi.fn(), resume: vi.fn(), pause: vi.fn(), progress: vi.fn(), complete: vi.fn() },
+  attempts: { start: vi.fn(), get3: vi.fn(), resume: vi.fn(), pause: vi.fn(), progress: vi.fn(), complete: vi.fn() },
   barriers: { report: vi.fn() }
 };
 
@@ -35,15 +35,15 @@ describe('SessionsPage', () => {
 
   it('restores the active attempt after refresh', async () => {
     sessionStorage.setItem('moves.participant.active-attempt', 'attempt-1');
-    api.attempts.get2.mockResolvedValue({ attemptId: 'attempt-1', plannedSessionId: 'session', state: 'STARTED', progress: [] });
+    api.attempts.get3.mockResolvedValue({ attemptId: 'attempt-1', plannedSessionId: 'session', state: 'STARTED', progress: [] });
     const fixture = TestBed.createComponent(SessionsPage); fixture.detectChanges(); await settle(fixture);
-    expect(api.attempts.get2).toHaveBeenCalledWith({ attemptId: 'attempt-1' });
+    expect(api.attempts.get3).toHaveBeenCalledWith({ attemptId: 'attempt-1' });
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('W trakcie sesji');
   });
 
   it('uses prescriptions only from the exactly matching planned session for a fresh attempt', async () => {
     api.attempts.start.mockResolvedValue({ attemptId: 'attempt-1' });
-    api.attempts.get2.mockResolvedValue({ attemptId: 'attempt-1', plannedSessionId: 'session', state: 'STARTED', selectedVariantType: 'STANDARD', progress: [] });
+    api.attempts.get3.mockResolvedValue({ attemptId: 'attempt-1', plannedSessionId: 'session', state: 'STARTED', selectedVariantType: 'STANDARD', progress: [] });
     const fixture = TestBed.createComponent(SessionsPage); fixture.detectChanges(); await settle(fixture);
     const instance = fixture.componentInstance as any;
     instance.chooseSession(instance.todaySession()); instance.showCheckIn(); await instance.start(); fixture.detectChanges();

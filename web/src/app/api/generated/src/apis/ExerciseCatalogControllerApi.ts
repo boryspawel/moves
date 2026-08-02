@@ -20,16 +20,16 @@ import {
   ExerciseCatalogDetailViewToJSON,
 } from '../models/ExerciseCatalogDetailView';
 
-export interface List1Request {
+export interface List3Request {
   query?: string;
-  movementPattern?: List1MovementPatternEnum;
-  technicalLevel?: List1TechnicalLevelEnum;
+  movementPattern?: List3MovementPatternEnum;
+  technicalLevel?: List3TechnicalLevelEnum;
   equipment?: string;
   page?: number;
   size?: number;
 }
 
-export interface VersionRequest {
+export interface Version1Request {
   versionId: string;
 }
 
@@ -38,9 +38,9 @@ export interface VersionRequest {
  */
 export class ExerciseCatalogControllerApi extends runtime.BaseAPI {
   /**
-   * Creates request options for list1 without sending the request
+   * Creates request options for list3 without sending the request
    */
-  async list1RequestOpts(requestParameters: List1Request): Promise<runtime.RequestOpts> {
+  async list3RequestOpts(requestParameters: List3Request): Promise<runtime.RequestOpts> {
     const queryParameters: any = {};
 
     if (requestParameters['query'] != null) {
@@ -82,11 +82,11 @@ export class ExerciseCatalogControllerApi extends runtime.BaseAPI {
   /**
    * Search published exercise versions using explicitly allowed filters
    */
-  async list1Raw(
-    requestParameters: List1Request,
+  async list3Raw(
+    requestParameters: List3Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<CatalogPage>> {
-    const requestOptions = await this.list1RequestOpts(requestParameters);
+    const requestOptions = await this.list3RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) => CatalogPageFromJSON(jsonValue));
@@ -95,22 +95,22 @@ export class ExerciseCatalogControllerApi extends runtime.BaseAPI {
   /**
    * Search published exercise versions using explicitly allowed filters
    */
-  async list1(
-    requestParameters: List1Request = {},
+  async list3(
+    requestParameters: List3Request = {},
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<CatalogPage> {
-    const response = await this.list1Raw(requestParameters, initOverrides);
+    const response = await this.list3Raw(requestParameters, initOverrides);
     return await response.value();
   }
 
   /**
-   * Creates request options for version without sending the request
+   * Creates request options for version1 without sending the request
    */
-  async versionRequestOpts(requestParameters: VersionRequest): Promise<runtime.RequestOpts> {
+  async version1RequestOpts(requestParameters: Version1Request): Promise<runtime.RequestOpts> {
     if (requestParameters['versionId'] == null) {
       throw new runtime.RequiredError(
         'versionId',
-        'Required parameter "versionId" was null or undefined when calling version().',
+        'Required parameter "versionId" was null or undefined when calling version1().',
       );
     }
 
@@ -135,11 +135,11 @@ export class ExerciseCatalogControllerApi extends runtime.BaseAPI {
   /**
    * Read a public detail projection of one published exercise version
    */
-  async versionRaw(
-    requestParameters: VersionRequest,
+  async version1Raw(
+    requestParameters: Version1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<ExerciseCatalogDetailView>> {
-    const requestOptions = await this.versionRequestOpts(requestParameters);
+    const requestOptions = await this.version1RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
@@ -150,11 +150,11 @@ export class ExerciseCatalogControllerApi extends runtime.BaseAPI {
   /**
    * Read a public detail projection of one published exercise version
    */
-  async version(
-    requestParameters: VersionRequest,
+  async version1(
+    requestParameters: Version1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<ExerciseCatalogDetailView> {
-    const response = await this.versionRaw(requestParameters, initOverrides);
+    const response = await this.version1Raw(requestParameters, initOverrides);
     return await response.value();
   }
 }
@@ -162,7 +162,7 @@ export class ExerciseCatalogControllerApi extends runtime.BaseAPI {
 /**
  * @export
  */
-export const List1MovementPatternEnum = {
+export const List3MovementPatternEnum = {
   Squat: 'SQUAT',
   Hinge: 'HINGE',
   Push: 'PUSH',
@@ -175,15 +175,15 @@ export const List1MovementPatternEnum = {
   Mobility: 'MOBILITY',
   Other: 'OTHER',
 } as const;
-export type List1MovementPatternEnum =
-  (typeof List1MovementPatternEnum)[keyof typeof List1MovementPatternEnum];
+export type List3MovementPatternEnum =
+  (typeof List3MovementPatternEnum)[keyof typeof List3MovementPatternEnum];
 /**
  * @export
  */
-export const List1TechnicalLevelEnum = {
+export const List3TechnicalLevelEnum = {
   Foundational: 'FOUNDATIONAL',
   Intermediate: 'INTERMEDIATE',
   Advanced: 'ADVANCED',
 } as const;
-export type List1TechnicalLevelEnum =
-  (typeof List1TechnicalLevelEnum)[keyof typeof List1TechnicalLevelEnum];
+export type List3TechnicalLevelEnum =
+  (typeof List3TechnicalLevelEnum)[keyof typeof List3TechnicalLevelEnum];

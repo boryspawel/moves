@@ -21,30 +21,6 @@ import { mapValues } from '../runtime';
 export interface ResultCommand {
   /**
    *
-   * @type {string}
-   * @memberof ResultCommand
-   */
-  exercisePrescriptionId?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof ResultCommand
-   */
-  actualSets?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof ResultCommand
-   */
-  actualRepetitions?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof ResultCommand
-   */
-  actualDurationSeconds?: number;
-  /**
-   *
    * @type {number}
    * @memberof ResultCommand
    */
@@ -60,19 +36,19 @@ export interface ResultCommand {
    * @type {number}
    * @memberof ResultCommand
    */
-  actualLoadKg?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof ResultCommand
-   */
-  actualExternalLoadValue?: number;
+  actualDurationSeconds?: number;
   /**
    *
    * @type {string}
    * @memberof ResultCommand
    */
   actualExternalLoadUnit?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof ResultCommand
+   */
+  actualExternalLoadValue?: number;
   /**
    *
    * @type {string}
@@ -93,6 +69,42 @@ export interface ResultCommand {
   actualIntensityZone?: string;
   /**
    *
+   * @type {number}
+   * @memberof ResultCommand
+   */
+  actualLoadKg?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof ResultCommand
+   */
+  actualRepetitions?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof ResultCommand
+   */
+  actualSets?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof ResultCommand
+   */
+  exercisePrescriptionId?: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof ResultCommand
+   */
+  modified?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof ResultCommand
+   */
+  observationMode?: string;
+  /**
+   *
    * @type {string}
    * @memberof ResultCommand
    */
@@ -102,19 +114,7 @@ export interface ResultCommand {
    * @type {boolean}
    * @memberof ResultCommand
    */
-  modified?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof ResultCommand
-   */
   skipped?: boolean;
-  /**
-   *
-   * @type {string}
-   * @memberof ResultCommand
-   */
-  observationMode?: string;
 }
 
 /**
@@ -133,30 +133,30 @@ export function ResultCommandFromJSONTyped(json: any, ignoreDiscriminator: boole
     return json;
   }
   return {
-    exercisePrescriptionId:
-      json['exercisePrescriptionId'] == null ? undefined : json['exercisePrescriptionId'],
-    actualSets: json['actualSets'] == null ? undefined : json['actualSets'],
-    actualRepetitions: json['actualRepetitions'] == null ? undefined : json['actualRepetitions'],
-    actualDurationSeconds:
-      json['actualDurationSeconds'] == null ? undefined : json['actualDurationSeconds'],
     actualContacts: json['actualContacts'] == null ? undefined : json['actualContacts'],
     actualDistanceMeters:
       json['actualDistanceMeters'] == null ? undefined : json['actualDistanceMeters'],
-    actualLoadKg: json['actualLoadKg'] == null ? undefined : json['actualLoadKg'],
-    actualExternalLoadValue:
-      json['actualExternalLoadValue'] == null ? undefined : json['actualExternalLoadValue'],
+    actualDurationSeconds:
+      json['actualDurationSeconds'] == null ? undefined : json['actualDurationSeconds'],
     actualExternalLoadUnit:
       json['actualExternalLoadUnit'] == null ? undefined : json['actualExternalLoadUnit'],
+    actualExternalLoadValue:
+      json['actualExternalLoadValue'] == null ? undefined : json['actualExternalLoadValue'],
     actualIntensityType:
       json['actualIntensityType'] == null ? undefined : json['actualIntensityType'],
     actualIntensityValue:
       json['actualIntensityValue'] == null ? undefined : json['actualIntensityValue'],
     actualIntensityZone:
       json['actualIntensityZone'] == null ? undefined : json['actualIntensityZone'],
-    side: json['side'] == null ? undefined : json['side'],
+    actualLoadKg: json['actualLoadKg'] == null ? undefined : json['actualLoadKg'],
+    actualRepetitions: json['actualRepetitions'] == null ? undefined : json['actualRepetitions'],
+    actualSets: json['actualSets'] == null ? undefined : json['actualSets'],
+    exercisePrescriptionId:
+      json['exercisePrescriptionId'] == null ? undefined : json['exercisePrescriptionId'],
     modified: json['modified'] == null ? undefined : json['modified'],
-    skipped: json['skipped'] == null ? undefined : json['skipped'],
     observationMode: json['observationMode'] == null ? undefined : json['observationMode'],
+    side: json['side'] == null ? undefined : json['side'],
+    skipped: json['skipped'] == null ? undefined : json['skipped'],
   };
 }
 
@@ -173,21 +173,21 @@ export function ResultCommandToJSONTyped(
   }
 
   return {
-    exercisePrescriptionId: value['exercisePrescriptionId'],
-    actualSets: value['actualSets'],
-    actualRepetitions: value['actualRepetitions'],
-    actualDurationSeconds: value['actualDurationSeconds'],
     actualContacts: value['actualContacts'],
     actualDistanceMeters: value['actualDistanceMeters'],
-    actualLoadKg: value['actualLoadKg'],
-    actualExternalLoadValue: value['actualExternalLoadValue'],
+    actualDurationSeconds: value['actualDurationSeconds'],
     actualExternalLoadUnit: value['actualExternalLoadUnit'],
+    actualExternalLoadValue: value['actualExternalLoadValue'],
     actualIntensityType: value['actualIntensityType'],
     actualIntensityValue: value['actualIntensityValue'],
     actualIntensityZone: value['actualIntensityZone'],
-    side: value['side'],
+    actualLoadKg: value['actualLoadKg'],
+    actualRepetitions: value['actualRepetitions'],
+    actualSets: value['actualSets'],
+    exercisePrescriptionId: value['exercisePrescriptionId'],
     modified: value['modified'],
-    skipped: value['skipped'],
     observationMode: value['observationMode'],
+    side: value['side'],
+    skipped: value['skipped'],
   };
 }

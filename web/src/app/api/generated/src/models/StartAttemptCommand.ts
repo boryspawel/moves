@@ -24,13 +24,13 @@ export interface StartAttemptCommand {
    * @type {string}
    * @memberof StartAttemptCommand
    */
-  plannedSessionId?: string;
+  planRevisionId?: string;
   /**
    *
    * @type {string}
    * @memberof StartAttemptCommand
    */
-  planRevisionId?: string;
+  plannedSessionId?: string;
   /**
    *
    * @type {string}
@@ -58,8 +58,8 @@ export function StartAttemptCommandFromJSONTyped(
     return json;
   }
   return {
-    plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
     planRevisionId: json['planRevisionId'] == null ? undefined : json['planRevisionId'],
+    plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
     selectedVariantType:
       json['selectedVariantType'] == null ? undefined : json['selectedVariantType'],
   };
@@ -78,8 +78,8 @@ export function StartAttemptCommandToJSONTyped(
   }
 
   return {
-    plannedSessionId: value['plannedSessionId'],
     planRevisionId: value['planRevisionId'],
+    plannedSessionId: value['plannedSessionId'],
     selectedVariantType: value['selectedVariantType'],
   };
 }

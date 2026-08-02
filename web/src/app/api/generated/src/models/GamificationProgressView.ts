@@ -36,10 +36,10 @@ import {
 export interface GamificationProgressView {
   /**
    *
-   * @type {ProfileView}
+   * @type {Array<LedgerView>}
    * @memberof GamificationProgressView
    */
-  profile?: ProfileView;
+  ledger?: Array<LedgerView>;
   /**
    *
    * @type {number}
@@ -48,10 +48,10 @@ export interface GamificationProgressView {
   points?: number;
   /**
    *
-   * @type {Array<LedgerView>}
+   * @type {ProfileView}
    * @memberof GamificationProgressView
    */
-  ledger?: Array<LedgerView>;
+  profile?: ProfileView;
 }
 
 /**
@@ -75,10 +75,10 @@ export function GamificationProgressViewFromJSONTyped(
     return json;
   }
   return {
-    profile: json['profile'] == null ? undefined : ProfileViewFromJSON(json['profile']),
-    points: json['points'] == null ? undefined : json['points'],
     ledger:
       json['ledger'] == null ? undefined : (json['ledger'] as Array<any>).map(LedgerViewFromJSON),
+    points: json['points'] == null ? undefined : json['points'],
+    profile: json['profile'] == null ? undefined : ProfileViewFromJSON(json['profile']),
   };
 }
 
@@ -95,9 +95,9 @@ export function GamificationProgressViewToJSONTyped(
   }
 
   return {
-    profile: ProfileViewToJSON(value['profile']),
-    points: value['points'],
     ledger:
       value['ledger'] == null ? undefined : (value['ledger'] as Array<any>).map(LedgerViewToJSON),
+    points: value['points'],
+    profile: ProfileViewToJSON(value['profile']),
   };
 }

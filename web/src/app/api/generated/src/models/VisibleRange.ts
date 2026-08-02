@@ -24,12 +24,6 @@ export interface VisibleRange {
    * @type {Date}
    * @memberof VisibleRange
    */
-  startsAt?: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof VisibleRange
-   */
   endsAt?: Date;
   /**
    *
@@ -37,6 +31,12 @@ export interface VisibleRange {
    * @memberof VisibleRange
    */
   recommendedStepMinutes?: number;
+  /**
+   *
+   * @type {Date}
+   * @memberof VisibleRange
+   */
+  startsAt?: Date;
 }
 
 /**
@@ -55,10 +55,10 @@ export function VisibleRangeFromJSONTyped(json: any, ignoreDiscriminator: boolea
     return json;
   }
   return {
-    startsAt: json['startsAt'] == null ? undefined : new Date(json['startsAt']),
     endsAt: json['endsAt'] == null ? undefined : new Date(json['endsAt']),
     recommendedStepMinutes:
       json['recommendedStepMinutes'] == null ? undefined : json['recommendedStepMinutes'],
+    startsAt: json['startsAt'] == null ? undefined : new Date(json['startsAt']),
   };
 }
 
@@ -75,8 +75,8 @@ export function VisibleRangeToJSONTyped(
   }
 
   return {
-    startsAt: value['startsAt'] == null ? value['startsAt'] : value['startsAt'].toISOString(),
     endsAt: value['endsAt'] == null ? value['endsAt'] : value['endsAt'].toISOString(),
     recommendedStepMinutes: value['recommendedStepMinutes'],
+    startsAt: value['startsAt'] == null ? value['startsAt'] : value['startsAt'].toISOString(),
   };
 }

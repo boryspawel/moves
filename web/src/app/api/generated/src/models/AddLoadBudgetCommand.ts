@@ -21,10 +21,10 @@ import { mapValues } from '../runtime';
 export interface AddLoadBudgetCommand {
   /**
    *
-   * @type {number}
+   * @type {AddLoadBudgetCommandActionEnum}
    * @memberof AddLoadBudgetCommand
    */
-  expectedVersion?: number;
+  action?: AddLoadBudgetCommandActionEnum;
   /**
    *
    * @type {string}
@@ -36,7 +36,7 @@ export interface AddLoadBudgetCommand {
    * @type {number}
    * @memberof AddLoadBudgetCommand
    */
-  low?: number;
+  expectedVersion?: number;
   /**
    *
    * @type {number}
@@ -45,16 +45,16 @@ export interface AddLoadBudgetCommand {
   high?: number;
   /**
    *
+   * @type {number}
+   * @memberof AddLoadBudgetCommand
+   */
+  low?: number;
+  /**
+   *
    * @type {string}
    * @memberof AddLoadBudgetCommand
    */
   unit?: string;
-  /**
-   *
-   * @type {AddLoadBudgetCommandActionEnum}
-   * @memberof AddLoadBudgetCommand
-   */
-  action?: AddLoadBudgetCommandActionEnum;
 }
 
 /**
@@ -86,12 +86,12 @@ export function AddLoadBudgetCommandFromJSONTyped(
     return json;
   }
   return {
-    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
-    channel: json['channel'] == null ? undefined : json['channel'],
-    low: json['low'] == null ? undefined : json['low'],
-    high: json['high'] == null ? undefined : json['high'],
-    unit: json['unit'] == null ? undefined : json['unit'],
     action: json['action'] == null ? undefined : json['action'],
+    channel: json['channel'] == null ? undefined : json['channel'],
+    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
+    high: json['high'] == null ? undefined : json['high'],
+    low: json['low'] == null ? undefined : json['low'],
+    unit: json['unit'] == null ? undefined : json['unit'],
   };
 }
 
@@ -108,11 +108,11 @@ export function AddLoadBudgetCommandToJSONTyped(
   }
 
   return {
-    expectedVersion: value['expectedVersion'],
-    channel: value['channel'],
-    low: value['low'],
-    high: value['high'],
-    unit: value['unit'],
     action: value['action'],
+    channel: value['channel'],
+    expectedVersion: value['expectedVersion'],
+    high: value['high'],
+    low: value['low'],
+    unit: value['unit'],
   };
 }

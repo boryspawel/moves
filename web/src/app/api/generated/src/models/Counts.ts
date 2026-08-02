@@ -36,13 +36,13 @@ export interface Counts {
    * @type {number}
    * @memberof Counts
    */
-  operationalTasks?: number;
+  currentAppointments?: number;
   /**
    *
    * @type {number}
    * @memberof Counts
    */
-  currentAppointments?: number;
+  operationalTasks?: number;
 }
 
 /**
@@ -63,9 +63,9 @@ export function CountsFromJSONTyped(json: any, ignoreDiscriminator: boolean): Co
   return {
     appointments: json['appointments'] == null ? undefined : json['appointments'],
     attentionItems: json['attentionItems'] == null ? undefined : json['attentionItems'],
-    operationalTasks: json['operationalTasks'] == null ? undefined : json['operationalTasks'],
     currentAppointments:
       json['currentAppointments'] == null ? undefined : json['currentAppointments'],
+    operationalTasks: json['operationalTasks'] == null ? undefined : json['operationalTasks'],
   };
 }
 
@@ -84,7 +84,7 @@ export function CountsToJSONTyped(
   return {
     appointments: value['appointments'],
     attentionItems: value['attentionItems'],
-    operationalTasks: value['operationalTasks'],
     currentAppointments: value['currentAppointments'],
+    operationalTasks: value['operationalTasks'],
   };
 }

@@ -30,13 +30,13 @@ export interface CreateSource {
    * @type {string}
    * @memberof CreateSource
    */
-  displayName?: string;
+  defaultLocale?: string;
   /**
    *
    * @type {string}
    * @memberof CreateSource
    */
-  defaultLocale?: string;
+  displayName?: string;
   /**
    *
    * @type {string}
@@ -68,8 +68,8 @@ export function CreateSourceFromJSONTyped(json: any, ignoreDiscriminator: boolea
   }
   return {
     code: json['code'] == null ? undefined : json['code'],
-    displayName: json['displayName'] == null ? undefined : json['displayName'],
     defaultLocale: json['defaultLocale'] == null ? undefined : json['defaultLocale'],
+    displayName: json['displayName'] == null ? undefined : json['displayName'],
     licenseCode: json['licenseCode'] == null ? undefined : json['licenseCode'],
     licenseVerified: json['licenseVerified'] == null ? undefined : json['licenseVerified'],
   };
@@ -89,8 +89,8 @@ export function CreateSourceToJSONTyped(
 
   return {
     code: value['code'],
-    displayName: value['displayName'],
     defaultLocale: value['defaultLocale'],
+    displayName: value['displayName'],
     licenseCode: value['licenseCode'],
     licenseVerified: value['licenseVerified'],
   };

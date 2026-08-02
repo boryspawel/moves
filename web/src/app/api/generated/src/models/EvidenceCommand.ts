@@ -30,13 +30,13 @@ export interface EvidenceCommand {
    * @type {string}
    * @memberof EvidenceCommand
    */
-  sourceUri?: string;
+  evidenceGrade?: string;
   /**
    *
    * @type {string}
    * @memberof EvidenceCommand
    */
-  evidenceGrade?: string;
+  sourceUri?: string;
 }
 
 /**
@@ -59,8 +59,8 @@ export function EvidenceCommandFromJSONTyped(
   }
   return {
     citation: json['citation'] == null ? undefined : json['citation'],
-    sourceUri: json['sourceUri'] == null ? undefined : json['sourceUri'],
     evidenceGrade: json['evidenceGrade'] == null ? undefined : json['evidenceGrade'],
+    sourceUri: json['sourceUri'] == null ? undefined : json['sourceUri'],
   };
 }
 
@@ -78,7 +78,7 @@ export function EvidenceCommandToJSONTyped(
 
   return {
     citation: value['citation'],
-    sourceUri: value['sourceUri'],
     evidenceGrade: value['evidenceGrade'],
+    sourceUri: value['sourceUri'],
   };
 }

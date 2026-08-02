@@ -30,13 +30,13 @@ export interface AlertTransitionCommand {
    * @type {string}
    * @memberof AlertTransitionCommand
    */
-  ownerAccountId?: string;
+  commentReference?: string;
   /**
    *
    * @type {string}
    * @memberof AlertTransitionCommand
    */
-  commentReference?: string;
+  ownerAccountId?: string;
 }
 
 /**
@@ -59,8 +59,8 @@ export function AlertTransitionCommandFromJSONTyped(
   }
   return {
     action: json['action'] == null ? undefined : json['action'],
-    ownerAccountId: json['ownerAccountId'] == null ? undefined : json['ownerAccountId'],
     commentReference: json['commentReference'] == null ? undefined : json['commentReference'],
+    ownerAccountId: json['ownerAccountId'] == null ? undefined : json['ownerAccountId'],
   };
 }
 
@@ -78,7 +78,7 @@ export function AlertTransitionCommandToJSONTyped(
 
   return {
     action: value['action'],
-    ownerAccountId: value['ownerAccountId'],
     commentReference: value['commentReference'],
+    ownerAccountId: value['ownerAccountId'],
   };
 }

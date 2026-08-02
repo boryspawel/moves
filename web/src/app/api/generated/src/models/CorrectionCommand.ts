@@ -21,10 +21,40 @@ import { mapValues } from '../runtime';
 export interface CorrectionCommand {
   /**
    *
+   * @type {number}
+   * @memberof CorrectionCommand
+   */
+  correctedContacts?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof CorrectionCommand
+   */
+  correctedDifficultyLevel?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof CorrectionCommand
+   */
+  correctedDurationSeconds?: number;
+  /**
+   *
    * @type {string}
    * @memberof CorrectionCommand
    */
-  reason?: string;
+  correctedExternalLoadUnit?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof CorrectionCommand
+   */
+  correctedExternalLoadValue?: number;
+  /**
+   *
+   * @type {boolean}
+   * @memberof CorrectionCommand
+   */
+  correctedModified?: boolean;
   /**
    *
    * @type {number}
@@ -36,49 +66,13 @@ export interface CorrectionCommand {
    * @type {number}
    * @memberof CorrectionCommand
    */
-  correctedDifficultyLevel?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof CorrectionCommand
-   */
-  exercisePrescriptionId?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof CorrectionCommand
-   */
-  correctedSets?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof CorrectionCommand
-   */
   correctedRepetitions?: number;
   /**
    *
    * @type {number}
    * @memberof CorrectionCommand
    */
-  correctedDurationSeconds?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof CorrectionCommand
-   */
-  correctedContacts?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof CorrectionCommand
-   */
-  correctedExternalLoadValue?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof CorrectionCommand
-   */
-  correctedExternalLoadUnit?: string;
+  correctedSets?: number;
   /**
    *
    * @type {string}
@@ -90,19 +84,25 @@ export interface CorrectionCommand {
    * @type {boolean}
    * @memberof CorrectionCommand
    */
-  correctedModified?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof CorrectionCommand
-   */
   correctedSkipped?: boolean;
   /**
    *
    * @type {string}
    * @memberof CorrectionCommand
    */
+  exercisePrescriptionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof CorrectionCommand
+   */
   observationMode?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof CorrectionCommand
+   */
+  reason?: string;
 }
 
 /**
@@ -124,26 +124,26 @@ export function CorrectionCommandFromJSONTyped(
     return json;
   }
   return {
-    reason: json['reason'] == null ? undefined : json['reason'],
-    correctedPainLevel: json['correctedPainLevel'] == null ? undefined : json['correctedPainLevel'],
+    correctedContacts: json['correctedContacts'] == null ? undefined : json['correctedContacts'],
     correctedDifficultyLevel:
       json['correctedDifficultyLevel'] == null ? undefined : json['correctedDifficultyLevel'],
-    exercisePrescriptionId:
-      json['exercisePrescriptionId'] == null ? undefined : json['exercisePrescriptionId'],
-    correctedSets: json['correctedSets'] == null ? undefined : json['correctedSets'],
-    correctedRepetitions:
-      json['correctedRepetitions'] == null ? undefined : json['correctedRepetitions'],
     correctedDurationSeconds:
       json['correctedDurationSeconds'] == null ? undefined : json['correctedDurationSeconds'],
-    correctedContacts: json['correctedContacts'] == null ? undefined : json['correctedContacts'],
-    correctedExternalLoadValue:
-      json['correctedExternalLoadValue'] == null ? undefined : json['correctedExternalLoadValue'],
     correctedExternalLoadUnit:
       json['correctedExternalLoadUnit'] == null ? undefined : json['correctedExternalLoadUnit'],
-    correctedSide: json['correctedSide'] == null ? undefined : json['correctedSide'],
+    correctedExternalLoadValue:
+      json['correctedExternalLoadValue'] == null ? undefined : json['correctedExternalLoadValue'],
     correctedModified: json['correctedModified'] == null ? undefined : json['correctedModified'],
+    correctedPainLevel: json['correctedPainLevel'] == null ? undefined : json['correctedPainLevel'],
+    correctedRepetitions:
+      json['correctedRepetitions'] == null ? undefined : json['correctedRepetitions'],
+    correctedSets: json['correctedSets'] == null ? undefined : json['correctedSets'],
+    correctedSide: json['correctedSide'] == null ? undefined : json['correctedSide'],
     correctedSkipped: json['correctedSkipped'] == null ? undefined : json['correctedSkipped'],
+    exercisePrescriptionId:
+      json['exercisePrescriptionId'] == null ? undefined : json['exercisePrescriptionId'],
     observationMode: json['observationMode'] == null ? undefined : json['observationMode'],
+    reason: json['reason'] == null ? undefined : json['reason'],
   };
 }
 
@@ -160,19 +160,19 @@ export function CorrectionCommandToJSONTyped(
   }
 
   return {
-    reason: value['reason'],
-    correctedPainLevel: value['correctedPainLevel'],
-    correctedDifficultyLevel: value['correctedDifficultyLevel'],
-    exercisePrescriptionId: value['exercisePrescriptionId'],
-    correctedSets: value['correctedSets'],
-    correctedRepetitions: value['correctedRepetitions'],
-    correctedDurationSeconds: value['correctedDurationSeconds'],
     correctedContacts: value['correctedContacts'],
-    correctedExternalLoadValue: value['correctedExternalLoadValue'],
+    correctedDifficultyLevel: value['correctedDifficultyLevel'],
+    correctedDurationSeconds: value['correctedDurationSeconds'],
     correctedExternalLoadUnit: value['correctedExternalLoadUnit'],
-    correctedSide: value['correctedSide'],
+    correctedExternalLoadValue: value['correctedExternalLoadValue'],
     correctedModified: value['correctedModified'],
+    correctedPainLevel: value['correctedPainLevel'],
+    correctedRepetitions: value['correctedRepetitions'],
+    correctedSets: value['correctedSets'],
+    correctedSide: value['correctedSide'],
     correctedSkipped: value['correctedSkipped'],
+    exercisePrescriptionId: value['exercisePrescriptionId'],
     observationMode: value['observationMode'],
+    reason: value['reason'],
   };
 }

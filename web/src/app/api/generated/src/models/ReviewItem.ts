@@ -24,13 +24,19 @@ export interface ReviewItem {
    * @type {string}
    * @memberof ReviewItem
    */
-  id?: string;
+  area?: string;
   /**
    *
    * @type {string}
    * @memberof ReviewItem
    */
-  area?: string;
+  comment?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof ReviewItem
+   */
+  contentRevision?: number;
   /**
    *
    * @type {string}
@@ -42,31 +48,7 @@ export interface ReviewItem {
    * @type {string}
    * @memberof ReviewItem
    */
-  comment?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ReviewItem
-   */
-  reviewerSubject?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof ReviewItem
-   */
-  reviewedAt?: Date;
-  /**
-   *
-   * @type {number}
-   * @memberof ReviewItem
-   */
-  version?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof ReviewItem
-   */
-  contentRevision?: number;
+  id?: string;
   /**
    *
    * @type {Date}
@@ -79,6 +61,24 @@ export interface ReviewItem {
    * @memberof ReviewItem
    */
   invalidatedBySubject?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof ReviewItem
+   */
+  reviewedAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof ReviewItem
+   */
+  reviewerSubject?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof ReviewItem
+   */
+  version?: number;
 }
 
 /**
@@ -97,17 +97,17 @@ export function ReviewItemFromJSONTyped(json: any, ignoreDiscriminator: boolean)
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
     area: json['area'] == null ? undefined : json['area'],
-    decision: json['decision'] == null ? undefined : json['decision'],
     comment: json['comment'] == null ? undefined : json['comment'],
-    reviewerSubject: json['reviewerSubject'] == null ? undefined : json['reviewerSubject'],
-    reviewedAt: json['reviewedAt'] == null ? undefined : new Date(json['reviewedAt']),
-    version: json['version'] == null ? undefined : json['version'],
     contentRevision: json['contentRevision'] == null ? undefined : json['contentRevision'],
+    decision: json['decision'] == null ? undefined : json['decision'],
+    id: json['id'] == null ? undefined : json['id'],
     invalidatedAt: json['invalidatedAt'] == null ? undefined : new Date(json['invalidatedAt']),
     invalidatedBySubject:
       json['invalidatedBySubject'] == null ? undefined : json['invalidatedBySubject'],
+    reviewedAt: json['reviewedAt'] == null ? undefined : new Date(json['reviewedAt']),
+    reviewerSubject: json['reviewerSubject'] == null ? undefined : json['reviewerSubject'],
+    version: json['version'] == null ? undefined : json['version'],
   };
 }
 
@@ -124,19 +124,19 @@ export function ReviewItemToJSONTyped(
   }
 
   return {
-    id: value['id'],
     area: value['area'],
-    decision: value['decision'],
     comment: value['comment'],
-    reviewerSubject: value['reviewerSubject'],
-    reviewedAt:
-      value['reviewedAt'] == null ? value['reviewedAt'] : value['reviewedAt'].toISOString(),
-    version: value['version'],
     contentRevision: value['contentRevision'],
+    decision: value['decision'],
+    id: value['id'],
     invalidatedAt:
       value['invalidatedAt'] == null
         ? value['invalidatedAt']
         : value['invalidatedAt'].toISOString(),
     invalidatedBySubject: value['invalidatedBySubject'],
+    reviewedAt:
+      value['reviewedAt'] == null ? value['reviewedAt'] : value['reviewedAt'].toISOString(),
+    reviewerSubject: value['reviewerSubject'],
+    version: value['version'],
   };
 }

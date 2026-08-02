@@ -21,22 +21,10 @@ import { mapValues } from '../runtime';
 export interface TrainingPlan {
   /**
    *
-   * @type {string}
+   * @type {Date}
    * @memberof TrainingPlan
    */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof TrainingPlan
-   */
-  goalId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof TrainingPlan
-   */
-  participantAccountId?: string;
+  createdAt?: Date;
   /**
    *
    * @type {string}
@@ -48,7 +36,13 @@ export interface TrainingPlan {
    * @type {string}
    * @memberof TrainingPlan
    */
-  name?: string;
+  goalId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof TrainingPlan
+   */
+  id?: string;
   /**
    *
    * @type {TrainingPlanModeEnum}
@@ -57,16 +51,22 @@ export interface TrainingPlan {
   mode?: TrainingPlanModeEnum;
   /**
    *
+   * @type {string}
+   * @memberof TrainingPlan
+   */
+  name?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof TrainingPlan
+   */
+  participantAccountId?: string;
+  /**
+   *
    * @type {TrainingPlanStatusEnum}
    * @memberof TrainingPlan
    */
   status?: TrainingPlanStatusEnum;
-  /**
-   *
-   * @type {Date}
-   * @memberof TrainingPlan
-   */
-  createdAt?: Date;
 }
 
 /**
@@ -104,15 +104,15 @@ export function TrainingPlanFromJSONTyped(json: any, ignoreDiscriminator: boolea
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
+    createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
+    createdByAccountId: json['createdByAccountId'] == null ? undefined : json['createdByAccountId'],
     goalId: json['goalId'] == null ? undefined : json['goalId'],
+    id: json['id'] == null ? undefined : json['id'],
+    mode: json['mode'] == null ? undefined : json['mode'],
+    name: json['name'] == null ? undefined : json['name'],
     participantAccountId:
       json['participantAccountId'] == null ? undefined : json['participantAccountId'],
-    createdByAccountId: json['createdByAccountId'] == null ? undefined : json['createdByAccountId'],
-    name: json['name'] == null ? undefined : json['name'],
-    mode: json['mode'] == null ? undefined : json['mode'],
     status: json['status'] == null ? undefined : json['status'],
-    createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
   };
 }
 
@@ -129,13 +129,13 @@ export function TrainingPlanToJSONTyped(
   }
 
   return {
-    id: value['id'],
-    goalId: value['goalId'],
-    participantAccountId: value['participantAccountId'],
-    createdByAccountId: value['createdByAccountId'],
-    name: value['name'],
-    mode: value['mode'],
-    status: value['status'],
     createdAt: value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
+    createdByAccountId: value['createdByAccountId'],
+    goalId: value['goalId'],
+    id: value['id'],
+    mode: value['mode'],
+    name: value['name'],
+    participantAccountId: value['participantAccountId'],
+    status: value['status'],
   };
 }

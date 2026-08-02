@@ -27,6 +27,12 @@ export interface ProfileView {
   enabled?: boolean;
   /**
    *
+   * @type {Date}
+   * @memberof ProfileView
+   */
+  enabledAt?: Date;
+  /**
+   *
    * @type {string}
    * @memberof ProfileView
    */
@@ -37,12 +43,6 @@ export interface ProfileView {
    * @memberof ProfileView
    */
   rankingVisible?: boolean;
-  /**
-   *
-   * @type {Date}
-   * @memberof ProfileView
-   */
-  enabledAt?: Date;
   /**
    *
    * @type {Date}
@@ -68,9 +68,9 @@ export function ProfileViewFromJSONTyped(json: any, ignoreDiscriminator: boolean
   }
   return {
     enabled: json['enabled'] == null ? undefined : json['enabled'],
+    enabledAt: json['enabledAt'] == null ? undefined : new Date(json['enabledAt']),
     pseudonym: json['pseudonym'] == null ? undefined : json['pseudonym'],
     rankingVisible: json['rankingVisible'] == null ? undefined : json['rankingVisible'],
-    enabledAt: json['enabledAt'] == null ? undefined : new Date(json['enabledAt']),
     updatedAt: json['updatedAt'] == null ? undefined : new Date(json['updatedAt']),
   };
 }
@@ -89,9 +89,9 @@ export function ProfileViewToJSONTyped(
 
   return {
     enabled: value['enabled'],
+    enabledAt: value['enabledAt'] == null ? value['enabledAt'] : value['enabledAt'].toISOString(),
     pseudonym: value['pseudonym'],
     rankingVisible: value['rankingVisible'],
-    enabledAt: value['enabledAt'] == null ? value['enabledAt'] : value['enabledAt'].toISOString(),
     updatedAt: value['updatedAt'] == null ? value['updatedAt'] : value['updatedAt'].toISOString(),
   };
 }

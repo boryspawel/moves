@@ -27,16 +27,16 @@ export interface Measurement {
   metricCode?: string;
   /**
    *
-   * @type {number}
-   * @memberof Measurement
-   */
-  value?: number;
-  /**
-   *
    * @type {string}
    * @memberof Measurement
    */
   unit?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof Measurement
+   */
+  value?: number;
 }
 
 /**
@@ -56,8 +56,8 @@ export function MeasurementFromJSONTyped(json: any, ignoreDiscriminator: boolean
   }
   return {
     metricCode: json['metricCode'] == null ? undefined : json['metricCode'],
-    value: json['value'] == null ? undefined : json['value'],
     unit: json['unit'] == null ? undefined : json['unit'],
+    value: json['value'] == null ? undefined : json['value'],
   };
 }
 
@@ -75,7 +75,7 @@ export function MeasurementToJSONTyped(
 
   return {
     metricCode: value['metricCode'],
-    value: value['value'],
     unit: value['unit'],
+    value: value['value'],
   };
 }

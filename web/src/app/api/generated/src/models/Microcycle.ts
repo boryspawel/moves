@@ -24,25 +24,25 @@ export interface Microcycle {
    * @type {string}
    * @memberof Microcycle
    */
+  cycleId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Microcycle
+   */
   id?: string;
   /**
    *
    * @type {string}
    * @memberof Microcycle
    */
-  cycleId?: string;
+  name?: string;
   /**
    *
    * @type {number}
    * @memberof Microcycle
    */
   sequenceNumber?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof Microcycle
-   */
-  name?: string;
 }
 
 /**
@@ -61,10 +61,10 @@ export function MicrocycleFromJSONTyped(json: any, ignoreDiscriminator: boolean)
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
     cycleId: json['cycleId'] == null ? undefined : json['cycleId'],
-    sequenceNumber: json['sequenceNumber'] == null ? undefined : json['sequenceNumber'],
+    id: json['id'] == null ? undefined : json['id'],
     name: json['name'] == null ? undefined : json['name'],
+    sequenceNumber: json['sequenceNumber'] == null ? undefined : json['sequenceNumber'],
   };
 }
 
@@ -81,9 +81,9 @@ export function MicrocycleToJSONTyped(
   }
 
   return {
-    id: value['id'],
     cycleId: value['cycleId'],
-    sequenceNumber: value['sequenceNumber'],
+    id: value['id'],
     name: value['name'],
+    sequenceNumber: value['sequenceNumber'],
   };
 }

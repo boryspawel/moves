@@ -24,37 +24,13 @@ export interface AlertData {
    * @type {string}
    * @memberof AlertData
    */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AlertData
-   */
-  sessionExecutionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AlertData
-   */
   alertType?: string;
   /**
    *
-   * @type {string}
+   * @type {Date}
    * @memberof AlertData
    */
-  priority?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AlertData
-   */
-  ownerAccountId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AlertData
-   */
-  status?: string;
+  createdAt?: Date;
   /**
    *
    * @type {Date}
@@ -66,13 +42,37 @@ export interface AlertData {
    * @type {string}
    * @memberof AlertData
    */
+  id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AlertData
+   */
+  ownerAccountId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AlertData
+   */
+  priority?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AlertData
+   */
+  sessionExecutionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AlertData
+   */
   sourceResponseId?: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof AlertData
    */
-  createdAt?: Date;
+  status?: string;
 }
 
 /**
@@ -91,15 +91,15 @@ export function AlertDataFromJSONTyped(json: any, ignoreDiscriminator: boolean):
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
-    sessionExecutionId: json['sessionExecutionId'] == null ? undefined : json['sessionExecutionId'],
     alertType: json['alertType'] == null ? undefined : json['alertType'],
-    priority: json['priority'] == null ? undefined : json['priority'],
-    ownerAccountId: json['ownerAccountId'] == null ? undefined : json['ownerAccountId'],
-    status: json['status'] == null ? undefined : json['status'],
-    dueAt: json['dueAt'] == null ? undefined : new Date(json['dueAt']),
-    sourceResponseId: json['sourceResponseId'] == null ? undefined : json['sourceResponseId'],
     createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
+    dueAt: json['dueAt'] == null ? undefined : new Date(json['dueAt']),
+    id: json['id'] == null ? undefined : json['id'],
+    ownerAccountId: json['ownerAccountId'] == null ? undefined : json['ownerAccountId'],
+    priority: json['priority'] == null ? undefined : json['priority'],
+    sessionExecutionId: json['sessionExecutionId'] == null ? undefined : json['sessionExecutionId'],
+    sourceResponseId: json['sourceResponseId'] == null ? undefined : json['sourceResponseId'],
+    status: json['status'] == null ? undefined : json['status'],
   };
 }
 
@@ -116,14 +116,14 @@ export function AlertDataToJSONTyped(
   }
 
   return {
-    id: value['id'],
-    sessionExecutionId: value['sessionExecutionId'],
     alertType: value['alertType'],
-    priority: value['priority'],
-    ownerAccountId: value['ownerAccountId'],
-    status: value['status'],
-    dueAt: value['dueAt'] == null ? value['dueAt'] : value['dueAt'].toISOString(),
-    sourceResponseId: value['sourceResponseId'],
     createdAt: value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
+    dueAt: value['dueAt'] == null ? value['dueAt'] : value['dueAt'].toISOString(),
+    id: value['id'],
+    ownerAccountId: value['ownerAccountId'],
+    priority: value['priority'],
+    sessionExecutionId: value['sessionExecutionId'],
+    sourceResponseId: value['sourceResponseId'],
+    status: value['status'],
   };
 }

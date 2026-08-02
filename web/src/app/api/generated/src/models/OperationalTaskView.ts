@@ -24,7 +24,7 @@ export interface OperationalTaskView {
    * @type {string}
    * @memberof OperationalTaskView
    */
-  type?: string;
+  navigationReference?: string;
   /**
    *
    * @type {string}
@@ -36,7 +36,7 @@ export interface OperationalTaskView {
    * @type {string}
    * @memberof OperationalTaskView
    */
-  navigationReference?: string;
+  type?: string;
 }
 
 /**
@@ -58,10 +58,10 @@ export function OperationalTaskViewFromJSONTyped(
     return json;
   }
   return {
-    type: json['type'] == null ? undefined : json['type'],
-    title: json['title'] == null ? undefined : json['title'],
     navigationReference:
       json['navigationReference'] == null ? undefined : json['navigationReference'],
+    title: json['title'] == null ? undefined : json['title'],
+    type: json['type'] == null ? undefined : json['type'],
   };
 }
 
@@ -78,8 +78,8 @@ export function OperationalTaskViewToJSONTyped(
   }
 
   return {
-    type: value['type'],
-    title: value['title'],
     navigationReference: value['navigationReference'],
+    title: value['title'],
+    type: value['type'],
   };
 }

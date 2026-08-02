@@ -21,16 +21,16 @@ import { mapValues } from '../runtime';
 export interface ProgressView {
   /**
    *
-   * @type {string}
-   * @memberof ProgressView
-   */
-  exercisePrescriptionId?: string;
-  /**
-   *
    * @type {boolean}
    * @memberof ProgressView
    */
   completed?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof ProgressView
+   */
+  exercisePrescriptionId?: string;
   /**
    *
    * @type {Date}
@@ -55,9 +55,9 @@ export function ProgressViewFromJSONTyped(json: any, ignoreDiscriminator: boolea
     return json;
   }
   return {
+    completed: json['completed'] == null ? undefined : json['completed'],
     exercisePrescriptionId:
       json['exercisePrescriptionId'] == null ? undefined : json['exercisePrescriptionId'],
-    completed: json['completed'] == null ? undefined : json['completed'],
     updatedAt: json['updatedAt'] == null ? undefined : new Date(json['updatedAt']),
   };
 }
@@ -75,8 +75,8 @@ export function ProgressViewToJSONTyped(
   }
 
   return {
-    exercisePrescriptionId: value['exercisePrescriptionId'],
     completed: value['completed'],
+    exercisePrescriptionId: value['exercisePrescriptionId'],
     updatedAt: value['updatedAt'] == null ? value['updatedAt'] : value['updatedAt'].toISOString(),
   };
 }

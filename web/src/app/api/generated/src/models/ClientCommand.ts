@@ -27,12 +27,6 @@ export interface ClientCommand {
   displayName?: string;
   /**
    *
-   * @type {ClientCommandRelationshipContextEnum}
-   * @memberof ClientCommand
-   */
-  relationshipContext?: ClientCommandRelationshipContextEnum;
-  /**
-   *
    * @type {string}
    * @memberof ClientCommand
    */
@@ -43,6 +37,12 @@ export interface ClientCommand {
    * @memberof ClientCommand
    */
   phone?: string;
+  /**
+   *
+   * @type {ClientCommandRelationshipContextEnum}
+   * @memberof ClientCommand
+   */
+  relationshipContext?: ClientCommandRelationshipContextEnum;
   /**
    *
    * @type {string}
@@ -79,10 +79,10 @@ export function ClientCommandFromJSONTyped(json: any, ignoreDiscriminator: boole
   }
   return {
     displayName: json['displayName'] == null ? undefined : json['displayName'],
-    relationshipContext:
-      json['relationshipContext'] == null ? undefined : json['relationshipContext'],
     email: json['email'] == null ? undefined : json['email'],
     phone: json['phone'] == null ? undefined : json['phone'],
+    relationshipContext:
+      json['relationshipContext'] == null ? undefined : json['relationshipContext'],
     timeZoneId: json['timeZoneId'] == null ? undefined : json['timeZoneId'],
   };
 }
@@ -101,9 +101,9 @@ export function ClientCommandToJSONTyped(
 
   return {
     displayName: value['displayName'],
-    relationshipContext: value['relationshipContext'],
     email: value['email'],
     phone: value['phone'],
+    relationshipContext: value['relationshipContext'],
     timeZoneId: value['timeZoneId'],
   };
 }

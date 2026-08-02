@@ -35,16 +35,16 @@ export interface DraftUpdateCommand {
   canonicalName?: string;
   /**
    *
-   * @type {VersionCommand}
-   * @memberof DraftUpdateCommand
-   */
-  version?: VersionCommand;
-  /**
-   *
    * @type {number}
    * @memberof DraftUpdateCommand
    */
   expectedVersion?: number;
+  /**
+   *
+   * @type {VersionCommand}
+   * @memberof DraftUpdateCommand
+   */
+  version?: VersionCommand;
 }
 
 /**
@@ -67,8 +67,8 @@ export function DraftUpdateCommandFromJSONTyped(
   }
   return {
     canonicalName: json['canonicalName'] == null ? undefined : json['canonicalName'],
-    version: json['version'] == null ? undefined : VersionCommandFromJSON(json['version']),
     expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
+    version: json['version'] == null ? undefined : VersionCommandFromJSON(json['version']),
   };
 }
 
@@ -86,7 +86,7 @@ export function DraftUpdateCommandToJSONTyped(
 
   return {
     canonicalName: value['canonicalName'],
-    version: VersionCommandToJSON(value['version']),
     expectedVersion: value['expectedVersion'],
+    version: VersionCommandToJSON(value['version']),
   };
 }

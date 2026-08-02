@@ -24,6 +24,12 @@ export interface RankingRow {
    * @type {number}
    * @memberof RankingRow
    */
+  points?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof RankingRow
+   */
   position?: number;
   /**
    *
@@ -31,12 +37,6 @@ export interface RankingRow {
    * @memberof RankingRow
    */
   pseudonym?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof RankingRow
-   */
-  points?: number;
 }
 
 /**
@@ -55,9 +55,9 @@ export function RankingRowFromJSONTyped(json: any, ignoreDiscriminator: boolean)
     return json;
   }
   return {
+    points: json['points'] == null ? undefined : json['points'],
     position: json['position'] == null ? undefined : json['position'],
     pseudonym: json['pseudonym'] == null ? undefined : json['pseudonym'],
-    points: json['points'] == null ? undefined : json['points'],
   };
 }
 
@@ -74,8 +74,8 @@ export function RankingRowToJSONTyped(
   }
 
   return {
+    points: value['points'],
     position: value['position'],
     pseudonym: value['pseudonym'],
-    points: value['points'],
   };
 }

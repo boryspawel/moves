@@ -29,16 +29,16 @@ import {
 export interface AncestorStep {
   /**
    *
-   * @type {AnatomicalStructureSnapshot}
-   * @memberof AncestorStep
-   */
-  structure?: AnatomicalStructureSnapshot;
-  /**
-   *
    * @type {AncestorStepRelationTypeEnum}
    * @memberof AncestorStep
    */
   relationType?: AncestorStepRelationTypeEnum;
+  /**
+   *
+   * @type {AnatomicalStructureSnapshot}
+   * @memberof AncestorStep
+   */
+  structure?: AnatomicalStructureSnapshot;
 }
 
 /**
@@ -68,11 +68,11 @@ export function AncestorStepFromJSONTyped(json: any, ignoreDiscriminator: boolea
     return json;
   }
   return {
+    relationType: json['relationType'] == null ? undefined : json['relationType'],
     structure:
       json['structure'] == null
         ? undefined
         : AnatomicalStructureSnapshotFromJSON(json['structure']),
-    relationType: json['relationType'] == null ? undefined : json['relationType'],
   };
 }
 
@@ -89,7 +89,7 @@ export function AncestorStepToJSONTyped(
   }
 
   return {
-    structure: AnatomicalStructureSnapshotToJSON(value['structure']),
     relationType: value['relationType'],
+    structure: AnatomicalStructureSnapshotToJSON(value['structure']),
   };
 }

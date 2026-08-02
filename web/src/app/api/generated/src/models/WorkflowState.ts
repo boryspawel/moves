@@ -24,19 +24,25 @@ export interface WorkflowState {
    * @type {string}
    * @memberof WorkflowState
    */
-  revisionId?: string;
+  assessmentId?: string;
   /**
    *
    * @type {string}
    * @memberof WorkflowState
    */
-  planId?: string;
+  currentRevisionId?: string;
   /**
    *
    * @type {string}
    * @memberof WorkflowState
    */
-  participantId?: string;
+  loadSnapshotId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof WorkflowState
+   */
+  mode?: string;
   /**
    *
    * @type {string}
@@ -48,7 +54,19 @@ export interface WorkflowState {
    * @type {string}
    * @memberof WorkflowState
    */
-  mode?: string;
+  participantId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof WorkflowState
+   */
+  planId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof WorkflowState
+   */
+  revisionId?: string;
   /**
    *
    * @type {string}
@@ -67,24 +85,6 @@ export interface WorkflowState {
    * @memberof WorkflowState
    */
   validationChecksum?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof WorkflowState
-   */
-  loadSnapshotId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof WorkflowState
-   */
-  assessmentId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof WorkflowState
-   */
-  currentRevisionId?: string;
 }
 
 /**
@@ -103,17 +103,17 @@ export function WorkflowStateFromJSONTyped(json: any, ignoreDiscriminator: boole
     return json;
   }
   return {
-    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
-    planId: json['planId'] == null ? undefined : json['planId'],
-    participantId: json['participantId'] == null ? undefined : json['participantId'],
-    ownerId: json['ownerId'] == null ? undefined : json['ownerId'],
+    assessmentId: json['assessmentId'] == null ? undefined : json['assessmentId'],
+    currentRevisionId: json['currentRevisionId'] == null ? undefined : json['currentRevisionId'],
+    loadSnapshotId: json['loadSnapshotId'] == null ? undefined : json['loadSnapshotId'],
     mode: json['mode'] == null ? undefined : json['mode'],
+    ownerId: json['ownerId'] == null ? undefined : json['ownerId'],
+    participantId: json['participantId'] == null ? undefined : json['participantId'],
+    planId: json['planId'] == null ? undefined : json['planId'],
+    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
     revisionStatus: json['revisionStatus'] == null ? undefined : json['revisionStatus'],
     revisionVersion: json['revisionVersion'] == null ? undefined : json['revisionVersion'],
     validationChecksum: json['validationChecksum'] == null ? undefined : json['validationChecksum'],
-    loadSnapshotId: json['loadSnapshotId'] == null ? undefined : json['loadSnapshotId'],
-    assessmentId: json['assessmentId'] == null ? undefined : json['assessmentId'],
-    currentRevisionId: json['currentRevisionId'] == null ? undefined : json['currentRevisionId'],
   };
 }
 
@@ -130,16 +130,16 @@ export function WorkflowStateToJSONTyped(
   }
 
   return {
-    revisionId: value['revisionId'],
-    planId: value['planId'],
-    participantId: value['participantId'],
-    ownerId: value['ownerId'],
+    assessmentId: value['assessmentId'],
+    currentRevisionId: value['currentRevisionId'],
+    loadSnapshotId: value['loadSnapshotId'],
     mode: value['mode'],
+    ownerId: value['ownerId'],
+    participantId: value['participantId'],
+    planId: value['planId'],
+    revisionId: value['revisionId'],
     revisionStatus: value['revisionStatus'],
     revisionVersion: value['revisionVersion'],
     validationChecksum: value['validationChecksum'],
-    loadSnapshotId: value['loadSnapshotId'],
-    assessmentId: value['assessmentId'],
-    currentRevisionId: value['currentRevisionId'],
   };
 }

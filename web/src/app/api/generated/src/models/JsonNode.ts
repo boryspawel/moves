@@ -24,97 +24,7 @@ export interface JsonNode {
    * @type {boolean}
    * @memberof JsonNode
    */
-  empty?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof JsonNode
-   */
   array?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof JsonNode
-   */
-  _null?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof JsonNode
-   */
-  object?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof JsonNode
-   */
-  _float?: boolean;
-  /**
-   *
-   * @type {JsonNodeNodeTypeEnum}
-   * @memberof JsonNode
-   */
-  nodeType?: JsonNodeNodeTypeEnum;
-  /**
-   *
-   * @type {boolean}
-   * @memberof JsonNode
-   */
-  string?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof JsonNode
-   */
-  integralNumber?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof JsonNode
-   */
-  valueNode?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof JsonNode
-   */
-  missingNode?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof JsonNode
-   */
-  pojo?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof JsonNode
-   */
-  floatingPointNumber?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof JsonNode
-   */
-  _short?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof JsonNode
-   */
-  _int?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof JsonNode
-   */
-  _long?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof JsonNode
-   */
-  _double?: boolean;
   /**
    *
    * @type {boolean}
@@ -131,9 +41,8 @@ export interface JsonNode {
    *
    * @type {boolean}
    * @memberof JsonNode
-   * @deprecated
    */
-  textual?: boolean;
+  binary?: boolean;
   /**
    *
    * @type {boolean}
@@ -145,13 +54,73 @@ export interface JsonNode {
    * @type {boolean}
    * @memberof JsonNode
    */
-  binary?: boolean;
+  container?: boolean;
   /**
    *
    * @type {boolean}
    * @memberof JsonNode
    */
-  container?: boolean;
+  _double?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof JsonNode
+   */
+  embeddedValue?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof JsonNode
+   */
+  empty?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof JsonNode
+   */
+  _float?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof JsonNode
+   */
+  floatingPointNumber?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof JsonNode
+   */
+  _int?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof JsonNode
+   */
+  integralNumber?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof JsonNode
+   */
+  _long?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof JsonNode
+   */
+  missingNode?: boolean;
+  /**
+   *
+   * @type {JsonNodeNodeTypeEnum}
+   * @memberof JsonNode
+   */
+  nodeType?: JsonNodeNodeTypeEnum;
+  /**
+   *
+   * @type {boolean}
+   * @memberof JsonNode
+   */
+  _null?: boolean;
   /**
    *
    * @type {boolean}
@@ -163,7 +132,38 @@ export interface JsonNode {
    * @type {boolean}
    * @memberof JsonNode
    */
-  embeddedValue?: boolean;
+  object?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof JsonNode
+   */
+  pojo?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof JsonNode
+   */
+  _short?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof JsonNode
+   */
+  string?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof JsonNode
+   * @deprecated
+   */
+  textual?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof JsonNode
+   */
+  valueNode?: boolean;
 }
 
 /**
@@ -198,31 +198,31 @@ export function JsonNodeFromJSONTyped(json: any, ignoreDiscriminator: boolean): 
     return json;
   }
   return {
-    empty: json['empty'] == null ? undefined : json['empty'],
     array: json['array'] == null ? undefined : json['array'],
-    _null: json['null'] == null ? undefined : json['null'],
-    object: json['object'] == null ? undefined : json['object'],
-    _float: json['float'] == null ? undefined : json['float'],
-    nodeType: json['nodeType'] == null ? undefined : json['nodeType'],
-    string: json['string'] == null ? undefined : json['string'],
-    integralNumber: json['integralNumber'] == null ? undefined : json['integralNumber'],
-    valueNode: json['valueNode'] == null ? undefined : json['valueNode'],
-    missingNode: json['missingNode'] == null ? undefined : json['missingNode'],
-    pojo: json['pojo'] == null ? undefined : json['pojo'],
-    floatingPointNumber:
-      json['floatingPointNumber'] == null ? undefined : json['floatingPointNumber'],
-    _short: json['short'] == null ? undefined : json['short'],
-    _int: json['int'] == null ? undefined : json['int'],
-    _long: json['long'] == null ? undefined : json['long'],
-    _double: json['double'] == null ? undefined : json['double'],
     bigDecimal: json['bigDecimal'] == null ? undefined : json['bigDecimal'],
     bigInteger: json['bigInteger'] == null ? undefined : json['bigInteger'],
-    textual: json['textual'] == null ? undefined : json['textual'],
-    _boolean: json['boolean'] == null ? undefined : json['boolean'],
     binary: json['binary'] == null ? undefined : json['binary'],
+    _boolean: json['boolean'] == null ? undefined : json['boolean'],
     container: json['container'] == null ? undefined : json['container'],
-    number: json['number'] == null ? undefined : json['number'],
+    _double: json['double'] == null ? undefined : json['double'],
     embeddedValue: json['embeddedValue'] == null ? undefined : json['embeddedValue'],
+    empty: json['empty'] == null ? undefined : json['empty'],
+    _float: json['float'] == null ? undefined : json['float'],
+    floatingPointNumber:
+      json['floatingPointNumber'] == null ? undefined : json['floatingPointNumber'],
+    _int: json['int'] == null ? undefined : json['int'],
+    integralNumber: json['integralNumber'] == null ? undefined : json['integralNumber'],
+    _long: json['long'] == null ? undefined : json['long'],
+    missingNode: json['missingNode'] == null ? undefined : json['missingNode'],
+    nodeType: json['nodeType'] == null ? undefined : json['nodeType'],
+    _null: json['null'] == null ? undefined : json['null'],
+    number: json['number'] == null ? undefined : json['number'],
+    object: json['object'] == null ? undefined : json['object'],
+    pojo: json['pojo'] == null ? undefined : json['pojo'],
+    _short: json['short'] == null ? undefined : json['short'],
+    string: json['string'] == null ? undefined : json['string'],
+    textual: json['textual'] == null ? undefined : json['textual'],
+    valueNode: json['valueNode'] == null ? undefined : json['valueNode'],
   };
 }
 
@@ -239,29 +239,29 @@ export function JsonNodeToJSONTyped(
   }
 
   return {
-    empty: value['empty'],
     array: value['array'],
-    null: value['_null'],
-    object: value['object'],
-    float: value['_float'],
-    nodeType: value['nodeType'],
-    string: value['string'],
-    integralNumber: value['integralNumber'],
-    valueNode: value['valueNode'],
-    missingNode: value['missingNode'],
-    pojo: value['pojo'],
-    floatingPointNumber: value['floatingPointNumber'],
-    short: value['_short'],
-    int: value['_int'],
-    long: value['_long'],
-    double: value['_double'],
     bigDecimal: value['bigDecimal'],
     bigInteger: value['bigInteger'],
-    textual: value['textual'],
-    boolean: value['_boolean'],
     binary: value['binary'],
+    boolean: value['_boolean'],
     container: value['container'],
-    number: value['number'],
+    double: value['_double'],
     embeddedValue: value['embeddedValue'],
+    empty: value['empty'],
+    float: value['_float'],
+    floatingPointNumber: value['floatingPointNumber'],
+    int: value['_int'],
+    integralNumber: value['integralNumber'],
+    long: value['_long'],
+    missingNode: value['missingNode'],
+    nodeType: value['nodeType'],
+    null: value['_null'],
+    number: value['number'],
+    object: value['object'],
+    pojo: value['pojo'],
+    short: value['_short'],
+    string: value['string'],
+    textual: value['textual'],
+    valueNode: value['valueNode'],
   };
 }

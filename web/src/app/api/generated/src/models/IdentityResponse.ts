@@ -21,16 +21,16 @@ import { mapValues } from '../runtime';
 export interface IdentityResponse {
   /**
    *
-   * @type {string}
-   * @memberof IdentityResponse
-   */
-  subject?: string;
-  /**
-   *
    * @type {Array<string>}
    * @memberof IdentityResponse
    */
   audiences?: Array<string>;
+  /**
+   *
+   * @type {string}
+   * @memberof IdentityResponse
+   */
+  subject?: string;
 }
 
 /**
@@ -52,8 +52,8 @@ export function IdentityResponseFromJSONTyped(
     return json;
   }
   return {
-    subject: json['subject'] == null ? undefined : json['subject'],
     audiences: json['audiences'] == null ? undefined : json['audiences'],
+    subject: json['subject'] == null ? undefined : json['subject'],
   };
 }
 
@@ -70,7 +70,7 @@ export function IdentityResponseToJSONTyped(
   }
 
   return {
-    subject: value['subject'],
     audiences: value['audiences'],
+    subject: value['subject'],
   };
 }

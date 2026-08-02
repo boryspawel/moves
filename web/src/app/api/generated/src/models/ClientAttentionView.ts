@@ -24,13 +24,13 @@ export interface ClientAttentionView {
    * @type {string}
    * @memberof ClientAttentionView
    */
-  id?: string;
+  category?: string;
   /**
    *
    * @type {string}
    * @memberof ClientAttentionView
    */
-  category?: string;
+  id?: string;
   /**
    *
    * @type {string}
@@ -64,8 +64,8 @@ export function ClientAttentionViewFromJSONTyped(
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
     category: json['category'] == null ? undefined : json['category'],
+    id: json['id'] == null ? undefined : json['id'],
     priority: json['priority'] == null ? undefined : json['priority'],
     status: json['status'] == null ? undefined : json['status'],
   };
@@ -84,8 +84,8 @@ export function ClientAttentionViewToJSONTyped(
   }
 
   return {
-    id: value['id'],
     category: value['category'],
+    id: value['id'],
     priority: value['priority'],
     status: value['status'],
   };

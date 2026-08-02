@@ -24,7 +24,7 @@ export interface PublicLoadCharacteristicView {
    * @type {string}
    * @memberof PublicLoadCharacteristicView
    */
-  movementPlane?: string;
+  characteristicType?: string;
   /**
    *
    * @type {string}
@@ -36,13 +36,13 @@ export interface PublicLoadCharacteristicView {
    * @type {string}
    * @memberof PublicLoadCharacteristicView
    */
-  rangeOfMotion?: string;
+  movementPlane?: string;
   /**
    *
    * @type {string}
    * @memberof PublicLoadCharacteristicView
    */
-  characteristicType?: string;
+  rangeOfMotion?: string;
 }
 
 /**
@@ -66,10 +66,10 @@ export function PublicLoadCharacteristicViewFromJSONTyped(
     return json;
   }
   return {
-    movementPlane: json['movementPlane'] == null ? undefined : json['movementPlane'],
-    contractionType: json['contractionType'] == null ? undefined : json['contractionType'],
-    rangeOfMotion: json['rangeOfMotion'] == null ? undefined : json['rangeOfMotion'],
     characteristicType: json['characteristicType'] == null ? undefined : json['characteristicType'],
+    contractionType: json['contractionType'] == null ? undefined : json['contractionType'],
+    movementPlane: json['movementPlane'] == null ? undefined : json['movementPlane'],
+    rangeOfMotion: json['rangeOfMotion'] == null ? undefined : json['rangeOfMotion'],
   };
 }
 
@@ -86,9 +86,9 @@ export function PublicLoadCharacteristicViewToJSONTyped(
   }
 
   return {
-    movementPlane: value['movementPlane'],
-    contractionType: value['contractionType'],
-    rangeOfMotion: value['rangeOfMotion'],
     characteristicType: value['characteristicType'],
+    contractionType: value['contractionType'],
+    movementPlane: value['movementPlane'],
+    rangeOfMotion: value['rangeOfMotion'],
   };
 }

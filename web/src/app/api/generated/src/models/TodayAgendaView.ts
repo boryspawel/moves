@@ -43,10 +43,10 @@ import {
 export interface TodayAgendaView {
   /**
    *
-   * @type {string}
+   * @type {ActivePlanView}
    * @memberof TodayAgendaView
    */
-  timeZone?: string;
+  activePlan?: ActivePlanView;
   /**
    *
    * @type {Date}
@@ -55,10 +55,10 @@ export interface TodayAgendaView {
   localDate?: Date;
   /**
    *
-   * @type {ActivePlanView}
+   * @type {RecoveryView}
    * @memberof TodayAgendaView
    */
-  activePlan?: ActivePlanView;
+  recovery?: RecoveryView;
   /**
    *
    * @type {Array<AgendaSessionView>}
@@ -73,10 +73,10 @@ export interface TodayAgendaView {
   state?: string;
   /**
    *
-   * @type {RecoveryView}
+   * @type {string}
    * @memberof TodayAgendaView
    */
-  recovery?: RecoveryView;
+  timeZone?: string;
 }
 
 /**
@@ -98,15 +98,15 @@ export function TodayAgendaViewFromJSONTyped(
     return json;
   }
   return {
-    timeZone: json['timeZone'] == null ? undefined : json['timeZone'],
-    localDate: json['localDate'] == null ? undefined : new Date(json['localDate']),
     activePlan: json['activePlan'] == null ? undefined : ActivePlanViewFromJSON(json['activePlan']),
+    localDate: json['localDate'] == null ? undefined : new Date(json['localDate']),
+    recovery: json['recovery'] == null ? undefined : RecoveryViewFromJSON(json['recovery']),
     sessions:
       json['sessions'] == null
         ? undefined
         : (json['sessions'] as Array<any>).map(AgendaSessionViewFromJSON),
     state: json['state'] == null ? undefined : json['state'],
-    recovery: json['recovery'] == null ? undefined : RecoveryViewFromJSON(json['recovery']),
+    timeZone: json['timeZone'] == null ? undefined : json['timeZone'],
   };
 }
 
@@ -123,17 +123,17 @@ export function TodayAgendaViewToJSONTyped(
   }
 
   return {
-    timeZone: value['timeZone'],
+    activePlan: ActivePlanViewToJSON(value['activePlan']),
     localDate:
       value['localDate'] == null
         ? value['localDate']
         : value['localDate'].toISOString().substring(0, 10),
-    activePlan: ActivePlanViewToJSON(value['activePlan']),
+    recovery: RecoveryViewToJSON(value['recovery']),
     sessions:
       value['sessions'] == null
         ? undefined
         : (value['sessions'] as Array<any>).map(AgendaSessionViewToJSON),
     state: value['state'],
-    recovery: RecoveryViewToJSON(value['recovery']),
+    timeZone: value['timeZone'],
   };
 }

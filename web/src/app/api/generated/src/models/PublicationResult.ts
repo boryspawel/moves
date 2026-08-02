@@ -27,28 +27,28 @@ export interface PublicationResult {
   exerciseVersionId?: string;
   /**
    *
-   * @type {string}
-   * @memberof PublicationResult
-   */
-  status?: string;
-  /**
-   *
    * @type {Date}
    * @memberof PublicationResult
    */
   publishedAt?: Date;
   /**
    *
-   * @type {number}
+   * @type {string}
    * @memberof PublicationResult
    */
-  version?: number;
+  status?: string;
   /**
    *
    * @type {Array<string>}
    * @memberof PublicationResult
    */
   unmetRequirements?: Array<string>;
+  /**
+   *
+   * @type {number}
+   * @memberof PublicationResult
+   */
+  version?: number;
 }
 
 /**
@@ -71,10 +71,10 @@ export function PublicationResultFromJSONTyped(
   }
   return {
     exerciseVersionId: json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
-    status: json['status'] == null ? undefined : json['status'],
     publishedAt: json['publishedAt'] == null ? undefined : new Date(json['publishedAt']),
-    version: json['version'] == null ? undefined : json['version'],
+    status: json['status'] == null ? undefined : json['status'],
     unmetRequirements: json['unmetRequirements'] == null ? undefined : json['unmetRequirements'],
+    version: json['version'] == null ? undefined : json['version'],
   };
 }
 
@@ -92,10 +92,10 @@ export function PublicationResultToJSONTyped(
 
   return {
     exerciseVersionId: value['exerciseVersionId'],
-    status: value['status'],
     publishedAt:
       value['publishedAt'] == null ? value['publishedAt'] : value['publishedAt'].toISOString(),
-    version: value['version'],
+    status: value['status'],
     unmetRequirements: value['unmetRequirements'],
+    version: value['version'],
   };
 }

@@ -24,13 +24,13 @@ export interface AvailabilityWindowView {
    * @type {Date}
    * @memberof AvailabilityWindowView
    */
-  startsAt?: Date;
+  endsAt?: Date;
   /**
    *
    * @type {Date}
    * @memberof AvailabilityWindowView
    */
-  endsAt?: Date;
+  startsAt?: Date;
   /**
    *
    * @type {string}
@@ -58,8 +58,8 @@ export function AvailabilityWindowViewFromJSONTyped(
     return json;
   }
   return {
-    startsAt: json['startsAt'] == null ? undefined : new Date(json['startsAt']),
     endsAt: json['endsAt'] == null ? undefined : new Date(json['endsAt']),
+    startsAt: json['startsAt'] == null ? undefined : new Date(json['startsAt']),
     type: json['type'] == null ? undefined : json['type'],
   };
 }
@@ -77,8 +77,8 @@ export function AvailabilityWindowViewToJSONTyped(
   }
 
   return {
-    startsAt: value['startsAt'] == null ? value['startsAt'] : value['startsAt'].toISOString(),
     endsAt: value['endsAt'] == null ? value['endsAt'] : value['endsAt'].toISOString(),
+    startsAt: value['startsAt'] == null ? value['startsAt'] : value['startsAt'].toISOString(),
     type: value['type'],
   };
 }

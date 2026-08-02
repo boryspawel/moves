@@ -24,12 +24,6 @@ export interface ImportProblem {
    * @type {string}
    * @memberof ImportProblem
    */
-  severity?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ImportProblem
-   */
   code?: string;
   /**
    *
@@ -49,6 +43,12 @@ export interface ImportProblem {
    * @memberof ImportProblem
    */
   resolvedAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof ImportProblem
+   */
+  severity?: string;
 }
 
 /**
@@ -67,11 +67,11 @@ export function ImportProblemFromJSONTyped(json: any, ignoreDiscriminator: boole
     return json;
   }
   return {
-    severity: json['severity'] == null ? undefined : json['severity'],
     code: json['code'] == null ? undefined : json['code'],
     field: json['field'] == null ? undefined : json['field'],
     message: json['message'] == null ? undefined : json['message'],
     resolvedAt: json['resolvedAt'] == null ? undefined : new Date(json['resolvedAt']),
+    severity: json['severity'] == null ? undefined : json['severity'],
   };
 }
 
@@ -88,11 +88,11 @@ export function ImportProblemToJSONTyped(
   }
 
   return {
-    severity: value['severity'],
     code: value['code'],
     field: value['field'],
     message: value['message'],
     resolvedAt:
       value['resolvedAt'] == null ? value['resolvedAt'] : value['resolvedAt'].toISOString(),
+    severity: value['severity'],
   };
 }

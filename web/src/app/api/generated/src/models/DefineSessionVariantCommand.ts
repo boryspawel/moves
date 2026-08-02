@@ -32,7 +32,19 @@ export interface DefineSessionVariantCommand {
    * @type {number}
    * @memberof DefineSessionVariantCommand
    */
+  expectedDurationMinutes?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof DefineSessionVariantCommand
+   */
   expectedVersion?: number;
+  /**
+   *
+   * @type {Array<VariantItemCommand>}
+   * @memberof DefineSessionVariantCommand
+   */
+  items?: Array<VariantItemCommand>;
   /**
    *
    * @type {string}
@@ -45,18 +57,6 @@ export interface DefineSessionVariantCommand {
    * @memberof DefineSessionVariantCommand
    */
   type?: DefineSessionVariantCommandTypeEnum;
-  /**
-   *
-   * @type {number}
-   * @memberof DefineSessionVariantCommand
-   */
-  expectedDurationMinutes?: number;
-  /**
-   *
-   * @type {Array<VariantItemCommand>}
-   * @memberof DefineSessionVariantCommand
-   */
-  items?: Array<VariantItemCommand>;
 }
 
 /**
@@ -91,15 +91,15 @@ export function DefineSessionVariantCommandFromJSONTyped(
     return json;
   }
   return {
-    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
-    sessionId: json['sessionId'] == null ? undefined : json['sessionId'],
-    type: json['type'] == null ? undefined : json['type'],
     expectedDurationMinutes:
       json['expectedDurationMinutes'] == null ? undefined : json['expectedDurationMinutes'],
+    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
     items:
       json['items'] == null
         ? undefined
         : (json['items'] as Array<any>).map(VariantItemCommandFromJSON),
+    sessionId: json['sessionId'] == null ? undefined : json['sessionId'],
+    type: json['type'] == null ? undefined : json['type'],
   };
 }
 
@@ -116,13 +116,13 @@ export function DefineSessionVariantCommandToJSONTyped(
   }
 
   return {
-    expectedVersion: value['expectedVersion'],
-    sessionId: value['sessionId'],
-    type: value['type'],
     expectedDurationMinutes: value['expectedDurationMinutes'],
+    expectedVersion: value['expectedVersion'],
     items:
       value['items'] == null
         ? undefined
         : (value['items'] as Array<any>).map(VariantItemCommandToJSON),
+    sessionId: value['sessionId'],
+    type: value['type'],
   };
 }

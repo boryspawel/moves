@@ -21,28 +21,16 @@ import { mapValues } from '../runtime';
 export interface CreateCommand {
   /**
    *
-   * @type {string}
-   * @memberof CreateCommand
-   */
-  participantId?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof CreateCommand
-   */
-  startsAt?: Date;
-  /**
-   *
    * @type {Date}
    * @memberof CreateCommand
    */
   endsAt?: Date;
   /**
    *
-   * @type {CreateCommandTypeEnum}
+   * @type {string}
    * @memberof CreateCommand
    */
-  type?: CreateCommandTypeEnum;
+  location?: string;
   /**
    *
    * @type {CreateCommandLocationModeEnum}
@@ -54,14 +42,37 @@ export interface CreateCommand {
    * @type {string}
    * @memberof CreateCommand
    */
-  location?: string;
+  participantId?: string;
   /**
    *
    * @type {string}
    * @memberof CreateCommand
    */
   shortPurpose?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof CreateCommand
+   */
+  startsAt?: Date;
+  /**
+   *
+   * @type {CreateCommandTypeEnum}
+   * @memberof CreateCommand
+   */
+  type?: CreateCommandTypeEnum;
 }
+
+/**
+ * @export
+ */
+export const CreateCommandLocationModeEnum = {
+  InPerson: 'IN_PERSON',
+  Remote: 'REMOTE',
+  Phone: 'PHONE',
+} as const;
+export type CreateCommandLocationModeEnum =
+  (typeof CreateCommandLocationModeEnum)[keyof typeof CreateCommandLocationModeEnum];
 
 /**
  * @export
@@ -74,17 +85,6 @@ export const CreateCommandTypeEnum = {
 } as const;
 export type CreateCommandTypeEnum =
   (typeof CreateCommandTypeEnum)[keyof typeof CreateCommandTypeEnum];
-
-/**
- * @export
- */
-export const CreateCommandLocationModeEnum = {
-  InPerson: 'IN_PERSON',
-  Remote: 'REMOTE',
-  Phone: 'PHONE',
-} as const;
-export type CreateCommandLocationModeEnum =
-  (typeof CreateCommandLocationModeEnum)[keyof typeof CreateCommandLocationModeEnum];
 
 /**
  * Check if a given object implements the CreateCommand interface.
@@ -102,13 +102,13 @@ export function CreateCommandFromJSONTyped(json: any, ignoreDiscriminator: boole
     return json;
   }
   return {
-    participantId: json['participantId'] == null ? undefined : json['participantId'],
-    startsAt: json['startsAt'] == null ? undefined : new Date(json['startsAt']),
     endsAt: json['endsAt'] == null ? undefined : new Date(json['endsAt']),
-    type: json['type'] == null ? undefined : json['type'],
-    locationMode: json['locationMode'] == null ? undefined : json['locationMode'],
     location: json['location'] == null ? undefined : json['location'],
+    locationMode: json['locationMode'] == null ? undefined : json['locationMode'],
+    participantId: json['participantId'] == null ? undefined : json['participantId'],
     shortPurpose: json['shortPurpose'] == null ? undefined : json['shortPurpose'],
+    startsAt: json['startsAt'] == null ? undefined : new Date(json['startsAt']),
+    type: json['type'] == null ? undefined : json['type'],
   };
 }
 
@@ -125,12 +125,12 @@ export function CreateCommandToJSONTyped(
   }
 
   return {
-    participantId: value['participantId'],
-    startsAt: value['startsAt'] == null ? value['startsAt'] : value['startsAt'].toISOString(),
     endsAt: value['endsAt'] == null ? value['endsAt'] : value['endsAt'].toISOString(),
-    type: value['type'],
-    locationMode: value['locationMode'],
     location: value['location'],
+    locationMode: value['locationMode'],
+    participantId: value['participantId'],
     shortPurpose: value['shortPurpose'],
+    startsAt: value['startsAt'] == null ? value['startsAt'] : value['startsAt'].toISOString(),
+    type: value['type'],
   };
 }

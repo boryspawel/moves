@@ -21,34 +21,10 @@ import { mapValues } from '../runtime';
 export interface RuleView {
   /**
    *
-   * @type {string}
-   * @memberof RuleView
-   */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RuleView
-   */
-  versionName?: string;
-  /**
-   *
    * @type {number}
    * @memberof RuleView
    */
   basePoints?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof RuleView
-   */
-  dailyLimit?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof RuleView
-   */
-  weeklyLimit?: number;
   /**
    *
    * @type {number}
@@ -60,7 +36,7 @@ export interface RuleView {
    * @type {number}
    * @memberof RuleView
    */
-  repeatWindowDays?: number;
+  dailyLimit?: number;
   /**
    *
    * @type {number}
@@ -69,10 +45,34 @@ export interface RuleView {
   fullRewardOccurrences?: number;
   /**
    *
+   * @type {string}
+   * @memberof RuleView
+   */
+  id?: string;
+  /**
+   *
    * @type {number}
    * @memberof RuleView
    */
   reducedRewardPercent?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof RuleView
+   */
+  repeatWindowDays?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof RuleView
+   */
+  versionName?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof RuleView
+   */
+  weeklyLimit?: number;
 }
 
 /**
@@ -91,17 +91,17 @@ export function RuleViewFromJSONTyped(json: any, ignoreDiscriminator: boolean): 
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
-    versionName: json['versionName'] == null ? undefined : json['versionName'],
     basePoints: json['basePoints'] == null ? undefined : json['basePoints'],
-    dailyLimit: json['dailyLimit'] == null ? undefined : json['dailyLimit'],
-    weeklyLimit: json['weeklyLimit'] == null ? undefined : json['weeklyLimit'],
     cooldownSeconds: json['cooldownSeconds'] == null ? undefined : json['cooldownSeconds'],
-    repeatWindowDays: json['repeatWindowDays'] == null ? undefined : json['repeatWindowDays'],
+    dailyLimit: json['dailyLimit'] == null ? undefined : json['dailyLimit'],
     fullRewardOccurrences:
       json['fullRewardOccurrences'] == null ? undefined : json['fullRewardOccurrences'],
+    id: json['id'] == null ? undefined : json['id'],
     reducedRewardPercent:
       json['reducedRewardPercent'] == null ? undefined : json['reducedRewardPercent'],
+    repeatWindowDays: json['repeatWindowDays'] == null ? undefined : json['repeatWindowDays'],
+    versionName: json['versionName'] == null ? undefined : json['versionName'],
+    weeklyLimit: json['weeklyLimit'] == null ? undefined : json['weeklyLimit'],
   };
 }
 
@@ -118,14 +118,14 @@ export function RuleViewToJSONTyped(
   }
 
   return {
-    id: value['id'],
-    versionName: value['versionName'],
     basePoints: value['basePoints'],
-    dailyLimit: value['dailyLimit'],
-    weeklyLimit: value['weeklyLimit'],
     cooldownSeconds: value['cooldownSeconds'],
-    repeatWindowDays: value['repeatWindowDays'],
+    dailyLimit: value['dailyLimit'],
     fullRewardOccurrences: value['fullRewardOccurrences'],
+    id: value['id'],
     reducedRewardPercent: value['reducedRewardPercent'],
+    repeatWindowDays: value['repeatWindowDays'],
+    versionName: value['versionName'],
+    weeklyLimit: value['weeklyLimit'],
   };
 }

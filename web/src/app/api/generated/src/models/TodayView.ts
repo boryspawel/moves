@@ -59,6 +59,36 @@ import {
 export interface TodayView {
   /**
    *
+   * @type {Array<AppointmentView>}
+   * @memberof TodayView
+   */
+  appointments?: Array<AppointmentView>;
+  /**
+   *
+   * @type {Array<AttentionItemView>}
+   * @memberof TodayView
+   */
+  attentionItems?: Array<AttentionItemView>;
+  /**
+   *
+   * @type {Array<AvailabilityWindowView>}
+   * @memberof TodayView
+   */
+  availabilityWindows?: Array<AvailabilityWindowView>;
+  /**
+   *
+   * @type {Counts}
+   * @memberof TodayView
+   */
+  counts?: Counts;
+  /**
+   *
+   * @type {AppointmentView}
+   * @memberof TodayView
+   */
+  currentAppointment?: AppointmentView;
+  /**
+   *
    * @type {Date}
    * @memberof TodayView
    */
@@ -71,6 +101,18 @@ export interface TodayView {
   localDate?: Date;
   /**
    *
+   * @type {AppointmentView}
+   * @memberof TodayView
+   */
+  nextAppointment?: AppointmentView;
+  /**
+   *
+   * @type {Array<OperationalTaskView>}
+   * @memberof TodayView
+   */
+  operationalTasks?: Array<OperationalTaskView>;
+  /**
+   *
    * @type {string}
    * @memberof TodayView
    */
@@ -81,48 +123,6 @@ export interface TodayView {
    * @memberof TodayView
    */
   visibleRange?: VisibleRange;
-  /**
-   *
-   * @type {AppointmentView}
-   * @memberof TodayView
-   */
-  currentAppointment?: AppointmentView;
-  /**
-   *
-   * @type {AppointmentView}
-   * @memberof TodayView
-   */
-  nextAppointment?: AppointmentView;
-  /**
-   *
-   * @type {Array<AppointmentView>}
-   * @memberof TodayView
-   */
-  appointments?: Array<AppointmentView>;
-  /**
-   *
-   * @type {Array<AvailabilityWindowView>}
-   * @memberof TodayView
-   */
-  availabilityWindows?: Array<AvailabilityWindowView>;
-  /**
-   *
-   * @type {Array<AttentionItemView>}
-   * @memberof TodayView
-   */
-  attentionItems?: Array<AttentionItemView>;
-  /**
-   *
-   * @type {Array<OperationalTaskView>}
-   * @memberof TodayView
-   */
-  operationalTasks?: Array<OperationalTaskView>;
-  /**
-   *
-   * @type {Counts}
-   * @memberof TodayView
-   */
-  counts?: Counts;
 }
 
 /**
@@ -141,36 +141,36 @@ export function TodayViewFromJSONTyped(json: any, ignoreDiscriminator: boolean):
     return json;
   }
   return {
-    generatedAt: json['generatedAt'] == null ? undefined : new Date(json['generatedAt']),
-    localDate: json['localDate'] == null ? undefined : new Date(json['localDate']),
-    timeZoneId: json['timeZoneId'] == null ? undefined : json['timeZoneId'],
-    visibleRange:
-      json['visibleRange'] == null ? undefined : VisibleRangeFromJSON(json['visibleRange']),
-    currentAppointment:
-      json['currentAppointment'] == null
-        ? undefined
-        : AppointmentViewFromJSON(json['currentAppointment']),
-    nextAppointment:
-      json['nextAppointment'] == null
-        ? undefined
-        : AppointmentViewFromJSON(json['nextAppointment']),
     appointments:
       json['appointments'] == null
         ? undefined
         : (json['appointments'] as Array<any>).map(AppointmentViewFromJSON),
-    availabilityWindows:
-      json['availabilityWindows'] == null
-        ? undefined
-        : (json['availabilityWindows'] as Array<any>).map(AvailabilityWindowViewFromJSON),
     attentionItems:
       json['attentionItems'] == null
         ? undefined
         : (json['attentionItems'] as Array<any>).map(AttentionItemViewFromJSON),
+    availabilityWindows:
+      json['availabilityWindows'] == null
+        ? undefined
+        : (json['availabilityWindows'] as Array<any>).map(AvailabilityWindowViewFromJSON),
+    counts: json['counts'] == null ? undefined : CountsFromJSON(json['counts']),
+    currentAppointment:
+      json['currentAppointment'] == null
+        ? undefined
+        : AppointmentViewFromJSON(json['currentAppointment']),
+    generatedAt: json['generatedAt'] == null ? undefined : new Date(json['generatedAt']),
+    localDate: json['localDate'] == null ? undefined : new Date(json['localDate']),
+    nextAppointment:
+      json['nextAppointment'] == null
+        ? undefined
+        : AppointmentViewFromJSON(json['nextAppointment']),
     operationalTasks:
       json['operationalTasks'] == null
         ? undefined
         : (json['operationalTasks'] as Array<any>).map(OperationalTaskViewFromJSON),
-    counts: json['counts'] == null ? undefined : CountsFromJSON(json['counts']),
+    timeZoneId: json['timeZoneId'] == null ? undefined : json['timeZoneId'],
+    visibleRange:
+      json['visibleRange'] == null ? undefined : VisibleRangeFromJSON(json['visibleRange']),
   };
 }
 
@@ -187,32 +187,32 @@ export function TodayViewToJSONTyped(
   }
 
   return {
+    appointments:
+      value['appointments'] == null
+        ? undefined
+        : (value['appointments'] as Array<any>).map(AppointmentViewToJSON),
+    attentionItems:
+      value['attentionItems'] == null
+        ? undefined
+        : (value['attentionItems'] as Array<any>).map(AttentionItemViewToJSON),
+    availabilityWindows:
+      value['availabilityWindows'] == null
+        ? undefined
+        : (value['availabilityWindows'] as Array<any>).map(AvailabilityWindowViewToJSON),
+    counts: CountsToJSON(value['counts']),
+    currentAppointment: AppointmentViewToJSON(value['currentAppointment']),
     generatedAt:
       value['generatedAt'] == null ? value['generatedAt'] : value['generatedAt'].toISOString(),
     localDate:
       value['localDate'] == null
         ? value['localDate']
         : value['localDate'].toISOString().substring(0, 10),
-    timeZoneId: value['timeZoneId'],
-    visibleRange: VisibleRangeToJSON(value['visibleRange']),
-    currentAppointment: AppointmentViewToJSON(value['currentAppointment']),
     nextAppointment: AppointmentViewToJSON(value['nextAppointment']),
-    appointments:
-      value['appointments'] == null
-        ? undefined
-        : (value['appointments'] as Array<any>).map(AppointmentViewToJSON),
-    availabilityWindows:
-      value['availabilityWindows'] == null
-        ? undefined
-        : (value['availabilityWindows'] as Array<any>).map(AvailabilityWindowViewToJSON),
-    attentionItems:
-      value['attentionItems'] == null
-        ? undefined
-        : (value['attentionItems'] as Array<any>).map(AttentionItemViewToJSON),
     operationalTasks:
       value['operationalTasks'] == null
         ? undefined
         : (value['operationalTasks'] as Array<any>).map(OperationalTaskViewToJSON),
-    counts: CountsToJSON(value['counts']),
+    timeZoneId: value['timeZoneId'],
+    visibleRange: VisibleRangeToJSON(value['visibleRange']),
   };
 }

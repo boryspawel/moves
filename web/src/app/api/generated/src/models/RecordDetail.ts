@@ -46,13 +46,73 @@ export interface RecordDetail {
    * @type {string}
    * @memberof RecordDetail
    */
-  id?: string;
+  batchId?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof RecordDetail
+   */
+  createdAt?: Date;
   /**
    *
    * @type {string}
    * @memberof RecordDetail
    */
-  batchId?: string;
+  draftVersionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RecordDetail
+   */
+  id?: string;
+  /**
+   *
+   * @type {Array<IssueView>}
+   * @memberof RecordDetail
+   */
+  issues?: Array<IssueView>;
+  /**
+   *
+   * @type {Array<CandidateView>}
+   * @memberof RecordDetail
+   */
+  matchCandidates?: Array<CandidateView>;
+  /**
+   *
+   * @type {string}
+   * @memberof RecordDetail
+   */
+  matchedExerciseId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RecordDetail
+   */
+  normalizationVersion?: string;
+  /**
+   *
+   * @type {JsonNode}
+   * @memberof RecordDetail
+   */
+  normalized?: JsonNode;
+  /**
+   *
+   * @type {string}
+   * @memberof RecordDetail
+   */
+  normalizedSha256?: string;
+  /**
+   *
+   * @type {JsonNode}
+   * @memberof RecordDetail
+   */
+  raw?: JsonNode;
+  /**
+   *
+   * @type {string}
+   * @memberof RecordDetail
+   */
+  rawSha256?: string;
   /**
    *
    * @type {number}
@@ -73,54 +133,6 @@ export interface RecordDetail {
   status?: string;
   /**
    *
-   * @type {JsonNode}
-   * @memberof RecordDetail
-   */
-  raw?: JsonNode;
-  /**
-   *
-   * @type {JsonNode}
-   * @memberof RecordDetail
-   */
-  normalized?: JsonNode;
-  /**
-   *
-   * @type {string}
-   * @memberof RecordDetail
-   */
-  rawSha256?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RecordDetail
-   */
-  normalizedSha256?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RecordDetail
-   */
-  normalizationVersion?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RecordDetail
-   */
-  matchedExerciseId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RecordDetail
-   */
-  draftVersionId?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof RecordDetail
-   */
-  createdAt?: Date;
-  /**
-   *
    * @type {Date}
    * @memberof RecordDetail
    */
@@ -131,18 +143,6 @@ export interface RecordDetail {
    * @memberof RecordDetail
    */
   version?: number;
-  /**
-   *
-   * @type {Array<IssueView>}
-   * @memberof RecordDetail
-   */
-  issues?: Array<IssueView>;
-  /**
-   *
-   * @type {Array<CandidateView>}
-   * @memberof RecordDetail
-   */
-  matchCandidates?: Array<CandidateView>;
 }
 
 /**
@@ -161,28 +161,28 @@ export function RecordDetailFromJSONTyped(json: any, ignoreDiscriminator: boolea
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
     batchId: json['batchId'] == null ? undefined : json['batchId'],
-    rowNumber: json['rowNumber'] == null ? undefined : json['rowNumber'],
-    sourceRecordKey: json['sourceRecordKey'] == null ? undefined : json['sourceRecordKey'],
-    status: json['status'] == null ? undefined : json['status'],
-    raw: json['raw'] == null ? undefined : JsonNodeFromJSON(json['raw']),
-    normalized: json['normalized'] == null ? undefined : JsonNodeFromJSON(json['normalized']),
-    rawSha256: json['rawSha256'] == null ? undefined : json['rawSha256'],
-    normalizedSha256: json['normalizedSha256'] == null ? undefined : json['normalizedSha256'],
-    normalizationVersion:
-      json['normalizationVersion'] == null ? undefined : json['normalizationVersion'],
-    matchedExerciseId: json['matchedExerciseId'] == null ? undefined : json['matchedExerciseId'],
-    draftVersionId: json['draftVersionId'] == null ? undefined : json['draftVersionId'],
     createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
-    updatedAt: json['updatedAt'] == null ? undefined : new Date(json['updatedAt']),
-    version: json['version'] == null ? undefined : json['version'],
+    draftVersionId: json['draftVersionId'] == null ? undefined : json['draftVersionId'],
+    id: json['id'] == null ? undefined : json['id'],
     issues:
       json['issues'] == null ? undefined : (json['issues'] as Array<any>).map(IssueViewFromJSON),
     matchCandidates:
       json['matchCandidates'] == null
         ? undefined
         : (json['matchCandidates'] as Array<any>).map(CandidateViewFromJSON),
+    matchedExerciseId: json['matchedExerciseId'] == null ? undefined : json['matchedExerciseId'],
+    normalizationVersion:
+      json['normalizationVersion'] == null ? undefined : json['normalizationVersion'],
+    normalized: json['normalized'] == null ? undefined : JsonNodeFromJSON(json['normalized']),
+    normalizedSha256: json['normalizedSha256'] == null ? undefined : json['normalizedSha256'],
+    raw: json['raw'] == null ? undefined : JsonNodeFromJSON(json['raw']),
+    rawSha256: json['rawSha256'] == null ? undefined : json['rawSha256'],
+    rowNumber: json['rowNumber'] == null ? undefined : json['rowNumber'],
+    sourceRecordKey: json['sourceRecordKey'] == null ? undefined : json['sourceRecordKey'],
+    status: json['status'] == null ? undefined : json['status'],
+    updatedAt: json['updatedAt'] == null ? undefined : new Date(json['updatedAt']),
+    version: json['version'] == null ? undefined : json['version'],
   };
 }
 
@@ -199,26 +199,26 @@ export function RecordDetailToJSONTyped(
   }
 
   return {
-    id: value['id'],
     batchId: value['batchId'],
-    rowNumber: value['rowNumber'],
-    sourceRecordKey: value['sourceRecordKey'],
-    status: value['status'],
-    raw: JsonNodeToJSON(value['raw']),
-    normalized: JsonNodeToJSON(value['normalized']),
-    rawSha256: value['rawSha256'],
-    normalizedSha256: value['normalizedSha256'],
-    normalizationVersion: value['normalizationVersion'],
-    matchedExerciseId: value['matchedExerciseId'],
-    draftVersionId: value['draftVersionId'],
     createdAt: value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
-    updatedAt: value['updatedAt'] == null ? value['updatedAt'] : value['updatedAt'].toISOString(),
-    version: value['version'],
+    draftVersionId: value['draftVersionId'],
+    id: value['id'],
     issues:
       value['issues'] == null ? undefined : (value['issues'] as Array<any>).map(IssueViewToJSON),
     matchCandidates:
       value['matchCandidates'] == null
         ? undefined
         : (value['matchCandidates'] as Array<any>).map(CandidateViewToJSON),
+    matchedExerciseId: value['matchedExerciseId'],
+    normalizationVersion: value['normalizationVersion'],
+    normalized: JsonNodeToJSON(value['normalized']),
+    normalizedSha256: value['normalizedSha256'],
+    raw: JsonNodeToJSON(value['raw']),
+    rawSha256: value['rawSha256'],
+    rowNumber: value['rowNumber'],
+    sourceRecordKey: value['sourceRecordKey'],
+    status: value['status'],
+    updatedAt: value['updatedAt'] == null ? value['updatedAt'] : value['updatedAt'].toISOString(),
+    version: value['version'],
   };
 }

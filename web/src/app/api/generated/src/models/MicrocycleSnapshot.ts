@@ -29,30 +29,6 @@ import {
 export interface MicrocycleSnapshot {
   /**
    *
-   * @type {string}
-   * @memberof MicrocycleSnapshot
-   */
-  id?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof MicrocycleSnapshot
-   */
-  sequenceNumber?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof MicrocycleSnapshot
-   */
-  name?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof MicrocycleSnapshot
-   */
-  startDate?: Date;
-  /**
-   *
    * @type {Date}
    * @memberof MicrocycleSnapshot
    */
@@ -62,7 +38,13 @@ export interface MicrocycleSnapshot {
    * @type {string}
    * @memberof MicrocycleSnapshot
    */
-  phaseIntent?: string;
+  id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof MicrocycleSnapshot
+   */
+  name?: string;
   /**
    *
    * @type {string}
@@ -71,10 +53,28 @@ export interface MicrocycleSnapshot {
   phaseGoal?: string;
   /**
    *
+   * @type {string}
+   * @memberof MicrocycleSnapshot
+   */
+  phaseIntent?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof MicrocycleSnapshot
+   */
+  sequenceNumber?: number;
+  /**
+   *
    * @type {Array<SessionSnapshot>}
    * @memberof MicrocycleSnapshot
    */
   sessions?: Array<SessionSnapshot>;
+  /**
+   *
+   * @type {Date}
+   * @memberof MicrocycleSnapshot
+   */
+  startDate?: Date;
 }
 
 /**
@@ -96,17 +96,17 @@ export function MicrocycleSnapshotFromJSONTyped(
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
-    sequenceNumber: json['sequenceNumber'] == null ? undefined : json['sequenceNumber'],
-    name: json['name'] == null ? undefined : json['name'],
-    startDate: json['startDate'] == null ? undefined : new Date(json['startDate']),
     endDate: json['endDate'] == null ? undefined : new Date(json['endDate']),
-    phaseIntent: json['phaseIntent'] == null ? undefined : json['phaseIntent'],
+    id: json['id'] == null ? undefined : json['id'],
+    name: json['name'] == null ? undefined : json['name'],
     phaseGoal: json['phaseGoal'] == null ? undefined : json['phaseGoal'],
+    phaseIntent: json['phaseIntent'] == null ? undefined : json['phaseIntent'],
+    sequenceNumber: json['sequenceNumber'] == null ? undefined : json['sequenceNumber'],
     sessions:
       json['sessions'] == null
         ? undefined
         : (json['sessions'] as Array<any>).map(SessionSnapshotFromJSON),
+    startDate: json['startDate'] == null ? undefined : new Date(json['startDate']),
   };
 }
 
@@ -123,20 +123,20 @@ export function MicrocycleSnapshotToJSONTyped(
   }
 
   return {
-    id: value['id'],
-    sequenceNumber: value['sequenceNumber'],
-    name: value['name'],
-    startDate:
-      value['startDate'] == null
-        ? value['startDate']
-        : value['startDate'].toISOString().substring(0, 10),
     endDate:
       value['endDate'] == null ? value['endDate'] : value['endDate'].toISOString().substring(0, 10),
-    phaseIntent: value['phaseIntent'],
+    id: value['id'],
+    name: value['name'],
     phaseGoal: value['phaseGoal'],
+    phaseIntent: value['phaseIntent'],
+    sequenceNumber: value['sequenceNumber'],
     sessions:
       value['sessions'] == null
         ? undefined
         : (value['sessions'] as Array<any>).map(SessionSnapshotToJSON),
+    startDate:
+      value['startDate'] == null
+        ? value['startDate']
+        : value['startDate'].toISOString().substring(0, 10),
   };
 }

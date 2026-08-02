@@ -36,13 +36,13 @@ export interface ClientAppointmentView {
    * @type {string}
    * @memberof ClientAppointmentView
    */
-  type?: string;
+  status?: string;
   /**
    *
    * @type {string}
    * @memberof ClientAppointmentView
    */
-  status?: string;
+  type?: string;
 }
 
 /**
@@ -66,8 +66,8 @@ export function ClientAppointmentViewFromJSONTyped(
   return {
     appointmentId: json['appointmentId'] == null ? undefined : json['appointmentId'],
     startsAt: json['startsAt'] == null ? undefined : new Date(json['startsAt']),
-    type: json['type'] == null ? undefined : json['type'],
     status: json['status'] == null ? undefined : json['status'],
+    type: json['type'] == null ? undefined : json['type'],
   };
 }
 
@@ -86,7 +86,7 @@ export function ClientAppointmentViewToJSONTyped(
   return {
     appointmentId: value['appointmentId'],
     startsAt: value['startsAt'] == null ? value['startsAt'] : value['startsAt'].toISOString(),
-    type: value['type'],
     status: value['status'],
+    type: value['type'],
   };
 }

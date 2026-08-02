@@ -24,31 +24,25 @@ export interface PrescriptionView {
    * @type {string}
    * @memberof PrescriptionView
    */
+  exerciseVersionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PrescriptionView
+   */
   id?: string;
   /**
    *
    * @type {string}
    * @memberof PrescriptionView
    */
-  exerciseVersionId?: string;
+  notes?: string;
   /**
    *
    * @type {number}
    * @memberof PrescriptionView
    */
   position?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof PrescriptionView
-   */
-  targetSets?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof PrescriptionView
-   */
-  targetRepetitions?: number;
   /**
    *
    * @type {number}
@@ -63,10 +57,16 @@ export interface PrescriptionView {
   targetLoadKg?: number;
   /**
    *
-   * @type {string}
+   * @type {number}
    * @memberof PrescriptionView
    */
-  notes?: string;
+  targetRepetitions?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof PrescriptionView
+   */
+  targetSets?: number;
 }
 
 /**
@@ -88,15 +88,15 @@ export function PrescriptionViewFromJSONTyped(
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
     exerciseVersionId: json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
+    id: json['id'] == null ? undefined : json['id'],
+    notes: json['notes'] == null ? undefined : json['notes'],
     position: json['position'] == null ? undefined : json['position'],
-    targetSets: json['targetSets'] == null ? undefined : json['targetSets'],
-    targetRepetitions: json['targetRepetitions'] == null ? undefined : json['targetRepetitions'],
     targetDurationSeconds:
       json['targetDurationSeconds'] == null ? undefined : json['targetDurationSeconds'],
     targetLoadKg: json['targetLoadKg'] == null ? undefined : json['targetLoadKg'],
-    notes: json['notes'] == null ? undefined : json['notes'],
+    targetRepetitions: json['targetRepetitions'] == null ? undefined : json['targetRepetitions'],
+    targetSets: json['targetSets'] == null ? undefined : json['targetSets'],
   };
 }
 
@@ -113,13 +113,13 @@ export function PrescriptionViewToJSONTyped(
   }
 
   return {
-    id: value['id'],
     exerciseVersionId: value['exerciseVersionId'],
+    id: value['id'],
+    notes: value['notes'],
     position: value['position'],
-    targetSets: value['targetSets'],
-    targetRepetitions: value['targetRepetitions'],
     targetDurationSeconds: value['targetDurationSeconds'],
     targetLoadKg: value['targetLoadKg'],
-    notes: value['notes'],
+    targetRepetitions: value['targetRepetitions'],
+    targetSets: value['targetSets'],
   };
 }

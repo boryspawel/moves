@@ -21,6 +21,12 @@ import { mapValues } from '../runtime';
 export interface AdherenceSummaryView {
   /**
    *
+   * @type {number}
+   * @memberof AdherenceSummaryView
+   */
+  completedSessions?: number;
+  /**
+   *
    * @type {string}
    * @memberof AdherenceSummaryView
    */
@@ -33,34 +39,10 @@ export interface AdherenceSummaryView {
   from?: Date;
   /**
    *
-   * @type {Date}
-   * @memberof AdherenceSummaryView
-   */
-  to?: Date;
-  /**
-   *
    * @type {number}
    * @memberof AdherenceSummaryView
    */
   plannedSessions?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof AdherenceSummaryView
-   */
-  startedSessions?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof AdherenceSummaryView
-   */
-  completedSessions?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof AdherenceSummaryView
-   */
-  skippedSessions?: number;
   /**
    *
    * @type {number}
@@ -73,6 +55,24 @@ export interface AdherenceSummaryView {
    * @memberof AdherenceSummaryView
    */
   reportingCoverage?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof AdherenceSummaryView
+   */
+  skippedSessions?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof AdherenceSummaryView
+   */
+  startedSessions?: number;
+  /**
+   *
+   * @type {Date}
+   * @memberof AdherenceSummaryView
+   */
+  to?: Date;
 }
 
 /**
@@ -94,16 +94,16 @@ export function AdherenceSummaryViewFromJSONTyped(
     return json;
   }
   return {
+    completedSessions: json['completedSessions'] == null ? undefined : json['completedSessions'],
     dataStatus: json['dataStatus'] == null ? undefined : json['dataStatus'],
     from: json['from'] == null ? undefined : new Date(json['from']),
-    to: json['to'] == null ? undefined : new Date(json['to']),
     plannedSessions: json['plannedSessions'] == null ? undefined : json['plannedSessions'],
-    startedSessions: json['startedSessions'] == null ? undefined : json['startedSessions'],
-    completedSessions: json['completedSessions'] == null ? undefined : json['completedSessions'],
-    skippedSessions: json['skippedSessions'] == null ? undefined : json['skippedSessions'],
     prescriptionCompletion:
       json['prescriptionCompletion'] == null ? undefined : json['prescriptionCompletion'],
     reportingCoverage: json['reportingCoverage'] == null ? undefined : json['reportingCoverage'],
+    skippedSessions: json['skippedSessions'] == null ? undefined : json['skippedSessions'],
+    startedSessions: json['startedSessions'] == null ? undefined : json['startedSessions'],
+    to: json['to'] == null ? undefined : new Date(json['to']),
   };
 }
 
@@ -120,14 +120,14 @@ export function AdherenceSummaryViewToJSONTyped(
   }
 
   return {
+    completedSessions: value['completedSessions'],
     dataStatus: value['dataStatus'],
     from: value['from'] == null ? value['from'] : value['from'].toISOString(),
-    to: value['to'] == null ? value['to'] : value['to'].toISOString(),
     plannedSessions: value['plannedSessions'],
-    startedSessions: value['startedSessions'],
-    completedSessions: value['completedSessions'],
-    skippedSessions: value['skippedSessions'],
     prescriptionCompletion: value['prescriptionCompletion'],
     reportingCoverage: value['reportingCoverage'],
+    skippedSessions: value['skippedSessions'],
+    startedSessions: value['startedSessions'],
+    to: value['to'] == null ? value['to'] : value['to'].toISOString(),
   };
 }

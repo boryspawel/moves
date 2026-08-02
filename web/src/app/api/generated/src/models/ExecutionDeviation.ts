@@ -24,7 +24,7 @@ export interface ExecutionDeviation {
    * @type {string}
    * @memberof ExecutionDeviation
    */
-  type?: string;
+  performedValue?: string;
   /**
    *
    * @type {string}
@@ -36,7 +36,7 @@ export interface ExecutionDeviation {
    * @type {string}
    * @memberof ExecutionDeviation
    */
-  performedValue?: string;
+  type?: string;
 }
 
 /**
@@ -58,9 +58,9 @@ export function ExecutionDeviationFromJSONTyped(
     return json;
   }
   return {
-    type: json['type'] == null ? undefined : json['type'],
-    plannedValue: json['plannedValue'] == null ? undefined : json['plannedValue'],
     performedValue: json['performedValue'] == null ? undefined : json['performedValue'],
+    plannedValue: json['plannedValue'] == null ? undefined : json['plannedValue'],
+    type: json['type'] == null ? undefined : json['type'],
   };
 }
 
@@ -77,8 +77,8 @@ export function ExecutionDeviationToJSONTyped(
   }
 
   return {
-    type: value['type'],
-    plannedValue: value['plannedValue'],
     performedValue: value['performedValue'],
+    plannedValue: value['plannedValue'],
+    type: value['type'],
   };
 }

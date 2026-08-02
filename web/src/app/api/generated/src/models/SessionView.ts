@@ -29,16 +29,16 @@ import {
 export interface SessionView {
   /**
    *
-   * @type {string}
+   * @type {Date}
    * @memberof SessionView
    */
-  id?: string;
+  assignedAt?: Date;
   /**
    *
    * @type {string}
    * @memberof SessionView
    */
-  title?: string;
+  id?: string;
   /**
    *
    * @type {SessionViewKindEnum}
@@ -47,22 +47,22 @@ export interface SessionView {
   kind?: SessionViewKindEnum;
   /**
    *
+   * @type {Array<PrescriptionView>}
+   * @memberof SessionView
+   */
+  prescriptions?: Array<PrescriptionView>;
+  /**
+   *
    * @type {SessionViewStatusEnum}
    * @memberof SessionView
    */
   status?: SessionViewStatusEnum;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof SessionView
    */
-  assignedAt?: Date;
-  /**
-   *
-   * @type {Array<PrescriptionView>}
-   * @memberof SessionView
-   */
-  prescriptions?: Array<PrescriptionView>;
+  title?: string;
 }
 
 /**
@@ -102,15 +102,15 @@ export function SessionViewFromJSONTyped(json: any, ignoreDiscriminator: boolean
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
-    title: json['title'] == null ? undefined : json['title'],
-    kind: json['kind'] == null ? undefined : json['kind'],
-    status: json['status'] == null ? undefined : json['status'],
     assignedAt: json['assignedAt'] == null ? undefined : new Date(json['assignedAt']),
+    id: json['id'] == null ? undefined : json['id'],
+    kind: json['kind'] == null ? undefined : json['kind'],
     prescriptions:
       json['prescriptions'] == null
         ? undefined
         : (json['prescriptions'] as Array<any>).map(PrescriptionViewFromJSON),
+    status: json['status'] == null ? undefined : json['status'],
+    title: json['title'] == null ? undefined : json['title'],
   };
 }
 
@@ -127,15 +127,15 @@ export function SessionViewToJSONTyped(
   }
 
   return {
-    id: value['id'],
-    title: value['title'],
-    kind: value['kind'],
-    status: value['status'],
     assignedAt:
       value['assignedAt'] == null ? value['assignedAt'] : value['assignedAt'].toISOString(),
+    id: value['id'],
+    kind: value['kind'],
     prescriptions:
       value['prescriptions'] == null
         ? undefined
         : (value['prescriptions'] as Array<any>).map(PrescriptionViewToJSON),
+    status: value['status'],
+    title: value['title'],
   };
 }

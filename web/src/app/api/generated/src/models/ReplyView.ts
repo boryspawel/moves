@@ -21,6 +21,12 @@ import { mapValues } from '../runtime';
 export interface ReplyView {
   /**
    *
+   * @type {Date}
+   * @memberof ReplyView
+   */
+  createdAt?: Date;
+  /**
+   *
    * @type {string}
    * @memberof ReplyView
    */
@@ -31,12 +37,6 @@ export interface ReplyView {
    * @memberof ReplyView
    */
   shortText?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof ReplyView
-   */
-  createdAt?: Date;
 }
 
 /**
@@ -55,9 +55,9 @@ export function ReplyViewFromJSONTyped(json: any, ignoreDiscriminator: boolean):
     return json;
   }
   return {
+    createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
     id: json['id'] == null ? undefined : json['id'],
     shortText: json['shortText'] == null ? undefined : json['shortText'],
-    createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
   };
 }
 
@@ -74,8 +74,8 @@ export function ReplyViewToJSONTyped(
   }
 
   return {
+    createdAt: value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
     id: value['id'],
     shortText: value['shortText'],
-    createdAt: value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
   };
 }

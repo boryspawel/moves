@@ -32,7 +32,7 @@ export interface CreatePlanCommand {
    * @type {string}
    * @memberof CreatePlanCommand
    */
-  participantAccountId?: string;
+  cycleName?: string;
   /**
    *
    * @type {string}
@@ -44,25 +44,25 @@ export interface CreatePlanCommand {
    * @type {string}
    * @memberof CreatePlanCommand
    */
-  planName?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof CreatePlanCommand
-   */
-  cycleName?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof CreatePlanCommand
-   */
   microcycleName?: string;
   /**
    *
    * @type {string}
    * @memberof CreatePlanCommand
    */
-  sessionTitle?: string;
+  participantAccountId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof CreatePlanCommand
+   */
+  planName?: string;
+  /**
+   *
+   * @type {Array<PrescriptionCommand>}
+   * @memberof CreatePlanCommand
+   */
+  prescriptions?: Array<PrescriptionCommand>;
   /**
    *
    * @type {CreatePlanCommandSessionKindEnum}
@@ -71,10 +71,10 @@ export interface CreatePlanCommand {
   sessionKind?: CreatePlanCommandSessionKindEnum;
   /**
    *
-   * @type {Array<PrescriptionCommand>}
+   * @type {string}
    * @memberof CreatePlanCommand
    */
-  prescriptions?: Array<PrescriptionCommand>;
+  sessionTitle?: string;
 }
 
 /**
@@ -106,18 +106,18 @@ export function CreatePlanCommandFromJSONTyped(
     return json;
   }
   return {
+    cycleName: json['cycleName'] == null ? undefined : json['cycleName'],
+    goalName: json['goalName'] == null ? undefined : json['goalName'],
+    microcycleName: json['microcycleName'] == null ? undefined : json['microcycleName'],
     participantAccountId:
       json['participantAccountId'] == null ? undefined : json['participantAccountId'],
-    goalName: json['goalName'] == null ? undefined : json['goalName'],
     planName: json['planName'] == null ? undefined : json['planName'],
-    cycleName: json['cycleName'] == null ? undefined : json['cycleName'],
-    microcycleName: json['microcycleName'] == null ? undefined : json['microcycleName'],
-    sessionTitle: json['sessionTitle'] == null ? undefined : json['sessionTitle'],
-    sessionKind: json['sessionKind'] == null ? undefined : json['sessionKind'],
     prescriptions:
       json['prescriptions'] == null
         ? undefined
         : (json['prescriptions'] as Array<any>).map(PrescriptionCommandFromJSON),
+    sessionKind: json['sessionKind'] == null ? undefined : json['sessionKind'],
+    sessionTitle: json['sessionTitle'] == null ? undefined : json['sessionTitle'],
   };
 }
 
@@ -134,16 +134,16 @@ export function CreatePlanCommandToJSONTyped(
   }
 
   return {
-    participantAccountId: value['participantAccountId'],
-    goalName: value['goalName'],
-    planName: value['planName'],
     cycleName: value['cycleName'],
+    goalName: value['goalName'],
     microcycleName: value['microcycleName'],
-    sessionTitle: value['sessionTitle'],
-    sessionKind: value['sessionKind'],
+    participantAccountId: value['participantAccountId'],
+    planName: value['planName'],
     prescriptions:
       value['prescriptions'] == null
         ? undefined
         : (value['prescriptions'] as Array<any>).map(PrescriptionCommandToJSON),
+    sessionKind: value['sessionKind'],
+    sessionTitle: value['sessionTitle'],
   };
 }

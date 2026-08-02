@@ -30,6 +30,12 @@ export interface TrainingCycle {
    * @type {string}
    * @memberof TrainingCycle
    */
+  name?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof TrainingCycle
+   */
   planId?: string;
   /**
    *
@@ -37,12 +43,6 @@ export interface TrainingCycle {
    * @memberof TrainingCycle
    */
   sequenceNumber?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof TrainingCycle
-   */
-  name?: string;
 }
 
 /**
@@ -62,9 +62,9 @@ export function TrainingCycleFromJSONTyped(json: any, ignoreDiscriminator: boole
   }
   return {
     id: json['id'] == null ? undefined : json['id'],
+    name: json['name'] == null ? undefined : json['name'],
     planId: json['planId'] == null ? undefined : json['planId'],
     sequenceNumber: json['sequenceNumber'] == null ? undefined : json['sequenceNumber'],
-    name: json['name'] == null ? undefined : json['name'],
   };
 }
 
@@ -82,8 +82,8 @@ export function TrainingCycleToJSONTyped(
 
   return {
     id: value['id'],
+    name: value['name'],
     planId: value['planId'],
     sequenceNumber: value['sequenceNumber'],
-    name: value['name'],
   };
 }

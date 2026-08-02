@@ -24,13 +24,13 @@ export interface ReviewRequestCommand {
    * @type {string}
    * @memberof ReviewRequestCommand
    */
-  reviewerAccountId?: string;
+  requestReference?: string;
   /**
    *
    * @type {string}
    * @memberof ReviewRequestCommand
    */
-  requestReference?: string;
+  reviewerAccountId?: string;
 }
 
 /**
@@ -52,8 +52,8 @@ export function ReviewRequestCommandFromJSONTyped(
     return json;
   }
   return {
-    reviewerAccountId: json['reviewerAccountId'] == null ? undefined : json['reviewerAccountId'],
     requestReference: json['requestReference'] == null ? undefined : json['requestReference'],
+    reviewerAccountId: json['reviewerAccountId'] == null ? undefined : json['reviewerAccountId'],
   };
 }
 
@@ -70,7 +70,7 @@ export function ReviewRequestCommandToJSONTyped(
   }
 
   return {
-    reviewerAccountId: value['reviewerAccountId'],
     requestReference: value['requestReference'],
+    reviewerAccountId: value['reviewerAccountId'],
   };
 }

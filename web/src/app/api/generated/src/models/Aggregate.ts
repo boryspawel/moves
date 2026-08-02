@@ -24,6 +24,30 @@ export interface Aggregate {
    * @type {string}
    * @memberof Aggregate
    */
+  channel?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof Aggregate
+   */
+  high?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof Aggregate
+   */
+  low?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof Aggregate
+   */
+  observationFamily?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Aggregate
+   */
   scope?: string;
   /**
    *
@@ -36,43 +60,19 @@ export interface Aggregate {
    * @type {string}
    * @memberof Aggregate
    */
-  structureId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof Aggregate
-   */
   side?: string;
   /**
    *
    * @type {string}
    * @memberof Aggregate
    */
-  channel?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof Aggregate
-   */
-  observationFamily?: string;
+  structureId?: string;
   /**
    *
    * @type {string}
    * @memberof Aggregate
    */
   unit?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof Aggregate
-   */
-  low?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof Aggregate
-   */
-  high?: number;
 }
 
 /**
@@ -91,15 +91,15 @@ export function AggregateFromJSONTyped(json: any, ignoreDiscriminator: boolean):
     return json;
   }
   return {
+    channel: json['channel'] == null ? undefined : json['channel'],
+    high: json['high'] == null ? undefined : json['high'],
+    low: json['low'] == null ? undefined : json['low'],
+    observationFamily: json['observationFamily'] == null ? undefined : json['observationFamily'],
     scope: json['scope'] == null ? undefined : json['scope'],
     scopeKey: json['scopeKey'] == null ? undefined : json['scopeKey'],
-    structureId: json['structureId'] == null ? undefined : json['structureId'],
     side: json['side'] == null ? undefined : json['side'],
-    channel: json['channel'] == null ? undefined : json['channel'],
-    observationFamily: json['observationFamily'] == null ? undefined : json['observationFamily'],
+    structureId: json['structureId'] == null ? undefined : json['structureId'],
     unit: json['unit'] == null ? undefined : json['unit'],
-    low: json['low'] == null ? undefined : json['low'],
-    high: json['high'] == null ? undefined : json['high'],
   };
 }
 
@@ -116,14 +116,14 @@ export function AggregateToJSONTyped(
   }
 
   return {
+    channel: value['channel'],
+    high: value['high'],
+    low: value['low'],
+    observationFamily: value['observationFamily'],
     scope: value['scope'],
     scopeKey: value['scopeKey'],
-    structureId: value['structureId'],
     side: value['side'],
-    channel: value['channel'],
-    observationFamily: value['observationFamily'],
+    structureId: value['structureId'],
     unit: value['unit'],
-    low: value['low'],
-    high: value['high'],
   };
 }

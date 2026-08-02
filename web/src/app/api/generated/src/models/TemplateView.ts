@@ -24,13 +24,13 @@ export interface TemplateView {
    * @type {string}
    * @memberof TemplateView
    */
-  id?: string;
+  code?: string;
   /**
    *
    * @type {string}
    * @memberof TemplateView
    */
-  code?: string;
+  id?: string;
   /**
    *
    * @type {number}
@@ -55,8 +55,8 @@ export function TemplateViewFromJSONTyped(json: any, ignoreDiscriminator: boolea
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
     code: json['code'] == null ? undefined : json['code'],
+    id: json['id'] == null ? undefined : json['id'],
     versionNumber: json['versionNumber'] == null ? undefined : json['versionNumber'],
   };
 }
@@ -74,8 +74,8 @@ export function TemplateViewToJSONTyped(
   }
 
   return {
-    id: value['id'],
     code: value['code'],
+    id: value['id'],
     versionNumber: value['versionNumber'],
   };
 }

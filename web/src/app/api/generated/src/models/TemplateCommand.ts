@@ -27,12 +27,6 @@ export interface TemplateCommand {
   code?: string;
   /**
    *
-   * @type {number}
-   * @memberof TemplateCommand
-   */
-  versionNumber?: number;
-  /**
-   *
    * @type {string}
    * @memberof TemplateCommand
    */
@@ -43,6 +37,12 @@ export interface TemplateCommand {
    * @memberof TemplateCommand
    */
   legalBasis?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof TemplateCommand
+   */
+  versionNumber?: number;
 }
 
 /**
@@ -65,9 +65,9 @@ export function TemplateCommandFromJSONTyped(
   }
   return {
     code: json['code'] == null ? undefined : json['code'],
-    versionNumber: json['versionNumber'] == null ? undefined : json['versionNumber'],
     contentReference: json['contentReference'] == null ? undefined : json['contentReference'],
     legalBasis: json['legalBasis'] == null ? undefined : json['legalBasis'],
+    versionNumber: json['versionNumber'] == null ? undefined : json['versionNumber'],
   };
 }
 
@@ -85,8 +85,8 @@ export function TemplateCommandToJSONTyped(
 
   return {
     code: value['code'],
-    versionNumber: value['versionNumber'],
     contentReference: value['contentReference'],
     legalBasis: value['legalBasis'],
+    versionNumber: value['versionNumber'],
   };
 }

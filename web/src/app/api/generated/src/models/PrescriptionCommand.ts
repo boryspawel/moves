@@ -27,16 +27,10 @@ export interface PrescriptionCommand {
   exerciseVersionId?: string;
   /**
    *
-   * @type {number}
+   * @type {string}
    * @memberof PrescriptionCommand
    */
-  targetSets?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof PrescriptionCommand
-   */
-  targetRepetitions?: number;
+  notes?: string;
   /**
    *
    * @type {number}
@@ -51,10 +45,16 @@ export interface PrescriptionCommand {
   targetLoadKg?: number;
   /**
    *
-   * @type {string}
+   * @type {number}
    * @memberof PrescriptionCommand
    */
-  notes?: string;
+  targetRepetitions?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof PrescriptionCommand
+   */
+  targetSets?: number;
 }
 
 /**
@@ -77,12 +77,12 @@ export function PrescriptionCommandFromJSONTyped(
   }
   return {
     exerciseVersionId: json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
-    targetSets: json['targetSets'] == null ? undefined : json['targetSets'],
-    targetRepetitions: json['targetRepetitions'] == null ? undefined : json['targetRepetitions'],
+    notes: json['notes'] == null ? undefined : json['notes'],
     targetDurationSeconds:
       json['targetDurationSeconds'] == null ? undefined : json['targetDurationSeconds'],
     targetLoadKg: json['targetLoadKg'] == null ? undefined : json['targetLoadKg'],
-    notes: json['notes'] == null ? undefined : json['notes'],
+    targetRepetitions: json['targetRepetitions'] == null ? undefined : json['targetRepetitions'],
+    targetSets: json['targetSets'] == null ? undefined : json['targetSets'],
   };
 }
 
@@ -100,10 +100,10 @@ export function PrescriptionCommandToJSONTyped(
 
   return {
     exerciseVersionId: value['exerciseVersionId'],
-    targetSets: value['targetSets'],
-    targetRepetitions: value['targetRepetitions'],
+    notes: value['notes'],
     targetDurationSeconds: value['targetDurationSeconds'],
     targetLoadKg: value['targetLoadKg'],
-    notes: value['notes'],
+    targetRepetitions: value['targetRepetitions'],
+    targetSets: value['targetSets'],
   };
 }

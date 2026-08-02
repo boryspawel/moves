@@ -21,10 +21,52 @@ import { mapValues } from '../runtime';
 export interface FactorSnapshot {
   /**
    *
+   * @type {boolean}
+   * @memberof FactorSnapshot
+   */
+  activelyOverridden?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof FactorSnapshot
+   */
+  channel?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof FactorSnapshot
+   */
+  evidenceGrade?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof FactorSnapshot
+   */
+  explanationCode?: string;
+  /**
+   *
    * @type {string}
    * @memberof FactorSnapshot
    */
   id?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof FactorSnapshot
+   */
+  observedHigh?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof FactorSnapshot
+   */
+  observedLow?: number;
+  /**
+   *
+   * @type {boolean}
+   * @memberof FactorSnapshot
+   */
+  overridable?: boolean;
   /**
    *
    * @type {FactorSnapshotResultEnum}
@@ -45,22 +87,10 @@ export interface FactorSnapshot {
   targetRef?: string;
   /**
    *
-   * @type {string}
-   * @memberof FactorSnapshot
-   */
-  channel?: string;
-  /**
-   *
    * @type {number}
    * @memberof FactorSnapshot
    */
-  observedLow?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof FactorSnapshot
-   */
-  observedHigh?: number;
+  thresholdHigh?: number;
   /**
    *
    * @type {number}
@@ -69,40 +99,10 @@ export interface FactorSnapshot {
   thresholdLow?: number;
   /**
    *
-   * @type {number}
-   * @memberof FactorSnapshot
-   */
-  thresholdHigh?: number;
-  /**
-   *
    * @type {string}
    * @memberof FactorSnapshot
    */
   unit?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof FactorSnapshot
-   */
-  explanationCode?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof FactorSnapshot
-   */
-  evidenceGrade?: string;
-  /**
-   *
-   * @type {boolean}
-   * @memberof FactorSnapshot
-   */
-  overridable?: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof FactorSnapshot
-   */
-  activelyOverridden?: boolean;
 }
 
 /**
@@ -136,20 +136,20 @@ export function FactorSnapshotFromJSONTyped(
     return json;
   }
   return {
+    activelyOverridden: json['activelyOverridden'] == null ? undefined : json['activelyOverridden'],
+    channel: json['channel'] == null ? undefined : json['channel'],
+    evidenceGrade: json['evidenceGrade'] == null ? undefined : json['evidenceGrade'],
+    explanationCode: json['explanationCode'] == null ? undefined : json['explanationCode'],
     id: json['id'] == null ? undefined : json['id'],
+    observedHigh: json['observedHigh'] == null ? undefined : json['observedHigh'],
+    observedLow: json['observedLow'] == null ? undefined : json['observedLow'],
+    overridable: json['overridable'] == null ? undefined : json['overridable'],
     result: json['result'] == null ? undefined : json['result'],
     ruleCode: json['ruleCode'] == null ? undefined : json['ruleCode'],
     targetRef: json['targetRef'] == null ? undefined : json['targetRef'],
-    channel: json['channel'] == null ? undefined : json['channel'],
-    observedLow: json['observedLow'] == null ? undefined : json['observedLow'],
-    observedHigh: json['observedHigh'] == null ? undefined : json['observedHigh'],
-    thresholdLow: json['thresholdLow'] == null ? undefined : json['thresholdLow'],
     thresholdHigh: json['thresholdHigh'] == null ? undefined : json['thresholdHigh'],
+    thresholdLow: json['thresholdLow'] == null ? undefined : json['thresholdLow'],
     unit: json['unit'] == null ? undefined : json['unit'],
-    explanationCode: json['explanationCode'] == null ? undefined : json['explanationCode'],
-    evidenceGrade: json['evidenceGrade'] == null ? undefined : json['evidenceGrade'],
-    overridable: json['overridable'] == null ? undefined : json['overridable'],
-    activelyOverridden: json['activelyOverridden'] == null ? undefined : json['activelyOverridden'],
   };
 }
 
@@ -166,19 +166,19 @@ export function FactorSnapshotToJSONTyped(
   }
 
   return {
+    activelyOverridden: value['activelyOverridden'],
+    channel: value['channel'],
+    evidenceGrade: value['evidenceGrade'],
+    explanationCode: value['explanationCode'],
     id: value['id'],
+    observedHigh: value['observedHigh'],
+    observedLow: value['observedLow'],
+    overridable: value['overridable'],
     result: value['result'],
     ruleCode: value['ruleCode'],
     targetRef: value['targetRef'],
-    channel: value['channel'],
-    observedLow: value['observedLow'],
-    observedHigh: value['observedHigh'],
-    thresholdLow: value['thresholdLow'],
     thresholdHigh: value['thresholdHigh'],
+    thresholdLow: value['thresholdLow'],
     unit: value['unit'],
-    explanationCode: value['explanationCode'],
-    evidenceGrade: value['evidenceGrade'],
-    overridable: value['overridable'],
-    activelyOverridden: value['activelyOverridden'],
   };
 }

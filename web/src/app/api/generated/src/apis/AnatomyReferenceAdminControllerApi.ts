@@ -47,11 +47,11 @@ export interface AncestorsRequest {
   structureId: string;
 }
 
-export interface Create3Request {
+export interface Create4Request {
   createStructureRequest: CreateStructureRequest;
 }
 
-export interface Get3Request {
+export interface Get4Request {
   structureId: string;
 }
 
@@ -177,13 +177,13 @@ export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for create3 without sending the request
+   * Creates request options for create4 without sending the request
    */
-  async create3RequestOpts(requestParameters: Create3Request): Promise<runtime.RequestOpts> {
+  async create4RequestOpts(requestParameters: Create4Request): Promise<runtime.RequestOpts> {
     if (requestParameters['createStructureRequest'] == null) {
       throw new runtime.RequiredError(
         'createStructureRequest',
-        'Required parameter "createStructureRequest" was null or undefined when calling create3().',
+        'Required parameter "createStructureRequest" was null or undefined when calling create4().',
       );
     }
 
@@ -207,11 +207,11 @@ export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
   /**
    * Create a draft anatomical structure
    */
-  async create3Raw(
-    requestParameters: Create3Request,
+  async create4Raw(
+    requestParameters: Create4Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AnatomicalStructureSnapshot>> {
-    const requestOptions = await this.create3RequestOpts(requestParameters);
+    const requestOptions = await this.create4RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
@@ -222,22 +222,22 @@ export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
   /**
    * Create a draft anatomical structure
    */
-  async create3(
-    requestParameters: Create3Request,
+  async create4(
+    requestParameters: Create4Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<AnatomicalStructureSnapshot> {
-    const response = await this.create3Raw(requestParameters, initOverrides);
+    const response = await this.create4Raw(requestParameters, initOverrides);
     return await response.value();
   }
 
   /**
-   * Creates request options for get3 without sending the request
+   * Creates request options for get4 without sending the request
    */
-  async get3RequestOpts(requestParameters: Get3Request): Promise<runtime.RequestOpts> {
+  async get4RequestOpts(requestParameters: Get4Request): Promise<runtime.RequestOpts> {
     if (requestParameters['structureId'] == null) {
       throw new runtime.RequiredError(
         'structureId',
-        'Required parameter "structureId" was null or undefined when calling get3().',
+        'Required parameter "structureId" was null or undefined when calling get4().',
       );
     }
 
@@ -261,11 +261,11 @@ export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async get3Raw(
-    requestParameters: Get3Request,
+  async get4Raw(
+    requestParameters: Get4Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AnatomicalStructureSnapshot>> {
-    const requestOptions = await this.get3RequestOpts(requestParameters);
+    const requestOptions = await this.get4RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
@@ -275,11 +275,11 @@ export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async get3(
-    requestParameters: Get3Request,
+  async get4(
+    requestParameters: Get4Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<AnatomicalStructureSnapshot> {
-    const response = await this.get3Raw(requestParameters, initOverrides);
+    const response = await this.get4Raw(requestParameters, initOverrides);
     return await response.value();
   }
 

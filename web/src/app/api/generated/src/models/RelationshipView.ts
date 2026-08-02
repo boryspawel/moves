@@ -21,16 +21,16 @@ import { mapValues } from '../runtime';
 export interface RelationshipView {
   /**
    *
-   * @type {string}
-   * @memberof RelationshipView
-   */
-  status?: string;
-  /**
-   *
    * @type {Date}
    * @memberof RelationshipView
    */
   startedAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof RelationshipView
+   */
+  status?: string;
 }
 
 /**
@@ -52,8 +52,8 @@ export function RelationshipViewFromJSONTyped(
     return json;
   }
   return {
-    status: json['status'] == null ? undefined : json['status'],
     startedAt: json['startedAt'] == null ? undefined : new Date(json['startedAt']),
+    status: json['status'] == null ? undefined : json['status'],
   };
 }
 
@@ -70,7 +70,7 @@ export function RelationshipViewToJSONTyped(
   }
 
   return {
-    status: value['status'],
     startedAt: value['startedAt'] == null ? value['startedAt'] : value['startedAt'].toISOString(),
+    status: value['status'],
   };
 }

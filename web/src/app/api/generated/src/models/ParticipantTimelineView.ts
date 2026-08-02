@@ -32,19 +32,13 @@ export interface ParticipantTimelineView {
    * @type {Date}
    * @memberof ParticipantTimelineView
    */
-  generatedAt?: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof ParticipantTimelineView
-   */
   from?: Date;
   /**
    *
    * @type {Date}
    * @memberof ParticipantTimelineView
    */
-  to?: Date;
+  generatedAt?: Date;
   /**
    *
    * @type {ParticipantTimelineViewGranularityEnum}
@@ -63,6 +57,12 @@ export interface ParticipantTimelineView {
    * @memberof ParticipantTimelineView
    */
   nextCursor?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof ParticipantTimelineView
+   */
+  to?: Date;
 }
 
 /**
@@ -95,15 +95,15 @@ export function ParticipantTimelineViewFromJSONTyped(
     return json;
   }
   return {
-    generatedAt: json['generatedAt'] == null ? undefined : new Date(json['generatedAt']),
     from: json['from'] == null ? undefined : new Date(json['from']),
-    to: json['to'] == null ? undefined : new Date(json['to']),
+    generatedAt: json['generatedAt'] == null ? undefined : new Date(json['generatedAt']),
     granularity: json['granularity'] == null ? undefined : json['granularity'],
     items:
       json['items'] == null
         ? undefined
         : (json['items'] as Array<any>).map(ParticipantTimelineEventFromJSON),
     nextCursor: json['nextCursor'] == null ? undefined : json['nextCursor'],
+    to: json['to'] == null ? undefined : new Date(json['to']),
   };
 }
 
@@ -120,15 +120,15 @@ export function ParticipantTimelineViewToJSONTyped(
   }
 
   return {
+    from: value['from'] == null ? value['from'] : value['from'].toISOString(),
     generatedAt:
       value['generatedAt'] == null ? value['generatedAt'] : value['generatedAt'].toISOString(),
-    from: value['from'] == null ? value['from'] : value['from'].toISOString(),
-    to: value['to'] == null ? value['to'] : value['to'].toISOString(),
     granularity: value['granularity'],
     items:
       value['items'] == null
         ? undefined
         : (value['items'] as Array<any>).map(ParticipantTimelineEventToJSON),
     nextCursor: value['nextCursor'],
+    to: value['to'] == null ? value['to'] : value['to'].toISOString(),
   };
 }

@@ -32,7 +32,19 @@ export interface EffectiveRestrictionView {
    * @type {string}
    * @memberof EffectiveRestrictionView
    */
+  explanationCode?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof EffectiveRestrictionView
+   */
   restrictionId?: string;
+  /**
+   *
+   * @type {TargetView}
+   * @memberof EffectiveRestrictionView
+   */
+  target?: TargetView;
   /**
    *
    * @type {Date}
@@ -45,18 +57,6 @@ export interface EffectiveRestrictionView {
    * @memberof EffectiveRestrictionView
    */
   validTo?: Date;
-  /**
-   *
-   * @type {string}
-   * @memberof EffectiveRestrictionView
-   */
-  explanationCode?: string;
-  /**
-   *
-   * @type {TargetView}
-   * @memberof EffectiveRestrictionView
-   */
-  target?: TargetView;
 }
 
 /**
@@ -80,11 +80,11 @@ export function EffectiveRestrictionViewFromJSONTyped(
     return json;
   }
   return {
+    explanationCode: json['explanationCode'] == null ? undefined : json['explanationCode'],
     restrictionId: json['restrictionId'] == null ? undefined : json['restrictionId'],
+    target: json['target'] == null ? undefined : TargetViewFromJSON(json['target']),
     validFrom: json['validFrom'] == null ? undefined : new Date(json['validFrom']),
     validTo: json['validTo'] == null ? undefined : new Date(json['validTo']),
-    explanationCode: json['explanationCode'] == null ? undefined : json['explanationCode'],
-    target: json['target'] == null ? undefined : TargetViewFromJSON(json['target']),
   };
 }
 
@@ -101,10 +101,10 @@ export function EffectiveRestrictionViewToJSONTyped(
   }
 
   return {
+    explanationCode: value['explanationCode'],
     restrictionId: value['restrictionId'],
+    target: TargetViewToJSON(value['target']),
     validFrom: value['validFrom'] == null ? value['validFrom'] : value['validFrom'].toISOString(),
     validTo: value['validTo'] == null ? value['validTo'] : value['validTo'].toISOString(),
-    explanationCode: value['explanationCode'],
-    target: TargetViewToJSON(value['target']),
   };
 }

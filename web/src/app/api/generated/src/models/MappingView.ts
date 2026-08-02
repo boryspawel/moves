@@ -24,6 +24,30 @@ export interface MappingView {
    * @type {string}
    * @memberof MappingView
    */
+  canonicalValue?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof MappingView
+   */
+  decidedAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof MappingView
+   */
+  decidedBySubject?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof MappingView
+   */
+  dictionaryType?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof MappingView
+   */
   id?: string;
   /**
    *
@@ -36,37 +60,13 @@ export interface MappingView {
    * @type {string}
    * @memberof MappingView
    */
-  dictionaryType?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof MappingView
-   */
   sourceValue?: string;
   /**
    *
    * @type {string}
    * @memberof MappingView
    */
-  canonicalValue?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof MappingView
-   */
   status?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof MappingView
-   */
-  decidedBySubject?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof MappingView
-   */
-  decidedAt?: Date;
   /**
    *
    * @type {number}
@@ -91,14 +91,14 @@ export function MappingViewFromJSONTyped(json: any, ignoreDiscriminator: boolean
     return json;
   }
   return {
+    canonicalValue: json['canonicalValue'] == null ? undefined : json['canonicalValue'],
+    decidedAt: json['decidedAt'] == null ? undefined : new Date(json['decidedAt']),
+    decidedBySubject: json['decidedBySubject'] == null ? undefined : json['decidedBySubject'],
+    dictionaryType: json['dictionaryType'] == null ? undefined : json['dictionaryType'],
     id: json['id'] == null ? undefined : json['id'],
     sourceId: json['sourceId'] == null ? undefined : json['sourceId'],
-    dictionaryType: json['dictionaryType'] == null ? undefined : json['dictionaryType'],
     sourceValue: json['sourceValue'] == null ? undefined : json['sourceValue'],
-    canonicalValue: json['canonicalValue'] == null ? undefined : json['canonicalValue'],
     status: json['status'] == null ? undefined : json['status'],
-    decidedBySubject: json['decidedBySubject'] == null ? undefined : json['decidedBySubject'],
-    decidedAt: json['decidedAt'] == null ? undefined : new Date(json['decidedAt']),
     version: json['version'] == null ? undefined : json['version'],
   };
 }
@@ -116,14 +116,14 @@ export function MappingViewToJSONTyped(
   }
 
   return {
+    canonicalValue: value['canonicalValue'],
+    decidedAt: value['decidedAt'] == null ? value['decidedAt'] : value['decidedAt'].toISOString(),
+    decidedBySubject: value['decidedBySubject'],
+    dictionaryType: value['dictionaryType'],
     id: value['id'],
     sourceId: value['sourceId'],
-    dictionaryType: value['dictionaryType'],
     sourceValue: value['sourceValue'],
-    canonicalValue: value['canonicalValue'],
     status: value['status'],
-    decidedBySubject: value['decidedBySubject'],
-    decidedAt: value['decidedAt'] == null ? value['decidedAt'] : value['decidedAt'].toISOString(),
     version: value['version'],
   };
 }

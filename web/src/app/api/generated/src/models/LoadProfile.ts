@@ -36,28 +36,28 @@ import {
 export interface LoadProfile {
   /**
    *
-   * @type {string}
+   * @type {Array<Aggregate>}
    * @memberof LoadProfile
    */
-  snapshotId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof LoadProfile
-   */
-  revisionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof LoadProfile
-   */
-  inputChecksum?: string;
+  aggregates?: Array<Aggregate>;
   /**
    *
    * @type {string}
    * @memberof LoadProfile
    */
   algorithmVersion?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof LoadProfile
+   */
+  calculatedAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof LoadProfile
+   */
+  catalogProfileVersion?: string;
   /**
    *
    * @type {string}
@@ -69,13 +69,7 @@ export interface LoadProfile {
    * @type {string}
    * @memberof LoadProfile
    */
-  catalogProfileVersion?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof LoadProfile
-   */
-  calculatedAt?: Date;
+  inputChecksum?: string;
   /**
    *
    * @type {Array<Observation>}
@@ -84,10 +78,16 @@ export interface LoadProfile {
   observations?: Array<Observation>;
   /**
    *
-   * @type {Array<Aggregate>}
+   * @type {string}
    * @memberof LoadProfile
    */
-  aggregates?: Array<Aggregate>;
+  revisionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof LoadProfile
+   */
+  snapshotId?: string;
 }
 
 /**
@@ -106,23 +106,23 @@ export function LoadProfileFromJSONTyped(json: any, ignoreDiscriminator: boolean
     return json;
   }
   return {
-    snapshotId: json['snapshotId'] == null ? undefined : json['snapshotId'],
-    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
-    inputChecksum: json['inputChecksum'] == null ? undefined : json['inputChecksum'],
-    algorithmVersion: json['algorithmVersion'] == null ? undefined : json['algorithmVersion'],
-    configurationVersion:
-      json['configurationVersion'] == null ? undefined : json['configurationVersion'],
-    catalogProfileVersion:
-      json['catalogProfileVersion'] == null ? undefined : json['catalogProfileVersion'],
-    calculatedAt: json['calculatedAt'] == null ? undefined : new Date(json['calculatedAt']),
-    observations:
-      json['observations'] == null
-        ? undefined
-        : (json['observations'] as Array<any>).map(ObservationFromJSON),
     aggregates:
       json['aggregates'] == null
         ? undefined
         : (json['aggregates'] as Array<any>).map(AggregateFromJSON),
+    algorithmVersion: json['algorithmVersion'] == null ? undefined : json['algorithmVersion'],
+    calculatedAt: json['calculatedAt'] == null ? undefined : new Date(json['calculatedAt']),
+    catalogProfileVersion:
+      json['catalogProfileVersion'] == null ? undefined : json['catalogProfileVersion'],
+    configurationVersion:
+      json['configurationVersion'] == null ? undefined : json['configurationVersion'],
+    inputChecksum: json['inputChecksum'] == null ? undefined : json['inputChecksum'],
+    observations:
+      json['observations'] == null
+        ? undefined
+        : (json['observations'] as Array<any>).map(ObservationFromJSON),
+    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
+    snapshotId: json['snapshotId'] == null ? undefined : json['snapshotId'],
   };
 }
 
@@ -139,21 +139,21 @@ export function LoadProfileToJSONTyped(
   }
 
   return {
-    snapshotId: value['snapshotId'],
-    revisionId: value['revisionId'],
-    inputChecksum: value['inputChecksum'],
-    algorithmVersion: value['algorithmVersion'],
-    configurationVersion: value['configurationVersion'],
-    catalogProfileVersion: value['catalogProfileVersion'],
-    calculatedAt:
-      value['calculatedAt'] == null ? value['calculatedAt'] : value['calculatedAt'].toISOString(),
-    observations:
-      value['observations'] == null
-        ? undefined
-        : (value['observations'] as Array<any>).map(ObservationToJSON),
     aggregates:
       value['aggregates'] == null
         ? undefined
         : (value['aggregates'] as Array<any>).map(AggregateToJSON),
+    algorithmVersion: value['algorithmVersion'],
+    calculatedAt:
+      value['calculatedAt'] == null ? value['calculatedAt'] : value['calculatedAt'].toISOString(),
+    catalogProfileVersion: value['catalogProfileVersion'],
+    configurationVersion: value['configurationVersion'],
+    inputChecksum: value['inputChecksum'],
+    observations:
+      value['observations'] == null
+        ? undefined
+        : (value['observations'] as Array<any>).map(ObservationToJSON),
+    revisionId: value['revisionId'],
+    snapshotId: value['snapshotId'],
   };
 }

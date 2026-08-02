@@ -21,16 +21,46 @@ import { mapValues } from '../runtime';
 export interface CorrectionView {
   /**
    *
-   * @type {string}
+   * @type {Date}
    * @memberof CorrectionView
    */
-  id?: string;
+  correctedAt?: Date;
+  /**
+   *
+   * @type {number}
+   * @memberof CorrectionView
+   */
+  correctedContacts?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof CorrectionView
+   */
+  correctedDifficultyLevel?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof CorrectionView
+   */
+  correctedDurationSeconds?: number;
   /**
    *
    * @type {string}
    * @memberof CorrectionView
    */
-  reason?: string;
+  correctedExternalLoadUnit?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof CorrectionView
+   */
+  correctedExternalLoadValue?: number;
+  /**
+   *
+   * @type {boolean}
+   * @memberof CorrectionView
+   */
+  correctedModified?: boolean;
   /**
    *
    * @type {number}
@@ -42,7 +72,7 @@ export interface CorrectionView {
    * @type {number}
    * @memberof CorrectionView
    */
-  correctedDifficultyLevel?: number;
+  correctedRepetitions?: number;
   /**
    *
    * @type {string}
@@ -57,46 +87,10 @@ export interface CorrectionView {
   correctedSets?: number;
   /**
    *
-   * @type {number}
-   * @memberof CorrectionView
-   */
-  correctedRepetitions?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof CorrectionView
-   */
-  correctedDurationSeconds?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof CorrectionView
-   */
-  correctedContacts?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof CorrectionView
-   */
-  correctedExternalLoadValue?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof CorrectionView
-   */
-  correctedExternalLoadUnit?: string;
-  /**
-   *
    * @type {string}
    * @memberof CorrectionView
    */
   correctedSide?: string;
-  /**
-   *
-   * @type {boolean}
-   * @memberof CorrectionView
-   */
-  correctedModified?: boolean;
   /**
    *
    * @type {boolean}
@@ -108,13 +102,19 @@ export interface CorrectionView {
    * @type {string}
    * @memberof CorrectionView
    */
+  id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof CorrectionView
+   */
   observationMode?: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof CorrectionView
    */
-  correctedAt?: Date;
+  reason?: string;
 }
 
 /**
@@ -136,27 +136,27 @@ export function CorrectionViewFromJSONTyped(
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
-    reason: json['reason'] == null ? undefined : json['reason'],
-    correctedPainLevel: json['correctedPainLevel'] == null ? undefined : json['correctedPainLevel'],
+    correctedAt: json['correctedAt'] == null ? undefined : new Date(json['correctedAt']),
+    correctedContacts: json['correctedContacts'] == null ? undefined : json['correctedContacts'],
     correctedDifficultyLevel:
       json['correctedDifficultyLevel'] == null ? undefined : json['correctedDifficultyLevel'],
-    correctedResultId: json['correctedResultId'] == null ? undefined : json['correctedResultId'],
-    correctedSets: json['correctedSets'] == null ? undefined : json['correctedSets'],
-    correctedRepetitions:
-      json['correctedRepetitions'] == null ? undefined : json['correctedRepetitions'],
     correctedDurationSeconds:
       json['correctedDurationSeconds'] == null ? undefined : json['correctedDurationSeconds'],
-    correctedContacts: json['correctedContacts'] == null ? undefined : json['correctedContacts'],
-    correctedExternalLoadValue:
-      json['correctedExternalLoadValue'] == null ? undefined : json['correctedExternalLoadValue'],
     correctedExternalLoadUnit:
       json['correctedExternalLoadUnit'] == null ? undefined : json['correctedExternalLoadUnit'],
-    correctedSide: json['correctedSide'] == null ? undefined : json['correctedSide'],
+    correctedExternalLoadValue:
+      json['correctedExternalLoadValue'] == null ? undefined : json['correctedExternalLoadValue'],
     correctedModified: json['correctedModified'] == null ? undefined : json['correctedModified'],
+    correctedPainLevel: json['correctedPainLevel'] == null ? undefined : json['correctedPainLevel'],
+    correctedRepetitions:
+      json['correctedRepetitions'] == null ? undefined : json['correctedRepetitions'],
+    correctedResultId: json['correctedResultId'] == null ? undefined : json['correctedResultId'],
+    correctedSets: json['correctedSets'] == null ? undefined : json['correctedSets'],
+    correctedSide: json['correctedSide'] == null ? undefined : json['correctedSide'],
     correctedSkipped: json['correctedSkipped'] == null ? undefined : json['correctedSkipped'],
+    id: json['id'] == null ? undefined : json['id'],
     observationMode: json['observationMode'] == null ? undefined : json['observationMode'],
-    correctedAt: json['correctedAt'] == null ? undefined : new Date(json['correctedAt']),
+    reason: json['reason'] == null ? undefined : json['reason'],
   };
 }
 
@@ -173,22 +173,22 @@ export function CorrectionViewToJSONTyped(
   }
 
   return {
-    id: value['id'],
-    reason: value['reason'],
-    correctedPainLevel: value['correctedPainLevel'],
-    correctedDifficultyLevel: value['correctedDifficultyLevel'],
-    correctedResultId: value['correctedResultId'],
-    correctedSets: value['correctedSets'],
-    correctedRepetitions: value['correctedRepetitions'],
-    correctedDurationSeconds: value['correctedDurationSeconds'],
-    correctedContacts: value['correctedContacts'],
-    correctedExternalLoadValue: value['correctedExternalLoadValue'],
-    correctedExternalLoadUnit: value['correctedExternalLoadUnit'],
-    correctedSide: value['correctedSide'],
-    correctedModified: value['correctedModified'],
-    correctedSkipped: value['correctedSkipped'],
-    observationMode: value['observationMode'],
     correctedAt:
       value['correctedAt'] == null ? value['correctedAt'] : value['correctedAt'].toISOString(),
+    correctedContacts: value['correctedContacts'],
+    correctedDifficultyLevel: value['correctedDifficultyLevel'],
+    correctedDurationSeconds: value['correctedDurationSeconds'],
+    correctedExternalLoadUnit: value['correctedExternalLoadUnit'],
+    correctedExternalLoadValue: value['correctedExternalLoadValue'],
+    correctedModified: value['correctedModified'],
+    correctedPainLevel: value['correctedPainLevel'],
+    correctedRepetitions: value['correctedRepetitions'],
+    correctedResultId: value['correctedResultId'],
+    correctedSets: value['correctedSets'],
+    correctedSide: value['correctedSide'],
+    correctedSkipped: value['correctedSkipped'],
+    id: value['id'],
+    observationMode: value['observationMode'],
+    reason: value['reason'],
   };
 }

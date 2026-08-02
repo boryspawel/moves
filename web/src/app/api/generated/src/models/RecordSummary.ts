@@ -24,7 +24,31 @@ export interface RecordSummary {
    * @type {string}
    * @memberof RecordSummary
    */
+  draftVersionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RecordSummary
+   */
   id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RecordSummary
+   */
+  matchedExerciseId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RecordSummary
+   */
+  normalizedSha256?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof RecordSummary
+   */
+  rawSha256?: string;
   /**
    *
    * @type {number}
@@ -43,30 +67,6 @@ export interface RecordSummary {
    * @memberof RecordSummary
    */
   status?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RecordSummary
-   */
-  rawSha256?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RecordSummary
-   */
-  normalizedSha256?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RecordSummary
-   */
-  matchedExerciseId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof RecordSummary
-   */
-  draftVersionId?: string;
   /**
    *
    * @type {number}
@@ -91,14 +91,14 @@ export function RecordSummaryFromJSONTyped(json: any, ignoreDiscriminator: boole
     return json;
   }
   return {
+    draftVersionId: json['draftVersionId'] == null ? undefined : json['draftVersionId'],
     id: json['id'] == null ? undefined : json['id'],
+    matchedExerciseId: json['matchedExerciseId'] == null ? undefined : json['matchedExerciseId'],
+    normalizedSha256: json['normalizedSha256'] == null ? undefined : json['normalizedSha256'],
+    rawSha256: json['rawSha256'] == null ? undefined : json['rawSha256'],
     rowNumber: json['rowNumber'] == null ? undefined : json['rowNumber'],
     sourceRecordKey: json['sourceRecordKey'] == null ? undefined : json['sourceRecordKey'],
     status: json['status'] == null ? undefined : json['status'],
-    rawSha256: json['rawSha256'] == null ? undefined : json['rawSha256'],
-    normalizedSha256: json['normalizedSha256'] == null ? undefined : json['normalizedSha256'],
-    matchedExerciseId: json['matchedExerciseId'] == null ? undefined : json['matchedExerciseId'],
-    draftVersionId: json['draftVersionId'] == null ? undefined : json['draftVersionId'],
     version: json['version'] == null ? undefined : json['version'],
   };
 }
@@ -116,14 +116,14 @@ export function RecordSummaryToJSONTyped(
   }
 
   return {
+    draftVersionId: value['draftVersionId'],
     id: value['id'],
+    matchedExerciseId: value['matchedExerciseId'],
+    normalizedSha256: value['normalizedSha256'],
+    rawSha256: value['rawSha256'],
     rowNumber: value['rowNumber'],
     sourceRecordKey: value['sourceRecordKey'],
     status: value['status'],
-    rawSha256: value['rawSha256'],
-    normalizedSha256: value['normalizedSha256'],
-    matchedExerciseId: value['matchedExerciseId'],
-    draftVersionId: value['draftVersionId'],
     version: value['version'],
   };
 }

@@ -21,10 +21,10 @@ import { mapValues } from '../runtime';
 export interface GrantCommand {
   /**
    *
-   * @type {string}
+   * @type {Set<GrantCommandDataScopesEnum>}
    * @memberof GrantCommand
    */
-  recipientId?: string;
+  dataScopes?: Set<GrantCommandDataScopesEnum>;
   /**
    *
    * @type {GrantCommandPurposeEnum}
@@ -36,13 +36,13 @@ export interface GrantCommand {
    * @type {string}
    * @memberof GrantCommand
    */
-  templateVersionId?: string;
+  recipientId?: string;
   /**
    *
-   * @type {Set<GrantCommandDataScopesEnum>}
+   * @type {string}
    * @memberof GrantCommand
    */
-  dataScopes?: Set<GrantCommandDataScopesEnum>;
+  templateVersionId?: string;
   /**
    *
    * @type {Date}
@@ -60,17 +60,6 @@ export interface GrantCommand {
 /**
  * @export
  */
-export const GrantCommandPurposeEnum = {
-  PerformancePlanning: 'PERFORMANCE_PLANNING',
-  FunctionalRecovery: 'FUNCTIONAL_RECOVERY',
-  ClinicalReview: 'CLINICAL_REVIEW',
-} as const;
-export type GrantCommandPurposeEnum =
-  (typeof GrantCommandPurposeEnum)[keyof typeof GrantCommandPurposeEnum];
-
-/**
- * @export
- */
 export const GrantCommandDataScopesEnum = {
   Plan: 'PLAN',
   Execution: 'EXECUTION',
@@ -79,6 +68,17 @@ export const GrantCommandDataScopesEnum = {
 } as const;
 export type GrantCommandDataScopesEnum =
   (typeof GrantCommandDataScopesEnum)[keyof typeof GrantCommandDataScopesEnum];
+
+/**
+ * @export
+ */
+export const GrantCommandPurposeEnum = {
+  PerformancePlanning: 'PERFORMANCE_PLANNING',
+  FunctionalRecovery: 'FUNCTIONAL_RECOVERY',
+  ClinicalReview: 'CLINICAL_REVIEW',
+} as const;
+export type GrantCommandPurposeEnum =
+  (typeof GrantCommandPurposeEnum)[keyof typeof GrantCommandPurposeEnum];
 
 /**
  * Check if a given object implements the GrantCommand interface.
@@ -96,10 +96,10 @@ export function GrantCommandFromJSONTyped(json: any, ignoreDiscriminator: boolea
     return json;
   }
   return {
-    recipientId: json['recipientId'] == null ? undefined : json['recipientId'],
-    purpose: json['purpose'] == null ? undefined : json['purpose'],
-    templateVersionId: json['templateVersionId'] == null ? undefined : json['templateVersionId'],
     dataScopes: json['dataScopes'] == null ? undefined : new Set(json['dataScopes']),
+    purpose: json['purpose'] == null ? undefined : json['purpose'],
+    recipientId: json['recipientId'] == null ? undefined : json['recipientId'],
+    templateVersionId: json['templateVersionId'] == null ? undefined : json['templateVersionId'],
     validFrom: json['validFrom'] == null ? undefined : new Date(json['validFrom']),
     validTo: json['validTo'] == null ? undefined : new Date(json['validTo']),
   };
@@ -118,11 +118,11 @@ export function GrantCommandToJSONTyped(
   }
 
   return {
-    recipientId: value['recipientId'],
-    purpose: value['purpose'],
-    templateVersionId: value['templateVersionId'],
     dataScopes:
       value['dataScopes'] == null ? undefined : Array.from(value['dataScopes'] as Set<any>),
+    purpose: value['purpose'],
+    recipientId: value['recipientId'],
+    templateVersionId: value['templateVersionId'],
     validFrom: value['validFrom'] == null ? value['validFrom'] : value['validFrom'].toISOString(),
     validTo: value['validTo'] == null ? value['validTo'] : value['validTo'].toISOString(),
   };

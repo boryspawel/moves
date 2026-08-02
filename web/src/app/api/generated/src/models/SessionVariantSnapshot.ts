@@ -29,28 +29,28 @@ import {
 export interface SessionVariantSnapshot {
   /**
    *
-   * @type {string}
-   * @memberof SessionVariantSnapshot
-   */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof SessionVariantSnapshot
-   */
-  type?: string;
-  /**
-   *
    * @type {number}
    * @memberof SessionVariantSnapshot
    */
   expectedDurationMinutes?: number;
   /**
    *
+   * @type {string}
+   * @memberof SessionVariantSnapshot
+   */
+  id?: string;
+  /**
+   *
    * @type {Array<SessionVariantItemSnapshot>}
    * @memberof SessionVariantSnapshot
    */
   items?: Array<SessionVariantItemSnapshot>;
+  /**
+   *
+   * @type {string}
+   * @memberof SessionVariantSnapshot
+   */
+  type?: string;
 }
 
 /**
@@ -72,14 +72,14 @@ export function SessionVariantSnapshotFromJSONTyped(
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
-    type: json['type'] == null ? undefined : json['type'],
     expectedDurationMinutes:
       json['expectedDurationMinutes'] == null ? undefined : json['expectedDurationMinutes'],
+    id: json['id'] == null ? undefined : json['id'],
     items:
       json['items'] == null
         ? undefined
         : (json['items'] as Array<any>).map(SessionVariantItemSnapshotFromJSON),
+    type: json['type'] == null ? undefined : json['type'],
   };
 }
 
@@ -96,12 +96,12 @@ export function SessionVariantSnapshotToJSONTyped(
   }
 
   return {
-    id: value['id'],
-    type: value['type'],
     expectedDurationMinutes: value['expectedDurationMinutes'],
+    id: value['id'],
     items:
       value['items'] == null
         ? undefined
         : (value['items'] as Array<any>).map(SessionVariantItemSnapshotToJSON),
+    type: value['type'],
   };
 }

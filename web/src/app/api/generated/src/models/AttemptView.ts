@@ -27,16 +27,22 @@ export interface AttemptView {
   attemptId?: string;
   /**
    *
-   * @type {string}
+   * @type {Date}
    * @memberof AttemptView
    */
-  plannedSessionId?: string;
+  lastActivityAt?: Date;
   /**
    *
    * @type {string}
    * @memberof AttemptView
    */
   planRevisionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AttemptView
+   */
+  plannedSessionId?: string;
   /**
    *
    * @type {string}
@@ -49,12 +55,6 @@ export interface AttemptView {
    * @memberof AttemptView
    */
   state?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof AttemptView
-   */
-  lastActivityAt?: Date;
   /**
    *
    * @type {Date}
@@ -80,12 +80,12 @@ export function AttemptViewFromJSONTyped(json: any, ignoreDiscriminator: boolean
   }
   return {
     attemptId: json['attemptId'] == null ? undefined : json['attemptId'],
-    plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
+    lastActivityAt: json['lastActivityAt'] == null ? undefined : new Date(json['lastActivityAt']),
     planRevisionId: json['planRevisionId'] == null ? undefined : json['planRevisionId'],
+    plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
     selectedVariantType:
       json['selectedVariantType'] == null ? undefined : json['selectedVariantType'],
     state: json['state'] == null ? undefined : json['state'],
-    lastActivityAt: json['lastActivityAt'] == null ? undefined : new Date(json['lastActivityAt']),
     updatedAt: json['updatedAt'] == null ? undefined : new Date(json['updatedAt']),
   };
 }
@@ -104,14 +104,14 @@ export function AttemptViewToJSONTyped(
 
   return {
     attemptId: value['attemptId'],
-    plannedSessionId: value['plannedSessionId'],
-    planRevisionId: value['planRevisionId'],
-    selectedVariantType: value['selectedVariantType'],
-    state: value['state'],
     lastActivityAt:
       value['lastActivityAt'] == null
         ? value['lastActivityAt']
         : value['lastActivityAt'].toISOString(),
+    planRevisionId: value['planRevisionId'],
+    plannedSessionId: value['plannedSessionId'],
+    selectedVariantType: value['selectedVariantType'],
+    state: value['state'],
     updatedAt: value['updatedAt'] == null ? value['updatedAt'] : value['updatedAt'].toISOString(),
   };
 }

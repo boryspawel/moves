@@ -24,37 +24,7 @@ export interface TargetView {
    * @type {string}
    * @memberof TargetView
    */
-  structureId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof TargetView
-   */
-  movementPattern?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof TargetView
-   */
   channel?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof TargetView
-   */
-  loadCharacteristic?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof TargetView
-   */
-  side?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof TargetView
-   */
-  rangeOfMotion?: string;
   /**
    *
    * @type {string}
@@ -66,25 +36,55 @@ export interface TargetView {
    * @type {number}
    * @memberof TargetView
    */
-  limitLow?: number;
+  limitHigh?: number;
   /**
    *
    * @type {number}
    * @memberof TargetView
    */
-  limitHigh?: number;
+  limitLow?: number;
   /**
    *
    * @type {string}
    * @memberof TargetView
    */
-  unit?: string;
+  loadCharacteristic?: string;
   /**
    *
    * @type {number}
    * @memberof TargetView
    */
   minimumRecoveryHours?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof TargetView
+   */
+  movementPattern?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof TargetView
+   */
+  rangeOfMotion?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof TargetView
+   */
+  side?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof TargetView
+   */
+  structureId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof TargetView
+   */
+  unit?: string;
 }
 
 /**
@@ -103,18 +103,18 @@ export function TargetViewFromJSONTyped(json: any, ignoreDiscriminator: boolean)
     return json;
   }
   return {
-    structureId: json['structureId'] == null ? undefined : json['structureId'],
-    movementPattern: json['movementPattern'] == null ? undefined : json['movementPattern'],
     channel: json['channel'] == null ? undefined : json['channel'],
-    loadCharacteristic: json['loadCharacteristic'] == null ? undefined : json['loadCharacteristic'],
-    side: json['side'] == null ? undefined : json['side'],
-    rangeOfMotion: json['rangeOfMotion'] == null ? undefined : json['rangeOfMotion'],
     contractionType: json['contractionType'] == null ? undefined : json['contractionType'],
-    limitLow: json['limitLow'] == null ? undefined : json['limitLow'],
     limitHigh: json['limitHigh'] == null ? undefined : json['limitHigh'],
-    unit: json['unit'] == null ? undefined : json['unit'],
+    limitLow: json['limitLow'] == null ? undefined : json['limitLow'],
+    loadCharacteristic: json['loadCharacteristic'] == null ? undefined : json['loadCharacteristic'],
     minimumRecoveryHours:
       json['minimumRecoveryHours'] == null ? undefined : json['minimumRecoveryHours'],
+    movementPattern: json['movementPattern'] == null ? undefined : json['movementPattern'],
+    rangeOfMotion: json['rangeOfMotion'] == null ? undefined : json['rangeOfMotion'],
+    side: json['side'] == null ? undefined : json['side'],
+    structureId: json['structureId'] == null ? undefined : json['structureId'],
+    unit: json['unit'] == null ? undefined : json['unit'],
   };
 }
 
@@ -131,16 +131,16 @@ export function TargetViewToJSONTyped(
   }
 
   return {
-    structureId: value['structureId'],
-    movementPattern: value['movementPattern'],
     channel: value['channel'],
-    loadCharacteristic: value['loadCharacteristic'],
-    side: value['side'],
-    rangeOfMotion: value['rangeOfMotion'],
     contractionType: value['contractionType'],
-    limitLow: value['limitLow'],
     limitHigh: value['limitHigh'],
-    unit: value['unit'],
+    limitLow: value['limitLow'],
+    loadCharacteristic: value['loadCharacteristic'],
     minimumRecoveryHours: value['minimumRecoveryHours'],
+    movementPattern: value['movementPattern'],
+    rangeOfMotion: value['rangeOfMotion'],
+    side: value['side'],
+    structureId: value['structureId'],
+    unit: value['unit'],
   };
 }

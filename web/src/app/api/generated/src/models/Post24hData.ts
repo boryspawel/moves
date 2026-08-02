@@ -21,10 +21,10 @@ import { mapValues } from '../runtime';
 export interface Post24hData {
   /**
    *
-   * @type {string}
+   * @type {number}
    * @memberof Post24hData
    */
-  id?: string;
+  difficultyLevel?: number;
   /**
    *
    * @type {string}
@@ -36,19 +36,13 @@ export interface Post24hData {
    * @type {string}
    * @memberof Post24hData
    */
-  participantId?: string;
+  id?: string;
   /**
    *
-   * @type {number}
+   * @type {string}
    * @memberof Post24hData
    */
-  painLevel?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof Post24hData
-   */
-  difficultyLevel?: number;
+  idempotencyKey?: string;
   /**
    *
    * @type {string}
@@ -63,10 +57,16 @@ export interface Post24hData {
   observationMode?: string;
   /**
    *
+   * @type {number}
+   * @memberof Post24hData
+   */
+  painLevel?: number;
+  /**
+   *
    * @type {string}
    * @memberof Post24hData
    */
-  idempotencyKey?: string;
+  participantId?: string;
   /**
    *
    * @type {Date}
@@ -91,14 +91,14 @@ export function Post24hDataFromJSONTyped(json: any, ignoreDiscriminator: boolean
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
-    executionId: json['executionId'] == null ? undefined : json['executionId'],
-    participantId: json['participantId'] == null ? undefined : json['participantId'],
-    painLevel: json['painLevel'] == null ? undefined : json['painLevel'],
     difficultyLevel: json['difficultyLevel'] == null ? undefined : json['difficultyLevel'],
+    executionId: json['executionId'] == null ? undefined : json['executionId'],
+    id: json['id'] == null ? undefined : json['id'],
+    idempotencyKey: json['idempotencyKey'] == null ? undefined : json['idempotencyKey'],
     note: json['note'] == null ? undefined : json['note'],
     observationMode: json['observationMode'] == null ? undefined : json['observationMode'],
-    idempotencyKey: json['idempotencyKey'] == null ? undefined : json['idempotencyKey'],
+    painLevel: json['painLevel'] == null ? undefined : json['painLevel'],
+    participantId: json['participantId'] == null ? undefined : json['participantId'],
     reportedAt: json['reportedAt'] == null ? undefined : new Date(json['reportedAt']),
   };
 }
@@ -116,14 +116,14 @@ export function Post24hDataToJSONTyped(
   }
 
   return {
-    id: value['id'],
-    executionId: value['executionId'],
-    participantId: value['participantId'],
-    painLevel: value['painLevel'],
     difficultyLevel: value['difficultyLevel'],
+    executionId: value['executionId'],
+    id: value['id'],
+    idempotencyKey: value['idempotencyKey'],
     note: value['note'],
     observationMode: value['observationMode'],
-    idempotencyKey: value['idempotencyKey'],
+    painLevel: value['painLevel'],
+    participantId: value['participantId'],
     reportedAt:
       value['reportedAt'] == null ? value['reportedAt'] : value['reportedAt'].toISOString(),
   };

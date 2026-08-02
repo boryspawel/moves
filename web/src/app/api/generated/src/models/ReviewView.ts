@@ -21,6 +21,18 @@ import { mapValues } from '../runtime';
 export interface ReviewView {
   /**
    *
+   * @type {Date}
+   * @memberof ReviewView
+   */
+  decidedAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof ReviewView
+   */
+  decisionReference?: string;
+  /**
+   *
    * @type {string}
    * @memberof ReviewView
    */
@@ -30,7 +42,13 @@ export interface ReviewView {
    * @type {string}
    * @memberof ReviewView
    */
-  revisionId?: string;
+  requestReference?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof ReviewView
+   */
+  requestedAt?: Date;
   /**
    *
    * @type {string}
@@ -42,31 +60,13 @@ export interface ReviewView {
    * @type {string}
    * @memberof ReviewView
    */
+  revisionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ReviewView
+   */
   status?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ReviewView
-   */
-  requestReference?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ReviewView
-   */
-  decisionReference?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof ReviewView
-   */
-  requestedAt?: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof ReviewView
-   */
-  decidedAt?: Date;
 }
 
 /**
@@ -85,14 +85,14 @@ export function ReviewViewFromJSONTyped(json: any, ignoreDiscriminator: boolean)
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
-    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
-    reviewerAccountId: json['reviewerAccountId'] == null ? undefined : json['reviewerAccountId'],
-    status: json['status'] == null ? undefined : json['status'],
-    requestReference: json['requestReference'] == null ? undefined : json['requestReference'],
-    decisionReference: json['decisionReference'] == null ? undefined : json['decisionReference'],
-    requestedAt: json['requestedAt'] == null ? undefined : new Date(json['requestedAt']),
     decidedAt: json['decidedAt'] == null ? undefined : new Date(json['decidedAt']),
+    decisionReference: json['decisionReference'] == null ? undefined : json['decisionReference'],
+    id: json['id'] == null ? undefined : json['id'],
+    requestReference: json['requestReference'] == null ? undefined : json['requestReference'],
+    requestedAt: json['requestedAt'] == null ? undefined : new Date(json['requestedAt']),
+    reviewerAccountId: json['reviewerAccountId'] == null ? undefined : json['reviewerAccountId'],
+    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
+    status: json['status'] == null ? undefined : json['status'],
   };
 }
 
@@ -109,14 +109,14 @@ export function ReviewViewToJSONTyped(
   }
 
   return {
-    id: value['id'],
-    revisionId: value['revisionId'],
-    reviewerAccountId: value['reviewerAccountId'],
-    status: value['status'],
-    requestReference: value['requestReference'],
+    decidedAt: value['decidedAt'] == null ? value['decidedAt'] : value['decidedAt'].toISOString(),
     decisionReference: value['decisionReference'],
+    id: value['id'],
+    requestReference: value['requestReference'],
     requestedAt:
       value['requestedAt'] == null ? value['requestedAt'] : value['requestedAt'].toISOString(),
-    decidedAt: value['decidedAt'] == null ? value['decidedAt'] : value['decidedAt'].toISOString(),
+    reviewerAccountId: value['reviewerAccountId'],
+    revisionId: value['revisionId'],
+    status: value['status'],
   };
 }

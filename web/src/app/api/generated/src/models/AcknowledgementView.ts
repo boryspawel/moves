@@ -24,12 +24,6 @@ export interface AcknowledgementView {
    * @type {string}
    * @memberof AcknowledgementView
    */
-  revisionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AcknowledgementView
-   */
   assessmentId?: string;
   /**
    *
@@ -37,6 +31,12 @@ export interface AcknowledgementView {
    * @memberof AcknowledgementView
    */
   factorIds?: Set<string>;
+  /**
+   *
+   * @type {string}
+   * @memberof AcknowledgementView
+   */
+  revisionId?: string;
 }
 
 /**
@@ -58,9 +58,9 @@ export function AcknowledgementViewFromJSONTyped(
     return json;
   }
   return {
-    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
     assessmentId: json['assessmentId'] == null ? undefined : json['assessmentId'],
     factorIds: json['factorIds'] == null ? undefined : new Set(json['factorIds']),
+    revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
   };
 }
 
@@ -77,8 +77,8 @@ export function AcknowledgementViewToJSONTyped(
   }
 
   return {
-    revisionId: value['revisionId'],
     assessmentId: value['assessmentId'],
     factorIds: value['factorIds'] == null ? undefined : Array.from(value['factorIds'] as Set<any>),
+    revisionId: value['revisionId'],
   };
 }

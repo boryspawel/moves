@@ -21,16 +21,16 @@ import { mapValues } from '../runtime';
 export interface RecoveryChoiceCommand {
   /**
    *
-   * @type {string}
-   * @memberof RecoveryChoiceCommand
-   */
-  offerId?: string;
-  /**
-   *
    * @type {number}
    * @memberof RecoveryChoiceCommand
    */
   aggregateVersion?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof RecoveryChoiceCommand
+   */
+  offerId?: string;
   /**
    *
    * @type {string}
@@ -58,8 +58,8 @@ export function RecoveryChoiceCommandFromJSONTyped(
     return json;
   }
   return {
-    offerId: json['offerId'] == null ? undefined : json['offerId'],
     aggregateVersion: json['aggregateVersion'] == null ? undefined : json['aggregateVersion'],
+    offerId: json['offerId'] == null ? undefined : json['offerId'],
     path: json['path'] == null ? undefined : json['path'],
   };
 }
@@ -77,8 +77,8 @@ export function RecoveryChoiceCommandToJSONTyped(
   }
 
   return {
-    offerId: value['offerId'],
     aggregateVersion: value['aggregateVersion'],
+    offerId: value['offerId'],
     path: value['path'],
   };
 }

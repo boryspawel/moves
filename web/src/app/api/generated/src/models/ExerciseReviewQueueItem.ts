@@ -21,6 +21,42 @@ import { mapValues } from '../runtime';
 export interface ExerciseReviewQueueItem {
   /**
    *
+   * @type {boolean}
+   * @memberof ExerciseReviewQueueItem
+   */
+  actionNeeded?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof ExerciseReviewQueueItem
+   */
+  batchId?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof ExerciseReviewQueueItem
+   */
+  blockerCount?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof ExerciseReviewQueueItem
+   */
+  canonicalName?: string;
+  /**
+   *
+   * @type {Array<string>}
+   * @memberof ExerciseReviewQueueItem
+   */
+  completedReviewAreas?: Array<string>;
+  /**
+   *
+   * @type {number}
+   * @memberof ExerciseReviewQueueItem
+   */
+  errorCount?: number;
+  /**
+   *
    * @type {string}
    * @memberof ExerciseReviewQueueItem
    */
@@ -36,37 +72,7 @@ export interface ExerciseReviewQueueItem {
    * @type {number}
    * @memberof ExerciseReviewQueueItem
    */
-  versionNumber?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof ExerciseReviewQueueItem
-   */
-  canonicalName?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ExerciseReviewQueueItem
-   */
-  sourceRecordKey?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ExerciseReviewQueueItem
-   */
-  batchId?: string;
-  /**
-   *
-   * @type {number}
-   * @memberof ExerciseReviewQueueItem
-   */
-  importRowNumber?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof ExerciseReviewQueueItem
-   */
-  versionStatus?: string;
+  expectedVersion?: number;
   /**
    *
    * @type {string}
@@ -78,25 +84,7 @@ export interface ExerciseReviewQueueItem {
    * @type {number}
    * @memberof ExerciseReviewQueueItem
    */
-  errorCount?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof ExerciseReviewQueueItem
-   */
-  warningCount?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof ExerciseReviewQueueItem
-   */
-  blockerCount?: number;
-  /**
-   *
-   * @type {Array<string>}
-   * @memberof ExerciseReviewQueueItem
-   */
-  completedReviewAreas?: Array<string>;
+  importRowNumber?: number;
   /**
    *
    * @type {Array<string>}
@@ -111,10 +99,10 @@ export interface ExerciseReviewQueueItem {
   readyToPublish?: boolean;
   /**
    *
-   * @type {boolean}
+   * @type {string}
    * @memberof ExerciseReviewQueueItem
    */
-  actionNeeded?: boolean;
+  sourceRecordKey?: string;
   /**
    *
    * @type {Date}
@@ -126,7 +114,19 @@ export interface ExerciseReviewQueueItem {
    * @type {number}
    * @memberof ExerciseReviewQueueItem
    */
-  expectedVersion?: number;
+  versionNumber?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof ExerciseReviewQueueItem
+   */
+  versionStatus?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof ExerciseReviewQueueItem
+   */
+  warningCount?: number;
 }
 
 /**
@@ -148,25 +148,25 @@ export function ExerciseReviewQueueItemFromJSONTyped(
     return json;
   }
   return {
-    exerciseId: json['exerciseId'] == null ? undefined : json['exerciseId'],
-    exerciseVersionId: json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
-    versionNumber: json['versionNumber'] == null ? undefined : json['versionNumber'],
-    canonicalName: json['canonicalName'] == null ? undefined : json['canonicalName'],
-    sourceRecordKey: json['sourceRecordKey'] == null ? undefined : json['sourceRecordKey'],
+    actionNeeded: json['actionNeeded'] == null ? undefined : json['actionNeeded'],
     batchId: json['batchId'] == null ? undefined : json['batchId'],
-    importRowNumber: json['importRowNumber'] == null ? undefined : json['importRowNumber'],
-    versionStatus: json['versionStatus'] == null ? undefined : json['versionStatus'],
-    importRecordStatus: json['importRecordStatus'] == null ? undefined : json['importRecordStatus'],
-    errorCount: json['errorCount'] == null ? undefined : json['errorCount'],
-    warningCount: json['warningCount'] == null ? undefined : json['warningCount'],
     blockerCount: json['blockerCount'] == null ? undefined : json['blockerCount'],
+    canonicalName: json['canonicalName'] == null ? undefined : json['canonicalName'],
     completedReviewAreas:
       json['completedReviewAreas'] == null ? undefined : json['completedReviewAreas'],
+    errorCount: json['errorCount'] == null ? undefined : json['errorCount'],
+    exerciseId: json['exerciseId'] == null ? undefined : json['exerciseId'],
+    exerciseVersionId: json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
+    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
+    importRecordStatus: json['importRecordStatus'] == null ? undefined : json['importRecordStatus'],
+    importRowNumber: json['importRowNumber'] == null ? undefined : json['importRowNumber'],
     missingReviewAreas: json['missingReviewAreas'] == null ? undefined : json['missingReviewAreas'],
     readyToPublish: json['readyToPublish'] == null ? undefined : json['readyToPublish'],
-    actionNeeded: json['actionNeeded'] == null ? undefined : json['actionNeeded'],
+    sourceRecordKey: json['sourceRecordKey'] == null ? undefined : json['sourceRecordKey'],
     updatedAt: json['updatedAt'] == null ? undefined : new Date(json['updatedAt']),
-    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
+    versionNumber: json['versionNumber'] == null ? undefined : json['versionNumber'],
+    versionStatus: json['versionStatus'] == null ? undefined : json['versionStatus'],
+    warningCount: json['warningCount'] == null ? undefined : json['warningCount'],
   };
 }
 
@@ -183,23 +183,23 @@ export function ExerciseReviewQueueItemToJSONTyped(
   }
 
   return {
+    actionNeeded: value['actionNeeded'],
+    batchId: value['batchId'],
+    blockerCount: value['blockerCount'],
+    canonicalName: value['canonicalName'],
+    completedReviewAreas: value['completedReviewAreas'],
+    errorCount: value['errorCount'],
     exerciseId: value['exerciseId'],
     exerciseVersionId: value['exerciseVersionId'],
-    versionNumber: value['versionNumber'],
-    canonicalName: value['canonicalName'],
-    sourceRecordKey: value['sourceRecordKey'],
-    batchId: value['batchId'],
-    importRowNumber: value['importRowNumber'],
-    versionStatus: value['versionStatus'],
+    expectedVersion: value['expectedVersion'],
     importRecordStatus: value['importRecordStatus'],
-    errorCount: value['errorCount'],
-    warningCount: value['warningCount'],
-    blockerCount: value['blockerCount'],
-    completedReviewAreas: value['completedReviewAreas'],
+    importRowNumber: value['importRowNumber'],
     missingReviewAreas: value['missingReviewAreas'],
     readyToPublish: value['readyToPublish'],
-    actionNeeded: value['actionNeeded'],
+    sourceRecordKey: value['sourceRecordKey'],
     updatedAt: value['updatedAt'] == null ? value['updatedAt'] : value['updatedAt'].toISOString(),
-    expectedVersion: value['expectedVersion'],
+    versionNumber: value['versionNumber'],
+    versionStatus: value['versionStatus'],
+    warningCount: value['warningCount'],
   };
 }

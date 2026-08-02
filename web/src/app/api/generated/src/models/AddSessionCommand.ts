@@ -21,30 +21,6 @@ import { mapValues } from '../runtime';
 export interface AddSessionCommand {
   /**
    *
-   * @type {number}
-   * @memberof AddSessionCommand
-   */
-  expectedVersion?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof AddSessionCommand
-   */
-  microcycleId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AddSessionCommand
-   */
-  title?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof AddSessionCommand
-   */
-  scheduledDate?: Date;
-  /**
-   *
    * @type {Date}
    * @memberof AddSessionCommand
    */
@@ -61,6 +37,30 @@ export interface AddSessionCommand {
    * @memberof AddSessionCommand
    */
   expectedDurationMinutes?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof AddSessionCommand
+   */
+  expectedVersion?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof AddSessionCommand
+   */
+  microcycleId?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof AddSessionCommand
+   */
+  scheduledDate?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof AddSessionCommand
+   */
+  title?: string;
 }
 
 /**
@@ -82,14 +82,14 @@ export function AddSessionCommandFromJSONTyped(
     return json;
   }
   return {
-    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
-    microcycleId: json['microcycleId'] == null ? undefined : json['microcycleId'],
-    title: json['title'] == null ? undefined : json['title'],
-    scheduledDate: json['scheduledDate'] == null ? undefined : new Date(json['scheduledDate']),
     availableFrom: json['availableFrom'] == null ? undefined : new Date(json['availableFrom']),
     availableTo: json['availableTo'] == null ? undefined : new Date(json['availableTo']),
     expectedDurationMinutes:
       json['expectedDurationMinutes'] == null ? undefined : json['expectedDurationMinutes'],
+    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
+    microcycleId: json['microcycleId'] == null ? undefined : json['microcycleId'],
+    scheduledDate: json['scheduledDate'] == null ? undefined : new Date(json['scheduledDate']),
+    title: json['title'] == null ? undefined : json['title'],
   };
 }
 
@@ -106,13 +106,6 @@ export function AddSessionCommandToJSONTyped(
   }
 
   return {
-    expectedVersion: value['expectedVersion'],
-    microcycleId: value['microcycleId'],
-    title: value['title'],
-    scheduledDate:
-      value['scheduledDate'] == null
-        ? value['scheduledDate']
-        : value['scheduledDate'].toISOString().substring(0, 10),
     availableFrom:
       value['availableFrom'] == null
         ? value['availableFrom']
@@ -120,5 +113,12 @@ export function AddSessionCommandToJSONTyped(
     availableTo:
       value['availableTo'] == null ? value['availableTo'] : value['availableTo'].toISOString(),
     expectedDurationMinutes: value['expectedDurationMinutes'],
+    expectedVersion: value['expectedVersion'],
+    microcycleId: value['microcycleId'],
+    scheduledDate:
+      value['scheduledDate'] == null
+        ? value['scheduledDate']
+        : value['scheduledDate'].toISOString().substring(0, 10),
+    title: value['title'],
   };
 }

@@ -21,10 +21,22 @@ import { mapValues } from '../runtime';
 export interface PlannedSession {
   /**
    *
+   * @type {Date}
+   * @memberof PlannedSession
+   */
+  assignedAt?: Date;
+  /**
+   *
    * @type {string}
    * @memberof PlannedSession
    */
   id?: string;
+  /**
+   *
+   * @type {PlannedSessionKindEnum}
+   * @memberof PlannedSession
+   */
+  kind?: PlannedSessionKindEnum;
   /**
    *
    * @type {string}
@@ -39,28 +51,16 @@ export interface PlannedSession {
   participantAccountId?: string;
   /**
    *
-   * @type {string}
-   * @memberof PlannedSession
-   */
-  title?: string;
-  /**
-   *
-   * @type {PlannedSessionKindEnum}
-   * @memberof PlannedSession
-   */
-  kind?: PlannedSessionKindEnum;
-  /**
-   *
    * @type {PlannedSessionStatusEnum}
    * @memberof PlannedSession
    */
   status?: PlannedSessionStatusEnum;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof PlannedSession
    */
-  assignedAt?: Date;
+  title?: string;
 }
 
 /**
@@ -104,14 +104,14 @@ export function PlannedSessionFromJSONTyped(
     return json;
   }
   return {
+    assignedAt: json['assignedAt'] == null ? undefined : new Date(json['assignedAt']),
     id: json['id'] == null ? undefined : json['id'],
+    kind: json['kind'] == null ? undefined : json['kind'],
     microcycleId: json['microcycleId'] == null ? undefined : json['microcycleId'],
     participantAccountId:
       json['participantAccountId'] == null ? undefined : json['participantAccountId'],
-    title: json['title'] == null ? undefined : json['title'],
-    kind: json['kind'] == null ? undefined : json['kind'],
     status: json['status'] == null ? undefined : json['status'],
-    assignedAt: json['assignedAt'] == null ? undefined : new Date(json['assignedAt']),
+    title: json['title'] == null ? undefined : json['title'],
   };
 }
 
@@ -128,13 +128,13 @@ export function PlannedSessionToJSONTyped(
   }
 
   return {
-    id: value['id'],
-    microcycleId: value['microcycleId'],
-    participantAccountId: value['participantAccountId'],
-    title: value['title'],
-    kind: value['kind'],
-    status: value['status'],
     assignedAt:
       value['assignedAt'] == null ? value['assignedAt'] : value['assignedAt'].toISOString(),
+    id: value['id'],
+    kind: value['kind'],
+    microcycleId: value['microcycleId'],
+    participantAccountId: value['participantAccountId'],
+    status: value['status'],
+    title: value['title'],
   };
 }

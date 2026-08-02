@@ -36,6 +36,48 @@ import {
 export interface ActivePlanView {
   /**
    *
+   * @type {Date}
+   * @memberof ActivePlanView
+   */
+  activatedAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof ActivePlanView
+   */
+  activeRevisionId?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof ActivePlanView
+   */
+  activeSessionCount?: number;
+  /**
+   *
+   * @type {Array<string>}
+   * @memberof ActivePlanView
+   */
+  availableActions?: Array<string>;
+  /**
+   *
+   * @type {ExecutionFactView}
+   * @memberof ActivePlanView
+   */
+  lastCompletedSession?: ExecutionFactView;
+  /**
+   *
+   * @type {string}
+   * @memberof ActivePlanView
+   */
+  name?: string;
+  /**
+   *
+   * @type {SessionFactView}
+   * @memberof ActivePlanView
+   */
+  nextPlannedSession?: SessionFactView;
+  /**
+   *
    * @type {string}
    * @memberof ActivePlanView
    */
@@ -45,25 +87,7 @@ export interface ActivePlanView {
    * @type {string}
    * @memberof ActivePlanView
    */
-  activeRevisionId?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ActivePlanView
-   */
-  name?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof ActivePlanView
-   */
   status?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof ActivePlanView
-   */
-  activatedAt?: Date;
   /**
    *
    * @type {Date}
@@ -76,30 +100,6 @@ export interface ActivePlanView {
    * @memberof ActivePlanView
    */
   validTo?: Date;
-  /**
-   *
-   * @type {number}
-   * @memberof ActivePlanView
-   */
-  activeSessionCount?: number;
-  /**
-   *
-   * @type {SessionFactView}
-   * @memberof ActivePlanView
-   */
-  nextPlannedSession?: SessionFactView;
-  /**
-   *
-   * @type {ExecutionFactView}
-   * @memberof ActivePlanView
-   */
-  lastCompletedSession?: ExecutionFactView;
-  /**
-   *
-   * @type {Array<string>}
-   * @memberof ActivePlanView
-   */
-  availableActions?: Array<string>;
 }
 
 /**
@@ -121,23 +121,23 @@ export function ActivePlanViewFromJSONTyped(
     return json;
   }
   return {
-    planId: json['planId'] == null ? undefined : json['planId'],
-    activeRevisionId: json['activeRevisionId'] == null ? undefined : json['activeRevisionId'],
-    name: json['name'] == null ? undefined : json['name'],
-    status: json['status'] == null ? undefined : json['status'],
     activatedAt: json['activatedAt'] == null ? undefined : new Date(json['activatedAt']),
-    validFrom: json['validFrom'] == null ? undefined : new Date(json['validFrom']),
-    validTo: json['validTo'] == null ? undefined : new Date(json['validTo']),
+    activeRevisionId: json['activeRevisionId'] == null ? undefined : json['activeRevisionId'],
     activeSessionCount: json['activeSessionCount'] == null ? undefined : json['activeSessionCount'],
-    nextPlannedSession:
-      json['nextPlannedSession'] == null
-        ? undefined
-        : SessionFactViewFromJSON(json['nextPlannedSession']),
+    availableActions: json['availableActions'] == null ? undefined : json['availableActions'],
     lastCompletedSession:
       json['lastCompletedSession'] == null
         ? undefined
         : ExecutionFactViewFromJSON(json['lastCompletedSession']),
-    availableActions: json['availableActions'] == null ? undefined : json['availableActions'],
+    name: json['name'] == null ? undefined : json['name'],
+    nextPlannedSession:
+      json['nextPlannedSession'] == null
+        ? undefined
+        : SessionFactViewFromJSON(json['nextPlannedSession']),
+    planId: json['planId'] == null ? undefined : json['planId'],
+    status: json['status'] == null ? undefined : json['status'],
+    validFrom: json['validFrom'] == null ? undefined : new Date(json['validFrom']),
+    validTo: json['validTo'] == null ? undefined : new Date(json['validTo']),
   };
 }
 
@@ -154,21 +154,21 @@ export function ActivePlanViewToJSONTyped(
   }
 
   return {
-    planId: value['planId'],
-    activeRevisionId: value['activeRevisionId'],
-    name: value['name'],
-    status: value['status'],
     activatedAt:
       value['activatedAt'] == null ? value['activatedAt'] : value['activatedAt'].toISOString(),
+    activeRevisionId: value['activeRevisionId'],
+    activeSessionCount: value['activeSessionCount'],
+    availableActions: value['availableActions'],
+    lastCompletedSession: ExecutionFactViewToJSON(value['lastCompletedSession']),
+    name: value['name'],
+    nextPlannedSession: SessionFactViewToJSON(value['nextPlannedSession']),
+    planId: value['planId'],
+    status: value['status'],
     validFrom:
       value['validFrom'] == null
         ? value['validFrom']
         : value['validFrom'].toISOString().substring(0, 10),
     validTo:
       value['validTo'] == null ? value['validTo'] : value['validTo'].toISOString().substring(0, 10),
-    activeSessionCount: value['activeSessionCount'],
-    nextPlannedSession: SessionFactViewToJSON(value['nextPlannedSession']),
-    lastCompletedSession: ExecutionFactViewToJSON(value['lastCompletedSession']),
-    availableActions: value['availableActions'],
   };
 }

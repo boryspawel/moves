@@ -24,25 +24,25 @@ export interface EvidenceView {
    * @type {string}
    * @memberof EvidenceView
    */
-  id?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof EvidenceView
-   */
   citation?: string;
   /**
    *
    * @type {string}
    * @memberof EvidenceView
    */
-  sourceUri?: string;
+  evidenceGrade?: string;
   /**
    *
    * @type {string}
    * @memberof EvidenceView
    */
-  evidenceGrade?: string;
+  id?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof EvidenceView
+   */
+  sourceUri?: string;
 }
 
 /**
@@ -61,10 +61,10 @@ export function EvidenceViewFromJSONTyped(json: any, ignoreDiscriminator: boolea
     return json;
   }
   return {
-    id: json['id'] == null ? undefined : json['id'],
     citation: json['citation'] == null ? undefined : json['citation'],
-    sourceUri: json['sourceUri'] == null ? undefined : json['sourceUri'],
     evidenceGrade: json['evidenceGrade'] == null ? undefined : json['evidenceGrade'],
+    id: json['id'] == null ? undefined : json['id'],
+    sourceUri: json['sourceUri'] == null ? undefined : json['sourceUri'],
   };
 }
 
@@ -81,9 +81,9 @@ export function EvidenceViewToJSONTyped(
   }
 
   return {
-    id: value['id'],
     citation: value['citation'],
-    sourceUri: value['sourceUri'],
     evidenceGrade: value['evidenceGrade'],
+    id: value['id'],
+    sourceUri: value['sourceUri'],
   };
 }

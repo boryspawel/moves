@@ -41,6 +41,7 @@ import {
   type ProgressStep,
 } from './onboarding-steps';
 import { toPresentationStage, type OnboardingPresentationStage } from './onboarding-presentation';
+import { isLocalCalendarDate } from './specialist-today.presentation';
 
 type LoadState = 'loading' | 'load-error' | 'loaded';
 type AvailabilitySlotForm = FormGroup<{
@@ -113,9 +114,11 @@ export const timeRangeValidator: ValidatorFn = (control): ValidationErrors | nul
           <app-onboarding-availability
             [form]="availabilityForm"
             [busy]="isSubmitting('availability')"
+            [showCancel]="availabilityEdit"
             (add)="addSlot()"
             (remove)="removeSlot($event)"
             (saved)="saveAvailability()"
+            (cancel)="cancelAvailabilityEdit()"
           />
         } @else if (presentationStage() === 'complete') {
           <app-onboarding-completion />
@@ -136,7 +139,8 @@ export class OnboardingPage {
   private readonly injector = inject(Injector);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly availabilityEdit = this.route.snapshot.queryParamMap.get('availabilityEdit') === 'true';
+  protected readonly availabilityEdit = this.route.snapshot.queryParamMap.get('availabilityEdit') === 'true';
+  private readonly returnDate = this.readReturnDate();
   protected readonly state = signal<State | null>(null);
   protected readonly loadState = signal<LoadState>('loading');
   protected readonly message = signal('');
@@ -265,6 +269,9 @@ export class OnboardingPage {
       'Dostępność zapisana.',
     );
   }
+  protected cancelAvailabilityEdit(): void {
+    if (this.availabilityEdit) this.returnToToday();
+  }
   private createSlot(): AvailabilitySlotForm {
     return this.createSlotFrom();
   }
@@ -317,13 +324,22 @@ export class OnboardingPage {
       this.message.set(success);
       this.focusAfterRender('.onboarding-card h2');
       if (this.availabilityEdit && stage === 'availability') {
-        void this.router.navigate(['/specialist/today']);
+        this.returnToToday();
       }
     } catch {
       this.message.set('Nie udało się zapisać tego kroku. Sprawdź dane i spróbuj ponownie.');
     } finally {
       this.submittingStage.set(null);
     }
+  }
+  private readReturnDate(): string | null {
+    const date = this.route.snapshot.queryParamMap.get('date');
+    return isLocalCalendarDate(date) ? date : null;
+  }
+  private returnToToday(): void {
+    void this.router.navigate(['/specialist/today'], {
+      queryParams: this.returnDate ? { date: this.returnDate } : {},
+    });
   }
   private focusAfterRender(selector: string): void {
     afterNextRender(

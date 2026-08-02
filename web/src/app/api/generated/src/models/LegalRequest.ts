@@ -24,13 +24,13 @@ export interface LegalRequest {
    * @type {boolean}
    * @memberof LegalRequest
    */
-  termsAccepted?: boolean;
+  privacyNoticeAcknowledged?: boolean;
   /**
    *
    * @type {boolean}
    * @memberof LegalRequest
    */
-  privacyNoticeAcknowledged?: boolean;
+  termsAccepted?: boolean;
 }
 
 /**
@@ -49,9 +49,9 @@ export function LegalRequestFromJSONTyped(json: any, ignoreDiscriminator: boolea
     return json;
   }
   return {
-    termsAccepted: json['termsAccepted'] == null ? undefined : json['termsAccepted'],
     privacyNoticeAcknowledged:
       json['privacyNoticeAcknowledged'] == null ? undefined : json['privacyNoticeAcknowledged'],
+    termsAccepted: json['termsAccepted'] == null ? undefined : json['termsAccepted'],
   };
 }
 
@@ -68,7 +68,7 @@ export function LegalRequestToJSONTyped(
   }
 
   return {
-    termsAccepted: value['termsAccepted'],
     privacyNoticeAcknowledged: value['privacyNoticeAcknowledged'],
+    termsAccepted: value['termsAccepted'],
   };
 }

@@ -324,8 +324,10 @@ export class OnboardingBasicProfileComponent {
     ><mat-card-header
       ><mat-card-title><h2 tabindex="-1">Typowa dostępność</h2></mat-card-title></mat-card-header
     ><mat-card-content
-      ><p>Dodaj wszystkie powtarzalne przedziały, w których jesteś dostępny/a.</p>
+      ><p>Dodaj wszystkie powtarzalne przedziały, w których jesteś dostępny/a. Godziny są w formacie 24-godzinnym.</p>
+      <p class="time-zone">Strefa czasowa: {{ timeZone }}</p>
       <form [formGroup]="form" (ngSubmit)="saved.emit()">
+        <fieldset class="day-picker"><legend>Dodaj zakres na wybrane dni</legend>@for (day of days; track day.value) { <label><input type="checkbox" [checked]="selectedDays.has(day.value)" (change)="toggleDay(day.value)"> {{ day.label }}</label> }<button mat-stroked-button type="button" (click)="copyToSelectedDays(slots.at(0))" [disabled]="!selectedDays.size">Dodaj zakres</button></fieldset>
         <div formArrayName="slots" class="availability-list">
           @for (slot of slots.controls; track $index; let index = $index) {
             <fieldset [formGroupName]="index">
@@ -350,13 +352,6 @@ export class OnboardingBasicProfileComponent {
                     >Godzina zakończenia musi być późniejsza od godziny rozpoczęcia.</mat-error
                   >
                 }</mat-form-field
-              ><mat-form-field appearance="outline"
-                ><mat-label>Strefa czasowa</mat-label
-                ><mat-select formControlName="timeZone">
-                  @for (zone of timeZones; track zone) {
-                    <mat-option [value]="zone">{{ zone }}</mat-option>
-                  }
-                </mat-select></mat-form-field
               ><button
                 mat-button
                 type="button"
@@ -365,13 +360,15 @@ export class OnboardingBasicProfileComponent {
               >
                 Usuń przedział
               </button>
+              @if (overlaps(slot, index)) { <p class="overlap-warning" role="status">Ten zakres nakłada się na inny zapisany zakres. Możesz go zapisać.</p> }
+              <div class="range-actions"><button mat-button type="button" (click)="copyToSelectedDays(slot)">Kopiuj na inne dni</button><button mat-button type="button" (click)="duplicate(slot)">Duplikuj zakres</button><button mat-button type="button" (click)="add.emit()">Dodaj kolejny zakres</button></div>
             </fieldset>
           }
         </div>
         <div class="availability-actions">
           <button mat-stroked-button type="button" (click)="add.emit()">
             Dodaj kolejny przedział</button
-          ><button mat-flat-button type="submit" [disabled]="busy">Zapisz dostępność</button>
+          >@if (showCancel) { <button mat-stroked-button type="button" (click)="cancel.emit()" [disabled]="busy">Anuluj</button> }<button mat-flat-button type="submit" [disabled]="busy">Zapisz dostępność</button>
         </div>
       </form></mat-card-content
     ></mat-card
@@ -380,11 +377,11 @@ export class OnboardingBasicProfileComponent {
     `
       .availability-list {
         display: grid;
-        gap: 16px;
+        gap: 10px;
       }
       fieldset {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 8px;
         border: 1px solid var(--onboarding-border);
         border-radius: 12px;
@@ -396,13 +393,18 @@ export class OnboardingBasicProfileComponent {
         gap: 12px;
         margin-top: 20px;
       }
+      .day-picker { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 12px; }
+      .day-picker label { white-space: nowrap; }
+      .time-zone, .overlap-warning { margin: 0 0 12px; }
+      .overlap-warning { grid-column: 1 / -1; color: var(--onboarding-warning); }
+      .range-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px; }
       @media (max-width: 680px) {
-        fieldset {
+        fieldset, .day-picker {
           grid-template-columns: 1fr 1fr;
         }
       }
       @media (max-width: 480px) {
-        fieldset {
+        fieldset, .day-picker {
           grid-template-columns: 1fr;
         }
         .availability-actions button {
@@ -414,12 +416,15 @@ export class OnboardingBasicProfileComponent {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OnboardingAvailabilityComponent {
-  @Input({ required: true }) form!: FormGroup<{ slots: FormArray }>;
+  @Input({ required: true }) form!: FormGroup<{ slots: FormArray<FormGroup<any>> }>;
   @Input() busy = false;
+  @Input() showCancel = false;
   @Output() readonly add = new EventEmitter<void>();
   @Output() readonly remove = new EventEmitter<number>();
   @Output() readonly saved = new EventEmitter<void>();
+  @Output() readonly cancel = new EventEmitter<void>();
   protected readonly timeZones = supportedTimeZones;
+  protected readonly selectedDays = new Set<string>();
   protected readonly days = [
     { value: SlotRequestDayOfWeekEnum.Monday, label: 'Poniedziałek' },
     { value: SlotRequestDayOfWeekEnum.Tuesday, label: 'Wtorek' },
@@ -429,8 +434,23 @@ export class OnboardingAvailabilityComponent {
     { value: SlotRequestDayOfWeekEnum.Saturday, label: 'Sobota' },
     { value: SlotRequestDayOfWeekEnum.Sunday, label: 'Niedziela' },
   ];
-  get slots(): FormArray {
+  get slots(): FormArray<FormGroup<any>> {
     return this.form.controls.slots;
+  }
+  protected get timeZone(): string { return this.slots.at(0)?.get('timeZone')?.value ?? 'Europe/Warsaw'; }
+  protected toggleDay(day: string): void { this.selectedDays.has(day) ? this.selectedDays.delete(day) : this.selectedDays.add(day); }
+  protected copyToSelectedDays(slot: FormGroup): void {
+    const source = slot.getRawValue();
+    this.selectedDays.forEach(day => this.slots.push(this.slot({ ...source, dayOfWeek: day })));
+    this.selectedDays.clear();
+  }
+  protected duplicate(slot: FormGroup): void { this.slots.push(this.slot(slot.getRawValue())); }
+  protected overlaps(slot: FormGroup, index: number): boolean {
+    const value = slot.getRawValue();
+    return this.slots.controls.some((other, otherIndex) => otherIndex !== index && other.get('dayOfWeek')?.value === value.dayOfWeek && other.get('timeZone')?.value === value.timeZone && other.get('startTime')?.value < value.endTime && value.startTime < other.get('endTime')?.value);
+  }
+  private slot(value: { dayOfWeek: string; startTime: string; endTime: string; timeZone: string }): FormGroup {
+    return new FormGroup({ dayOfWeek: new FormControl(value.dayOfWeek, { nonNullable: true }), startTime: new FormControl(value.startTime, { nonNullable: true }), endTime: new FormControl(value.endTime, { nonNullable: true }), timeZone: new FormControl(value.timeZone, { nonNullable: true }) });
   }
 }
 

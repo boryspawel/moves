@@ -27,52 +27,16 @@ export interface AppointmentView {
   appointmentId?: string;
   /**
    *
-   * @type {string}
+   * @type {Array<string>}
    * @memberof AppointmentView
    */
-  participantId?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof AppointmentView
-   */
-  startsAt?: Date;
+  availableActions?: Array<string>;
   /**
    *
    * @type {Date}
    * @memberof AppointmentView
    */
   endsAt?: Date;
-  /**
-   *
-   * @type {AppointmentViewTypeEnum}
-   * @memberof AppointmentView
-   */
-  type?: AppointmentViewTypeEnum;
-  /**
-   *
-   * @type {AppointmentViewStatusEnum}
-   * @memberof AppointmentView
-   */
-  status?: AppointmentViewStatusEnum;
-  /**
-   *
-   * @type {AppointmentViewLocationModeEnum}
-   * @memberof AppointmentView
-   */
-  locationMode?: AppointmentViewLocationModeEnum;
-  /**
-   *
-   * @type {string}
-   * @memberof AppointmentView
-   */
-  location?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AppointmentView
-   */
-  shortPurpose?: string;
   /**
    *
    * @type {boolean}
@@ -87,10 +51,46 @@ export interface AppointmentView {
   isNext?: boolean;
   /**
    *
-   * @type {Array<string>}
+   * @type {string}
    * @memberof AppointmentView
    */
-  availableActions?: Array<string>;
+  location?: string;
+  /**
+   *
+   * @type {AppointmentViewLocationModeEnum}
+   * @memberof AppointmentView
+   */
+  locationMode?: AppointmentViewLocationModeEnum;
+  /**
+   *
+   * @type {string}
+   * @memberof AppointmentView
+   */
+  participantId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AppointmentView
+   */
+  shortPurpose?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof AppointmentView
+   */
+  startsAt?: Date;
+  /**
+   *
+   * @type {AppointmentViewStatusEnum}
+   * @memberof AppointmentView
+   */
+  status?: AppointmentViewStatusEnum;
+  /**
+   *
+   * @type {AppointmentViewTypeEnum}
+   * @memberof AppointmentView
+   */
+  type?: AppointmentViewTypeEnum;
   /**
    *
    * @type {number}
@@ -102,14 +102,13 @@ export interface AppointmentView {
 /**
  * @export
  */
-export const AppointmentViewTypeEnum = {
-  Training: 'TRAINING',
-  Physiotherapy: 'PHYSIOTHERAPY',
-  Assessment: 'ASSESSMENT',
-  Consultation: 'CONSULTATION',
+export const AppointmentViewLocationModeEnum = {
+  InPerson: 'IN_PERSON',
+  Remote: 'REMOTE',
+  Phone: 'PHONE',
 } as const;
-export type AppointmentViewTypeEnum =
-  (typeof AppointmentViewTypeEnum)[keyof typeof AppointmentViewTypeEnum];
+export type AppointmentViewLocationModeEnum =
+  (typeof AppointmentViewLocationModeEnum)[keyof typeof AppointmentViewLocationModeEnum];
 
 /**
  * @export
@@ -128,13 +127,14 @@ export type AppointmentViewStatusEnum =
 /**
  * @export
  */
-export const AppointmentViewLocationModeEnum = {
-  InPerson: 'IN_PERSON',
-  Remote: 'REMOTE',
-  Phone: 'PHONE',
+export const AppointmentViewTypeEnum = {
+  Training: 'TRAINING',
+  Physiotherapy: 'PHYSIOTHERAPY',
+  Assessment: 'ASSESSMENT',
+  Consultation: 'CONSULTATION',
 } as const;
-export type AppointmentViewLocationModeEnum =
-  (typeof AppointmentViewLocationModeEnum)[keyof typeof AppointmentViewLocationModeEnum];
+export type AppointmentViewTypeEnum =
+  (typeof AppointmentViewTypeEnum)[keyof typeof AppointmentViewTypeEnum];
 
 /**
  * Check if a given object implements the AppointmentView interface.
@@ -156,17 +156,17 @@ export function AppointmentViewFromJSONTyped(
   }
   return {
     appointmentId: json['appointmentId'] == null ? undefined : json['appointmentId'],
-    participantId: json['participantId'] == null ? undefined : json['participantId'],
-    startsAt: json['startsAt'] == null ? undefined : new Date(json['startsAt']),
+    availableActions: json['availableActions'] == null ? undefined : json['availableActions'],
     endsAt: json['endsAt'] == null ? undefined : new Date(json['endsAt']),
-    type: json['type'] == null ? undefined : json['type'],
-    status: json['status'] == null ? undefined : json['status'],
-    locationMode: json['locationMode'] == null ? undefined : json['locationMode'],
-    location: json['location'] == null ? undefined : json['location'],
-    shortPurpose: json['shortPurpose'] == null ? undefined : json['shortPurpose'],
     isCurrent: json['isCurrent'] == null ? undefined : json['isCurrent'],
     isNext: json['isNext'] == null ? undefined : json['isNext'],
-    availableActions: json['availableActions'] == null ? undefined : json['availableActions'],
+    location: json['location'] == null ? undefined : json['location'],
+    locationMode: json['locationMode'] == null ? undefined : json['locationMode'],
+    participantId: json['participantId'] == null ? undefined : json['participantId'],
+    shortPurpose: json['shortPurpose'] == null ? undefined : json['shortPurpose'],
+    startsAt: json['startsAt'] == null ? undefined : new Date(json['startsAt']),
+    status: json['status'] == null ? undefined : json['status'],
+    type: json['type'] == null ? undefined : json['type'],
     version: json['version'] == null ? undefined : json['version'],
   };
 }
@@ -185,17 +185,17 @@ export function AppointmentViewToJSONTyped(
 
   return {
     appointmentId: value['appointmentId'],
-    participantId: value['participantId'],
-    startsAt: value['startsAt'] == null ? value['startsAt'] : value['startsAt'].toISOString(),
+    availableActions: value['availableActions'],
     endsAt: value['endsAt'] == null ? value['endsAt'] : value['endsAt'].toISOString(),
-    type: value['type'],
-    status: value['status'],
-    locationMode: value['locationMode'],
-    location: value['location'],
-    shortPurpose: value['shortPurpose'],
     isCurrent: value['isCurrent'],
     isNext: value['isNext'],
-    availableActions: value['availableActions'],
+    location: value['location'],
+    locationMode: value['locationMode'],
+    participantId: value['participantId'],
+    shortPurpose: value['shortPurpose'],
+    startsAt: value['startsAt'] == null ? value['startsAt'] : value['startsAt'].toISOString(),
+    status: value['status'],
+    type: value['type'],
     version: value['version'],
   };
 }

@@ -35,46 +35,16 @@ export interface PublicAnatomyContributionView {
   code?: string;
   /**
    *
-   * @type {string}
+   * @type {number}
    * @memberof PublicAnatomyContributionView
    */
-  displayName?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof PublicAnatomyContributionView
-   */
-  structureType?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof PublicAnatomyContributionView
-   */
-  role?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof PublicAnatomyContributionView
-   */
-  loadChannel?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof PublicAnatomyContributionView
-   */
-  contributionBand?: string;
+  coefficientHigh?: number;
   /**
    *
    * @type {number}
    * @memberof PublicAnatomyContributionView
    */
   coefficientLow?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof PublicAnatomyContributionView
-   */
-  coefficientHigh?: number;
   /**
    *
    * @type {string}
@@ -86,13 +56,37 @@ export interface PublicAnatomyContributionView {
    * @type {string}
    * @memberof PublicAnatomyContributionView
    */
+  contributionBand?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicAnatomyContributionView
+   */
+  displayName?: string;
+  /**
+   *
+   * @type {Array<PublicEvidenceView>}
+   * @memberof PublicAnatomyContributionView
+   */
+  evidence?: Array<PublicEvidenceView>;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicAnatomyContributionView
+   */
   evidenceGrade?: string;
   /**
    *
    * @type {string}
    * @memberof PublicAnatomyContributionView
    */
-  variantCondition?: string;
+  loadChannel?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicAnatomyContributionView
+   */
+  role?: string;
   /**
    *
    * @type {string}
@@ -101,10 +95,16 @@ export interface PublicAnatomyContributionView {
   sideRule?: string;
   /**
    *
-   * @type {Array<PublicEvidenceView>}
+   * @type {string}
    * @memberof PublicAnatomyContributionView
    */
-  evidence?: Array<PublicEvidenceView>;
+  structureType?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicAnatomyContributionView
+   */
+  variantCondition?: string;
 }
 
 /**
@@ -129,21 +129,21 @@ export function PublicAnatomyContributionViewFromJSONTyped(
   }
   return {
     code: json['code'] == null ? undefined : json['code'],
-    displayName: json['displayName'] == null ? undefined : json['displayName'],
-    structureType: json['structureType'] == null ? undefined : json['structureType'],
-    role: json['role'] == null ? undefined : json['role'],
-    loadChannel: json['loadChannel'] == null ? undefined : json['loadChannel'],
-    contributionBand: json['contributionBand'] == null ? undefined : json['contributionBand'],
-    coefficientLow: json['coefficientLow'] == null ? undefined : json['coefficientLow'],
     coefficientHigh: json['coefficientHigh'] == null ? undefined : json['coefficientHigh'],
+    coefficientLow: json['coefficientLow'] == null ? undefined : json['coefficientLow'],
     confidenceClass: json['confidenceClass'] == null ? undefined : json['confidenceClass'],
-    evidenceGrade: json['evidenceGrade'] == null ? undefined : json['evidenceGrade'],
-    variantCondition: json['variantCondition'] == null ? undefined : json['variantCondition'],
-    sideRule: json['sideRule'] == null ? undefined : json['sideRule'],
+    contributionBand: json['contributionBand'] == null ? undefined : json['contributionBand'],
+    displayName: json['displayName'] == null ? undefined : json['displayName'],
     evidence:
       json['evidence'] == null
         ? undefined
         : (json['evidence'] as Array<any>).map(PublicEvidenceViewFromJSON),
+    evidenceGrade: json['evidenceGrade'] == null ? undefined : json['evidenceGrade'],
+    loadChannel: json['loadChannel'] == null ? undefined : json['loadChannel'],
+    role: json['role'] == null ? undefined : json['role'],
+    sideRule: json['sideRule'] == null ? undefined : json['sideRule'],
+    structureType: json['structureType'] == null ? undefined : json['structureType'],
+    variantCondition: json['variantCondition'] == null ? undefined : json['variantCondition'],
   };
 }
 
@@ -161,20 +161,20 @@ export function PublicAnatomyContributionViewToJSONTyped(
 
   return {
     code: value['code'],
-    displayName: value['displayName'],
-    structureType: value['structureType'],
-    role: value['role'],
-    loadChannel: value['loadChannel'],
-    contributionBand: value['contributionBand'],
-    coefficientLow: value['coefficientLow'],
     coefficientHigh: value['coefficientHigh'],
+    coefficientLow: value['coefficientLow'],
     confidenceClass: value['confidenceClass'],
-    evidenceGrade: value['evidenceGrade'],
-    variantCondition: value['variantCondition'],
-    sideRule: value['sideRule'],
+    contributionBand: value['contributionBand'],
+    displayName: value['displayName'],
     evidence:
       value['evidence'] == null
         ? undefined
         : (value['evidence'] as Array<any>).map(PublicEvidenceViewToJSON),
+    evidenceGrade: value['evidenceGrade'],
+    loadChannel: value['loadChannel'],
+    role: value['role'],
+    sideRule: value['sideRule'],
+    structureType: value['structureType'],
+    variantCondition: value['variantCondition'],
   };
 }

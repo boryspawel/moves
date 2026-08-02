@@ -21,16 +21,28 @@ import { mapValues } from '../runtime';
 export interface OutcomeCommand {
   /**
    *
-   * @type {string}
-   * @memberof OutcomeCommand
-   */
-  metricCode?: string;
-  /**
-   *
    * @type {number}
    * @memberof OutcomeCommand
    */
   baseline?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof OutcomeCommand
+   */
+  evidenceSource?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof OutcomeCommand
+   */
+  measurementMethod?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof OutcomeCommand
+   */
+  metricCode?: string;
   /**
    *
    * @type {number}
@@ -43,18 +55,6 @@ export interface OutcomeCommand {
    * @memberof OutcomeCommand
    */
   unit?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof OutcomeCommand
-   */
-  measurementMethod?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof OutcomeCommand
-   */
-  evidenceSource?: string;
 }
 
 /**
@@ -76,12 +76,12 @@ export function OutcomeCommandFromJSONTyped(
     return json;
   }
   return {
-    metricCode: json['metricCode'] == null ? undefined : json['metricCode'],
     baseline: json['baseline'] == null ? undefined : json['baseline'],
+    evidenceSource: json['evidenceSource'] == null ? undefined : json['evidenceSource'],
+    measurementMethod: json['measurementMethod'] == null ? undefined : json['measurementMethod'],
+    metricCode: json['metricCode'] == null ? undefined : json['metricCode'],
     target: json['target'] == null ? undefined : json['target'],
     unit: json['unit'] == null ? undefined : json['unit'],
-    measurementMethod: json['measurementMethod'] == null ? undefined : json['measurementMethod'],
-    evidenceSource: json['evidenceSource'] == null ? undefined : json['evidenceSource'],
   };
 }
 
@@ -98,11 +98,11 @@ export function OutcomeCommandToJSONTyped(
   }
 
   return {
-    metricCode: value['metricCode'],
     baseline: value['baseline'],
+    evidenceSource: value['evidenceSource'],
+    measurementMethod: value['measurementMethod'],
+    metricCode: value['metricCode'],
     target: value['target'],
     unit: value['unit'],
-    measurementMethod: value['measurementMethod'],
-    evidenceSource: value['evidenceSource'],
   };
 }

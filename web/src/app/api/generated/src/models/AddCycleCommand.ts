@@ -21,16 +21,16 @@ import { mapValues } from '../runtime';
 export interface AddCycleCommand {
   /**
    *
-   * @type {number}
+   * @type {Date}
    * @memberof AddCycleCommand
    */
-  expectedVersion?: number;
+  endDate?: Date;
   /**
    *
    * @type {number}
    * @memberof AddCycleCommand
    */
-  sequenceNumber?: number;
+  expectedVersion?: number;
   /**
    *
    * @type {string}
@@ -39,16 +39,10 @@ export interface AddCycleCommand {
   name?: string;
   /**
    *
-   * @type {Date}
+   * @type {string}
    * @memberof AddCycleCommand
    */
-  startDate?: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof AddCycleCommand
-   */
-  endDate?: Date;
+  phaseGoal?: string;
   /**
    *
    * @type {string}
@@ -57,10 +51,16 @@ export interface AddCycleCommand {
   phaseIntent?: string;
   /**
    *
-   * @type {string}
+   * @type {number}
    * @memberof AddCycleCommand
    */
-  phaseGoal?: string;
+  sequenceNumber?: number;
+  /**
+   *
+   * @type {Date}
+   * @memberof AddCycleCommand
+   */
+  startDate?: Date;
 }
 
 /**
@@ -82,13 +82,13 @@ export function AddCycleCommandFromJSONTyped(
     return json;
   }
   return {
-    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
-    sequenceNumber: json['sequenceNumber'] == null ? undefined : json['sequenceNumber'],
-    name: json['name'] == null ? undefined : json['name'],
-    startDate: json['startDate'] == null ? undefined : new Date(json['startDate']),
     endDate: json['endDate'] == null ? undefined : new Date(json['endDate']),
-    phaseIntent: json['phaseIntent'] == null ? undefined : json['phaseIntent'],
+    expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
+    name: json['name'] == null ? undefined : json['name'],
     phaseGoal: json['phaseGoal'] == null ? undefined : json['phaseGoal'],
+    phaseIntent: json['phaseIntent'] == null ? undefined : json['phaseIntent'],
+    sequenceNumber: json['sequenceNumber'] == null ? undefined : json['sequenceNumber'],
+    startDate: json['startDate'] == null ? undefined : new Date(json['startDate']),
   };
 }
 
@@ -105,16 +105,16 @@ export function AddCycleCommandToJSONTyped(
   }
 
   return {
+    endDate:
+      value['endDate'] == null ? value['endDate'] : value['endDate'].toISOString().substring(0, 10),
     expectedVersion: value['expectedVersion'],
-    sequenceNumber: value['sequenceNumber'],
     name: value['name'],
+    phaseGoal: value['phaseGoal'],
+    phaseIntent: value['phaseIntent'],
+    sequenceNumber: value['sequenceNumber'],
     startDate:
       value['startDate'] == null
         ? value['startDate']
         : value['startDate'].toISOString().substring(0, 10),
-    endDate:
-      value['endDate'] == null ? value['endDate'] : value['endDate'].toISOString().substring(0, 10),
-    phaseIntent: value['phaseIntent'],
-    phaseGoal: value['phaseGoal'],
   };
 }
