@@ -203,6 +203,35 @@ class ModuleBoundaryTest {
                 .check(productionClasses);
     }
 
+    @Test
+    void exerciseSetsRemainIndependentFromParticipantPlanningAndCatalogInternals() {
+        noClasses().that().resideInAPackage("com.motionecosystem.exercisesets..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "com.motionecosystem.participant..",
+                        "com.motionecosystem.calendar..",
+                        "com.motionecosystem.trainingexecution..",
+                        "com.motionecosystem.trainingplanning..",
+                        "com.motionecosystem.exercisecatalog.infrastructure..",
+                        "com.motionecosystem.exercisecatalog.domain..")
+                .check(productionClasses);
+
+        noClasses().that().resideInAPackage("com.motionecosystem.exercisesets..")
+                .should().dependOnClassesThat().haveFullyQualifiedName("org.springframework.jdbc.core.JdbcTemplate")
+                .check(productionClasses);
+
+        classes().that().resideInAPackage("com.motionecosystem.exercisesets.infrastructure..")
+                .and().areAnnotatedWith(jakarta.persistence.Entity.class)
+                .should().notBePublic()
+                .check(productionClasses);
+    }
+
+    @Test
+    void exerciseSetApiDoesNotExposeJpaEntities() {
+        noClasses().that().resideInAPackage("com.motionecosystem.exercisesets.api..")
+                .should().beAnnotatedWith(jakarta.persistence.Entity.class)
+                .check(productionClasses);
+    }
+
     private static ArchCondition<JavaClass> onlyDependOnJpaRepositoriesInTheirOwnModule() {
         return new ArchCondition<>("only depend on JPA repositories in their own top-level module") {
             @Override

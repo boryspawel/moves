@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "barrier_report", schema = "adherence")
-class BarrierReport {
+public class BarrierReport {
     @Id UUID id;
     @Column(name = "participant_id") UUID participantAccountId;
     @Column(name = "planned_session_id") UUID plannedSessionId;

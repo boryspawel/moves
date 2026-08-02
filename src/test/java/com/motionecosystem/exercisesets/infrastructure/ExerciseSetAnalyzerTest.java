@@ -198,6 +198,7 @@ class ExerciseSetAnalyzerTest {
         assertThat(result.visualConcentrationPolicyVersion()).isEqualTo("visual-region-concentration-policy-v1");
         assertThat(result.visualRegionExposures()).singleElement().satisfies(exposure -> {
             assertThat(exposure.visualRegionCode()).isEqualTo("REGION");
+            assertThat(exposure.displayName()).isEqualTo("Udo");
             assertThat(exposure.view()).isEqualTo(VisualRegionView.FRONT);
             assertThat(exposure.layer()).isEqualTo(VisualRegionLayer.MUSCLE);
             assertThat(exposure.laterality()).isEqualTo(VisualRegionLaterality.LEFT);
@@ -212,6 +213,24 @@ class ExerciseSetAnalyzerTest {
     }
 
     @Test
+    void preservesBilateralVisualExposureWithoutDuplicatingItsContribution() {
+        var item = item(1, Phase.MAIN, strength(), "[]");
+        item.dose.side = Side.BILATERAL;
+        var bilateral = contribution(UUID.randomUUID(), UUID.randomUUID(), "STRUCTURE:BILATERAL", "BILATERAL", List.of(), mapping());
+
+        var result = analyzer.analyzeAnatomy(version(SetProfile.HOME, item), true,
+                Map.of(item.id, snapshot(item.exerciseVersionId, List.of(bilateral))));
+
+        assertThat(result.visualRegionExposures()).singleElement().satisfies(exposure -> {
+            assertThat(exposure.laterality()).isEqualTo(VisualRegionLaterality.BILATERAL);
+            assertThat(exposure.rawValue()).isEqualByComparingTo("0.7");
+            assertThat(exposure.shareWithinChannel()).isEqualByComparingTo("1");
+            assertThat(exposure.concentrationBand()).isEqualTo(ConcentrationBand.DOMINANT);
+            assertThat(exposure.breakdowns()).singleElement();
+        });
+    }
+
+    @Test
     void reportsMixedTopLevelVersionAndKeepsEveryVisualExposureVersionExplicit() {
         var item = item(1, Phase.MAIN, strength(), "[]");
         var v1 = contribution(UUID.randomUUID(), UUID.randomUUID(), "ONE", "LEFT", List.of(), mapping(1, "REGION:ONE"));
@@ -222,6 +241,8 @@ class ExerciseSetAnalyzerTest {
 
         assertThat(result.visualMappingVersion()).isEqualTo("MIXED");
         assertThat(result.visualRegionExposures()).extracting(VisualRegionExposure::mappingVersion).containsExactly(1L, 2L);
+        assertThat(result.visualRegionExposures()).extracting(VisualRegionExposure::laterality)
+                .containsExactly(VisualRegionLaterality.LEFT, VisualRegionLaterality.RIGHT);
     }
 
     private static ExerciseSetAnalyzer.ItemAnatomySnapshot snapshot(UUID exerciseVersionId, List<ExerciseSetAnalyzer.ItemAnatomyContribution> contributions) {
@@ -239,7 +260,7 @@ class ExerciseSetAnalyzerTest {
         return mapping(1, "REGION");
     }
     private static ExerciseSetAnalyzer.ItemVisualMapping mapping(long version, String code) {
-        return new ExerciseSetAnalyzer.ItemVisualMapping(version, List.of(new ExerciseSetAnalyzer.ItemVisualRegion(UUID.randomUUID(), code, "Region", "FRONT", "MUSCLE", "region", null, 1, "ACTIVE")));
+        return new ExerciseSetAnalyzer.ItemVisualMapping(version, List.of(new ExerciseSetAnalyzer.ItemVisualRegion(UUID.randomUUID(), code, "Udo", "FRONT", "MUSCLE", "region", null, 1, "ACTIVE")));
     }
 
     private void assertBlocked(SetProfile profile, Phase phase) { assertThat(analyzer.analyze(version(profile, item(1, phase, strength(), "[]")), true).status()).isEqualTo(AnalysisStatus.SUGGESTIONS_AVAILABLE); }

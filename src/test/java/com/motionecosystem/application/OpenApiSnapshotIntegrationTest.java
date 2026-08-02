@@ -15,6 +15,10 @@ import org.springframework.security.web.FilterChainProxy;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 @SpringBootTest(classes = MotionEcosystemApplication.class)
 @Import(PostgresTestConfiguration.class)
@@ -24,6 +28,8 @@ class OpenApiSnapshotIntegrationTest {
     WebApplicationContext context;
     @Autowired
     FilterChainProxy securityFilterChain;
+    @Autowired
+    ObjectMapper json;
 
     @Test
     void exposesAndOptionallySnapshotsTheRealContract() throws Exception {
@@ -37,6 +43,7 @@ class OpenApiSnapshotIntegrationTest {
                 "/api/v1/planned-sessions",
                 "/api/v1/gamification/me",
                 "/api/v1/specialist/participants",
+                "/api/v1/specialist/available-slots",
                 "/api/v1/specialist/worklist",
                 "/api/v2/training-plans/{planId}/collaborators",
                 "/api/v2/training-plans/{planId}/collaborators/{collaboratorId}",
@@ -50,7 +57,22 @@ class OpenApiSnapshotIntegrationTest {
         if (output != null && !output.isBlank()) {
             Path path = Path.of(output).toAbsolutePath().normalize();
             Files.createDirectories(path.getParent());
-            Files.writeString(path, contract);
+            Files.writeString(path, json.writeValueAsString(canonicalize(json.readTree(contract))));
         }
+    }
+
+    private JsonNode canonicalize(JsonNode node) {
+        if (node.isObject()) {
+            ObjectNode result = json.createObjectNode();
+            node.propertyNames().stream().sorted()
+                    .forEach(name -> result.set(name, canonicalize(node.get(name))));
+            return result;
+        }
+        if (node.isArray()) {
+            ArrayNode result = json.createArrayNode();
+            node.forEach(value -> result.add(canonicalize(value)));
+            return result;
+        }
+        return node.deepCopy();
     }
 }

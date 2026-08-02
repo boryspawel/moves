@@ -134,7 +134,7 @@ class ExerciseSetServiceTest {
     void returnsPersistedVisualProjectionAfterLiveMappingCouldHaveChanged() throws Exception {
         draft.status = VersionStatus.PUBLISHED;
         var exposure = new com.motionecosystem.exercisesets.api.ExerciseSetDtos.VisualRegionExposure(
-                "ANATOMY_VISUAL_MAP_V1:FRONT:THIGH", com.motionecosystem.exercisesets.api.ExerciseSetDtos.VisualRegionView.FRONT,
+                "ANATOMY_VISUAL_MAP_V1:FRONT:THIGH", "Udo", com.motionecosystem.exercisesets.api.ExerciseSetDtos.VisualRegionView.FRONT,
                 com.motionecosystem.exercisesets.api.ExerciseSetDtos.VisualRegionLayer.MUSCLE,
                 com.motionecosystem.exercisesets.api.ExerciseSetDtos.VisualRegionLaterality.LEFT,
                 com.motionecosystem.exercisesets.api.ExerciseSetDtos.VisualRegionChannel.DYN_EXU, 1L,
@@ -154,6 +154,7 @@ class ExerciseSetServiceTest {
         assertThat(result.visualMappingVersion()).isEqualTo("1");
         assertThat(result.visualRegionExposures()).singleElement().satisfies(saved -> {
             assertThat(saved.visualRegionCode()).isEqualTo("ANATOMY_VISUAL_MAP_V1:FRONT:THIGH");
+            assertThat(saved.displayName()).isEqualTo("Udo");
             assertThat(saved.mappingVersion()).isEqualTo(1L);
         });
         verifyNoInteractions(catalog, anatomyReference);
@@ -179,6 +180,33 @@ class ExerciseSetServiceTest {
         assertThat(result.visualMappingCompleteness()).isEqualTo(AnatomyMappingCompleteness.UNAVAILABLE);
         assertThat(result.visualRegionExposures()).isEmpty();
         verifyNoInteractions(catalog, anatomyReference);
+    }
+
+    @Test
+    void readsLegacyVisualExposureWithoutDisplayName() throws Exception {
+        var legacy = new ObjectMapper().readValue("""
+                {
+                  "visualRegionCode":"ANATOMY_VISUAL_MAP_V1:FRONT:THIGH",
+                  "view":"FRONT",
+                  "layer":"MUSCLE",
+                  "laterality":"LEFT",
+                  "channel":"DYN_EXU",
+                  "mappingVersion":1,
+                  "rawValue":0,
+                  "unit":"COEFFICIENT_HIGH_SUM",
+                  "shareWithinChannel":0,
+                  "concentrationBand":"NO_DATA",
+                  "completeness":"COMPLETE",
+                  "sourceStructures":[],
+                  "breakdowns":[]
+                }
+                """, com.motionecosystem.exercisesets.api.ExerciseSetDtos.VisualRegionExposure.class);
+
+        assertThat(legacy.visualRegionCode()).isEqualTo("ANATOMY_VISUAL_MAP_V1:FRONT:THIGH");
+        assertThat(legacy.displayName()).isNull();
+        assertThat(legacy.laterality()).isEqualTo(com.motionecosystem.exercisesets.api.ExerciseSetDtos.VisualRegionLaterality.LEFT);
+        assertThat(legacy.sourceStructures()).isEmpty();
+        assertThat(legacy.breakdowns()).isEmpty();
     }
 
     @Test

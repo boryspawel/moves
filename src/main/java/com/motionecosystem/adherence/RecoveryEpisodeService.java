@@ -7,6 +7,7 @@ import com.motionecosystem.participant.api.ParticipantContextQueryPort;
 import com.motionecosystem.safety.api.SessionSafetyDecisionQueryPort;
 import com.motionecosystem.specialist.api.AdherenceSpecialistSignalPort;
 import com.motionecosystem.trainingexecution.api.SessionStartAuthorizationPort;
+import com.motionecosystem.trainingexecution.api.ExecutionAdherencePort;
 import com.motionecosystem.trainingexecution.SessionExecutionAttemptService;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort;
 import com.motionecosystem.trainingplanning.api.ParticipantPlanWindowHistoryQueryPort;
@@ -29,7 +30,7 @@ import org.springframework.web.server.ResponseStatusException;
 /** Versioned recovery aggregate and its participant projection; it never changes a plan or safety envelope. */
 @Service
 @RequiredArgsConstructor
-public class RecoveryEpisodeService implements SessionStartAuthorizationPort {
+public class RecoveryEpisodeService implements SessionStartAuthorizationPort, ExecutionAdherencePort {
     private static final List<String> ACTIVE = List.of("OPEN", "RETURN_IN_PROGRESS");
     private final CurrentAccountService accounts;
     private final ParticipantContextQueryPort participants;
@@ -66,6 +67,7 @@ public class RecoveryEpisodeService implements SessionStartAuthorizationPort {
 
     /** Idempotent evaluation used by lifecycle hooks and the bounded background scan. */
     @Transactional
+    @Override
     public void detect(UUID participant) {
         if (episodes.findFirstByParticipantAccountIdAndStatusInOrderByOpenedAtDesc(participant, ACTIVE).isPresent()) return;
         var context = participants.findContext(participant).orElse(null);
@@ -139,6 +141,7 @@ public class RecoveryEpisodeService implements SessionStartAuthorizationPort {
     }
 
     @Transactional
+    @Override
     public void attemptStarted(UUID participant, UUID attemptId, UUID sessionId) {
         episodes.findFirstByParticipantAccountIdAndTargetPlannedSessionIdAndStatusIn(participant, sessionId, ACTIVE)
                 .ifPresent(episode -> {
@@ -148,6 +151,7 @@ public class RecoveryEpisodeService implements SessionStartAuthorizationPort {
     }
 
     @Transactional
+    @Override
     public void executionCompleted(UUID participant, UUID sessionId, UUID executionId) {
         episodes.findFirstByParticipantAccountIdAndTargetPlannedSessionIdAndStatusIn(participant, sessionId, ACTIVE)
                 .ifPresent(episode -> {

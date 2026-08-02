@@ -41,6 +41,7 @@ class SpecialistWorklistIntegrationTest {
     void setUp() {
         participant = account("worklist-participant", "PARTICIPANT");
         specialist = account("worklist-specialist", "SPECIALIST");
+        participantRecord(participant);
         scope(specialist);
         relationship();
         template = consents.publishTemplate("SPECIAL_DATA", 1, "urn:consent:worklist:v1", "EXPLICIT_CONSENT").id();
@@ -56,6 +57,8 @@ class SpecialistWorklistIntegrationTest {
                     consent.consent_template_version,
                     specialist.participant_specialist_relationship,
                     specialist.professional_scope,
+                    participant.participant_access_link,
+                    participant.participant_record,
                     identity_access.principal_account CASCADE
                 """);
     }
@@ -129,8 +132,22 @@ class SpecialistWorklistIntegrationTest {
     private void relationship() {
         jdbc.update("""
                 INSERT INTO specialist.participant_specialist_relationship
-                    (id, specialist_account_id, participant_account_id, status, activated_at)
+                    (id, specialist_account_id, participant_id, status, activated_at)
                 VALUES (?, ?, ?, 'ACTIVE', now())
                 """, UUID.randomUUID(), specialist, participant);
+    }
+
+    private void participantRecord(UUID accountId) {
+        jdbc.update("""
+                INSERT INTO participant.participant_record
+                    (id, display_name, record_status, relationship_context, created_by_specialist_id,
+                     created_at, updated_at, version)
+                VALUES (?, 'Worklist participant', 'ACTIVE', 'CLIENT', ?, now(), now(), 0)
+                """, accountId, specialist);
+        jdbc.update("""
+                INSERT INTO participant.participant_access_link
+                    (id, participant_id, principal_account_id, access_status, linked_at, activated_at, version)
+                VALUES (?, ?, ?, 'ACTIVE', now(), now(), 0)
+                """, UUID.randomUUID(), accountId, accountId);
     }
 }

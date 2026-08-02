@@ -8,8 +8,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.zone.ZoneRulesException;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -70,8 +68,7 @@ public class RecurringAvailabilityService {
         if (requested == null || requested.isEmpty()) {
             throw invalid("at least one availability slot is required");
         }
-        List<Slot> sorted = new ArrayList<>(requested);
-        for (Slot slot : sorted) {
+        for (Slot slot : requested) {
             if (slot == null || slot.dayOfWeek == null || slot.startTime == null || slot.endTime == null
                     || slot.timeZone == null || !slot.endTime.isAfter(slot.startTime)) {
                 throw invalid("availability slot has invalid boundaries");
@@ -82,19 +79,7 @@ public class RecurringAvailabilityService {
                 throw invalid("availability time zone is invalid");
             }
         }
-        sorted.sort(Comparator.comparing(Slot::dayOfWeek)
-                .thenComparing(Slot::timeZone)
-                .thenComparing(Slot::startTime));
-        for (int index = 1; index < sorted.size(); index++) {
-            Slot previous = sorted.get(index - 1);
-            Slot current = sorted.get(index);
-            if (previous.dayOfWeek == current.dayOfWeek
-                    && previous.timeZone.equals(current.timeZone)
-                    && current.startTime.isBefore(previous.endTime)) {
-                throw invalid("availability slots overlap");
-            }
-        }
-        return List.copyOf(sorted);
+        return List.copyOf(requested);
     }
 
     private static ResponseStatusException invalid(String message) {

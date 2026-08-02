@@ -64,6 +64,8 @@ class TrainingPlanningV2IntegrationTest {
         otherParticipantId = account("other-planning-participant", "PARTICIPANT");
         specialistId = account("planning-specialist", "SPECIALIST");
         foreignSpecialistId = account("foreign-planning-specialist", "SPECIALIST");
+        participantRecord(participantId);
+        participantRecord(otherParticipantId);
         relationship(specialistId, participantId);
         scope(specialistId, "TRAINER");
         UUID template = consents.publishTemplate(
@@ -84,6 +86,8 @@ class TrainingPlanningV2IntegrationTest {
                     training_planning.training_goal,
                     specialist.participant_specialist_relationship,
                     specialist.professional_scope,
+                    participant.participant_access_link,
+                    participant.participant_record,
                     exercise_catalog.exercise,
                     identity_access.principal_account
                 CASCADE
@@ -253,9 +257,23 @@ class TrainingPlanningV2IntegrationTest {
     private void relationship(UUID specialist, UUID participant) {
         jdbc.update("""
                 INSERT INTO specialist.participant_specialist_relationship
-                    (id, specialist_account_id, participant_account_id, status, activated_at)
+                    (id, specialist_account_id, participant_id, status, activated_at)
                 VALUES (?, ?, ?, 'ACTIVE', now())
                 """, UUID.randomUUID(), specialist, participant);
+    }
+
+    private void participantRecord(UUID accountId) {
+        jdbc.update("""
+                INSERT INTO participant.participant_record
+                    (id, display_name, record_status, relationship_context, created_by_specialist_id,
+                     created_at, updated_at, version)
+                VALUES (?, 'Planning participant', 'ACTIVE', 'CLIENT', ?, now(), now(), 0)
+                """, accountId, specialistId);
+        jdbc.update("""
+                INSERT INTO participant.participant_access_link
+                    (id, participant_id, principal_account_id, access_status, linked_at, activated_at, version)
+                VALUES (?, ?, ?, 'ACTIVE', now(), now(), 0)
+                """, UUID.randomUUID(), accountId, accountId);
     }
 
     private void scope(UUID specialist, String type) {

@@ -63,9 +63,11 @@ class TrainingPlanningExecutionIntegrationTest {
         otherParticipantId = account("other-participant", "PARTICIPANT");
         specialistId = account("specialist", "SPECIALIST");
         foreignSpecialistId = account("foreign-specialist", "SPECIALIST");
+        participantRecord(participantId);
+        participantRecord(otherParticipantId);
         jdbc.update("""
                 INSERT INTO specialist.participant_specialist_relationship
-                    (id, specialist_account_id, participant_account_id, status, activated_at)
+                    (id, specialist_account_id, participant_id, status, activated_at)
                 VALUES (?, ?, ?, 'ACTIVE', now())
                 """, UUID.randomUUID(), specialistId, participantId);
         exerciseVersionId = publishedExerciseVersion();
@@ -97,6 +99,8 @@ class TrainingPlanningExecutionIntegrationTest {
                     specialist.participant_specialist_relationship,
                     safety.participant_restriction,
                     safety.readiness_check_in,
+                    participant.participant_access_link,
+                    participant.participant_record,
                     exercise_catalog.exercise_version_contraindication,
                     exercise_catalog.exercise_version_equipment,
                     exercise_catalog.exercise_contribution,
@@ -451,6 +455,19 @@ class TrainingPlanningExecutionIntegrationTest {
         return id;
     }
 
+    private void participantRecord(UUID accountId) {
+        jdbc.update("""
+                INSERT INTO participant.participant_record
+                    (id, display_name, record_status, relationship_context, created_by_specialist_id, created_at, updated_at, version)
+                VALUES (?, 'Execution participant', 'ACTIVE', 'CLIENT', ?, now(), now(), 0)
+                """, accountId, specialistId);
+        jdbc.update("""
+                INSERT INTO participant.participant_access_link
+                    (id, participant_id, principal_account_id, access_status, linked_at, activated_at, version)
+                VALUES (?, ?, ?, 'ACTIVE', now(), now(), 0)
+                """, UUID.randomUUID(), accountId, accountId);
+    }
+
     private UUID publishedExerciseVersion() {
         UUID exerciseId = UUID.randomUUID();
         UUID versionId = UUID.randomUUID();
@@ -569,14 +586,14 @@ class TrainingPlanningExecutionIntegrationTest {
         UUID sessionId = UUID.randomUUID();
         jdbc.update("""
                 INSERT INTO training_planning.training_goal
-                    (id, participant_account_id, name, created_by_account_id, created_at,
+                    (id, participant_id, name, created_by_account_id, created_at,
                      perspective, category, title, priority, status)
                 VALUES (?, ?, 'Legacy execution goal', ?, now(),
                         'GENERAL_FITNESS', 'LEGACY', 'Legacy execution goal', 50, 'ACTIVE')
                 """, goalId, participantId, specialistId);
         jdbc.update("""
                 INSERT INTO training_planning.training_plan
-                    (id, goal_id, participant_account_id, created_by_account_id, name,
+                    (id, goal_id, participant_id, created_by_account_id, name,
                      plan_mode, status, created_at, purpose, owner_account_id, version)
                 VALUES (?, ?, ?, ?, 'Legacy execution fixture',
                         'SPECIALIST_ASSIGNED', 'ACTIVE', now(), 'Legacy execution fixture', ?, 0)
@@ -605,7 +622,7 @@ class TrainingPlanningExecutionIntegrationTest {
                 """, microcycleId, cycleId);
         jdbc.update("""
                 INSERT INTO training_planning.planned_session
-                    (id, microcycle_id, participant_account_id, title, session_kind,
+                    (id, microcycle_id, participant_id, title, session_kind,
                      status, assigned_at, creation_source)
                 VALUES (?, ?, ?, 'Supported strength', 'SELF_GUIDED',
                         'ASSIGNED', now(), 'LEGACY_V1')

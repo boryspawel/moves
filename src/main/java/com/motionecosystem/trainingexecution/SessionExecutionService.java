@@ -23,7 +23,7 @@ import com.motionecosystem.trainingexecution.SessionExecutionPersistence.ReportD
 import com.motionecosystem.trainingexecution.SessionExecutionPersistence.ResultData;
 import com.motionecosystem.trainingplanning.api.PlannedSessionExecutionPort;
 import com.motionecosystem.trainingplanning.api.PlannedSessionExecutionPort.SessionState;
-import com.motionecosystem.adherence.RecoveryEpisodeService;
+import com.motionecosystem.trainingexecution.api.ExecutionAdherencePort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -43,7 +43,7 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
     private final TransactionalOutbox outbox;
     private final ExecutionProjectionService projections;
     private final SessionExecutionAttemptService attempts;
-    private final RecoveryEpisodeService recovery;
+    private final ExecutionAdherencePort adherence;
     private final Clock clock;
 
     @Transactional
@@ -136,8 +136,8 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
                         report.difficultyLevel(), report.techniqueConfidenceLevel(), report.note(), command.sessionRpe(),
                         mode(command.observationMode()), report.reportedAt()), alerts);
         attempts.completeAfterFinalDeclaration(subject, participantId, plannedSessionId);
-        recovery.executionCompleted(participantId, plannedSessionId, execution.id());
-        recovery.detect(participantId);
+        adherence.executionCompleted(participantId, plannedSessionId, execution.id());
+        adherence.detect(participantId);
         plannedSessions.markCompleted(plannedSessionId);
         audit.record(subject, "SESSION_EXECUTION_DECLARED", "SessionExecution", execution.id());
         return execution(execution.id());

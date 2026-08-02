@@ -114,7 +114,7 @@ final class ExerciseSetAnalyzer {
                 breakdowns.add(new VisualRegionBreakdown(candidate.itemId(), candidate.exerciseVersionId(), source.id(), source.anatomicalStructureId(),
                         source.anatomicalStructureCode(), coefficientHigh(source), source.coefficientLow(), source.coefficientHigh(), source.role(), source.evidence()));
             }
-            result.add(new VisualRegionExposure(first.region().code(), first.view(), first.layer(), first.laterality(), first.channel(), first.mappingVersion(), raw,
+            result.add(new VisualRegionExposure(first.region().code(), first.region().displayName(), first.view(), first.layer(), first.laterality(), first.channel(), first.mappingVersion(), raw,
                     "COEFFICIENT_HIGH_SUM", share, concentrationBand(share), completeness, low, high,
                     List.copyOf(sources.values()), List.copyOf(breakdowns)));
         }
@@ -142,7 +142,10 @@ final class ExerciseSetAnalyzer {
     }
 
     private static VisualRegionLaterality visualLaterality(String laterality) {
-        return "LEFT".equals(laterality) ? VisualRegionLaterality.LEFT : "RIGHT".equals(laterality) ? VisualRegionLaterality.RIGHT : VisualRegionLaterality.CENTRAL;
+        return "LEFT".equals(laterality) ? VisualRegionLaterality.LEFT
+                : "RIGHT".equals(laterality) ? VisualRegionLaterality.RIGHT
+                : "BILATERAL".equals(laterality) ? VisualRegionLaterality.BILATERAL
+                : VisualRegionLaterality.CENTRAL;
     }
 
     private static String visualMappingVersion(Map<UUID, ItemAnatomySnapshot> snapshots) {

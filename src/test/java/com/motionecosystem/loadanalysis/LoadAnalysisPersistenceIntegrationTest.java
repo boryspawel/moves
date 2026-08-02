@@ -54,8 +54,18 @@ class LoadAnalysisPersistenceIntegrationTest {
         UUID plan = UUID.randomUUID(); UUID revision = UUID.randomUUID(); UUID participant = UUID.randomUUID();
         UUID author = UUID.randomUUID();
         jdbc.update("""
+                INSERT INTO identity_access.principal_account
+                    (id, external_subject, status, profile_type, created_at, version)
+                VALUES (?, ?, 'ACTIVE', 'SPECIALIST', now(), 0)
+                """, author, "load-author-" + author);
+        jdbc.update("""
+                INSERT INTO participant.participant_record
+                    (id, display_name, record_status, relationship_context, created_by_specialist_id, created_at, updated_at, version)
+                VALUES (?, 'Load participant', 'ACTIVE', 'CLIENT', ?, now(), now(), 0)
+                """, participant, author);
+        jdbc.update("""
                 INSERT INTO training_planning.training_plan
-                    (id, participant_account_id, created_by_account_id, name, plan_mode, status,
+                    (id, participant_id, created_by_account_id, name, plan_mode, status,
                      created_at, purpose, owner_account_id, version)
                 VALUES (?, ?, ?, 'Load plan', 'SELF_DIRECTED', 'DRAFT', now(), 'Load test', ?, 0)
                 """, plan, participant, author, author);

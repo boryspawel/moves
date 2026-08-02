@@ -8,7 +8,7 @@ import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.safety.api.SessionSafetyDecisionQueryPort;
 import com.motionecosystem.trainingexecution.api.SessionExecutionProgressQueryPort;
 import com.motionecosystem.trainingexecution.api.SessionStartAuthorizationPort;
-import com.motionecosystem.adherence.RecoveryEpisodeService;
+import com.motionecosystem.trainingexecution.api.ExecutionAdherencePort;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort;
 import com.motionecosystem.trainingplanning.api.PlannedSessionExecutionPort;
 import java.time.Clock;
@@ -35,7 +35,7 @@ public class SessionExecutionAttemptService implements SessionExecutionProgressQ
     private final PlanRevisionQueryPort revisions;
     private final SessionSafetyDecisionQueryPort safety;
     private final SessionStartAuthorizationPort startAuthorization;
-    private final RecoveryEpisodeService recovery;
+    private final ExecutionAdherencePort adherence;
     private final AdherenceMetricsService metrics;
     private final AuditRecorder audit;
     private final Clock clock;
@@ -73,8 +73,8 @@ public class SessionExecutionAttemptService implements SessionExecutionProgressQ
         SessionExecutionAttempt created = attempts.save(new SessionExecutionAttempt(participant, plannedSessionId, planRevisionId, variant, key, clock.instant()));
         metrics.record(participant, "SESSION_ATTEMPT_STARTED", created.id, planRevisionId, plannedSessionId,
                 created.id, "SESSION_ATTEMPT_V1", variant);
-        recovery.attemptStarted(participant, created.id, plannedSessionId);
-        recovery.detect(participant);
+        adherence.attemptStarted(participant, created.id, plannedSessionId);
+        adherence.detect(participant);
         audit.record(subject, "SESSION_ATTEMPT_STARTED", "SessionExecutionAttempt", created.id);
         return view(created);
     }
@@ -170,7 +170,7 @@ public class SessionExecutionAttemptService implements SessionExecutionProgressQ
             case "ABANDON" -> { if (attempt.active()) { attempt.abandon(validReason(reason), now); audit.record(subject, "SESSION_ATTEMPT_ABANDONED", "SessionExecutionAttempt", attemptId); } }
             default -> throw new IllegalArgumentException(action);
         }
-        if ("ABANDON".equals(action)) recovery.detect(participant);
+        if ("ABANDON".equals(action)) adherence.detect(participant);
         return view(attempt);
     }
 

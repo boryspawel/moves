@@ -54,6 +54,16 @@ class GamificationIntegrationTest {
                     (id, external_subject, status, profile_type, created_at, version)
                 VALUES (?, 'game-participant', 'ACTIVE', 'PARTICIPANT', now(), 0)
                 """, participantId);
+        jdbc.update("""
+                INSERT INTO participant.participant_record
+                    (id, display_name, record_status, relationship_context, created_by_specialist_id, created_at, updated_at, version)
+                VALUES (?, 'Game participant', 'ACTIVE', 'CLIENT', ?, now(), now(), 0)
+                """, participantId, participantId);
+        jdbc.update("""
+                INSERT INTO participant.participant_access_link
+                    (id, participant_id, principal_account_id, access_status, linked_at, activated_at, version)
+                VALUES (?, ?, ?, 'ACTIVE', now(), now(), 0)
+                """, UUID.randomUUID(), participantId, participantId);
         exerciseVersionId = publishedExerciseVersion();
         microcycleId = hierarchy();
     }
@@ -79,6 +89,8 @@ class GamificationIntegrationTest {
                     training_planning.training_plan,
                     training_planning.training_goal,
                     safety.participant_restriction,
+                    participant.participant_access_link,
+                    participant.participant_record,
                     exercise_catalog.exercise_version_contraindication,
                     exercise_catalog.exercise_version_equipment,
                     exercise_catalog.exercise_version,
@@ -235,12 +247,12 @@ class GamificationIntegrationTest {
         UUID microcycle = UUID.randomUUID();
         jdbc.update("""
                 INSERT INTO training_planning.training_goal
-                    (id, participant_account_id, name, created_by_account_id, created_at)
+                    (id, participant_id, name, created_by_account_id, created_at)
                 VALUES (?, ?, 'Consistency', ?, now())
                 """, goal, participantId, participantId);
         jdbc.update("""
                 INSERT INTO training_planning.training_plan
-                    (id, goal_id, participant_account_id, created_by_account_id, name, plan_mode,
+                    (id, goal_id, participant_id, created_by_account_id, name, plan_mode,
                      status, created_at, purpose, owner_account_id)
                 VALUES (?, ?, ?, ?, 'Self test plan', 'SELF_DIRECTED', 'ACTIVE', now(),
                         'Legacy gamification fixture', ?)
@@ -256,7 +268,7 @@ class GamificationIntegrationTest {
         UUID session = UUID.randomUUID();
         jdbc.update("""
                 INSERT INTO training_planning.planned_session
-                    (id, microcycle_id, participant_account_id, title, session_kind, status, assigned_at)
+                    (id, microcycle_id, participant_id, title, session_kind, status, assigned_at)
                 VALUES (?, ?, ?, 'Session', 'SELF_GUIDED', 'ASSIGNED', now())
                 """, session, microcycleId, participantId);
         jdbc.update("""
@@ -271,7 +283,7 @@ class GamificationIntegrationTest {
         UUID execution = UUID.randomUUID();
         jdbc.update("""
                 INSERT INTO training_execution.session_execution
-                    (id, planned_session_id, participant_account_id, declared_completion, idempotency_key, recorded_at)
+                    (id, planned_session_id, participant_id, declared_completion, idempotency_key, recorded_at)
                 VALUES (?, ?, ?, true, ?, now())
                 """, execution, sessionId, participantId, "fixture-" + execution);
         jdbc.update("""

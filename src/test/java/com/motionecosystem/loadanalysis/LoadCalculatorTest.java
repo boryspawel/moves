@@ -112,7 +112,7 @@ class LoadCalculatorTest {
 
     private ContributionSnapshot contributionAt(UUID structure, String channel, String calculationRole,
                                                  String side, String low, String high) {
-        return new ContributionSnapshot(UUID.randomUUID(), structure, ContributionRoleValue.PRIMARY,
+        return new ContributionSnapshot(UUID.randomUUID(), structure, "TEST", "MUSCLE", ContributionRoleValue.PRIMARY,
                 LoadChannelValue.valueOf(channel), ContributionBandValue.MODERATE,
                 new BigDecimal(low), new BigDecimal(high), "MEDIUM", "B",
                 CalculationRoleValue.valueOf(calculationRole), null, SideRuleValue.valueOf(side), List.of());

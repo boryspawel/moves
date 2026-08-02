@@ -113,6 +113,7 @@ public final class ExerciseSetDtos {
                                            String anatomicalStructureType) { }
     /** Backend projection consumed by the partial SVG; rawValue is summed coefficientHigh of unique direct contributions. */
     public record VisualRegionExposure(@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String visualRegionCode,
+                                       @Schema(nullable = true) String displayName,
                                        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) VisualRegionView view,
                                        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) VisualRegionLayer layer,
                                        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) VisualRegionLaterality laterality,
@@ -145,7 +146,7 @@ public final class ExerciseSetDtos {
     public enum AnatomyMappingCompleteness { COMPLETE, PARTIAL, UNAVAILABLE }
     public enum VisualRegionView { FRONT, BACK }
     public enum VisualRegionLayer { BASE, MUSCLE }
-    public enum VisualRegionLaterality { LEFT, RIGHT, CENTRAL }
+    public enum VisualRegionLaterality { LEFT, RIGHT, CENTRAL, BILATERAL }
     public enum VisualRegionChannel { DYN_EXU, ISO_SEC, IMPACT_CONTACTS, ENDURANCE_MIN_ZONE }
     public enum ConcentrationBand { NO_DATA, LOW, SIGNIFICANT, DOMINANT }
     public enum AnalysisStatus { NO_SUGGESTIONS, SUGGESTIONS_AVAILABLE, ANALYSIS_UNAVAILABLE }

@@ -76,6 +76,7 @@ class AuthorizationAndConsentIntegrationTest {
         participant = account("cap-participant", "PARTICIPANT");
         trainer = account("cap-trainer", "SPECIALIST");
         physio = account("cap-physio", "SPECIALIST");
+        participantRecord(participant);
         scope(trainer, "TRAINER");
         scope(physio, "PHYSIOTHERAPIST");
         relationship(trainer);
@@ -94,6 +95,8 @@ class AuthorizationAndConsentIntegrationTest {
                     consent.consent_template_version,
                     specialist.participant_specialist_relationship,
                     specialist.professional_scope,
+                    participant.participant_access_link,
+                    participant.participant_record,
                     identity_access.principal_account CASCADE
                 """);
     }
@@ -297,12 +300,26 @@ class AuthorizationAndConsentIntegrationTest {
     private void relationship(UUID actor) {
         jdbc.update("""
                         INSERT INTO specialist.participant_specialist_relationship
-                            (id, specialist_account_id, participant_account_id, status, activated_at)
+                            (id, specialist_account_id, participant_id, status, activated_at)
                         VALUES (?, ?, ?, 'ACTIVE', now())
                         """,
                 UUID.randomUUID(),
                 actor,
                 participant);
+    }
+
+    private void participantRecord(UUID accountId) {
+        jdbc.update("""
+                        INSERT INTO participant.participant_record
+                            (id, display_name, record_status, relationship_context, created_by_specialist_id,
+                             created_at, updated_at, version)
+                        VALUES (?, 'Capability participant', 'ACTIVE', 'CLIENT', ?, now(), now(), 0)
+                        """, accountId, trainer);
+        jdbc.update("""
+                        INSERT INTO participant.participant_access_link
+                            (id, participant_id, principal_account_id, access_status, linked_at, activated_at, version)
+                        VALUES (?, ?, ?, 'ACTIVE', now(), now(), 0)
+                        """, UUID.randomUUID(), accountId, accountId);
     }
 
     private static void denied(Runnable action) {
