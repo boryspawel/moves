@@ -33,9 +33,9 @@ describe('PatientTimelineEventPanelComponent', () => {
       expect(text).not.toContain(uuid);
     }
     expect((timelineFixture.nativeElement as HTMLElement).textContent).toContain('Zdarzenie');
-    expect((timelineFixture.nativeElement as HTMLElement).textContent).toContain('Brak krótkiego podsumowania');
+    expect((timelineFixture.nativeElement as HTMLElement).textContent).not.toContain('Brak krótkiego podsumowania');
     expect((panelFixture.nativeElement as HTMLElement).textContent).toContain('Szczegóły zdarzenia');
-    expect((panelFixture.nativeElement as HTMLElement).textContent).toContain('Brak dodatkowego opisu.');
+    expect((panelFixture.nativeElement as HTMLElement).textContent).not.toContain('Brak dodatkowego opisu.');
 
     const readableEvent = { title: 'Rozmowa kontrolna', summary: 'Ustalono dalsze kroki.', source: 'Notatka specjalisty' };
     timelineFixture.componentRef.setInput('event', readableEvent);

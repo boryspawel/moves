@@ -6,7 +6,6 @@ describe('participant workspace timeline geometry', () => {
     expect(rangeDates('2w', new Date('2026-07-24')).granularity).toBe('DETAIL');
     expect(rangeDates('3m', new Date('2026-07-24')).granularity).toBe('WEEK');
     expect(rangeDates('12m', new Date('2026-07-24')).granularity).toBe('MONTH');
-    expect(rangeDates('all', new Date('2026-07-24')).from).toBeUndefined();
   });
 
   it('sorts newest first and groups without exposing technical identifiers', () => {

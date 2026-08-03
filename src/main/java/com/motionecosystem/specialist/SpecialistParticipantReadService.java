@@ -60,7 +60,7 @@ public class SpecialistParticipantReadService {
         Instant now = clock.instant();
         List<SpecialistAppointmentQueryPort.AppointmentSummary> upcoming = appointments.findForParticipant(
                 access.specialistId(), participantId, now, now.plusSeconds(366L * 24 * 60 * 60), MAX_LIMIT).stream()
-                .filter(item -> "SCHEDULED".equals(item.status()))
+                .filter(item -> isNextAppointment(item, now))
                 .sorted(Comparator.comparing(SpecialistAppointmentQueryPort.AppointmentSummary::startsAt))
                 .limit(1)
                 .toList();
@@ -277,6 +277,14 @@ public class SpecialistParticipantReadService {
 
     private static AppointmentView appointment(SpecialistAppointmentQueryPort.AppointmentSummary item) {
         return new AppointmentView(item.appointmentId(), item.startsAt(), item.endsAt(), item.type(), item.status(), item.shortPurpose());
+    }
+    private static boolean isNextAppointment(SpecialistAppointmentQueryPort.AppointmentSummary item, Instant now) {
+        return switch (item.status()) {
+            case "SCHEDULED" -> item.endsAt().isAfter(now);
+            case "CONFIRMED" -> !item.startsAt().isBefore(now);
+            case "IN_PROGRESS" -> !item.startsAt().isAfter(now) && item.endsAt().isAfter(now);
+            default -> false;
+        };
     }
     private static ActivePlanView activePlan(PlanRevisionQueryPort.PlanRevisionSnapshot value, Instant now,
                                              List<ParticipantExecutionHistoryQueryPort.ExecutionStart> executions) {

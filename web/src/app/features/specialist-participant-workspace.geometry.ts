@@ -1,8 +1,8 @@
 import type { ParticipantTimelineEvent } from '../api/generated/src/models/ParticipantTimelineEvent';
 
-export type WorkspaceRange = '2w' | '3m' | '12m' | 'all';
+export type WorkspaceRange = '2w' | '3m' | '12m';
 export type WorkspaceView = 'timeline' | 'list';
-export const timelineCategories = ['GOALS', 'PLANS', 'SESSIONS', 'EXECUTION', 'PROGRESS', 'PROBLEMS', 'NOTES', 'DOCUMENTS'] as const;
+export const timelineCategories = ['APPOINTMENT', 'SESSION', 'EXECUTION'] as const;
 export type TimelineCategory = typeof timelineCategories[number];
 
 export function rangeDates(range: WorkspaceRange, now = new Date()): { from?: Date; to: Date; granularity: 'DETAIL' | 'WEEK' | 'MONTH' } {
@@ -10,7 +10,7 @@ export function rangeDates(range: WorkspaceRange, now = new Date()): { from?: Da
   if (range === '2w') { from.setDate(from.getDate() - 14); return { from, to, granularity: 'DETAIL' }; }
   if (range === '3m') { from.setMonth(from.getMonth() - 3); return { from, to, granularity: 'WEEK' }; }
   if (range === '12m') { from.setFullYear(from.getFullYear() - 1); return { from, to, granularity: 'MONTH' }; }
-  return { to, granularity: 'MONTH' };
+  return { from, to, granularity: 'DETAIL' };
 }
 export function sortedEvents(events: readonly ParticipantTimelineEvent[]): ParticipantTimelineEvent[] {
   return [...events].sort((a, b) => (b.effectiveFrom?.getTime() ?? b.recordedAt?.getTime() ?? 0) - (a.effectiveFrom?.getTime() ?? a.recordedAt?.getTime() ?? 0));

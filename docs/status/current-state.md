@@ -1,6 +1,6 @@
 # Stan bieżący
 
-_Zaktualizowano: 2026-07-29._
+_Zaktualizowano: 2026-08-03._
 
 ## SET-01 / SET-05 — zestawy ćwiczeń i wybór katalogowy
 
@@ -148,10 +148,24 @@ biomechaniczną ani kliniczną. SET-07B może rozpocząć prototyp techniczny.
 
 ## Workspace specjalisty i lokalne operacje
 
-- Widok listy klientów oraz workspace kartoteki korzystają z wygenerowanego
-  kontraktu specjalisty i identyfikatora `participantId`. Workspace łączy
-  profil, plan, terminy, sygnały wymagające uwagi i timeline, bez przejmowania
-  własności danych przez frontend.
+- Workspace i timeline specjalisty są odczytami po `participantId` przez publiczne
+  porty właścicieli danych; składają profil, aktywny plan, terminy, wykonania i
+  minimalne sygnały wymagające uwagi, bez przejmowania ich własności przez frontend.
+  Każdy odczyt pozostaje za granicą capability, aktywnej relacji i zgody właściwej
+  dla kontekstu zawodowego; brak capability do historii wykonań ukrywa ją, a nie
+  rozszerza dostęp.
+- „Następne spotkanie” jest wybierane względem bieżącego czasu: uwzględnia
+  `SCHEDULED` jeszcze nie zakończone, `CONFIRMED` nie rozpoczęte oraz trwające
+  `IN_PROGRESS`; statusy końcowe nie są kandydatami. Timeline obsługuje spotkania,
+  planowane sesje i wykonania, z zakresem 2 tygodni / 3 miesięcy / 12 miesięcy,
+  filtrem typu, kursorem wcześniejszych wyników oraz przełącznikiem osi/listy.
+  Zakres, typy, widok i wybrane zdarzenie są kontrolowane przez URL.
+- Sygnały uwagi są prezentowane jako minimalne, bezpieczne komunikaty. Zdarzenia
+  mają etykiety kategorii, typu, statusu, źródła i czasu; UUID lub nieznany kod nie
+  staje się samodzielną etykietą dla użytkownika. Panel szczegółu przyjmuje focus,
+  zamyka się przez Escape i zwraca focus do elementu otwierającego; kontrolki mają
+  nazwy ARIA, a układ zachowuje użyteczność na małych viewportach. Zaplanowanie
+  terminu odświeża workspace i timeline.
 - Widok `Today` prezentuje terminy, wolne sloty i worklistę w utrwalonej strefie
   specjalisty. Testy komponentów pokrywają geometrię slotów, prezentację i
   przejścia workspace; pozostały dług UX to E2E dla mobile viewport, zoomu

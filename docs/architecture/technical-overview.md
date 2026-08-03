@@ -79,6 +79,15 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
   workspace i timeline. Lista klientów oraz workspace prezentują dane z
   publicznych portów modułów bez własnych, ręcznie utrzymywanych modeli
   kontraktu; `Today` zachowuje tę samą granicę `participantId`.
+- Workspace i timeline wykonują odczyty w granicy `participantId` po centralnym
+  sprawdzeniu capability, aktywnej relacji i zgody w kontekście zawodowym.
+  Timeline nie jest źródłem danych: kompozycja obejmuje wyłącznie dozwolone
+  projekcje spotkań, planowanych sesji i wykonań. UI steruje zakresem (2 tygodnie,
+  3 miesiące, 12 miesięcy), typami, widokiem osi/listy i wybranym zdarzeniem przez
+  URL; panel szczegółów używa etykiet prezentacyjnych i nie pokazuje UUID ani
+  nieznanych kodów jako samodzielnych nazw. Wybór „następnego spotkania” jest
+  czasowo świadomy: obejmuje nieukończone `SCHEDULED`, przyszłe `CONFIRMED` oraz
+  trwające `IN_PROGRESS`, z wyłączeniem statusów końcowych.
 - Ból, ograniczenia, wywiad i notatki nie trafiają do gamifikacji ani publicznego profilu.
 - Trener widzi wyłącznie effective safety envelope. Clinical rationale jest osobnym widokiem fizjoterapeuty objętym osobną zgodą.
 - Collaborator planu ma jawny zakres, który nie zastępuje kontroli capability, relacji i consent.
@@ -113,3 +122,6 @@ records using `participantId`; workspace and timeline use the same identifier.
 `participant.participant_access_link` represents the optional account boundary.
 The explicit `TEST_DEFAULT` override is available only in `local` or `test`,
 never in `prod`; see [test participant-record consent debt](../test-participant-record-consent-debt.md).
+
+`client-result-observation-model.md` pozostaje osobnym dokumentem przyszłego etapu
+CLIENT-UX-01; nie opisuje funkcji dostarczonej w workspace.
