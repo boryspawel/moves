@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { categoryLabel, eventTimeLabel, safeText, sourceLabel, statusLabel, typeLabel } from './specialist-participant-workspace.presentation';
+import { attentionSummary, categoryLabel, eventTimeLabel, goalsSummary, humanEventTitle, realizationSummary, safeText, statusLabel, typeLabel } from './specialist-participant-workspace.presentation';
 
 describe('participant workspace presentation', () => {
   it('uses Polish appointment labels and a 24-hour range', () => {
@@ -9,9 +9,25 @@ describe('participant workspace presentation', () => {
     expect(eventTimeLabel(event)).toBe('3 sierpnia, 09:00–10:00');
   });
 
-  it('does not expose empty or technical source and marks past scheduled appointments', () => {
+  it('omits blank text and marks past scheduled appointments', () => {
     expect(safeText('')).toBeUndefined();
-    expect(sourceLabel('SYSTEM_EVENT')).toBeUndefined();
     expect(statusLabel({ status: 'SCHEDULED', effectiveFrom: new Date('2026-08-02T09:00:00') }, new Date('2026-08-03T09:00:00'))).toBe('Termin minął · status nieuzupełniony');
+  });
+
+  it('normalizes raw appointment titles and uses the Polish fallback for unknown appointment enums', () => {
+    expect(humanEventTitle({ category: 'APPOINTMENT', title: 'TRAINING' })).toBe('Trening');
+    expect(humanEventTitle({ category: 'APPOINTMENT', title: 'UNRECOGNIZED_TYPE' })).toBe('Spotkanie');
+  });
+
+  it('uses localized plural summary messages', () => {
+    expect(goalsSummary()).toBe('Brak aktywnych celów');
+    expect(goalsSummary(1)).toBe('1 aktywny cel');
+    expect(goalsSummary(2)).toBe('2 aktywne cele');
+    expect(realizationSummary()).toBe('Brak danych');
+    expect(realizationSummary(0)).toBe('Brak wykonanych sesji');
+    expect(realizationSummary(1)).toBe('1 wykonana sesja');
+    expect(realizationSummary(5)).toBe('5 wykonanych sesji');
+    expect(attentionSummary(0)).toBe('Brak problemów');
+    expect(attentionSummary(3)).toBe('3 problemy');
   });
 });
