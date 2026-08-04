@@ -50,7 +50,7 @@ export interface AbandonRequest {
   abandonAttemptCommand?: AbandonAttemptCommand;
 }
 
-export interface CompleteRequest {
+export interface Complete1Request {
   attemptId: string;
   idempotencyKey: string;
   declareExecutionCommand: DeclareExecutionCommand;
@@ -137,27 +137,27 @@ export class SessionExecutionAttemptControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for complete without sending the request
+   * Creates request options for complete1 without sending the request
    */
-  async completeRequestOpts(requestParameters: CompleteRequest): Promise<runtime.RequestOpts> {
+  async complete1RequestOpts(requestParameters: Complete1Request): Promise<runtime.RequestOpts> {
     if (requestParameters['attemptId'] == null) {
       throw new runtime.RequiredError(
         'attemptId',
-        'Required parameter "attemptId" was null or undefined when calling complete().',
+        'Required parameter "attemptId" was null or undefined when calling complete1().',
       );
     }
 
     if (requestParameters['idempotencyKey'] == null) {
       throw new runtime.RequiredError(
         'idempotencyKey',
-        'Required parameter "idempotencyKey" was null or undefined when calling complete().',
+        'Required parameter "idempotencyKey" was null or undefined when calling complete1().',
       );
     }
 
     if (requestParameters['declareExecutionCommand'] == null) {
       throw new runtime.RequiredError(
         'declareExecutionCommand',
-        'Required parameter "declareExecutionCommand" was null or undefined when calling complete().',
+        'Required parameter "declareExecutionCommand" was null or undefined when calling complete1().',
       );
     }
 
@@ -188,11 +188,11 @@ export class SessionExecutionAttemptControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async completeRaw(
-    requestParameters: CompleteRequest,
+  async complete1Raw(
+    requestParameters: Complete1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<ExecutionView>> {
-    const requestOptions = await this.completeRequestOpts(requestParameters);
+    const requestOptions = await this.complete1RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) => ExecutionViewFromJSON(jsonValue));
@@ -200,11 +200,11 @@ export class SessionExecutionAttemptControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async complete(
-    requestParameters: CompleteRequest,
+  async complete1(
+    requestParameters: Complete1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<ExecutionView> {
-    const response = await this.completeRaw(requestParameters, initOverrides);
+    const response = await this.complete1Raw(requestParameters, initOverrides);
     return await response.value();
   }
 

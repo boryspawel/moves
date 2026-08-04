@@ -91,8 +91,6 @@ export const AnalysisViewStatusEnum = {
   NoSuggestions: 'NO_SUGGESTIONS',
   SuggestionsAvailable: 'SUGGESTIONS_AVAILABLE',
   AnalysisUnavailable: 'ANALYSIS_UNAVAILABLE',
-  /** Compatibility with historical analysis snapshots. */
-  Blocked: 'BLOCKED',
 } as const;
 export type AnalysisViewStatusEnum =
   (typeof AnalysisViewStatusEnum)[keyof typeof AnalysisViewStatusEnum];

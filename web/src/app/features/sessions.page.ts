@@ -489,7 +489,7 @@ export class SessionsPage {
     const detail = this.attempt();
     if (!detail?.attemptId) return;
     try {
-      await this.api.attempts.complete({
+      await this.api.attempts.complete1({
         attemptId: detail.attemptId,
         idempotencyKey: crypto.randomUUID(),
         declareExecutionCommand: {

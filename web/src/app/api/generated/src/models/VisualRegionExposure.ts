@@ -60,12 +60,6 @@ export interface VisualRegionExposure {
   coefficientLow?: number;
   /**
    *
-   * @type {string}
-   * @memberof VisualRegionExposure
-   */
-  displayName?: string;
-  /**
-   *
    * @type {VisualRegionExposureCompletenessEnum}
    * @memberof VisualRegionExposure
    */
@@ -76,6 +70,12 @@ export interface VisualRegionExposure {
    * @memberof VisualRegionExposure
    */
   concentrationBand: VisualRegionExposureConcentrationBandEnum;
+  /**
+   *
+   * @type {string}
+   * @memberof VisualRegionExposure
+   */
+  displayName?: string | null;
   /**
    *
    * @type {VisualRegionExposureLateralityEnum}
@@ -235,9 +235,14 @@ export function VisualRegionExposureFromJSONTyped(
     channel: json['channel'],
     coefficientHigh: json['coefficientHigh'] == null ? undefined : json['coefficientHigh'],
     coefficientLow: json['coefficientLow'] == null ? undefined : json['coefficientLow'],
-    displayName: json['displayName'] == null ? undefined : json['displayName'],
     completeness: json['completeness'],
     concentrationBand: json['concentrationBand'],
+    displayName:
+      json['displayName'] === undefined
+        ? undefined
+        : json['displayName'] === null
+          ? null
+          : json['displayName'],
     laterality: json['laterality'],
     layer: json['layer'],
     mappingVersion: json['mappingVersion'],
@@ -269,9 +274,9 @@ export function VisualRegionExposureToJSONTyped(
     channel: value['channel'],
     coefficientHigh: value['coefficientHigh'],
     coefficientLow: value['coefficientLow'],
-    displayName: value['displayName'],
     completeness: value['completeness'],
     concentrationBand: value['concentrationBand'],
+    displayName: value['displayName'],
     laterality: value['laterality'],
     layer: value['layer'],
     mappingVersion: value['mappingVersion'],

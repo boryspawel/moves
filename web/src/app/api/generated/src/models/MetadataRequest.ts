@@ -36,7 +36,7 @@ export interface MetadataRequest {
    * @type {MetadataRequestProfileEnum}
    * @memberof MetadataRequest
    */
-  profile: MetadataRequestProfileEnum;
+  profile?: MetadataRequestProfileEnum;
   /**
    *
    * @type {Array<string>}
@@ -54,7 +54,7 @@ export interface MetadataRequest {
    * @type {string}
    * @memberof MetadataRequest
    */
-  title: string;
+  title?: string;
 }
 
 /**
@@ -79,8 +79,6 @@ export type MetadataRequestProfileEnum =
  * Check if a given object implements the MetadataRequest interface.
  */
 export function instanceOfMetadataRequest(value: object): value is MetadataRequest {
-  if (!('profile' in value) || value['profile'] === undefined) return false;
-  if (!('title' in value) || value['title'] === undefined) return false;
   return true;
 }
 
@@ -98,10 +96,10 @@ export function MetadataRequestFromJSONTyped(
   return {
     description: json['description'] == null ? undefined : json['description'],
     expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
-    profile: json['profile'],
+    profile: json['profile'] == null ? undefined : json['profile'],
     tags: json['tags'] == null ? undefined : json['tags'],
     targetLevel: json['targetLevel'] == null ? undefined : json['targetLevel'],
-    title: json['title'],
+    title: json['title'] == null ? undefined : json['title'],
   };
 }
 
