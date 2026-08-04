@@ -42,6 +42,7 @@ export * from './AnatomyStructureExposure';
 export * from './AnatomyUnmappedStructure';
 export * from './AncestorPath';
 export * from './AncestorStep';
+export * from './AppointmentVersionCommand';
 export * from './AppointmentView';
 export * from './ArtifactView';
 export * from './AssessmentSnapshot';

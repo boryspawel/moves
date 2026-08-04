@@ -39,4 +39,5 @@ public class Appointment {
     }
     void cancel(Instant now) { status = Status.CANCELLED; updatedAt = now; }
     void noShow(Instant now) { status = Status.NO_SHOW; updatedAt = now; }
+    void complete(Instant now) { status = Status.COMPLETED; updatedAt = now; }
 }

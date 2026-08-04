@@ -39,7 +39,7 @@ class AppointmentAvailabilityValidationTest {
         Instant ends = Instant.parse("2030-06-10T13:00:00Z");
         when(availability.windows(specialistId, starts.atZone(ZoneOffset.UTC).toLocalDate())).thenReturn(List.of(
                 new RecurringAvailabilityService.Window(Instant.parse("2030-06-10T08:00:00Z"), Instant.parse("2030-06-10T10:00:00Z"))));
-        AppointmentService service = new AppointmentService(repository, mock(AppointmentIdempotencyRepository.class), accounts,
+        AppointmentService service = new AppointmentService(repository, mock(AppointmentEventRepository.class), mock(AppointmentIdempotencyRepository.class), accounts,
                 mock(SpecialistRelationshipService.class), availability, profiles, mock(AuditRecorder.class),
                 Clock.fixed(Instant.parse("2030-06-01T00:00:00Z"), ZoneOffset.UTC));
         AppointmentService.CreateCommand create = new AppointmentService.CreateCommand(participantId, starts, ends,

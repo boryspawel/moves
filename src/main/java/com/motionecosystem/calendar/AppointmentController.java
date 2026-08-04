@@ -20,7 +20,9 @@ public class AppointmentController {
     @PutMapping("/{id}") @PreAuthorize("hasRole('SPECIALIST')") @Operation(summary = "Update a specialist appointment")
     AppointmentService.AppointmentView update(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id, @RequestHeader("Idempotency-Key") String key, @RequestBody AppointmentService.UpdateCommand command) { return appointments.update(jwt.getSubject(), id, key, command); }
     @PostMapping("/{id}/cancel") @PreAuthorize("hasRole('SPECIALIST')") @Operation(summary = "Cancel a specialist appointment")
-    AppointmentService.AppointmentView cancel(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id, @RequestHeader("Idempotency-Key") String key, @RequestBody AppointmentService.VersionCommand command) { return appointments.cancel(jwt.getSubject(), id, key, command); }
+    AppointmentService.AppointmentView cancel(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id, @RequestHeader("Idempotency-Key") String key, @RequestBody AppointmentService.AppointmentVersionCommand command) { return appointments.cancel(jwt.getSubject(), id, key, command); }
     @PostMapping("/{id}/no-show") @PreAuthorize("hasRole('SPECIALIST')") @Operation(summary = "Mark a specialist appointment as no-show")
-    AppointmentService.AppointmentView noShow(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id, @RequestHeader("Idempotency-Key") String key, @RequestBody AppointmentService.VersionCommand command) { return appointments.noShow(jwt.getSubject(), id, key, command); }
+    AppointmentService.AppointmentView noShow(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id, @RequestHeader("Idempotency-Key") String key, @RequestBody AppointmentService.AppointmentVersionCommand command) { return appointments.noShow(jwt.getSubject(), id, key, command); }
+    @PostMapping("/{id}/complete") @PreAuthorize("hasRole('SPECIALIST')") @Operation(summary = "Complete a specialist appointment")
+    AppointmentService.AppointmentView complete(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id, @RequestHeader("Idempotency-Key") String key, @RequestBody AppointmentService.AppointmentVersionCommand command) { return appointments.complete(jwt.getSubject(), id, key, command); }
 }

@@ -14,6 +14,11 @@
 
 import * as runtime from '../runtime';
 import {
+  type AppointmentVersionCommand,
+  AppointmentVersionCommandFromJSON,
+  AppointmentVersionCommandToJSON,
+} from '../models/AppointmentVersionCommand';
+import {
   type AppointmentView,
   AppointmentViewFromJSON,
   AppointmentViewToJSON,
@@ -28,16 +33,17 @@ import {
   UpdateCommandFromJSON,
   UpdateCommandToJSON,
 } from '../models/UpdateCommand';
-import {
-  type VersionCommand,
-  VersionCommandFromJSON,
-  VersionCommandToJSON,
-} from '../models/VersionCommand';
 
 export interface CancelRequest {
   id: string;
   idempotencyKey: string;
-  versionCommand: VersionCommand;
+  appointmentVersionCommand: AppointmentVersionCommand;
+}
+
+export interface CompleteRequest {
+  id: string;
+  idempotencyKey: string;
+  appointmentVersionCommand: AppointmentVersionCommand;
 }
 
 export interface Create2Request {
@@ -48,7 +54,7 @@ export interface Create2Request {
 export interface NoShowRequest {
   id: string;
   idempotencyKey: string;
-  versionCommand: VersionCommand;
+  appointmentVersionCommand: AppointmentVersionCommand;
 }
 
 export interface Update1Request {
@@ -79,10 +85,10 @@ export class AppointmentControllerApi extends runtime.BaseAPI {
       );
     }
 
-    if (requestParameters['versionCommand'] == null) {
+    if (requestParameters['appointmentVersionCommand'] == null) {
       throw new runtime.RequiredError(
-        'versionCommand',
-        'Required parameter "versionCommand" was null or undefined when calling cancel().',
+        'appointmentVersionCommand',
+        'Required parameter "appointmentVersionCommand" was null or undefined when calling cancel().',
       );
     }
 
@@ -104,7 +110,7 @@ export class AppointmentControllerApi extends runtime.BaseAPI {
       method: 'POST',
       headers: headerParameters,
       query: queryParameters,
-      body: VersionCommandToJSON(requestParameters['versionCommand']),
+      body: AppointmentVersionCommandToJSON(requestParameters['appointmentVersionCommand']),
     };
   }
 
@@ -129,6 +135,77 @@ export class AppointmentControllerApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<AppointmentView> {
     const response = await this.cancelRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for complete without sending the request
+   */
+  async completeRequestOpts(requestParameters: CompleteRequest): Promise<runtime.RequestOpts> {
+    if (requestParameters['id'] == null) {
+      throw new runtime.RequiredError(
+        'id',
+        'Required parameter "id" was null or undefined when calling complete().',
+      );
+    }
+
+    if (requestParameters['idempotencyKey'] == null) {
+      throw new runtime.RequiredError(
+        'idempotencyKey',
+        'Required parameter "idempotencyKey" was null or undefined when calling complete().',
+      );
+    }
+
+    if (requestParameters['appointmentVersionCommand'] == null) {
+      throw new runtime.RequiredError(
+        'appointmentVersionCommand',
+        'Required parameter "appointmentVersionCommand" was null or undefined when calling complete().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    if (requestParameters['idempotencyKey'] != null) {
+      headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+    }
+
+    let urlPath = `/api/v1/specialist/appointments/{id}/complete`;
+    urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+      body: AppointmentVersionCommandToJSON(requestParameters['appointmentVersionCommand']),
+    };
+  }
+
+  /**
+   * Complete a specialist appointment
+   */
+  async completeRaw(
+    requestParameters: CompleteRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AppointmentView>> {
+    const requestOptions = await this.completeRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => AppointmentViewFromJSON(jsonValue));
+  }
+
+  /**
+   * Complete a specialist appointment
+   */
+  async complete(
+    requestParameters: CompleteRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AppointmentView> {
+    const response = await this.completeRaw(requestParameters, initOverrides);
     return await response.value();
   }
 
@@ -213,10 +290,10 @@ export class AppointmentControllerApi extends runtime.BaseAPI {
       );
     }
 
-    if (requestParameters['versionCommand'] == null) {
+    if (requestParameters['appointmentVersionCommand'] == null) {
       throw new runtime.RequiredError(
-        'versionCommand',
-        'Required parameter "versionCommand" was null or undefined when calling noShow().',
+        'appointmentVersionCommand',
+        'Required parameter "appointmentVersionCommand" was null or undefined when calling noShow().',
       );
     }
 
@@ -238,7 +315,7 @@ export class AppointmentControllerApi extends runtime.BaseAPI {
       method: 'POST',
       headers: headerParameters,
       query: queryParameters,
-      body: VersionCommandToJSON(requestParameters['versionCommand']),
+      body: AppointmentVersionCommandToJSON(requestParameters['appointmentVersionCommand']),
     };
   }
 
