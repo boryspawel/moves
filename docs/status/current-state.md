@@ -224,3 +224,6 @@ opublikowany/historyczny oraz desktop, 390 i 320 px z kontrolą konsoli, SVG/API
 klawiatury, powrotu focusu i overflow. Runtime QA mapy ciała jest świadomie
 odroczone i nie blokuje stabilności DEV-ENV, w szczególności gdy środowisko nie
 obsługuje sandboxa Chromium.
+# Appointment lifecycle history
+
+Appointment lifecycle history is persisted append-only in `calendar.appointment_event`; the appointment row remains the current snapshot.

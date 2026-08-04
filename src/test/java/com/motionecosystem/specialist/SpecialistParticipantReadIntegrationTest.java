@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.motionecosystem.application.MotionEcosystemApplication;
+import com.motionecosystem.availability.RecurringAvailabilityService;
 import com.motionecosystem.calendar.Appointment;
 import com.motionecosystem.calendar.AppointmentService;
 import com.motionecosystem.consent.ConsentGrantService;
@@ -13,10 +14,13 @@ import com.motionecosystem.consent.api.ConsentDecisionPort;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.participant.ParticipantProfileService;
+import com.motionecosystem.participant.ParticipantRecord;
 import com.motionecosystem.support.PostgresTestConfiguration;
 import com.motionecosystem.trainingexecution.TimelineExecutionAttemptFixture;
 import jakarta.persistence.EntityManager;
 import java.time.Instant;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.UUID;
@@ -46,6 +50,7 @@ class SpecialistParticipantReadIntegrationTest {
     @Autowired private SpecialistProfileService specialistProfiles;
     @Autowired private ConsentGrantService consents;
     @Autowired private AppointmentService appointments;
+    @Autowired private RecurringAvailabilityService availability;
     @Autowired private SpecialistParticipantReadService reads;
     @Autowired private EntityManager entityManager;
     @Autowired private TransactionTemplate transactions;
@@ -126,7 +131,7 @@ class SpecialistParticipantReadIntegrationTest {
 
     private void assertAggregateAndAppointment(List<SpecialistParticipantReadService.ParticipantTimelineEvent> items, String eventType) {
         assertThat(items).extracting(SpecialistParticipantReadService.ParticipantTimelineEvent::eventType)
-                .containsExactlyInAnyOrder(eventType, "APPOINTMENT_SCHEDULED");
+                .containsExactlyInAnyOrder(eventType, "APPOINTMENT_CREATED");
         assertThat(items).filteredOn(item -> eventType.equals(item.eventType())).singleElement().satisfies(item -> {
             assertThat(item.detail().sourceEventCount()).isEqualTo(2);
             assertThat(item.detail().sourceFrom()).isEqualTo(Instant.parse("2030-06-03T09:00:00Z"));
@@ -146,8 +151,10 @@ class SpecialistParticipantReadIntegrationTest {
         String specialistSubject = "timeline-specialist-" + suffix;
         UUID participantId = account(participantSubject, ProfileType.PARTICIPANT);
         UUID specialistId = account(specialistSubject, ProfileType.SPECIALIST);
-        participantProfiles.save(participantId, "Timeline participant");
+        participantRecord(participantId, specialistId);
         specialistProfiles.save(specialistId, "Timeline specialist", SpecialistKind.TRAINER, "UTC");
+        availability.replace(specialistId, java.util.Arrays.stream(DayOfWeek.values())
+                .map(day -> new RecurringAvailabilityService.Slot(day, LocalTime.of(8, 0), LocalTime.of(22, 0), "UTC")).toList());
         verifyScope(specialistId);
         Fixture fixture = new Fixture(participantSubject, specialistSubject, participantId, specialistId);
         if (hasRelationship) relationship(fixture);
@@ -166,9 +173,19 @@ class SpecialistParticipantReadIntegrationTest {
         set(relationship, "id", UUID.randomUUID());
         set(relationship, "specialistAccountId", fixture.specialistId);
         set(relationship, "participantAccountId", fixture.participantId);
+        set(relationship, "participantId", fixture.participantId);
         set(relationship, "status", ParticipantSpecialistRelationship.Status.ACTIVE);
         set(relationship, "activatedAt", Instant.now());
         transactions.executeWithoutResult(status -> entityManager.persist(relationship));
+    }
+
+    private void participantRecord(UUID participantId, UUID specialistId) {
+        transactions.executeWithoutResult(status -> {
+            ParticipantRecord record = new ParticipantRecord("Timeline participant", ParticipantRecord.RelationshipContext.CLIENT,
+                    null, null, null, specialistId, Instant.now());
+            set(record, "id", participantId);
+            entityManager.persist(record);
+        });
     }
 
     private void verifyScope(UUID specialistId) {

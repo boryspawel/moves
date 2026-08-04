@@ -12,6 +12,7 @@ import com.motionecosystem.availability.RecurringAvailabilityService;
 import com.motionecosystem.calendar.Appointment;
 import com.motionecosystem.calendar.AppointmentService;
 import com.motionecosystem.calendar.api.SpecialistAppointmentQueryPort;
+import com.motionecosystem.calendar.api.SpecialistAppointmentEventQueryPort;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
@@ -76,6 +77,7 @@ class SpecialistCalendarParticipantIdTest {
         SpecialistProfileService profiles = mock(SpecialistProfileService.class);
         SpecialistAuthorizationPort authorization = mock(SpecialistAuthorizationPort.class);
         SpecialistAppointmentQueryPort appointments = mock(SpecialistAppointmentQueryPort.class);
+        SpecialistAppointmentEventQueryPort appointmentEvents = mock(SpecialistAppointmentEventQueryPort.class);
         when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(specialistId, "specialist", ProfileType.SPECIALIST));
         when(profiles.find(specialistId)).thenReturn(Optional.of(new SpecialistProfileService.ProfileView(
                 specialistId, "Specialist", SpecialistKind.TRAINER, "UTC")));
@@ -84,12 +86,12 @@ class SpecialistCalendarParticipantIdTest {
                         SpecialistAuthorizationPort.ProfessionalRole.TRAINER,
                         SpecialistAuthorizationPort.Purpose.PERFORMANCE_PLANNING,
                         Set.of(SpecialistAuthorizationPort.Capability.PLAN_PERFORMANCE)));
-        when(appointments.timeline(eq(specialistId), eq(participantId), any(), any(), eq(null), eq(11))).thenReturn(List.of(
-                new SpecialistAppointmentQueryPort.AppointmentSummary(UUID.randomUUID(), NOW, NOW.plusSeconds(3600),
-                        "CONSULTATION", "SCHEDULED", "Check-in", NOW, NOW)));
+        when(appointmentEvents.timeline(eq(specialistId), eq(participantId), any(), any(), eq(null), eq(11))).thenReturn(List.of(
+                new SpecialistAppointmentEventQueryPort.AppointmentEventSummary(UUID.randomUUID(), UUID.randomUUID(), "CREATED", null,
+                        "SCHEDULED", NOW, NOW, "CONSULTATION", "Check-in")));
         SpecialistParticipantReadService service = new SpecialistParticipantReadService(accounts, profiles, authorization,
                 mock(ParticipantClientPort.class), mock(com.motionecosystem.participant.api.ParticipantContextQueryPort.class),
-                appointments, mock(PlanRevisionQueryPort.class), mock(ParticipantExecutionHistoryQueryPort.class),
+                appointments, appointmentEvents, mock(PlanRevisionQueryPort.class), mock(ParticipantExecutionHistoryQueryPort.class),
                 mock(ParticipantSpecialistRelationshipRepository.class), mock(SpecialistWorklistService.class), mock(AuditRecorder.class),
                 Clock.fixed(NOW, ZoneOffset.UTC));
 
@@ -99,6 +101,6 @@ class SpecialistCalendarParticipantIdTest {
 
         assertThat(view.items()).singleElement().extracting(SpecialistParticipantReadService.ParticipantTimelineEvent::category)
                 .isEqualTo("APPOINTMENT");
-        verify(appointments).timeline(eq(specialistId), eq(participantId), any(), any(), eq(null), eq(11));
+        verify(appointmentEvents).timeline(eq(specialistId), eq(participantId), any(), any(), eq(null), eq(11));
     }
 }

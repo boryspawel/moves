@@ -1,6 +1,7 @@
 package com.motionecosystem.specialist;
 
 import com.motionecosystem.calendar.api.SpecialistAppointmentQueryPort;
+import com.motionecosystem.calendar.api.SpecialistAppointmentEventQueryPort;
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
@@ -45,6 +46,7 @@ public class SpecialistParticipantReadService {
     private final ParticipantClientPort participantClients;
     private final ParticipantContextQueryPort participantContexts;
     private final SpecialistAppointmentQueryPort appointments;
+    private final SpecialistAppointmentEventQueryPort appointmentEvents;
     private final PlanRevisionQueryPort revisions;
     private final ParticipantExecutionHistoryQueryPort executionHistory;
     private final ParticipantSpecialistRelationshipRepository relationships;
@@ -83,9 +85,8 @@ public class SpecialistParticipantReadService {
         Cursor cursor = parseCursor(normalized.cursor());
         List<ParticipantTimelineEvent> events = new ArrayList<>();
         if (normalized.types().contains(TimelineType.APPOINTMENT)) {
-            appointments.timeline(access.specialistId(), participantId, normalized.from(), normalized.to(),
-                            cursor == null ? null : new SpecialistAppointmentQueryPort.SeekCursor(
-                                    cursor.effectiveFrom(), cursor.recordedAt(), cursor.eventId()), normalized.limit() + 1)
+            appointmentEvents.timeline(access.specialistId(), participantId, normalized.from(), normalized.to(),
+                            appointmentEventCursor(cursor), normalized.limit() + 1)
                     .forEach(item -> events.add(appointmentEvent(item)));
         }
         Optional<PlanRevisionQueryPort.PlanRevisionSnapshot> revision = revisions.findActiveRevision(participantId);
@@ -205,17 +206,28 @@ public class SpecialistParticipantReadService {
                         new EventDetail("PLANNED_SESSION", item.session().id().toString()))));
     }
 
-    private static ParticipantTimelineEvent appointmentEvent(SpecialistAppointmentQueryPort.AppointmentSummary item) {
-        String type = switch (item.status()) {
+    private static SpecialistAppointmentEventQueryPort.SeekCursor appointmentEventCursor(Cursor cursor) {
+        if (cursor == null || cursor.recordedAt() == null || !cursor.eventId().startsWith("appointment-event:")) return null;
+        try {
+            return new SpecialistAppointmentEventQueryPort.SeekCursor(cursor.effectiveFrom(), cursor.recordedAt(),
+                    UUID.fromString(cursor.eventId().substring("appointment-event:".length())));
+        } catch (IllegalArgumentException ignored) { return null; }
+    }
+
+    private static ParticipantTimelineEvent appointmentEvent(SpecialistAppointmentEventQueryPort.AppointmentEventSummary item) {
+        String type = "BASELINE".equals(item.eventType()) ? baselineType(item.toStatus()) : "APPOINTMENT_" + item.eventType();
+        return new ParticipantTimelineEvent("appointment-event:" + item.eventId(), type, "APPOINTMENT", item.toStatus(),
+                item.effectiveAt(), null, item.recordedAt(), item.recordedAt(), item.appointmentType(), item.shortPurpose(), "NORMAL", "OPERATIONAL",
+                null, "CALENDAR_APPOINTMENT_EVENT", List.of(), null, null, null, null, List.of("OPEN_APPOINTMENT"),
+                new EventDetail("APPOINTMENT", item.appointmentId().toString()));
+    }
+    private static String baselineType(String status) {
+        return switch (status) {
             case "COMPLETED" -> "APPOINTMENT_COMPLETED";
             case "CANCELLED" -> "APPOINTMENT_CANCELLED";
             case "NO_SHOW" -> "APPOINTMENT_NO_SHOW";
             default -> "APPOINTMENT_SCHEDULED";
         };
-        return new ParticipantTimelineEvent("appointment:" + item.appointmentId(), type, "APPOINTMENT", item.status(),
-                item.startsAt(), item.endsAt(), item.recordedAt(), item.updatedAt(), item.type(), item.shortPurpose(), "NORMAL", "OPERATIONAL",
-                null, "CALENDAR_APPOINTMENT", List.of(), null, null, null, null, List.of("OPEN_APPOINTMENT"),
-                new EventDetail("APPOINTMENT", item.appointmentId().toString()));
     }
 
     private static ParticipantTimelineEvent executionEvent(ParticipantExecutionHistoryQueryPort.ExecutionStart item,

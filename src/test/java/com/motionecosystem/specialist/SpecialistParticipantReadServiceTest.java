@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.calendar.api.SpecialistAppointmentQueryPort;
+import com.motionecosystem.calendar.api.SpecialistAppointmentEventQueryPort;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
@@ -38,6 +39,7 @@ class SpecialistParticipantReadServiceTest {
         ParticipantClientPort participants = mock(ParticipantClientPort.class);
         ParticipantContextQueryPort contexts = mock(ParticipantContextQueryPort.class);
         SpecialistAppointmentQueryPort appointments = mock(SpecialistAppointmentQueryPort.class);
+        SpecialistAppointmentEventQueryPort appointmentEvents = mock(SpecialistAppointmentEventQueryPort.class);
         PlanRevisionQueryPort revisions = mock(PlanRevisionQueryPort.class);
         ParticipantExecutionHistoryQueryPort executionHistory = mock(ParticipantExecutionHistoryQueryPort.class);
         ParticipantSpecialistRelationshipRepository relationships = mock(ParticipantSpecialistRelationshipRepository.class);
@@ -74,7 +76,7 @@ class SpecialistParticipantReadServiceTest {
         when(relationships.findBySpecialistAccountIdAndParticipantId(specialistId, participantId)).thenReturn(Optional.of(relationship));
         when(relationship.status()).thenReturn(ParticipantSpecialistRelationship.Status.ACTIVE);
 
-        var workspace = new SpecialistParticipantReadService(accounts, profiles, authorization, participants, contexts, appointments,
+        var workspace = new SpecialistParticipantReadService(accounts, profiles, authorization, participants, contexts, appointments, appointmentEvents,
                 revisions, executionHistory, relationships, worklist, audit, clock).workspace("specialist", participantId);
 
         assertThat(workspace.participant())
@@ -90,7 +92,7 @@ class SpecialistParticipantReadServiceTest {
 
         when(appointments.findForParticipant(any(), any(), any(), any(), anyInt())).thenReturn(List.of(
                 appointment(now.plusSeconds(14_400), now.plusSeconds(18_000), "SCHEDULED"), futureConfirmed));
-        assertThat(new SpecialistParticipantReadService(accounts, profiles, authorization, participants, contexts, appointments,
+        assertThat(new SpecialistParticipantReadService(accounts, profiles, authorization, participants, contexts, appointments, appointmentEvents,
                 revisions, executionHistory, relationships, worklist, audit, clock).workspace("specialist", participantId).nextAppointment())
                 .extracting(SpecialistParticipantReadService.AppointmentView::appointmentId,
                         SpecialistParticipantReadService.AppointmentView::status)
@@ -98,7 +100,7 @@ class SpecialistParticipantReadServiceTest {
 
         when(appointments.findForParticipant(any(), any(), any(), any(), anyInt())).thenReturn(List.of(
                 appointment(now.plusSeconds(7_200), now.plusSeconds(10_800), "SCHEDULED"), currentScheduled));
-        assertThat(new SpecialistParticipantReadService(accounts, profiles, authorization, participants, contexts, appointments,
+        assertThat(new SpecialistParticipantReadService(accounts, profiles, authorization, participants, contexts, appointments, appointmentEvents,
                 revisions, executionHistory, relationships, worklist, audit, clock).workspace("specialist", participantId).nextAppointment())
                 .extracting(SpecialistParticipantReadService.AppointmentView::appointmentId,
                         SpecialistParticipantReadService.AppointmentView::status)
