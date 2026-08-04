@@ -1,6 +1,6 @@
 # Stan bieżący
 
-_Zaktualizowano: 2026-08-03._
+_Zaktualizowano: 2026-08-04._
 
 ## SET-01 / SET-05 — zestawy ćwiczeń i wybór katalogowy
 
@@ -226,4 +226,13 @@ odroczone i nie blokuje stabilności DEV-ENV, w szczególności gdy środowisko 
 obsługuje sandboxa Chromium.
 # Appointment lifecycle history
 
-Appointment lifecycle history is persisted append-only in `calendar.appointment_event`; the appointment row remains the current snapshot.
+Historia lifecycle terminu jest utrwalana append-only w
+`calendar.appointment_event`; wiersz terminu pozostaje bieżącym snapshotem. V050
+poszerza klasyfikację historii o pięć kolumn, a publiczne zdarzenia terminów mają
+własne UUID i są dostępne jako kontekstowo autoryzowany szczegół.
+
+`Today` wylicza deterministycznie `APPOINTMENT_OUTCOME_REQUIRED` dla zaległych,
+aktywnych terminów `SCHEDULED`, `CONFIRMED` i `IN_PROGRESS`. To nie jest trwała
+worklista ani automatyczna zmiana lifecycle: specjalista wybiera idempotentną akcję
+lifecycle z wersją terminu. Deep link do szczegółu zdarzenia zachowuje kontekst
+uczestnika i wymaga aktywnej relacji oraz capability właściwych dla tego kontekstu.

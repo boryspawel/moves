@@ -122,9 +122,9 @@ uczestników z aktywną relacją i tworzy termin idempotentnie, komunikując jas
 konflikty oraz błędy. Gdy nie ma zapisanej dostępności, CTA prowadzi do
 onboardingu edycji dostępności, który wczytuje istniejące sloty.
 Dzień jest wyznaczany w zapisanej strefie IANA profilu specjalisty; terminy są
-przechowywane i przekazywane jako chwile UTC. Zadania operacyjne nie są jeszcze
-źródłem danych tego widoku, dlatego `operationalTasks` jest obecnie zwracane jako
-puste.
+przechowywane i przekazywane jako chwile UTC. `operationalTasks` wylicza
+deterministycznie `APPOINTMENT_OUTCOME_REQUIRED` dla zaległych aktywnych terminów;
+nie jest trwałą worklistą ani nie zmienia lifecycle automatycznie.
 
 ## Diagnostyka i smoke test
 
