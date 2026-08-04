@@ -1,10 +1,12 @@
 package com.motionecosystem.specialist;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.motionecosystem.audit.AuditRecorder;
@@ -105,6 +107,41 @@ class SpecialistParticipantReadServiceTest {
                 .extracting(SpecialistParticipantReadService.AppointmentView::appointmentId,
                         SpecialistParticipantReadService.AppointmentView::status)
                 .containsExactly(currentScheduled.appointmentId(), "SCHEDULED");
+    }
+
+    @Test
+    void resolvesOnlyScopedAppointmentPublicIdsAndMapsBaselineLikeTimeline() {
+        UUID specialistId = UUID.randomUUID();
+        UUID participantId = UUID.randomUUID();
+        UUID eventId = UUID.randomUUID();
+        CurrentAccountService accounts = mock(CurrentAccountService.class);
+        SpecialistProfileService profiles = mock(SpecialistProfileService.class);
+        SpecialistAuthorizationPort authorization = mock(SpecialistAuthorizationPort.class);
+        SpecialistAppointmentEventQueryPort appointmentEvents = mock(SpecialistAppointmentEventQueryPort.class);
+        AuditRecorder audit = mock(AuditRecorder.class);
+        var decision = new SpecialistAuthorizationPort.AuthorizationDecision(specialistId, participantId,
+                SpecialistAuthorizationPort.ProfessionalRole.TRAINER, SpecialistAuthorizationPort.Purpose.PERFORMANCE_PLANNING, Set.of());
+        when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(specialistId, "specialist", ProfileType.SPECIALIST));
+        when(profiles.find(specialistId)).thenReturn(Optional.of(new SpecialistProfileService.ProfileView(specialistId, "Specialist", SpecialistKind.TRAINER, "UTC")));
+        when(authorization.requireCapabilities(any(), any(), any(), anySet(), any())).thenReturn(decision);
+        when(appointmentEvents.findBySpecialistAndParticipant(specialistId, participantId, eventId)).thenReturn(Optional.of(
+                new SpecialistAppointmentEventQueryPort.AppointmentEventSummary(eventId, UUID.randomUUID(), "BASELINE", null, "COMPLETED",
+                        Instant.parse("2030-01-01T10:00:00Z"), Instant.parse("2030-01-01T10:01:00Z"), "CONSULTATION", "Baseline")));
+        SpecialistParticipantReadService service = new SpecialistParticipantReadService(accounts, profiles, authorization,
+                mock(ParticipantClientPort.class), mock(ParticipantContextQueryPort.class), mock(SpecialistAppointmentQueryPort.class), appointmentEvents,
+                mock(PlanRevisionQueryPort.class), mock(ParticipantExecutionHistoryQueryPort.class), mock(ParticipantSpecialistRelationshipRepository.class),
+                mock(SpecialistWorklistService.class), audit, Clock.systemUTC());
+
+        var event = service.timelineEvent("specialist", participantId, "appointment-event:" + eventId);
+
+        assertThat(event).extracting(SpecialistParticipantReadService.ParticipantTimelineEvent::eventId,
+                SpecialistParticipantReadService.ParticipantTimelineEvent::eventType,
+                SpecialistParticipantReadService.ParticipantTimelineEvent::category)
+                .containsExactly("appointment-event:" + eventId, "APPOINTMENT_COMPLETED", "APPOINTMENT");
+        verify(appointmentEvents).findBySpecialistAndParticipant(specialistId, participantId, eventId);
+        assertThatThrownBy(() -> service.timelineEvent("specialist", participantId, "session-execution:" + UUID.randomUUID()))
+                .isInstanceOfSatisfying(org.springframework.web.server.ResponseStatusException.class,
+                        error -> assertThat(error.getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.NOT_FOUND));
     }
 
     private static SpecialistAppointmentQueryPort.AppointmentSummary appointment(Instant startsAt, Instant endsAt, String status) {

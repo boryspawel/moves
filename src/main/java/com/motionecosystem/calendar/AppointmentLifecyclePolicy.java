@@ -2,6 +2,7 @@ package com.motionecosystem.calendar;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 /** The single source of truth for appointment lifecycle decisions. */
@@ -28,6 +29,11 @@ public final class AppointmentLifecyclePolicy {
             if (allows(action, appointment, now)) actions.add(actionName(action));
         }
         return List.copyOf(actions);
+    }
+
+    /** Statuses for appointments whose outcome can still be recorded after they have ended. */
+    public EnumSet<Appointment.Status> outcomeOutstandingStatuses() {
+        return EnumSet.of(Appointment.Status.SCHEDULED, Appointment.Status.CONFIRMED, Appointment.Status.IN_PROGRESS);
     }
 
     private static boolean schedulable(Appointment.Status status) {

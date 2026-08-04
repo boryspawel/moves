@@ -3,6 +3,7 @@ package com.motionecosystem.specialist;
 import com.motionecosystem.availability.RecurringAvailabilityService;
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.calendar.AppointmentService;
+import com.motionecosystem.calendar.api.SpecialistOverdueAppointmentQueryPort;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.participant.api.ParticipantClientPort;
@@ -28,6 +29,7 @@ class SpecialistTodayService {
     private final ParticipantClientPort participants;
     private final RecurringAvailabilityService availability;
     private final AppointmentService appointments;
+    private final SpecialistOverdueAppointmentQueryPort overdueAppointments;
     private final SpecialistWorklistService worklist;
     private final AuditRecorder audit;
     private final Clock clock;
@@ -55,13 +57,14 @@ class SpecialistTodayService {
         List<AppointmentView> appointmentViews = raw.stream().map(item -> appointmentView(item, labels.get(item.participantId()), nextId.filter(item.appointmentId()::equals).isPresent())).toList();
         List<AvailabilityWindowView> windows = windows(slots, localDate);
         List<AttentionItemView> attention = attention(subject, account.id(), profile, labels);
+        List<OperationalTaskView> operationalTasks = operationalTasks(account.id(), activeParticipants, now, labels);
         VisibleRange range = range(zone, localDate, windows, appointmentViews);
         if (!appointmentViews.isEmpty() || !attention.isEmpty()) audit.record(subject, "SPECIALIST_TODAY_VIEWED", "PrincipalAccount", account.id());
         return new TodayView(now, localDate, zone.getId(), range,
                 current.map(item -> appointmentView(item, labels.get(item.participantId()), false)).orElse(null),
                 nextId.flatMap(id -> appointmentViews.stream().filter(item -> item.appointmentId().equals(id)).findFirst()).orElse(null),
-                appointmentViews, windows, attention, List.of(),
-                new Counts(appointmentViews.size(), attention.size(), 0, current.isPresent() ? 1 : 0));
+                appointmentViews, windows, attention, operationalTasks,
+                new Counts(appointmentViews.size(), attention.size(), operationalTasks.size(), current.isPresent() ? 1 : 0));
     }
     private static boolean active(AppointmentService.AppointmentView item) { return item.status() != com.motionecosystem.calendar.Appointment.Status.CANCELLED && item.status() != com.motionecosystem.calendar.Appointment.Status.COMPLETED && item.status() != com.motionecosystem.calendar.Appointment.Status.NO_SHOW; }
     private Map<UUID, String> participantLabels(Set<UUID> participantIds) {
@@ -81,6 +84,13 @@ class SpecialistTodayService {
                 .map(item -> new AttentionItemView(item.id(), item.category(), item.priority(), labels.get(item.participantId()),
                         item.category().replace('_', ' '), item.minimalData(), item.createdAt(), item.snoozedUntil(), item.status(),
                         actions(item), "/api/v1/specialist/worklist/" + item.id())).toList();
+    }
+    private List<OperationalTaskView> operationalTasks(UUID specialist, Set<UUID> activeParticipants, Instant now, Map<UUID, String> labels) {
+        return overdueAppointments.overdueOutcomeAppointments(specialist, activeParticipants, now).stream()
+                .map(item -> new OperationalTaskView("APPOINTMENT_OUTCOME_REQUIRED",
+                        "Uzupełnij wynik spotkania z " + labels.getOrDefault(item.participantId(), "Uczestnik"),
+                        "/specialist/clients/" + item.participantId() + (item.latestEventId() == null ? "" : "?eventId=appointment-event:" + item.latestEventId())))
+                .toList();
     }
     private static int priority(String priority) { return "HIGH".equals(priority) ? 3 : "MEDIUM".equals(priority) ? 2 : 1; }
     private static List<String> actions(SpecialistWorklistService.WorklistItemView item) { return "PARTICIPANT_ISSUE".equals(item.category()) ? List.of("OPEN_WORKLIST_ITEM", "REPLY") : List.of("OPEN_WORKLIST_ITEM", "ACKNOWLEDGE", "RESOLVE"); }

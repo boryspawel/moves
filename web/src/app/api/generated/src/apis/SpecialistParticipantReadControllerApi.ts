@@ -14,6 +14,11 @@
 
 import * as runtime from '../runtime';
 import {
+  type ParticipantTimelineEvent,
+  ParticipantTimelineEventFromJSON,
+  ParticipantTimelineEventToJSON,
+} from '../models/ParticipantTimelineEvent';
+import {
   type ParticipantTimelineView,
   ParticipantTimelineViewFromJSON,
   ParticipantTimelineViewToJSON,
@@ -32,6 +37,11 @@ export interface TimelineRequest {
   granularity?: TimelineGranularityEnum;
   cursor?: string;
   limit?: number;
+}
+
+export interface TimelineEventRequest {
+  participantId: string;
+  eventId: string;
 }
 
 export interface WorkspaceRequest {
@@ -118,6 +128,74 @@ export class SpecialistParticipantReadControllerApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<ParticipantTimelineView> {
     const response = await this.timelineRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for timelineEvent without sending the request
+   */
+  async timelineEventRequestOpts(
+    requestParameters: TimelineEventRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['participantId'] == null) {
+      throw new runtime.RequiredError(
+        'participantId',
+        'Required parameter "participantId" was null or undefined when calling timelineEvent().',
+      );
+    }
+
+    if (requestParameters['eventId'] == null) {
+      throw new runtime.RequiredError(
+        'eventId',
+        'Required parameter "eventId" was null or undefined when calling timelineEvent().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v1/specialist/participants/{participantId}/timeline/events/{eventId}`;
+    urlPath = urlPath.replace(
+      '{participantId}',
+      encodeURIComponent(String(requestParameters['participantId'])),
+    );
+    urlPath = urlPath.replace(
+      '{eventId}',
+      encodeURIComponent(String(requestParameters['eventId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   * Get an authorized specialist participant timeline event
+   */
+  async timelineEventRaw(
+    requestParameters: TimelineEventRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<ParticipantTimelineEvent>> {
+    const requestOptions = await this.timelineEventRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      ParticipantTimelineEventFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   * Get an authorized specialist participant timeline event
+   */
+  async timelineEvent(
+    requestParameters: TimelineEventRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<ParticipantTimelineEvent> {
+    const response = await this.timelineEventRaw(requestParameters, initOverrides);
     return await response.value();
   }
 

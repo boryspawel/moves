@@ -1,6 +1,7 @@
 package com.motionecosystem.calendar;
 
 import com.motionecosystem.calendar.api.SpecialistAppointmentQueryPort;
+import com.motionecosystem.calendar.api.SpecialistOverdueAppointmentQueryPort;
 import com.motionecosystem.availability.RecurringAvailabilityService;
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
@@ -20,7 +21,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
-public class AppointmentService implements SpecialistAppointmentQueryPort {
+public class AppointmentService implements SpecialistAppointmentQueryPort, SpecialistOverdueAppointmentQueryPort {
+    private static final int OVERDUE_OUTCOME_LIMIT = 20;
     private final AppointmentRepository appointments;
     private final AppointmentEventRepository events;
     private final AppointmentIdempotencyRepository idempotency;
@@ -81,6 +83,26 @@ public class AppointmentService implements SpecialistAppointmentQueryPort {
         return appointments.findIntersecting(specialist, start, end).stream()
                 .filter(appointment -> activeParticipants.contains(appointment.participantId))
                 .map(appointment -> view(appointment, now)).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public AppointmentView detail(String subject, UUID id) {
+        UUID specialist = specialist(subject);
+        Appointment appointment = owned(specialist, id);
+        relationships.requireActive(specialist, appointment.participantId);
+        return view(appointment);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<OverdueAppointment> overdueOutcomeAppointments(UUID specialistAccountId, Set<UUID> activeParticipantIds, Instant now) {
+        if (specialistAccountId == null || activeParticipantIds == null || activeParticipantIds.isEmpty() || now == null) return List.of();
+        return appointments.findOverdueOutcomeAppointments(specialistAccountId, activeParticipantIds, now,
+                        lifecycle.outcomeOutstandingStatuses(), org.springframework.data.domain.PageRequest.of(0, OVERDUE_OUTCOME_LIMIT)).stream()
+                .filter(appointment -> lifecycle.allows(AppointmentLifecyclePolicy.Action.COMPLETE, appointment, now))
+                .map(appointment -> new OverdueAppointment(appointment.id, appointment.participantId, appointment.endsAt,
+                        appointment.type.name(), appointment.status.name(), latestEventId(appointment.id)))
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -145,6 +167,9 @@ public class AppointmentService implements SpecialistAppointmentQueryPort {
     private void record(Appointment appointment, AppointmentEvent.Type type, Appointment.Status fromStatus, Instant effectiveAt,
                         UUID actor, Instant previousStartsAt, Instant previousEndsAt) {
         events.save(new AppointmentEvent(appointment, type, fromStatus, effectiveAt, clock.instant(), actor, previousStartsAt, previousEndsAt));
+    }
+    private UUID latestEventId(UUID appointmentId) {
+        return events.findLatestEventId(appointmentId, org.springframework.data.domain.PageRequest.of(0, 1)).stream().findFirst().orElse(null);
     }
     private void conflictIfOverlapping(UUID specialist, Instant start, Instant end, UUID excluded) {
         if (appointments.hasActiveOverlap(specialist, start, end, excluded)) conflict("appointment overlaps an existing appointment");

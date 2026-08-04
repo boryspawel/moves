@@ -30,6 +30,10 @@
 .attention ul { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--space-3); }
 .attention li { display: grid; gap: var(--space-1); padding-bottom: var(--space-3); border-bottom: 1px solid var(--app-border); }
 .attention small { color: var(--app-text-muted); }
+.operational-tasks { margin-top: var(--space-4); border: 1px solid var(--app-border); border-radius: var(--radius-card); padding: var(--space-3); background: var(--app-surface); }
+.operational-tasks h2 { margin: 0 0 var(--space-2); font-size: 1rem; }
+.operational-tasks ul { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--space-2); }
+.operational-tasks a { color: var(--app-primary); }
 .details-panel { position: fixed; z-index: 10; right: var(--space-5); bottom: var(--space-5); width: min(26rem, calc(100vw - 2 * var(--space-4))); box-shadow: 0 8px 24px color-mix(in srgb, var(--app-text) 20%, transparent); }
 .details-panel .close { position: absolute; top: var(--space-2); right: var(--space-2); border: 0; background: transparent; color: var(--app-text); font-size: 1.5rem; cursor: pointer; }
 .appointment-dialog { position: fixed; z-index: 20; inset: 0; display: grid; place-items: center; padding: var(--space-4); background: color-mix(in srgb, var(--app-text) 35%, transparent); }

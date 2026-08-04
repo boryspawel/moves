@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AppointmentController {
     private final AppointmentService appointments;
+    @GetMapping("/{id}") @PreAuthorize("hasRole('SPECIALIST')") @Operation(operationId = "getSpecialistAppointment", summary = "Get a specialist appointment")
+    AppointmentService.AppointmentView detail(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) { return appointments.detail(jwt.getSubject(), id); }
     @PostMapping @PreAuthorize("hasRole('SPECIALIST')") @Operation(summary = "Create a specialist appointment")
     AppointmentService.AppointmentView create(@AuthenticationPrincipal Jwt jwt, @RequestHeader("Idempotency-Key") String key, @RequestBody AppointmentService.CreateCommand command) { return appointments.create(jwt.getSubject(), key, command); }
     @PutMapping("/{id}") @PreAuthorize("hasRole('SPECIALIST')") @Operation(summary = "Update a specialist appointment")

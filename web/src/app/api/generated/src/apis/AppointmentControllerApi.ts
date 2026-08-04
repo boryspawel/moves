@@ -51,6 +51,10 @@ export interface Create2Request {
   createCommand: CreateCommand;
 }
 
+export interface GetSpecialistAppointmentRequest {
+  id: string;
+}
+
 export interface NoShowRequest {
   id: string;
   idempotencyKey: string;
@@ -269,6 +273,58 @@ export class AppointmentControllerApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<AppointmentView> {
     const response = await this.create2Raw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for getSpecialistAppointment without sending the request
+   */
+  async getSpecialistAppointmentRequestOpts(
+    requestParameters: GetSpecialistAppointmentRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['id'] == null) {
+      throw new runtime.RequiredError(
+        'id',
+        'Required parameter "id" was null or undefined when calling getSpecialistAppointment().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v1/specialist/appointments/{id}`;
+    urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   * Get a specialist appointment
+   */
+  async getSpecialistAppointmentRaw(
+    requestParameters: GetSpecialistAppointmentRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AppointmentView>> {
+    const requestOptions = await this.getSpecialistAppointmentRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => AppointmentViewFromJSON(jsonValue));
+  }
+
+  /**
+   * Get a specialist appointment
+   */
+  async getSpecialistAppointment(
+    requestParameters: GetSpecialistAppointmentRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AppointmentView> {
+    const response = await this.getSpecialistAppointmentRaw(requestParameters, initOverrides);
     return await response.value();
   }
 

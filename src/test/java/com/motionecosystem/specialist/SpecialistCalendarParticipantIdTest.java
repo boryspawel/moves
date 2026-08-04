@@ -13,6 +13,7 @@ import com.motionecosystem.calendar.Appointment;
 import com.motionecosystem.calendar.AppointmentService;
 import com.motionecosystem.calendar.api.SpecialistAppointmentQueryPort;
 import com.motionecosystem.calendar.api.SpecialistAppointmentEventQueryPort;
+import com.motionecosystem.calendar.api.SpecialistOverdueAppointmentQueryPort;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
@@ -43,6 +44,7 @@ class SpecialistCalendarParticipantIdTest {
         SpecialistRelationshipService relationships = mock(SpecialistRelationshipService.class);
         ParticipantClientPort participants = mock(ParticipantClientPort.class);
         AppointmentService appointments = mock(AppointmentService.class);
+        SpecialistOverdueAppointmentQueryPort overdueAppointments = mock(SpecialistOverdueAppointmentQueryPort.class);
         AuditRecorder audit = mock(AuditRecorder.class);
         when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(specialistId, "specialist", ProfileType.SPECIALIST));
         when(profiles.find(specialistId)).thenReturn(Optional.of(new SpecialistProfileService.ProfileView(
@@ -55,10 +57,14 @@ class SpecialistCalendarParticipantIdTest {
                 NOW.plusSeconds(3600), NOW.plusSeconds(7200), Appointment.Type.CONSULTATION, Appointment.Status.SCHEDULED,
                 Appointment.LocationMode.REMOTE, null, "Check-in", false, false, List.of("OPEN_APPOINTMENT"), 0);
         when(appointments.inRange(eq(specialistId), any(), any(), eq(Set.of(participantId)), eq(NOW))).thenReturn(List.of(appointment));
+        UUID eventId = UUID.randomUUID();
+        when(overdueAppointments.overdueOutcomeAppointments(specialistId, Set.of(participantId), NOW)).thenReturn(List.of(
+                new SpecialistOverdueAppointmentQueryPort.OverdueAppointment(UUID.randomUUID(), participantId, NOW.minusSeconds(1),
+                        "CONSULTATION", "CONFIRMED", eventId)));
         RecurringAvailabilityService availability = mock(RecurringAvailabilityService.class);
         when(availability.list(specialistId)).thenReturn(List.of());
         SpecialistTodayService service = new SpecialistTodayService(accounts, relationships, profiles, participants,
-                availability, appointments, mock(SpecialistWorklistService.class), audit,
+                availability, appointments, overdueAppointments, mock(SpecialistWorklistService.class), audit,
                 Clock.fixed(NOW, ZoneOffset.UTC));
 
         SpecialistTodayService.TodayView view = service.today("specialist", LocalDate.of(2030, 6, 10));
@@ -67,6 +73,12 @@ class SpecialistCalendarParticipantIdTest {
             assertThat(item.participantId()).isEqualTo(participantId);
             assertThat(item.participantLabel()).isEqualTo("Account-free client");
         });
+        assertThat(view.operationalTasks()).singleElement().satisfies(task -> {
+            assertThat(task.type()).isEqualTo("APPOINTMENT_OUTCOME_REQUIRED");
+            assertThat(task.title()).isEqualTo("Uzupełnij wynik spotkania z Account-free client");
+            assertThat(task.navigationReference()).isEqualTo("/specialist/clients/" + participantId + "?eventId=appointment-event:" + eventId);
+        });
+        assertThat(view.counts().operationalTasks()).isOne();
     }
 
     @Test

@@ -1,15 +1,29 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
+import { RouterTestingModule } from '@angular/router/testing';
 import { BehaviorSubject } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 import { ApiFacade } from '../core/api.facade';
 import { SpecialistTodayApi } from './specialist-today.api';
-import { DayTimelineComponent, SpecialistTodayPage, TodayAppointmentDialogComponent } from './specialist-today.page';
+import { DayTimelineComponent, SpecialistTodayPage, TodayAppointmentDialogComponent, TodayOperationalTasksComponent } from './specialist-today.page';
 import type { TodayView } from '../api/generated/src/models/TodayView';
 
 const emptyView: TodayView = { generatedAt: new Date('2026-07-24T00:00:00Z'), localDate: new Date('2026-07-24T00:00:00Z'), timeZoneId: 'Europe/Warsaw', visibleRange: { startsAt: new Date('2026-07-24T08:00:00Z'), endsAt: new Date('2026-07-24T18:00:00Z'), recommendedStepMinutes: 30 }, appointments: [], availabilityWindows: [{ startsAt: new Date('2026-07-24T09:00:00Z'), endsAt: new Date('2026-07-24T10:00:00Z'), type: 'STANDARD_AVAILABILITY' }], attentionItems: [], operationalTasks: [] };
 
 describe('SpecialistTodayPage', () => {
+  it('renders operational tasks only when present and navigates through their references', async () => {
+    await TestBed.configureTestingModule({ imports: [TodayOperationalTasksComponent, RouterTestingModule] }).compileComponents();
+    const fixture = TestBed.createComponent(TodayOperationalTasksComponent);
+    fixture.componentInstance.tasks = [];
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Do uzupełnienia');
+    fixture.componentRef.setInput('tasks', [{ title: 'Uzupełnij wynik spotkania', navigationReference: '/specialist/participants/p/events/e' }]);
+    fixture.detectChanges();
+    const link = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>('a')!;
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Do uzupełnienia');
+    expect(link.textContent).toContain('Uzupełnij wynik spotkania');
+    expect(link.getAttribute('href')).toContain('/specialist/participants/p/events/e');
+  });
   it('submits an arbitrary, non-grid appointment time for the canonical participant ID', async () => {
     await TestBed.configureTestingModule({ imports: [TodayAppointmentDialogComponent] }).compileComponents();
     const fixture = TestBed.createComponent(TodayAppointmentDialogComponent);

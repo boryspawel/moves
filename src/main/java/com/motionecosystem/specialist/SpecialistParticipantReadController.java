@@ -45,6 +45,14 @@ public class SpecialistParticipantReadController {
                 new SpecialistParticipantReadService.TimelineQuery(from, to, parseTypes(types), granularity, cursor, limit));
     }
 
+    @GetMapping("/timeline/events/{eventId}")
+    @PreAuthorize("hasRole('SPECIALIST')")
+    @Operation(summary = "Get an authorized specialist participant timeline event")
+    SpecialistParticipantReadService.ParticipantTimelineEvent timelineEvent(@AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID participantId, @PathVariable String eventId) {
+        return reads.timelineEvent(jwt.getSubject(), participantId, eventId);
+    }
+
     private static Set<SpecialistParticipantReadService.TimelineType> parseTypes(String value) {
         if (value == null || value.isBlank()) return null;
         try {

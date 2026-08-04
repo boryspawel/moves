@@ -19,6 +19,8 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Optional;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -66,6 +68,42 @@ class AppointmentLifecycleServiceTest {
 
         assertThat(fixture.service.complete("specialist", appointment.id, "complete-key", command).status()).isEqualTo(Appointment.Status.COMPLETED);
         verify(fixture.audit).record("specialist", "APPOINTMENT_COMPLETED", "Appointment", appointment.id);
+    }
+
+    @Test
+    void detail_requires_owned_active_relationship_and_returns_current_view() {
+        Fixture fixture = fixture();
+        Appointment appointment = appointment(fixture.specialistId, fixture.participantId, NOW.minusSeconds(120), NOW.plusSeconds(60));
+        when(fixture.appointments.findById(appointment.id)).thenReturn(Optional.of(appointment));
+
+        AppointmentService.AppointmentView result = fixture.service.detail("specialist", appointment.id);
+
+        assertThat(result.appointmentId()).isEqualTo(appointment.id);
+        assertThat(result.version()).isEqualTo(appointment.version);
+        assertThat(result.availableActions()).contains("COMPLETE");
+        verify(fixture.relationships).requireActive(fixture.specialistId, fixture.participantId);
+    }
+
+    @Test
+    void overdue_outcome_projection_uses_policy_order_and_latest_event_fallback() {
+        Fixture fixture = fixture();
+        UUID firstParticipant = UUID.randomUUID();
+        UUID secondParticipant = UUID.randomUUID();
+        Appointment first = appointment(fixture.specialistId, firstParticipant, NOW.minusSeconds(7200), NOW.minusSeconds(3600));
+        Appointment second = appointment(fixture.specialistId, secondParticipant, NOW.minusSeconds(3600), NOW.minusSeconds(60));
+        UUID eventId = UUID.randomUUID();
+        when(fixture.appointments.findOverdueOutcomeAppointments(org.mockito.ArgumentMatchers.eq(fixture.specialistId),
+                org.mockito.ArgumentMatchers.eq(Set.of(firstParticipant, secondParticipant)), org.mockito.ArgumentMatchers.eq(NOW),
+                org.mockito.ArgumentMatchers.anySet(), org.mockito.ArgumentMatchers.any())).thenReturn(List.of(first, second));
+        when(fixture.events.findLatestEventId(org.mockito.ArgumentMatchers.eq(first.id), org.mockito.ArgumentMatchers.any())).thenReturn(List.of(eventId));
+        when(fixture.events.findLatestEventId(org.mockito.ArgumentMatchers.eq(second.id), org.mockito.ArgumentMatchers.any())).thenReturn(List.of());
+
+        var results = fixture.service.overdueOutcomeAppointments(fixture.specialistId, Set.of(firstParticipant, secondParticipant), NOW);
+
+        assertThat(results).extracting(com.motionecosystem.calendar.api.SpecialistOverdueAppointmentQueryPort.OverdueAppointment::appointmentId)
+                .containsExactly(first.id, second.id);
+        assertThat(results).extracting(com.motionecosystem.calendar.api.SpecialistOverdueAppointmentQueryPort.OverdueAppointment::latestEventId)
+                .containsExactly(eventId, null);
     }
 
     private static Fixture fixture() {

@@ -110,6 +110,16 @@ public class SpecialistParticipantReadService {
                 items, nextCursor);
     }
 
+    public ParticipantTimelineEvent timelineEvent(String subject, UUID participantId, String publicEventId) {
+        Access access = authorize(subject, participantId);
+        UUID eventId = appointmentEventId(publicEventId);
+        SpecialistAppointmentEventQueryPort.AppointmentEventSummary event = appointmentEvents
+                .findBySpecialistAndParticipant(access.specialistId(), participantId, eventId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "timeline event not found"));
+        audit.record(subject, "SPECIALIST_PARTICIPANT_TIMELINE_EVENT_VIEWED", "ParticipantAccount", participantId);
+        return appointmentEvent(event);
+    }
+
     private Access authorize(String subject, UUID participantId) {
         if (participantId == null) throw bad("participantId is required");
         var account = accounts.requireActive(subject);
@@ -212,6 +222,22 @@ public class SpecialistParticipantReadService {
             return new SpecialistAppointmentEventQueryPort.SeekCursor(cursor.effectiveFrom(), cursor.recordedAt(),
                     UUID.fromString(cursor.eventId().substring("appointment-event:".length())));
         } catch (IllegalArgumentException ignored) { return null; }
+    }
+
+    private static UUID appointmentEventId(String publicEventId) {
+        if (publicEventId == null || !publicEventId.startsWith("appointment-event:")) throw timelineEventNotFound();
+        try {
+            String value = publicEventId.substring("appointment-event:".length());
+            UUID eventId = UUID.fromString(value);
+            if (!eventId.toString().equalsIgnoreCase(value)) throw new IllegalArgumentException();
+            return eventId;
+        } catch (IllegalArgumentException invalid) {
+            throw timelineEventNotFound();
+        }
+    }
+
+    private static ResponseStatusException timelineEventNotFound() {
+        return new ResponseStatusException(HttpStatus.NOT_FOUND, "timeline event not found");
     }
 
     private static ParticipantTimelineEvent appointmentEvent(SpecialistAppointmentEventQueryPort.AppointmentEventSummary item) {

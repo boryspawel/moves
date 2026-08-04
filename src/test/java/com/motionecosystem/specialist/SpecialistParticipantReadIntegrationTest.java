@@ -117,6 +117,43 @@ class SpecialistParticipantReadIntegrationTest {
     }
 
     @Test
+    void resolvesOnlyTheAuthorizedParticipantsAppointmentEventByStrictPublicId() throws Exception {
+        Fixture fixture = fixture(true, EnumSet.of(ConsentDecisionPort.DataScope.PLAN));
+        appointment(fixture, Instant.parse("2030-06-10T09:00:00Z"), "deep-link-event");
+        String eventId = timeline(fixture, FROM, TO, 10, SpecialistParticipantReadService.Granularity.DETAIL,
+                EnumSet.of(SpecialistParticipantReadService.TimelineType.APPOINTMENT), null).items().getFirst().eventId();
+        var request = SecurityMockMvcRequestPostProcessors.jwt().jwt(token -> token.subject(fixture.specialistSubject))
+                .authorities(new SimpleGrantedAuthority("ROLE_SPECIALIST"));
+
+        mvc.perform(get("/api/v1/specialist/participants/{participantId}/timeline/events/{eventId}", fixture.participantId, eventId).with(request))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/v1/specialist/participants/{participantId}/timeline/events/{eventId}", fixture.participantId,
+                        "session-execution:" + UUID.randomUUID()).with(request))
+                .andExpect(status().isNotFound());
+        mvc.perform(get("/api/v1/specialist/participants/{participantId}/timeline/events/{eventId}", fixture.participantId,
+                        "appointment-event:1-1-1-1-1").with(request))
+                .andExpect(status().isNotFound());
+        mvc.perform(get("/api/v1/specialist/participants/{participantId}/timeline/events/{eventId}", fixture.participantId,
+                        "appointment-event:" + UUID.randomUUID()).with(request))
+                .andExpect(status().isNotFound());
+
+        Fixture other = fixture(true, EnumSet.of(ConsentDecisionPort.DataScope.PLAN));
+        appointment(other, Instant.parse("2030-06-11T09:00:00Z"), "other-participant-event");
+        String otherEventId = timeline(other, FROM, TO, 10, SpecialistParticipantReadService.Granularity.DETAIL,
+                EnumSet.of(SpecialistParticipantReadService.TimelineType.APPOINTMENT), null).items().getFirst().eventId();
+        mvc.perform(get("/api/v1/specialist/participants/{participantId}/timeline/events/{eventId}", fixture.participantId, otherEventId).with(request))
+                .andExpect(status().isNotFound());
+
+        relationship(other.specialistId, fixture.participantId);
+        grant(fixture.participantSubject, other.specialistId, EnumSet.of(ConsentDecisionPort.DataScope.PLAN));
+        var otherSpecialistRequest = SecurityMockMvcRequestPostProcessors.jwt().jwt(token -> token.subject(other.specialistSubject))
+                .authorities(new SimpleGrantedAuthority("ROLE_SPECIALIST"));
+        mvc.perform(get("/api/v1/specialist/participants/{participantId}/timeline/events/{eventId}", fixture.participantId, eventId)
+                        .with(otherSpecialistRequest))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void aggregatesRepeatedEventsForWeekAndMonthWhileKeepingAppointmentsIndividual() {
         Fixture fixture = fixture(true, EnumSet.of(ConsentDecisionPort.DataScope.PLAN, ConsentDecisionPort.DataScope.EXECUTION));
         execution(fixture.participantId, Instant.parse("2030-06-03T09:00:00Z"), "week-one");
@@ -169,11 +206,15 @@ class SpecialistParticipantReadIntegrationTest {
     }
 
     private void relationship(Fixture fixture) {
+        relationship(fixture.specialistId, fixture.participantId);
+    }
+
+    private void relationship(UUID specialistId, UUID participantId) {
         ParticipantSpecialistRelationship relationship = new ParticipantSpecialistRelationship();
         set(relationship, "id", UUID.randomUUID());
-        set(relationship, "specialistAccountId", fixture.specialistId);
-        set(relationship, "participantAccountId", fixture.participantId);
-        set(relationship, "participantId", fixture.participantId);
+        set(relationship, "specialistAccountId", specialistId);
+        set(relationship, "participantAccountId", participantId);
+        set(relationship, "participantId", participantId);
         set(relationship, "status", ParticipantSpecialistRelationship.Status.ACTIVE);
         set(relationship, "activatedAt", Instant.now());
         transactions.executeWithoutResult(status -> entityManager.persist(relationship));
@@ -198,8 +239,12 @@ class SpecialistParticipantReadIntegrationTest {
     }
 
     private void grant(Fixture fixture, EnumSet<ConsentDecisionPort.DataScope> scopes) {
+        grant(fixture.participantSubject, fixture.specialistId, scopes);
+    }
+
+    private void grant(String participantSubject, UUID specialistId, EnumSet<ConsentDecisionPort.DataScope> scopes) {
         UUID template = consents.publishTemplate("TIMELINE_" + UUID.randomUUID(), 1, "urn:timeline:" + UUID.randomUUID(), "EXPLICIT_CONSENT").id();
-        consents.grant(fixture.participantSubject, new ConsentGrantService.GrantCommand(fixture.specialistId,
+        consents.grant(participantSubject, new ConsentGrantService.GrantCommand(specialistId,
                 ConsentDecisionPort.Purpose.PERFORMANCE_PLANNING, template, scopes, null, null));
     }
 
