@@ -16,6 +16,7 @@ export * from './ExerciseVersionReviewControllerApi';
 export * from './GamificationControllerApi';
 export * from './LoadAnalysisControllerApi';
 export * from './OnboardingControllerApi';
+export * from './ParticipantGoalControllerApi';
 export * from './ParticipantSafetyControllerApi';
 export * from './PlanCollaborationControllerApi';
 export * from './PlanRevisionWorkflowControllerApi';

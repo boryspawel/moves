@@ -8,6 +8,7 @@ import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.participant.api.ParticipantContextQueryPort;
 import com.motionecosystem.participant.api.ParticipantClientPort;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort;
+import com.motionecosystem.participantgoals.api.ParticipantGoalEventQueryPort;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.Capability;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ProfessionalRole;
@@ -29,14 +30,13 @@ import java.util.Optional;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 /** Specialist-owned composition that consumes only public read ports of data owners. */
 @Service
-@RequiredArgsConstructor
 public class SpecialistParticipantReadService {
     private static final int DEFAULT_LIMIT = 50;
     private static final int MAX_LIMIT = 100;
@@ -49,10 +49,33 @@ public class SpecialistParticipantReadService {
     private final SpecialistAppointmentEventQueryPort appointmentEvents;
     private final PlanRevisionQueryPort revisions;
     private final ParticipantExecutionHistoryQueryPort executionHistory;
+    private final ParticipantGoalEventQueryPort goalEvents;
     private final ParticipantSpecialistRelationshipRepository relationships;
     private final SpecialistWorklistService worklist;
     private final AuditRecorder audit;
     private final Clock clock;
+
+    @Autowired
+    public SpecialistParticipantReadService(CurrentAccountService accounts, SpecialistProfileService profiles, SpecialistAuthorizationPort authorization,
+            ParticipantClientPort participantClients, ParticipantContextQueryPort participantContexts, SpecialistAppointmentQueryPort appointments,
+            SpecialistAppointmentEventQueryPort appointmentEvents, PlanRevisionQueryPort revisions,
+            ParticipantExecutionHistoryQueryPort executionHistory, ParticipantGoalEventQueryPort goalEvents,
+            ParticipantSpecialistRelationshipRepository relationships, SpecialistWorklistService worklist, AuditRecorder audit, Clock clock) {
+        this.accounts = accounts; this.profiles = profiles; this.authorization = authorization; this.participantClients = participantClients;
+        this.participantContexts = participantContexts; this.appointments = appointments; this.appointmentEvents = appointmentEvents;
+        this.revisions = revisions; this.executionHistory = executionHistory; this.goalEvents = goalEvents; this.relationships = relationships;
+        this.worklist = worklist; this.audit = audit; this.clock = clock;
+    }
+
+    /** Compatibility constructor for focused callers that predate participant-goal timeline events. */
+    SpecialistParticipantReadService(CurrentAccountService accounts, SpecialistProfileService profiles, SpecialistAuthorizationPort authorization,
+            ParticipantClientPort participantClients, ParticipantContextQueryPort participantContexts, SpecialistAppointmentQueryPort appointments,
+            SpecialistAppointmentEventQueryPort appointmentEvents, PlanRevisionQueryPort revisions,
+            ParticipantExecutionHistoryQueryPort executionHistory, ParticipantSpecialistRelationshipRepository relationships,
+            SpecialistWorklistService worklist, AuditRecorder audit, Clock clock) {
+        this(accounts, profiles, authorization, participantClients, participantContexts, appointments, appointmentEvents, revisions,
+                executionHistory, null, relationships, worklist, audit, clock);
+    }
 
     public SpecialistParticipantWorkspaceView workspace(String subject, UUID participantId) {
         Access access = authorize(subject, participantId);
@@ -89,6 +112,10 @@ public class SpecialistParticipantReadService {
                             appointmentEventCursor(cursor), normalized.limit() + 1)
                     .forEach(item -> events.add(appointmentEvent(item)));
         }
+        if (normalized.types().contains(TimelineType.GOAL) && goalEvents != null) {
+            goalEvents.timeline(participantId, normalized.from(), normalized.to(), goalEventCursor(cursor), MAX_LIMIT)
+                    .forEach(item -> events.add(goalEvent(item)));
+        }
         Optional<PlanRevisionQueryPort.PlanRevisionSnapshot> revision = revisions.findActiveRevision(participantId);
         revision.ifPresent(value -> addPlanEvents(events, value, normalized));
         if (normalized.types().contains(TimelineType.EXECUTION) && canViewExecutionHistory(access, participantId)) {
@@ -112,12 +139,19 @@ public class SpecialistParticipantReadService {
 
     public ParticipantTimelineEvent timelineEvent(String subject, UUID participantId, String publicEventId) {
         Access access = authorize(subject, participantId);
-        UUID eventId = appointmentEventId(publicEventId);
-        SpecialistAppointmentEventQueryPort.AppointmentEventSummary event = appointmentEvents
-                .findBySpecialistAndParticipant(access.specialistId(), participantId, eventId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "timeline event not found"));
+        ParticipantTimelineEvent resolved;
+        if (publicEventId != null && publicEventId.startsWith("appointment-event:")) {
+            UUID eventId = appointmentEventId(publicEventId);
+            SpecialistAppointmentEventQueryPort.AppointmentEventSummary event = appointmentEvents
+                    .findBySpecialistAndParticipant(access.specialistId(), participantId, eventId).orElseThrow(SpecialistParticipantReadService::timelineEventNotFound);
+            resolved = appointmentEvent(event);
+        } else if (publicEventId != null && publicEventId.startsWith("participant-goal-event:") && goalEvents != null) {
+            UUID eventId = goalEventId(publicEventId);
+            resolved = goalEvents.findByParticipantId(participantId, eventId).map(SpecialistParticipantReadService::goalEvent)
+                    .orElseThrow(SpecialistParticipantReadService::timelineEventNotFound);
+        } else throw timelineEventNotFound();
         audit.record(subject, "SPECIALIST_PARTICIPANT_TIMELINE_EVENT_VIEWED", "ParticipantAccount", participantId);
-        return appointmentEvent(event);
+        return resolved;
     }
 
     private Access authorize(String subject, UUID participantId) {
@@ -224,6 +258,14 @@ public class SpecialistParticipantReadService {
         } catch (IllegalArgumentException ignored) { return null; }
     }
 
+    private static ParticipantGoalEventQueryPort.SeekCursor goalEventCursor(Cursor cursor) {
+        if (cursor == null || cursor.recordedAt() == null || !cursor.eventId().startsWith("participant-goal-event:")) return null;
+        try {
+            return new ParticipantGoalEventQueryPort.SeekCursor(cursor.effectiveFrom(), cursor.recordedAt(),
+                    UUID.fromString(cursor.eventId().substring("participant-goal-event:".length())));
+        } catch (IllegalArgumentException ignored) { return null; }
+    }
+
     private static UUID appointmentEventId(String publicEventId) {
         if (publicEventId == null || !publicEventId.startsWith("appointment-event:")) throw timelineEventNotFound();
         try {
@@ -236,6 +278,15 @@ public class SpecialistParticipantReadService {
         }
     }
 
+    private static UUID goalEventId(String publicEventId) {
+        try {
+            String value = publicEventId.substring("participant-goal-event:".length());
+            UUID eventId = UUID.fromString(value);
+            if (!eventId.toString().equalsIgnoreCase(value)) throw new IllegalArgumentException();
+            return eventId;
+        } catch (IllegalArgumentException invalid) { throw timelineEventNotFound(); }
+    }
+
     private static ResponseStatusException timelineEventNotFound() {
         return new ResponseStatusException(HttpStatus.NOT_FOUND, "timeline event not found");
     }
@@ -246,6 +297,21 @@ public class SpecialistParticipantReadService {
                 item.effectiveAt(), null, item.recordedAt(), item.recordedAt(), item.appointmentType(), item.shortPurpose(), "NORMAL", "OPERATIONAL",
                 null, "CALENDAR_APPOINTMENT_EVENT", List.of(), null, null, null, null, List.of("OPEN_APPOINTMENT"),
                 new EventDetail("APPOINTMENT", item.appointmentId().toString()));
+    }
+    private static ParticipantTimelineEvent goalEvent(ParticipantGoalEventQueryPort.ParticipantGoalEventSummary item) {
+        return new ParticipantTimelineEvent("participant-goal-event:" + item.eventId(), goalEventType(item), "GOAL", item.toStatus(),
+                item.effectiveAt(), null, item.recordedAt(), item.recordedAt(), item.title(), item.description(), "NORMAL", "OPERATIONAL",
+                null, "PARTICIPANT_GOAL_EVENT", List.of(item.goalId()), null, null,
+                item.observationValue() == null ? null : new Measurement(item.metricCode(), item.observationValue(), item.observationUnit()), null,
+                List.of("OPEN_GOAL"), new EventDetail("PARTICIPANT_GOAL_EVENT", item.eventId().toString(), null, null, null, item.goalId()));
+    }
+    private static String goalEventType(ParticipantGoalEventQueryPort.ParticipantGoalEventSummary item) {
+        if (!"BASELINE".equals(item.eventType())) return "PARTICIPANT_GOAL_" + item.eventType();
+        return switch (item.toStatus()) {
+            case "ACHIEVED" -> "PARTICIPANT_GOAL_ACHIEVED";
+            case "CANCELLED" -> "PARTICIPANT_GOAL_CANCELLED";
+            default -> "PARTICIPANT_GOAL_CREATED";
+        };
     }
     private static String baselineType(String status) {
         return switch (status) {
@@ -395,7 +461,7 @@ public class SpecialistParticipantReadService {
     private static ResponseStatusException bad(String message) { return new ResponseStatusException(HttpStatus.BAD_REQUEST, message); }
 
     public enum Granularity { DETAIL, WEEK, MONTH }
-    public enum TimelineType { APPOINTMENT, SESSION, EXECUTION }
+    public enum TimelineType { APPOINTMENT, SESSION, EXECUTION, GOAL }
     public record TimelineQuery(Instant from, Instant to, Set<TimelineType> types, Granularity granularity, String cursor, Integer limit) { }
     public record SpecialistParticipantWorkspaceView(Instant generatedAt, ParticipantHeader participant, RelationshipView relationship,
                                                       List<String> capabilities, AppointmentView nextAppointment, ActivePlanView activePlan,
@@ -428,9 +494,13 @@ public class SpecialistParticipantReadService {
                                            PlannedExecutionComparison plannedExecutionComparison, Measurement measurement,
                                            Problem problem, List<String> availableActions, EventDetail detail) { }
     public record EventDetail(String detailKind, String detailResourceId, Integer sourceEventCount,
-                              Instant sourceFrom, Instant sourceTo) {
+                              Instant sourceFrom, Instant sourceTo, UUID referenceId) {
+        public EventDetail(String detailKind, String detailResourceId, Integer sourceEventCount,
+                           Instant sourceFrom, Instant sourceTo) {
+            this(detailKind, detailResourceId, sourceEventCount, sourceFrom, sourceTo, null);
+        }
         public EventDetail(String detailKind, String detailResourceId) {
-            this(detailKind, detailResourceId, null, null, null);
+            this(detailKind, detailResourceId, null, null, null, null);
         }
     }
     public record PlannedExecutionComparison(PlannedSession planned, PerformedSession performed, String completionState,

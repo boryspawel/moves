@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { attentionSummary, categoryLabel, eventTimeLabel, goalsSummary, humanEventTitle, realizationSummary, safeText, statusLabel, typeLabel } from './specialist-participant-workspace.presentation';
+import { attentionSummary, categoryLabel, eventTimeLabel, goalsSummary, humanEventTitle, outcomeMetricLabel, realizationSummary, safeText, statusLabel, typeLabel } from './specialist-participant-workspace.presentation';
 
 describe('participant workspace presentation', () => {
   it('uses Polish appointment labels and a 24-hour range', () => {
@@ -29,5 +29,13 @@ describe('participant workspace presentation', () => {
     expect(realizationSummary(5)).toBe('5 wykonanych sesji');
     expect(attentionSummary(0)).toBe('Brak problemów');
     expect(attentionSummary(3)).toBe('3 problemy');
+  });
+
+  it('uses nontechnical labels for body metrics and unknown outcome codes', () => {
+    expect(outcomeMetricLabel('body-weight')).toBe('Masa ciała');
+    expect(outcomeMetricLabel('body-circumference:waist')).toBe('Obwód talii');
+    expect(outcomeMetricLabel('BODY_CIRCUMFERENCE:HIPS')).toBe('Obwód bioder');
+    expect(outcomeMetricLabel('BODY_CIRCUMFERENCE:CHEST')).toBe('Obwód klatki piersiowej');
+    expect(outcomeMetricLabel('INTERNAL_METRIC')).toBe('Wynik');
   });
 });

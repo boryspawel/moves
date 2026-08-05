@@ -1,6 +1,40 @@
 # Stan bieżący
 
-_Zaktualizowano: 2026-08-04._
+## Participant Goals — completed scope and next steps
+
+**GOALS-01 through GOALS-05 are complete.** The canonical, participant-owned outcome-goal
+aggregate is separate from plan-revision goals and is available in the specialist workspace.
+It includes active/achieved/cancelled lifecycle, immutable outcome snapshots, explicit specialist
+achievement/cancellation, append-only observations and progress, append-only mutation events,
+specialist timeline entries and event deep links. The specialist workspace supports creating,
+viewing and updating eligible goals, lifecycle actions and lazy observation-history reading. It
+also provides a read-only, code-versioned metric-preset catalog and a dedicated create-from-preset
+flow; each resulting goal keeps an immutable outcome snapshot rather than a live catalog reference.
+Details and boundaries are in [participant goals](../architecture/participant-goals.md) and
+[ADR-018](../adr/ADR-018-participant-goal-ownership.md).
+
+Deliberate current limits: goals are not integrated with training-plan revisions; achievement is
+not automatic; there is no participant self-service UI, measurement correction/edit/delete,
+unit conversion, charts, alerts, device import, analytics or ML.
+
+### Participant Goals — next-steps roadmap
+
+- **Training-plan integration:** link goals to a revision, snapshot those links in that revision,
+  and copy associations when creating a new revision. Validate participant, acting perspective
+  and authorization consistently; define the transition strategy for legacy
+  `training_planning.training_goal`. Do not automatically back-propagate associations to
+  historic revisions.
+- **Observation evolution:** add an append-only correcting event, defined unit conversions,
+  session and research-result integrations, and derived charts/aggregates.
+- **Participant access:** enable `GENERAL_FITNESS` self-service with own-goal reading and only
+  explicitly allowed observations; keep participant authorization separate from specialist
+  authorization.
+- **Lifecycle and data compliance:** define access after relation termination, consent withdrawal
+  versus legal retention, retention/access-limitation/anonymization/audit rules, and handling of
+  unfinished operations after cooperation ends.
+- **Outside the MVP:** notifications, reminders, achievement suggestions, device import,
+  analytics and ML.
+_Zaktualizowano: 2026-08-05._
 
 ## SET-01 / SET-05 — zestawy ćwiczeń i wybór katalogowy
 
@@ -193,6 +227,15 @@ Weryfikacja OpenAPI odświeża specyfikację i klient przez `npm run api:refresh
 a następnie wymaga braku różnic. Wygenerowane pliki są aktualizowane wyłącznie
 tym przepływem, nie ręcznie.
 
+## GOALS-05 — katalog celów uczestnika
+
+GOALS-05 jest ukończony: workspace specjalisty pobiera neutralny, tylko do odczytu katalog metryk
+celów i tworzy cel przez osobny endpoint create-from-preset. Katalog jest wersjonowany w kodzie,
+bez migracji, CRUD ani referencji na żywo; zapisany cel ma pojedynczy snapshot wyniku oraz neutralny
+priorytet backendu.
+Przyszłe prace obejmują edycję/dodawanie wyników po utworzeniu, konfigurowalny katalog, powiązanie
+wyników siłowych/ćwiczeń z katalogiem ćwiczeń oraz kolejne typy pomiarów.
+
 Snapshot i wygenerowany klient obejmują aktualne endpointy kartoteki specjalisty,
 workspace, `Today` i zestawów ćwiczeń. Są odświeżane wyłącznie przez
 `npm run api:refresh`, a `npm run api:verify` wykrywa drift.
@@ -224,6 +267,7 @@ opublikowany/historyczny oraz desktop, 390 i 320 px z kontrolą konsoli, SVG/API
 klawiatury, powrotu focusu i overflow. Runtime QA mapy ciała jest świadomie
 odroczone i nie blokuje stabilności DEV-ENV, w szczególności gdy środowisko nie
 obsługuje sandboxa Chromium.
+
 # Appointment lifecycle history
 
 Historia lifecycle terminu jest utrwalana append-only w

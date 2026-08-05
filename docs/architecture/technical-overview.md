@@ -18,6 +18,7 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
 
 - `identityaccess`: mapowanie `sub`, status konta i role techniczne;
 - `participant`: profil uczestnika;
+- `participantgoals`: cele uczestnika z wersjonowanym w kodzie, tylko do odczytu katalogiem presetów; utworzenie z presetu zapisuje jeden pochodny snapshot wyniku, bez referencji na żywo, CRUD katalogu ani migracji;
 - `specialist`: profil specjalisty, relacja do uczestnika oraz worklista adherence z participant issue/reply i aktywną deduplikacją;
 - `calendar`: terminy specjalisty i ich idempotentne komendy; moduł `specialist` składa z nich ograniczony widok `Today`, lecz nie przejmuje własności danych terminu;
 - `consent`: wersje dokumentów, granty, wycofanie i ważność;
@@ -126,3 +127,10 @@ never in `prod`; see [test participant-record consent debt](../test-participant-
 
 `client-result-observation-model.md` pozostaje osobnym dokumentem przyszłego etapu
 CLIENT-UX-01; nie opisuje funkcji dostarczonej w workspace.
+
+## Cele uczestnika w workspace
+
+Sekcja „Cele” jest częścią istniejącej kartoteki specjalisty i korzysta wyłącznie z
+generowanego klienta OpenAPI. Kontekst działania pochodzi z profilu onboardingowego
+specjalisty, a dostępne mutacje z `availableActions`; nie tworzy to nowej trasy,
+integracji z planem, self-service, automatycznego osiągania ani wykresów.

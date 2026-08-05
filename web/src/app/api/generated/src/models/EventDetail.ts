@@ -33,6 +33,12 @@ export interface EventDetail {
   detailResourceId?: string;
   /**
    *
+   * @type {string}
+   * @memberof EventDetail
+   */
+  referenceId?: string;
+  /**
+   *
    * @type {number}
    * @memberof EventDetail
    */
@@ -69,6 +75,7 @@ export function EventDetailFromJSONTyped(json: any, ignoreDiscriminator: boolean
   return {
     detailKind: json['detailKind'] == null ? undefined : json['detailKind'],
     detailResourceId: json['detailResourceId'] == null ? undefined : json['detailResourceId'],
+    referenceId: json['referenceId'] == null ? undefined : json['referenceId'],
     sourceEventCount: json['sourceEventCount'] == null ? undefined : json['sourceEventCount'],
     sourceFrom: json['sourceFrom'] == null ? undefined : new Date(json['sourceFrom']),
     sourceTo: json['sourceTo'] == null ? undefined : new Date(json['sourceTo']),
@@ -90,6 +97,7 @@ export function EventDetailToJSONTyped(
   return {
     detailKind: value['detailKind'],
     detailResourceId: value['detailResourceId'],
+    referenceId: value['referenceId'],
     sourceEventCount: value['sourceEventCount'],
     sourceFrom:
       value['sourceFrom'] == null ? value['sourceFrom'] : value['sourceFrom'].toISOString(),
