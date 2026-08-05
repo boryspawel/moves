@@ -9,7 +9,7 @@ import java.util.UUID;
 class AppointmentIdempotency {
     @Id UUID id;
     @Column(name = "specialist_account_id", nullable = false) UUID specialistAccountId;
-    @Column(nullable = false) String operation;
+    @Column(nullable = false, length = 64) String operation;
     @Column(name = "idempotency_key", nullable = false) String idempotencyKey;
     @Column(name = "appointment_id", nullable = false) UUID appointmentId;
     @Column(name = "created_at", nullable = false) Instant createdAt;

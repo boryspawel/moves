@@ -54,6 +54,29 @@ class AppointmentEventPersistenceIntegrationTest {
         assertThat(entityManager.find(AppointmentEvent.class, event.id).eventType).isEqualTo(AppointmentEvent.Type.COMPLETED);
     }
 
+    @Test
+    @Transactional
+    void widensIdempotencyOperationAndPersistsCompleteOperationThroughJpa() {
+        assertThat(columnLength("appointment_idempotency", "operation")).isEqualTo(64);
+
+        PrincipalAccount specialist = PrincipalAccount.create("appointment-idempotency-specialist-" + UUID.randomUUID(), NOW);
+        entityManager.persist(specialist);
+        ParticipantRecord participant = new ParticipantRecord("Appointment idempotency participant",
+                ParticipantRecord.RelationshipContext.CLIENT, null, null, ZoneOffset.UTC, specialist.id(), NOW);
+        entityManager.persist(participant);
+        Appointment appointment = new Appointment(specialist.id(), participant.id(), NOW, NOW.plusSeconds(3600),
+                Appointment.Type.CONSULTATION, Appointment.LocationMode.REMOTE, null, null, specialist.id(), NOW);
+        entityManager.persist(appointment);
+        AppointmentIdempotency idempotency = new AppointmentIdempotency(specialist.id(),
+                "COMPLETE:" + appointment.id, "complete-idempotency-key", appointment.id, NOW);
+        entityManager.persist(idempotency);
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(entityManager.find(AppointmentIdempotency.class, idempotency.id).operation)
+                .isEqualTo("COMPLETE:" + appointment.id);
+    }
+
     private Map<String, Integer> classificationColumnLengths() {
         @SuppressWarnings("unchecked")
         List<Object[]> rows = entityManager.createNativeQuery("""
@@ -65,5 +88,18 @@ class AppointmentEventPersistenceIntegrationTest {
                 """).getResultList();
         return rows.stream().collect(java.util.stream.Collectors.toMap(
                 row -> (String) row[0], row -> ((Number) row[1]).intValue()));
+    }
+
+    private int columnLength(String table, String column) {
+        return ((Number) entityManager.createNativeQuery("""
+                SELECT character_maximum_length
+                FROM information_schema.columns
+                WHERE table_schema = 'calendar'
+                  AND table_name = :table
+                  AND column_name = :column
+                """)
+                .setParameter("table", table)
+                .setParameter("column", column)
+                .getSingleResult()).intValue();
     }
 }
