@@ -11,6 +11,9 @@ interface GoalObservationRepository extends JpaRepository<GoalObservation, UUID>
     List<GoalObservation> findByGoalIdOrderByMeasuredAtDescRecordedAtDescIdDesc(UUID goalId, Pageable pageable);
     List<GoalObservation> findByGoalIdAndOutcomeIdOrderByMeasuredAtDescRecordedAtDescIdDesc(UUID goalId, UUID outcomeId, Pageable pageable);
     long countByGoalIdAndOutcomeId(UUID goalId, UUID outcomeId);
-    @Query("select o from GoalObservation o where o.goalId = :goalId and (:outcomeId is null or o.outcomeId = :outcomeId) and (:measuredAt is null or o.measuredAt < :measuredAt or (o.measuredAt = :measuredAt and (o.recordedAt < :recordedAt or (o.recordedAt = :recordedAt and o.id < :id)))) order by o.measuredAt desc, o.recordedAt desc, o.id desc")
-    List<GoalObservation> seek(@Param("goalId") UUID goalId, @Param("outcomeId") UUID outcomeId, @Param("measuredAt") java.time.Instant measuredAt, @Param("recordedAt") java.time.Instant recordedAt, @Param("id") UUID id, Pageable pageable);
+    @Query("select o from GoalObservation o where o.goalId = :goalId and (o.measuredAt < :measuredAt or (o.measuredAt = :measuredAt and (o.recordedAt < :recordedAt or (o.recordedAt = :recordedAt and o.id < :id)))) order by o.measuredAt desc, o.recordedAt desc, o.id desc")
+    List<GoalObservation> seekAfterAllOutcomes(@Param("goalId") UUID goalId, @Param("measuredAt") java.time.Instant measuredAt, @Param("recordedAt") java.time.Instant recordedAt, @Param("id") UUID id, Pageable pageable);
+
+    @Query("select o from GoalObservation o where o.goalId = :goalId and o.outcomeId = :outcomeId and (o.measuredAt < :measuredAt or (o.measuredAt = :measuredAt and (o.recordedAt < :recordedAt or (o.recordedAt = :recordedAt and o.id < :id)))) order by o.measuredAt desc, o.recordedAt desc, o.id desc")
+    List<GoalObservation> seekAfterOutcome(@Param("goalId") UUID goalId, @Param("outcomeId") UUID outcomeId, @Param("measuredAt") java.time.Instant measuredAt, @Param("recordedAt") java.time.Instant recordedAt, @Param("id") UUID id, Pageable pageable);
 }

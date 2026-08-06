@@ -482,7 +482,7 @@ export class ScheduleAppointmentDialogComponent {
 
 const goalStatus: Record<string, string> = {
   ACTIVE: 'Aktywny',
-  ACHIEVED: 'Osiągnięty',
+  ACHIEVED: 'Cel osiągnięty',
   CANCELLED: 'Anulowany',
 };
 const goalPerspective: Record<string, string> = {
@@ -493,7 +493,7 @@ const goalPerspective: Record<string, string> = {
 const progress: Record<string, string> = {
   NO_DATA: 'Brak pomiaru',
   IN_PROGRESS: 'W trakcie',
-  TARGET_REACHED: 'Cel osiągnięty',
+  TARGET_REACHED: 'Wartość docelowa osiągnięta',
   NOT_COMPARABLE: 'Brak porównania',
 };
 const comparator: Record<string, string> = { AT_LEAST: 'co najmniej', AT_MOST: 'nie więcej niż' };
@@ -524,17 +524,14 @@ const comparator: Record<string, string> = { AT_LEAST: 'co najmniej', AT_MOST: '
       <div class="goal-cards">
         @for (goal of active(); track goal.id) {
           <button mat-stroked-button type="button" class="goal-card" (click)="open(goal)">
-            <strong>{{ goal.title }}</strong
-            ><span>{{ status(goal.status) }} · {{ perspective(goal.category) }}</span>
-            @if (goal.targetDate) {
-              <span>Termin: {{ goal.targetDate | date: 'longDate' : '' : 'pl' }}</span>
-            }
+            <strong class="goal-card-title">{{ goal.title }}</strong>
+            <span class="goal-card-meta">{{ status(goal.status) }} · {{ perspective(goal.category) }}</span>
             @for (outcome of goal.outcomes ?? []; track outcome.id) {
-              <span
-                >{{ outcomeLabel(outcome.metricCode) }}: {{ outcome.targetValue }} {{ outcome.unit }} ({{
-                  progressLabel(outcome.progressState)
-                }})</span
-              >
+              <span class="goal-card-target">{{ outcomeLabel(outcome.metricCode) }}: {{ comparatorLabel(outcome.targetComparator) }} {{ outcome.targetValue }} {{ outcome.unit }}</span>
+              <span class="goal-card-observation">Ostatni pomiar: {{ outcome.latestObservation ? outcome.latestObservation.value + ' ' + outcome.unit : 'Brak pomiarów' }}</span>
+              @if (hasMeaningfulProgress(outcome.progressState)) {
+                <span class="goal-card-progress">Postęp: {{ progressLabel(outcome.progressState) }}</span>
+              }
             }
           </button>
         }
@@ -545,8 +542,15 @@ const comparator: Record<string, string> = { AT_LEAST: 'co najmniej', AT_MOST: '
           <div class="goal-cards">
             @for (goal of completed(); track goal.id) {
               <button mat-stroked-button type="button" class="goal-card" (click)="open(goal)">
-                <strong>{{ goal.title }}</strong
-                ><span>{{ status(goal.status) }}</span>
+                <strong class="goal-card-title">{{ goal.title }}</strong>
+                <span class="goal-card-meta">{{ status(goal.status) }} · {{ perspective(goal.category) }}</span>
+                @for (outcome of goal.outcomes ?? []; track outcome.id) {
+                  <span class="goal-card-target">{{ outcomeLabel(outcome.metricCode) }}: {{ comparatorLabel(outcome.targetComparator) }} {{ outcome.targetValue }} {{ outcome.unit }}</span>
+                  <span class="goal-card-observation">Ostatni pomiar: {{ outcome.latestObservation ? outcome.latestObservation.value + ' ' + outcome.unit : 'Brak pomiarów' }}</span>
+                  @if (hasMeaningfulProgress(outcome.progressState)) {
+                    <span class="goal-card-progress">Postęp: {{ progressLabel(outcome.progressState) }}</span>
+                  }
+                }
               </button>
             }
           </div>
@@ -671,6 +675,8 @@ const comparator: Record<string, string> = { AT_LEAST: 'co najmniej', AT_MOST: '
               <h3 id="goal-history-title">Historia pomiarów</h3>
               @if (historyLoading()) {
                 <p role="status">Wczytywanie historii pomiarów…</p>
+              } @else if (historyError()) {
+                <p role="status">Nie udało się wczytać historii pomiarów.</p>
               } @else if (history().length) {
                 <ol class="goal-observation-history">
                   @for (observation of history(); track observation.id) {
@@ -760,6 +766,7 @@ export class ParticipantGoalsComponent {
   protected readonly confirm = signal<'ACHIEVE' | 'CANCEL' | null>(null);
   protected readonly history = signal<any[]>([]);
   protected readonly historyLoading = signal(false);
+  protected readonly historyError = signal(false);
   protected readonly createStep = signal<1 | 2>(1);
   protected readonly presets = signal<PresetView[]>([]);
   protected readonly selectedPreset = signal<PresetView | null>(null);
@@ -800,6 +807,7 @@ export class ParticipantGoalsComponent {
   protected status = (value?: string) => goalStatus[value ?? ''] ?? 'Brak danych';
   protected perspective = (value?: string) => goalPerspective[value ?? ''] ?? 'Brak danych';
   protected progressLabel = (value?: string) => progress[value ?? ''] ?? 'Brak danych';
+  protected hasMeaningfulProgress = (value?: string) => value === 'IN_PROGRESS' || value === 'TARGET_REACHED';
   protected outcomeLabel = outcomeMetricLabel;
   protected comparatorLabel = (value?: string) => comparator[value ?? ''] ?? 'Brak';
   ngOnChanges() {
@@ -916,6 +924,7 @@ export class ParticipantGoalsComponent {
       });
       this.observationForm.controls.outcomeId.setValue(detail.outcomes?.[0]?.id ?? '');
       this.history.set([]);
+      this.historyError.set(false);
       void this.loadHistory();
     } catch {
       this.selected.set(null);
@@ -939,6 +948,7 @@ export class ParticipantGoalsComponent {
     const goal = this.selected();
     if (!goal?.id || !this.role) return;
     this.historyLoading.set(true);
+    this.historyError.set(false);
     try {
       this.history.set(
         (
@@ -948,8 +958,12 @@ export class ParticipantGoalsComponent {
             actingContext: this.context(),
             limit: 20,
           })
-        ).items ?? [],
+        ).items?.slice().sort((left, right) =>
+          (right.measuredAt?.getTime() ?? 0) - (left.measuredAt?.getTime() ?? 0),
+        ) ?? [],
       );
+    } catch {
+      this.historyError.set(true);
     } finally {
       this.historyLoading.set(false);
     }
@@ -981,7 +995,7 @@ export class ParticipantGoalsComponent {
     const value = this.observationForm.getRawValue();
     const measuredAt = new Date(value.measuredAt);
     if (!goal?.id || !this.role || this.observationForm.invalid || measuredAt > new Date()) return;
-    await this.mutate(
+    const recorded = await this.mutate(
       () =>
         this.api.participantGoals.recordParticipantGoalObservation({
           participantId: this.participantId,
@@ -998,6 +1012,7 @@ export class ParticipantGoalsComponent {
         }),
       'Pomiar został zapisany.',
     );
+    if (recorded) await this.loadHistory();
   }
   protected async finish(action: 'ACHIEVE' | 'CANCEL') {
     const goal = this.selected();
@@ -1022,7 +1037,7 @@ export class ParticipantGoalsComponent {
       action === 'ACHIEVE' ? 'Cel został oznaczony jako osiągnięty.' : 'Cel został anulowany.',
     );
   }
-  private async mutate(call: () => Promise<any>, success: string) {
+  private async mutate(call: () => Promise<any>, success: string): Promise<boolean> {
     this.mutating.set(true);
     try {
       const updated = await call();
@@ -1031,10 +1046,12 @@ export class ParticipantGoalsComponent {
       this.confirm.set(null);
       await this.refresh();
       this.changed.emit();
+      return true;
     } catch (error) {
       const status = error instanceof ResponseError ? error.response.status : 0;
       if (status === 409 && this.selected()) await this.open(this.selected()!);
       else if (status === 404) this.close();
+      return false;
     } finally {
       this.mutating.set(false);
     }

@@ -152,7 +152,7 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort {
         if (limit < 1 || limit > 100) throw bad("limit must be from 1 to 100");
         Cursor after = Cursor.parse(cursor);
         var page = org.springframework.data.domain.PageRequest.of(0, limit + 1);
-        List<GoalObservation> filtered = observations.seek(goalId, outcomeId, after == null ? null : after.measuredAt, after == null ? null : after.recordedAt, after == null ? null : after.id, page);
+        List<GoalObservation> filtered = observationPage(goalId, outcomeId, after, page);
         boolean hasMore = filtered.size() > limit; List<GoalObservation> items = hasMore ? filtered.subList(0, limit) : filtered;
         String next = hasMore ? Cursor.of(items.get(items.size() - 1)) : null;
         return new ObservationPage(items.stream().map(this::observationView).toList(), next);
@@ -181,9 +181,21 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort {
     @Override @Transactional(readOnly = true)
     public ObservationHistory findObservationHistory(UUID goalId, UUID outcomeId, Instant measuredBefore, Instant recordedBefore, UUID idBefore, int limit) {
         if (goalId == null || limit < 1 || limit > 100) return new ObservationHistory(List.of(), null);
-        List<GoalObservation> result = observations.seek(goalId, outcomeId, measuredBefore, recordedBefore, idBefore, org.springframework.data.domain.PageRequest.of(0, limit + 1));
+        Cursor after = measuredBefore == null || recordedBefore == null || idBefore == null ? null : new Cursor(measuredBefore, recordedBefore, idBefore);
+        List<GoalObservation> result = observationPage(goalId, outcomeId, after, org.springframework.data.domain.PageRequest.of(0, limit + 1));
         boolean more = result.size() > limit; List<GoalObservation> items = more ? result.subList(0, limit) : result;
         return new ObservationHistory(items.stream().map(item -> new ObservationSnapshot(item.id, item.goalId, item.outcomeId, item.participantId, item.value, item.unit, item.measurementMethod, item.measuredAt, item.recordedAt)).toList(), more ? Cursor.of(items.get(items.size() - 1)) : null);
+    }
+
+    private List<GoalObservation> observationPage(UUID goalId, UUID outcomeId, Cursor after, org.springframework.data.domain.Pageable page) {
+        if (after == null) {
+            return outcomeId == null
+                    ? observations.findByGoalIdOrderByMeasuredAtDescRecordedAtDescIdDesc(goalId, page)
+                    : observations.findByGoalIdAndOutcomeIdOrderByMeasuredAtDescRecordedAtDescIdDesc(goalId, outcomeId, page);
+        }
+        return outcomeId == null
+                ? observations.seekAfterAllOutcomes(goalId, after.measuredAt, after.recordedAt, after.id, page)
+                : observations.seekAfterOutcome(goalId, outcomeId, after.measuredAt, after.recordedAt, after.id, page);
     }
 
     private UUID authorize(String subject, UUID participantId, ActingContext context, ParticipantGoal.Category category) {

@@ -163,6 +163,137 @@ describe('ParticipantGoalsComponent', () => {
     expect(panel.querySelector('option')?.textContent).toContain('Obwód talii (km)');
   });
 
+  it('renders localized goal-card rows without technical codes and opens the existing panel on click', async () => {
+    const goal = {
+      id: 'goal-1', category: 'PERFORMANCE', title: 'Pobiec 5 km', status: 'ACTIVE',
+      outcomes: [{ id: 'outcome-1', metricCode: 'BODY_CIRCUMFERENCE:WAIST', targetValue: 5, targetComparator: 'AT_LEAST', unit: 'km', progressState: 'NO_DATA' }],
+    };
+    const getParticipantGoal = vi.fn().mockResolvedValue(goal);
+    const fixture = await participantGoalsFixture({ getParticipantGoal });
+    const component = fixture.componentInstance as any;
+    component.goals.set([goal]);
+    component.state.set('loaded');
+    fixture.detectChanges();
+
+    const card = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.goal-card')!;
+    expect(card.querySelector('.goal-card-title')?.textContent).toContain('Pobiec 5 km');
+    expect(card.querySelector('.goal-card-meta')?.textContent).toContain('Aktywny · Wynik sportowy');
+    expect(card.querySelector('.goal-card-target')?.textContent).toContain('Obwód talii: co najmniej 5 km');
+    expect(card.querySelector('.goal-card-observation')?.textContent).toContain('Ostatni pomiar: Brak pomiarów');
+    expect(card.querySelector('.goal-card-progress')).toBeNull();
+    expect(card.textContent).not.toContain('BODY_CIRCUMFERENCE:WAIST');
+
+    card.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(getParticipantGoal).toHaveBeenCalledWith(expect.objectContaining({ goalId: 'goal-1' }));
+    expect((fixture.nativeElement as HTMLElement).querySelector('.goal-panel')).not.toBeNull();
+  });
+
+  it('renders returned observation history newest first when the goal summary has measurements', async () => {
+    const goal = {
+      id: 'goal-1', category: 'PERFORMANCE', title: 'Cel', status: 'ACTIVE',
+      outcomes: [{ id: 'outcome-1', targetValue: 5, unit: 'km', observationCount: 2, latestObservation: { value: 5 } }],
+      availableActions: [],
+    };
+    const fixture = await participantGoalsFixture({
+      getParticipantGoal: vi.fn().mockResolvedValue(goal),
+      listParticipantGoalObservations: vi.fn().mockResolvedValue({ items: [
+        { id: 'older', value: 4, unit: 'km', measuredAt: new Date('2026-01-01T09:00:00Z'), note: 'Starsza notatka' },
+        { id: 'newer', value: 5, unit: 'km', measuredAt: new Date('2026-01-02T09:00:00Z'), note: 'Nowsza notatka' },
+      ] }),
+    });
+    const component = fixture.componentInstance as any;
+
+    await component.open(goal);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const history = (fixture.nativeElement as HTMLElement).querySelector('.goal-observation-history')!;
+    expect(history.textContent).toContain('5 km');
+    expect(history.textContent).toContain('Nowsza notatka');
+    expect(history.textContent).toContain('4 km');
+    expect(history.textContent).toContain('Starsza notatka');
+    expect(history.querySelector('li')?.textContent).toContain('Nowsza notatka');
+  });
+
+  it('renders an empty history only when the returned observation items are empty', async () => {
+    const goal = { id: 'goal-1', category: 'PERFORMANCE', title: 'Cel', status: 'ACTIVE', outcomes: [], availableActions: [] };
+    const fixture = await participantGoalsFixture({ getParticipantGoal: vi.fn().mockResolvedValue(goal) });
+
+    await (fixture.componentInstance as any).open(goal);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Brak zapisanych pomiarów.');
+  });
+
+  it('renders a neutral history error instead of an empty state when loading observations fails', async () => {
+    const goal = { id: 'goal-1', category: 'PERFORMANCE', title: 'Cel', status: 'ACTIVE', outcomes: [], availableActions: [] };
+    const fixture = await participantGoalsFixture({
+      getParticipantGoal: vi.fn().mockResolvedValue(goal),
+      listParticipantGoalObservations: vi.fn().mockRejectedValue(new Error('network')),
+    });
+
+    await (fixture.componentInstance as any).open(goal);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Nie udało się wczytać historii pomiarów.');
+    expect(text).not.toContain('Brak zapisanych pomiarów.');
+  });
+
+  it('reloads the selected goal, list, timeline signal, and observation history after recording without closing the panel', async () => {
+    const goal = {
+      id: 'goal-1', category: 'PERFORMANCE', title: 'Cel', status: 'ACTIVE', version: 1,
+      outcomes: [{ id: 'outcome-1', targetValue: 5, unit: 'km' }], availableActions: ['RECORD_OBSERVATION'],
+    };
+    const updatedGoal = { ...goal, outcomes: [{ ...goal.outcomes[0], observationCount: 1, latestObservation: { value: 5 } }] };
+    const listParticipantGoals = vi.fn().mockResolvedValue([updatedGoal]);
+    const listParticipantGoalObservations = vi.fn()
+      .mockResolvedValueOnce({ items: [] })
+      .mockResolvedValueOnce({ items: [{ id: 'observation-1', value: 5, unit: 'km', measuredAt: new Date('2026-01-02T09:00:00Z') }] });
+    const fixture = await participantGoalsFixture({
+      getParticipantGoal: vi.fn().mockResolvedValue(goal),
+      listParticipantGoals,
+      listParticipantGoalObservations,
+      recordParticipantGoalObservation: vi.fn().mockResolvedValue(updatedGoal),
+    });
+    const component = fixture.componentInstance as any;
+    const timelineReload = vi.spyOn(component.changed, 'emit');
+
+    await component.open(goal);
+    await fixture.whenStable();
+    component.panelMode.set('observation');
+    component.observationForm.patchValue({ outcomeId: 'outcome-1', value: 5, measuredAt: '2026-01-02T09:00', note: '', evidenceSource: '' });
+    await component.record();
+    fixture.detectChanges();
+
+    expect(component.selected()).toEqual(updatedGoal);
+    expect(component.panelMode()).toBe('view');
+    expect((fixture.nativeElement as HTMLElement).querySelector('.goal-panel')).not.toBeNull();
+    expect(listParticipantGoals).toHaveBeenCalled();
+    expect(timelineReload).toHaveBeenCalledOnce();
+    expect(listParticipantGoalObservations).toHaveBeenCalledTimes(2);
+    expect(component.history()).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'observation-1' })]));
+  });
+
+  it('distinguishes target progress from an achieved goal lifecycle status', async () => {
+    const goal = {
+      id: 'goal-1', category: 'PERFORMANCE', title: 'Cel', status: 'ACHIEVED',
+      outcomes: [{ id: 'outcome-1', targetValue: 5, unit: 'km', progressState: 'TARGET_REACHED' }], availableActions: [],
+    };
+    const fixture = await participantGoalsFixture({ getParticipantGoal: vi.fn().mockResolvedValue(goal) });
+
+    await (fixture.componentInstance as any).open(goal);
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Cel osiągnięty');
+    expect(text).toContain('Wartość docelowa osiągnięta');
+  });
+
   it('switches to action-gated edit and observation forms, then cancels back to view', async () => {
     const goal = {
       id: 'goal-1', category: 'PERFORMANCE', title: 'Cel', priority: 1, status: 'ACTIVE',

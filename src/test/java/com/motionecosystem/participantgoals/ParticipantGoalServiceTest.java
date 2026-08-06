@@ -289,7 +289,8 @@ class ParticipantGoalServiceTest {
         when(fixture.outcomes.findByGoalIdOrderByPositionAsc(goal.id)).thenReturn(List.of(atLeast, atMost, legacy, noData));
         when(fixture.observations.findTopByGoalIdAndOutcomeIdOrderByMeasuredAtDescRecordedAtDescIdDesc(goal.id, atLeast.id)).thenReturn(Optional.of(reached));
         when(fixture.observations.findTopByGoalIdAndOutcomeIdOrderByMeasuredAtDescRecordedAtDescIdDesc(goal.id, atMost.id)).thenReturn(Optional.of(progressing));
-        when(fixture.observations.seek(eq(goal.id), eq(atLeast.id), any(), any(), any(), any())).thenReturn(List.of(reached, progressing));
+        when(fixture.observations.findByGoalIdAndOutcomeIdOrderByMeasuredAtDescRecordedAtDescIdDesc(eq(goal.id), eq(atLeast.id), any())).thenReturn(List.of(reached, progressing));
+        when(fixture.observations.seekAfterOutcome(eq(goal.id), eq(atLeast.id), eq(reached.measuredAt), eq(reached.recordedAt), eq(reached.id), any())).thenReturn(List.of(progressing));
         when(fixture.goals.findByIdAndSpecialistAccountIdAndParticipantId(goal.id, fixture.specialistId, fixture.participantId)).thenReturn(Optional.of(goal));
         when(fixture.outcomes.findByIdAndGoalId(atLeast.id, goal.id)).thenReturn(Optional.of(atLeast));
 
@@ -302,9 +303,24 @@ class ParticipantGoalServiceTest {
         assertThat(first.nextCursor()).isNotBlank();
         var second = fixture.service.observationHistory("specialist", fixture.participantId, goal.id, trainer(), atLeast.id, 1, first.nextCursor());
         assertThat(second.items()).hasSize(1);
-        ArgumentCaptor<Instant> measuredAt = ArgumentCaptor.forClass(Instant.class);
-        verify(fixture.observations, org.mockito.Mockito.times(2)).seek(eq(goal.id), eq(atLeast.id), measuredAt.capture(), any(), any(), any());
-        assertThat(measuredAt.getAllValues()).containsExactly(null, reached.measuredAt);
+        verify(fixture.observations).findByGoalIdAndOutcomeIdOrderByMeasuredAtDescRecordedAtDescIdDesc(eq(goal.id), eq(atLeast.id), any());
+        verify(fixture.observations).seekAfterOutcome(eq(goal.id), eq(atLeast.id), eq(reached.measuredAt), eq(reached.recordedAt), eq(reached.id), any());
+        verify(fixture.observations, never()).seekAfterAllOutcomes(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void usesFirstPageQueryWithoutSeekParametersWhenCursorIsAbsent() {
+        Fixture fixture = observationFixture();
+        ParticipantGoal goal = goal(fixture, ParticipantGoal.Category.PERFORMANCE);
+        when(fixture.goals.findByIdAndSpecialistAccountIdAndParticipantId(goal.id, fixture.specialistId, fixture.participantId)).thenReturn(Optional.of(goal));
+        when(fixture.observations.findByGoalIdOrderByMeasuredAtDescRecordedAtDescIdDesc(eq(goal.id), any())).thenReturn(List.of());
+
+        var page = fixture.service.observationHistory("specialist", fixture.participantId, goal.id, trainer(), null, 10, null);
+
+        assertThat(page.items()).isEmpty();
+        verify(fixture.observations).findByGoalIdOrderByMeasuredAtDescRecordedAtDescIdDesc(eq(goal.id), any());
+        verify(fixture.observations, never()).seekAfterAllOutcomes(any(), any(), any(), any(), any());
+        verify(fixture.observations, never()).seekAfterOutcome(any(), any(), any(), any(), any(), any());
     }
 
     private static void assertStatus(HttpStatus status, Runnable call) {
