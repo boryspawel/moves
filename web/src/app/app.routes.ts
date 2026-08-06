@@ -9,6 +9,8 @@ export const routes: Routes = [
   { path: 'catalog', canActivate: [authGuard, completedOnboardingGuard], loadComponent: () => import('./features/catalog.page').then(m => m.CatalogPage) },
   { path: 'catalog/:versionId', canActivate: [authGuard, completedOnboardingGuard], loadComponent: () => import('./features/catalog-detail.page').then(m => m.CatalogDetailPage) },
   { path: 'admin/exercise-import', canActivate: [authGuard, completedOnboardingGuard, roleGuard('CONTENT_ADMIN')], loadComponent: () => import('./features/exercise-import.page').then(m => m.ExerciseImportPage) },
+  { path: 'admin/exercise-catalog', canActivate: [authGuard, completedOnboardingGuard, roleGuard('CONTENT_ADMIN')], loadComponent: () => import('./features/exercise-catalog-admin.page').then(m => m.ExerciseCatalogAdminPage) },
+  { path: 'admin/exercise-catalog/:versionId', canActivate: [authGuard, completedOnboardingGuard, roleGuard('CONTENT_ADMIN')], loadComponent: () => import('./features/exercise-catalog-admin-detail.page').then(m => m.ExerciseCatalogAdminDetailPage) },
   {
     path: 'admin/exercise-import/batches/:batchId/attention',
     canActivate: [authGuard, completedOnboardingGuard, roleGuard('CONTENT_ADMIN')],

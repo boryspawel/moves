@@ -2,6 +2,7 @@ package com.motionecosystem.exercisecatalog;
 
 import com.motionecosystem.exercisecatalog.api.PublishExerciseVersion;
 import com.motionecosystem.exercisecatalog.api.ReviewExerciseVersion;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -43,7 +44,7 @@ class ExerciseVersionReviewController {
         }).toList();
     }
     @GetMapping("/{id}/diff") ExerciseEditorialWorkflowService.VersionDiff diff(@PathVariable UUID id){return workflow.diff(id);}
-    @PostMapping("/{id}/publish") PublishExerciseVersion.PublicationResult publish(@AuthenticationPrincipal Jwt jwt,@PathVariable UUID id,@Valid @RequestBody ExerciseVersionPublishRequest request){return workflow.publish(id,jwt.getSubject(),request.expectedVersion());}
+    @PostMapping("/{id}/publish") @Operation(operationId = "publishReviewedExerciseVersion") PublishExerciseVersion.PublicationResult publish(@AuthenticationPrincipal Jwt jwt,@PathVariable UUID id,@Valid @RequestBody ExerciseVersionPublishRequest request){return workflow.publish(id,jwt.getSubject(),request.expectedVersion());}
     record ExerciseVersionPublishRequest(@NotNull @PositiveOrZero Long expectedVersion){}
 
     record ReviewQueueItem(UUID exerciseVersionId, String exerciseName, String status, List<String> unmetRequirements) {

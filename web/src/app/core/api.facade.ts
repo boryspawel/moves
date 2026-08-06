@@ -4,6 +4,7 @@ import {
   BarrierReportControllerApi,
   Configuration,
   ExerciseCatalogControllerApi,
+  ExerciseCatalogAdminControllerApi,
   GamificationControllerApi,
   ReminderPreferenceControllerApi,
   OnboardingControllerApi,
@@ -47,6 +48,7 @@ export function generatedAuthorizationMiddleware(accessToken: () => Promise<stri
 export class ApiFacade {
   readonly onboarding: OnboardingControllerApi;
   readonly catalog: ExerciseCatalogControllerApi;
+  readonly catalogAdmin: ExerciseCatalogAdminControllerApi;
   readonly planning: TrainingPlanningControllerApi;
   readonly planningV2: TrainingPlanningV2ControllerApi;
   readonly planWorkflow: PlanRevisionWorkflowControllerApi;
@@ -79,6 +81,7 @@ export class ApiFacade {
     });
     this.onboarding = new OnboardingControllerApi(configuration);
     this.catalog = new ExerciseCatalogControllerApi(configuration);
+    this.catalogAdmin = new ExerciseCatalogAdminControllerApi(configuration);
     this.planning = new TrainingPlanningControllerApi(configuration);
     this.planningV2 = new TrainingPlanningV2ControllerApi(configuration);
     this.planWorkflow = new PlanRevisionWorkflowControllerApi(configuration);

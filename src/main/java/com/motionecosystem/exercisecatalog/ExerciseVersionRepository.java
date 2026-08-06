@@ -69,6 +69,28 @@ interface ExerciseVersionRepository extends JpaRepository<ExerciseVersion, UUID>
             @Param("equipment") String equipment,
             Pageable pageable);
 
+    @Query(value = """
+            SELECT exercise.id AS exerciseId, exercise.canonicalName AS canonicalName,
+                   version.id AS versionId, version.versionNumber AS versionNumber,
+                   version.status AS status, version.version AS expectedVersion,
+                   version.technicalLevel AS technicalLevel, version.environment AS environment
+            FROM ExerciseVersion version JOIN Exercise exercise ON exercise.id = version.exerciseId
+            WHERE NOT EXISTS (SELECT newer.id FROM ExerciseVersion newer
+                              WHERE newer.exerciseId = version.exerciseId
+                                AND newer.versionNumber > version.versionNumber)
+              AND (:queryDisabled = TRUE OR LOWER(exercise.canonicalName) LIKE :queryPattern)
+            ORDER BY LOWER(exercise.canonicalName), exercise.id
+            """, countQuery = """
+            SELECT COUNT(version.id) FROM ExerciseVersion version JOIN Exercise exercise ON exercise.id = version.exerciseId
+            WHERE NOT EXISTS (SELECT newer.id FROM ExerciseVersion newer
+                              WHERE newer.exerciseId = version.exerciseId
+                                AND newer.versionNumber > version.versionNumber)
+              AND (:queryDisabled = TRUE OR LOWER(exercise.canonicalName) LIKE :queryPattern)
+            """)
+    Page<EditorialListProjection> findCurrentEditorial(
+            @Param("queryDisabled") boolean queryDisabled, @Param("queryPattern") String queryPattern,
+            Pageable pageable);
+
     List<ExerciseVersion> findByIdInAndStatus(Set<UUID> ids, ExerciseVersionStatus status);
     List<ExerciseVersion> findByStatusOrderByCreatedAtAscIdAsc(ExerciseVersionStatus status);
 
@@ -110,6 +132,12 @@ interface ExerciseVersionRepository extends JpaRepository<ExerciseVersion, UUID>
         MovementPattern getPrimaryMovementPattern();
         TechnicalLevel getTechnicalLevel();
         ExerciseEnvironment getEnvironment();
+    }
+
+    interface EditorialListProjection {
+        UUID getExerciseId(); String getCanonicalName(); UUID getVersionId(); int getVersionNumber();
+        ExerciseVersionStatus getStatus(); long getExpectedVersion();
+        TechnicalLevel getTechnicalLevel(); ExerciseEnvironment getEnvironment();
     }
 
     interface MovementPatternProjection {

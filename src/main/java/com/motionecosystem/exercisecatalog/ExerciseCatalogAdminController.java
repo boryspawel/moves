@@ -8,6 +8,7 @@ import com.motionecosystem.exercisecatalog.api.ReviewExerciseVersion;
 import com.motionecosystem.exercisecatalog.CatalogService.ContributionCommand;
 import com.motionecosystem.exercisecatalog.CatalogService.EvidenceCommand;
 import com.motionecosystem.exercisecatalog.CatalogService.LoadCharacteristicCommand;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -37,40 +39,54 @@ class ExerciseCatalogAdminController {
         this.workflow = workflow;
     }
 
+    @GetMapping
+    @Operation(operationId = "listEditorialExercises")
+    CatalogService.EditorialCatalogPage list(@RequestParam(required = false) String query,
+                                             @RequestParam(defaultValue = "0") int page,
+                                             @RequestParam(defaultValue = "20") int size) {
+        return catalog.editorialList(query, page, size);
+    }
+
     @PostMapping
-    CatalogService.VersionView create(@AuthenticationPrincipal Jwt jwt, @RequestBody CatalogCreateRequest request) {
+    @Operation(operationId = "createEditorialExercise")
+    CatalogService.ExerciseEditorialVersionView create(@AuthenticationPrincipal Jwt jwt, @RequestBody CatalogCreateRequest request) {
         return catalog.create(jwt.getSubject(), request.canonicalName(), request.version());
     }
 
     @PostMapping("/{exerciseId}/versions")
-    CatalogService.VersionView createVersion(@AuthenticationPrincipal Jwt jwt,
+    @Operation(operationId = "createEditorialExerciseVersion")
+    CatalogService.ExerciseEditorialVersionView createVersion(@AuthenticationPrincipal Jwt jwt,
                                              @PathVariable UUID exerciseId,
                                              @RequestBody CatalogService.VersionCommand request) {
         return catalog.createNextVersion(jwt.getSubject(), exerciseId, request);
     }
 
     @PutMapping("/versions/{versionId}")
-    CatalogService.VersionView update(@AuthenticationPrincipal Jwt jwt,
+    @Operation(operationId = "updateEditorialExerciseDraft")
+    CatalogService.ExerciseEditorialVersionView update(@AuthenticationPrincipal Jwt jwt,
                                       @PathVariable UUID versionId,
                                       @RequestBody CatalogService.VersionCommand request) {
         return catalog.updateDraft(jwt.getSubject(), versionId, request);
     }
 
     @PutMapping("/versions/{versionId}/editorial")
-    CatalogService.VersionView updateEditorialDraft(@AuthenticationPrincipal Jwt jwt,
+    @Operation(operationId = "updateEditorialExerciseContent")
+    CatalogService.ExerciseEditorialVersionView updateEditorialDraft(@AuthenticationPrincipal Jwt jwt,
                                                     @PathVariable UUID versionId,
                                                     @RequestBody CatalogService.DraftUpdateCommand request) {
         return catalog.updateEditorialDraft(jwt.getSubject(), versionId, request);
     }
 
     @PutMapping("/versions/{versionId}/load-characteristics")
-    CatalogService.EditorView replaceLoadCharacteristics(
+    @Operation(operationId = "replaceEditorialLoadCharacteristics")
+    CatalogService.ExerciseEditorialEditorView replaceLoadCharacteristics(
             @AuthenticationPrincipal Jwt jwt, @PathVariable UUID versionId,
             @RequestBody List<LoadCharacteristicCommand> request) {
         return catalog.replaceLoadCharacteristics(jwt.getSubject(), versionId, request);
     }
 
     @PostMapping("/versions/{versionId}/evidence")
+    @Operation(operationId = "addEditorialEvidence")
     CatalogService.EvidenceView addEvidence(@AuthenticationPrincipal Jwt jwt,
                                             @PathVariable UUID versionId,
                                             @RequestBody EvidenceCommand request) {
@@ -78,6 +94,7 @@ class ExerciseCatalogAdminController {
     }
 
     @PostMapping("/versions/{versionId}/contributions")
+    @Operation(operationId = "addEditorialContribution")
     CatalogService.ContributionView addContribution(@AuthenticationPrincipal Jwt jwt,
                                                     @PathVariable UUID versionId,
                                                     @RequestBody ContributionCommand request) {
@@ -85,18 +102,21 @@ class ExerciseCatalogAdminController {
     }
 
     @PostMapping("/versions/{versionId}/submit-review")
-    CatalogService.VersionView submitReview(@AuthenticationPrincipal Jwt jwt,
+    @Operation(operationId = "submitEditorialExerciseForReview")
+    CatalogService.ExerciseEditorialVersionView submitReview(@AuthenticationPrincipal Jwt jwt,
                                             @PathVariable UUID versionId) {
         return catalog.submitForReview(jwt.getSubject(), versionId);
     }
 
     @PostMapping("/versions/{versionId}/request-changes")
-    CatalogService.VersionView requestChanges(@AuthenticationPrincipal Jwt jwt,
+    @Operation(operationId = "requestEditorialExerciseChanges")
+    CatalogService.ExerciseEditorialVersionView requestChanges(@AuthenticationPrincipal Jwt jwt,
                                               @PathVariable UUID versionId) {
         return catalog.requestChanges(jwt.getSubject(), versionId);
     }
 
     @PostMapping("/versions/{versionId}/approve")
+    @Operation(operationId = "approveEditorialExercise")
     ReviewExerciseVersion.ReviewResult approve(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID versionId) {
         ReviewExerciseVersion.ReviewResult result = null;
         for (String area : List.of("CONTENT", "TECHNIQUE", "ANATOMY_EXPOSURE", "LICENSE")) {
@@ -107,27 +127,38 @@ class ExerciseCatalogAdminController {
     }
 
     @PostMapping("/versions/{versionId}/publish")
+    @Operation(operationId = "publishEditorialExercise")
     PublishExerciseVersion.PublicationResult publish(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID versionId,
                                                      @Valid @RequestBody PublishRequest request) {
         return workflow.publish(versionId, jwt.getSubject(), request.expectedVersion());
     }
 
     @PostMapping("/versions/{versionId}/withdraw")
-    CatalogService.VersionView withdraw(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID versionId) {
+    @Operation(operationId = "withdrawEditorialExercise")
+    CatalogService.ExerciseEditorialVersionView withdraw(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID versionId) {
         return catalog.withdraw(jwt.getSubject(), versionId);
     }
 
     @GetMapping("/{exerciseId}/versions")
-    List<CatalogService.VersionView> versions(@PathVariable UUID exerciseId) {
+    @Operation(operationId = "listEditorialExerciseVersions")
+    List<CatalogService.ExerciseEditorialVersionView> versions(@PathVariable UUID exerciseId) {
         return catalog.allVersions(exerciseId);
     }
 
     @GetMapping("/versions/{versionId}/editor")
-    CatalogService.EditorView editor(@PathVariable UUID versionId) {
+    @Operation(operationId = "getEditorialExerciseEditor")
+    CatalogService.ExerciseEditorialEditorView editor(@PathVariable UUID versionId) {
         return catalog.editor(versionId);
     }
 
+    @GetMapping("/versions/{versionId}/capabilities")
+    @Operation(operationId = "getEditorialExerciseCapabilities")
+    CatalogService.EditorialCapabilities capabilities(@PathVariable UUID versionId) {
+        return catalog.editorialCapabilities(versionId);
+    }
+
     @GetMapping("/legacy/contraindications")
+    @Operation(operationId = "listLegacyEditorialContraindications")
     List<CatalogService.LegacyContraindicationReportItem> legacyContraindications() {
         return catalog.legacyContraindicationReport();
     }

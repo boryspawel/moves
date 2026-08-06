@@ -133,7 +133,7 @@ export interface VersionRequest {
   versionId: string;
 }
 
-export interface Versions1Request {
+export interface VersionsRequest {
   setId: string;
 }
 
@@ -1172,13 +1172,13 @@ export class ExerciseSetControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for versions1 without sending the request
+   * Creates request options for versions without sending the request
    */
-  async versions1RequestOpts(requestParameters: Versions1Request): Promise<runtime.RequestOpts> {
+  async versionsRequestOpts(requestParameters: VersionsRequest): Promise<runtime.RequestOpts> {
     if (requestParameters['setId'] == null) {
       throw new runtime.RequiredError(
         'setId',
-        'Required parameter "setId" was null or undefined when calling versions1().',
+        'Required parameter "setId" was null or undefined when calling versions().',
       );
     }
 
@@ -1199,11 +1199,11 @@ export class ExerciseSetControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async versions1Raw(
-    requestParameters: Versions1Request,
+  async versionsRaw(
+    requestParameters: VersionsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<Array<VersionSummary>>> {
-    const requestOptions = await this.versions1RequestOpts(requestParameters);
+    const requestOptions = await this.versionsRequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
@@ -1213,11 +1213,11 @@ export class ExerciseSetControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async versions1(
-    requestParameters: Versions1Request,
+  async versions(
+    requestParameters: VersionsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<Array<VersionSummary>> {
-    const response = await this.versions1Raw(requestParameters, initOverrides);
+    const response = await this.versionsRaw(requestParameters, initOverrides);
     return await response.value();
   }
 }

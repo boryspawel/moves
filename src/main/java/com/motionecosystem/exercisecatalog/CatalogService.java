@@ -46,9 +46,10 @@ public class CatalogService implements ExerciseCatalogQueryPort {
     private final AuditRecorder audit;
     private final Clock clock;
     private final ExerciseReviewReadRepository reviewReads;
+    private final ExerciseEditorialWorkflowService workflow;
 
     @Transactional
-    public VersionView create(String actorSubject, String canonicalName, VersionCommand requested) {
+    public ExerciseEditorialVersionView create(String actorSubject, String canonicalName, VersionCommand requested) {
         String name = requiredText(canonicalName, 160, "canonical name");
         VersionCommand command = validate(requested);
         Instant now = clock.instant();
@@ -58,13 +59,47 @@ public class CatalogService implements ExerciseCatalogQueryPort {
         return view(exercise, version);
     }
 
+    @Transactional(readOnly = true)
+    public EditorialCatalogPage editorialList(String query, int page, int size) {
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        String text = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
+        Page<ExerciseVersionRepository.EditorialListProjection> result = versions.findCurrentEditorial(
+                text.isBlank(), "%" + text + "%", PageRequest.of(safePage, safeSize));
+        return new EditorialCatalogPage(result.getContent().stream().map(item -> new EditorialCatalogItem(
+                item.getExerciseId(), item.getCanonicalName(), item.getVersionId(), item.getVersionNumber(),
+                item.getStatus(), item.getExpectedVersion(), item.getTechnicalLevel(), item.getEnvironment(),
+                availableActions(item.getVersionId(), item.getStatus()))).toList(), result.getNumber(), result.getSize(),
+                result.getTotalElements(), result.getTotalPages());
+    }
+
+    @Transactional(readOnly = true)
+    public EditorialCapabilities editorialCapabilities(UUID versionId) {
+        ExerciseVersion value = version(versionId);
+        return new EditorialCapabilities(value.id, value.exerciseId, value.status, value.version,
+                availableActions(value.id, value.status));
+    }
+
+    private List<String> availableActions(UUID versionId, ExerciseVersionStatus status) {
+        return switch (status) {
+            case DRAFT, CHANGES_REQUESTED -> List.of("EDIT", "SUBMIT_REVIEW");
+            case IN_REVIEW -> List.of("REQUEST_CHANGES");
+            case APPROVED -> workflow.readyToPublish(versionId) ? List.of("PUBLISH") : List.of();
+            case PUBLISHED -> List.of("CREATE_NEXT_VERSION", "WITHDRAW");
+            case WITHDRAWN -> List.of("CREATE_NEXT_VERSION");
+        };
+    }
+
     @Transactional
-    public VersionView createNextVersion(String actorSubject, UUID exerciseId, VersionCommand requested) {
+    public ExerciseEditorialVersionView createNextVersion(String actorSubject, UUID exerciseId, VersionCommand requested) {
         Exercise exercise = exercises.findLockedById(exerciseId)
                 .orElseThrow(() -> notFound("exercise not found"));
-        int number = versions.findFirstByExerciseIdOrderByVersionNumberDesc(exerciseId)
-                .map(item -> item.versionNumber + 1)
-                .orElse(1);
+        ExerciseVersion current = versions.findFirstByExerciseIdOrderByVersionNumberDesc(exerciseId)
+                .orElseThrow(() -> notFound("current exercise version not found"));
+        if (current.status != ExerciseVersionStatus.PUBLISHED && current.status != ExerciseVersionStatus.WITHDRAWN) {
+            throw conflict("only a published or withdrawn current version can be superseded", null);
+        }
+        int number = current.versionNumber + 1;
         try {
             ExerciseVersion version = versions.saveAndFlush(
                     new ExerciseVersion(exerciseId, number, validate(requested), clock.instant()));
@@ -76,7 +111,7 @@ public class CatalogService implements ExerciseCatalogQueryPort {
     }
 
     @Transactional
-    public VersionView updateDraft(String actorSubject, UUID versionId, VersionCommand requested) {
+    public ExerciseEditorialVersionView updateDraft(String actorSubject, UUID versionId, VersionCommand requested) {
         ExerciseVersion version = lockedVersion(versionId);
         try {
             version.update(validate(requested));
@@ -90,7 +125,7 @@ public class CatalogService implements ExerciseCatalogQueryPort {
 
     /** A UI-oriented, still aggregate-scoped command with an explicit optimistic-lock token. */
     @Transactional
-    public VersionView updateEditorialDraft(String actorSubject, UUID versionId, DraftUpdateCommand requested) {
+    public ExerciseEditorialVersionView updateEditorialDraft(String actorSubject, UUID versionId, DraftUpdateCommand requested) {
         if (requested == null || requested.expectedVersion() == null) {
             throw badRequest("expected version is required");
         }
@@ -119,7 +154,7 @@ public class CatalogService implements ExerciseCatalogQueryPort {
     }
 
     @Transactional
-    public EditorView replaceLoadCharacteristics(String actorSubject, UUID versionId,
+    public ExerciseEditorialEditorView replaceLoadCharacteristics(String actorSubject, UUID versionId,
                                                  Collection<LoadCharacteristicCommand> requested) {
         ExerciseVersion version = editableVersion(versionId);
         List<LoadCharacteristicCommand> commands = validateCharacteristics(requested);
@@ -178,7 +213,7 @@ public class CatalogService implements ExerciseCatalogQueryPort {
     }
 
     @Transactional
-    public VersionView submitForReview(String actorSubject, UUID versionId) {
+    public ExerciseEditorialVersionView submitForReview(String actorSubject, UUID versionId) {
         ExerciseVersion version = lockedVersion(versionId);
         try {
             validateCompleteProfile(version);
@@ -191,7 +226,7 @@ public class CatalogService implements ExerciseCatalogQueryPort {
     }
 
     @Transactional
-    public VersionView requestChanges(String actorSubject, UUID versionId) {
+    public ExerciseEditorialVersionView requestChanges(String actorSubject, UUID versionId) {
         ExerciseVersion version = lockedVersion(versionId);
         try {
             version.requestChanges();
@@ -203,7 +238,7 @@ public class CatalogService implements ExerciseCatalogQueryPort {
     }
 
     @Transactional
-    public VersionView approve(String actorSubject, UUID versionId) {
+    public ExerciseEditorialVersionView approve(String actorSubject, UUID versionId) {
         ExerciseVersion version = lockedVersion(versionId);
         try {
             validateCompleteProfile(version);
@@ -216,7 +251,7 @@ public class CatalogService implements ExerciseCatalogQueryPort {
     }
 
     @Transactional
-    public VersionView publish(String actorSubject, UUID versionId) {
+    public ExerciseEditorialVersionView publish(String actorSubject, UUID versionId) {
         ExerciseVersion version = lockedVersion(versionId);
         try {
             validateCompleteProfile(version);
@@ -231,7 +266,7 @@ public class CatalogService implements ExerciseCatalogQueryPort {
     }
 
     @Transactional
-    public VersionView withdraw(String actorSubject, UUID versionId) {
+    public ExerciseEditorialVersionView withdraw(String actorSubject, UUID versionId) {
         ExerciseVersion version = lockedVersion(versionId);
         try {
             version.withdraw(clock.instant());
@@ -311,13 +346,13 @@ public class CatalogService implements ExerciseCatalogQueryPort {
     }
 
     @Transactional(readOnly = true)
-    public EditorView editor(UUID versionId) {
+    public ExerciseEditorialEditorView editor(UUID versionId) {
         ExerciseVersion version = version(versionId);
         return editorView(exercise(version.exerciseId), version);
     }
 
     @Transactional(readOnly = true)
-    public List<VersionView> allVersions(UUID exerciseId) {
+    public List<ExerciseEditorialVersionView> allVersions(UUID exerciseId) {
         Exercise exercise = exercise(exerciseId);
         return versions.findByExerciseIdOrderByVersionNumber(exerciseId).stream()
                 .map(version -> view(exercise, version))
@@ -487,7 +522,7 @@ public class CatalogService implements ExerciseCatalogQueryPort {
         return versions.findLockedById(id).orElseThrow(() -> notFound("exercise version not found"));
     }
 
-    private EditorView editorView(Exercise exercise, ExerciseVersion version) {
+    private ExerciseEditorialEditorView editorView(Exercise exercise, ExerciseVersion version) {
         List<EvidenceSource> evidence = evidenceSources.findByExerciseVersionIdOrderById(version.id);
         Map<UUID, EvidenceSource> evidenceById = evidence.stream()
                 .collect(Collectors.toMap(item -> item.id, Function.identity()));
@@ -496,7 +531,7 @@ public class CatalogService implements ExerciseCatalogQueryPort {
         Set<UUID> contributionIds = contributionItems.stream().map(item -> item.id).collect(Collectors.toSet());
         Map<UUID, List<EvidenceSource>> linked = contributionIds.isEmpty()
                 ? Map.of() : linkedEvidence(contributionIds, evidenceById);
-        return new EditorView(view(exercise, version),
+        return new ExerciseEditorialEditorView(view(exercise, version),
                 loadCharacteristics.findByExerciseVersionIdOrderById(version.id).stream()
                         .map(CatalogService::characteristicView).toList(),
                 evidence.stream().map(CatalogService::evidenceView).toList(),
@@ -584,8 +619,8 @@ public class CatalogService implements ExerciseCatalogQueryPort {
         return value == null || value.isBlank() ? null : value;
     }
 
-    private static VersionView view(Exercise exercise, ExerciseVersion version) {
-        return new VersionView(exercise.id, exercise.canonicalName, version.id, version.versionNumber,
+    private static ExerciseEditorialVersionView view(Exercise exercise, ExerciseVersion version) {
+        return new ExerciseEditorialVersionView(exercise.id, exercise.canonicalName, version.id, version.versionNumber,
                 version.status, Set.copyOf(version.movementPatterns), version.instruction,
                 version.mediaReference, version.stimulusType, version.fatigueProfile,
                 version.technicalLevel, version.environment, Set.copyOf(version.requiredEquipment),
@@ -730,7 +765,7 @@ public class CatalogService implements ExerciseCatalogQueryPort {
         }
     }
 
-    public record VersionView(UUID exerciseId, String canonicalName, UUID versionId, int versionNumber,
+    public record ExerciseEditorialVersionView(UUID exerciseId, String canonicalName, UUID versionId, int versionNumber,
                               ExerciseVersionStatus status, Set<MovementPattern> movementPatterns,
                               String instruction, String mediaReference, StimulusType stimulusType,
                               FatigueProfile fatigueProfile, TechnicalLevel technicalLevel,
@@ -750,6 +785,15 @@ public class CatalogService implements ExerciseCatalogQueryPort {
             content = List.copyOf(content);
         }
     }
+
+    public record EditorialCatalogItem(UUID exerciseId, String canonicalName, UUID versionId, int versionNumber,
+                                       ExerciseVersionStatus status, long expectedVersion,
+                                       TechnicalLevel technicalLevel, ExerciseEnvironment environment,
+                                       List<String> availableActions) {}
+    public record EditorialCatalogPage(List<EditorialCatalogItem> content, int page, int size,
+                                       long totalElements, int totalPages) { public EditorialCatalogPage { content = List.copyOf(content); } }
+    public record EditorialCapabilities(UUID versionId, UUID exerciseId, ExerciseVersionStatus status,
+                                       long expectedVersion, List<String> availableActions) { public EditorialCapabilities { availableActions = List.copyOf(availableActions); } }
 
     public record ExerciseCatalogDetailView(UUID exerciseId, UUID versionId, int versionNumber,
                                             String canonicalName, String instruction,
@@ -779,7 +823,7 @@ public class CatalogService implements ExerciseCatalogQueryPort {
 
     public record PublicEvidenceView(String citation, String evidenceGrade, String sourceUri) {}
 
-    public record EditorView(VersionView version, List<LoadCharacteristicView> loadCharacteristics,
+    public record ExerciseEditorialEditorView(ExerciseEditorialVersionView version, List<LoadCharacteristicView> loadCharacteristics,
                              List<EvidenceView> evidence, List<ContributionView> contributions,
                              Set<String> legacyContraindicationTags) {
     }

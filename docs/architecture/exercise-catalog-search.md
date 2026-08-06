@@ -10,6 +10,16 @@ nigdy HTTP ani repozytorium JPA katalogu. Picker emituje `ExerciseSelection` z
 `exerciseId`, dokładnym `exerciseVersionId`, nazwą, sugerowanym typem dawki i małą
 prezentacją — nie zapisuje zestawu.
 
+## Granica redakcyjna
+
+Publiczne `/catalog` oraz API wyszukiwania pozostają wyłącznie readerem opublikowanych
+wersji. Osobny, chroniony `CONTENT_ADMIN` endpoint `GET /api/v1/admin/exercises` jest
+projekcją nawigacyjną aktualnej (najwyższej) wersji, z backendowym `availableActions`
+i `expectedVersion`; szczegół pobiera też `GET .../capabilities`. Frontend nie odgaduje
+przejść lifecycle. Wersje published i withdrawn są niemutowalne; kolejna wersja jest
+nowym draftem. Te projekcje nie są modelem audytu ani nie zmieniają historycznych
+referencji opublikowanych wersji.
+
 | Operacja | Endpoint | Wynik |
 |---|---|---|
 | Wyszukiwanie | `POST /api/v2/exercises/search` | projekcja wyników, cursor i facety |

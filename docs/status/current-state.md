@@ -1,5 +1,18 @@
 # Stan bieżący
 
+## EXERCISE-CATALOG-CRUD-01 — redakcja katalogu
+
+Redakcja katalogu jest dostępna wyłącznie dla `CONTENT_ADMIN` pod
+`/admin/exercise-catalog`; nie zmienia publicznego readera `/catalog`, importu ani
+planowania. Endpoint `GET /api/v1/admin/exercises` zwraca stronicowaną, bieżącą wersję
+każdego ćwiczenia wraz z akcjami dozwolonymi przez backend i tokenem optimistic-lock.
+Ekran szczegółów zaczyna w trybie odczytu, pozwala edytować tylko draft oraz tworzyć
+następną wersję z opublikowanej/wycofanej. Obszary load, anatomii i dowodów są
+progresywnie ujawniane; historia wersji jest odczytowa.
+
+TODO: bulk edit, import/export, duplicate exercises, media, pełny review jeśli nie jest
+udostępniony, bezpieczne usuwanie porzuconych draftów oraz idempotency/retry dla create.
+
 ## Participant Goals — completed scope and next steps
 
 **GOALS-01 through GOALS-05 are complete.** The canonical, participant-owned outcome-goal

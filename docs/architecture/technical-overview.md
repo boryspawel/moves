@@ -134,3 +134,11 @@ Sekcja „Cele” jest częścią istniejącej kartoteki specjalisty i korzysta 
 generowanego klienta OpenAPI. Kontekst działania pochodzi z profilu onboardingowego
 specjalisty, a dostępne mutacje z `availableActions`; nie tworzy to nowej trasy,
 integracji z planem, self-service, automatycznego osiągania ani wykresów.
+
+## Frontend redakcji katalogu
+
+Angular ma osobną trasę administracyjną `/admin/exercise-catalog`, opartą wyłącznie o
+wygenerowany klient OpenAPI i `ApiFacade.catalogAdmin`. Lista, szczegół, tworzenie
+draftu i historia nie współdzielą komponentów ani kontraktów z publicznym pickerem
+`/catalog`. Akcje lifecycle są renderowane wyłącznie z projekcji `availableActions`
+z serwera; szczegół używa serwerowego `expectedVersion` przy publikacji i zapisie draftu.

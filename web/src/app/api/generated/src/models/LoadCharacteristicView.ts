@@ -21,6 +21,18 @@ import { mapValues } from '../runtime';
 export interface LoadCharacteristicView {
   /**
    *
+   * @type {LoadCharacteristicViewCharacteristicTypeEnum}
+   * @memberof LoadCharacteristicView
+   */
+  characteristicType?: LoadCharacteristicViewCharacteristicTypeEnum;
+  /**
+   *
+   * @type {LoadCharacteristicViewContractionTypeEnum}
+   * @memberof LoadCharacteristicView
+   */
+  contractionType?: LoadCharacteristicViewContractionTypeEnum;
+  /**
+   *
    * @type {string}
    * @memberof LoadCharacteristicView
    */
@@ -33,58 +45,11 @@ export interface LoadCharacteristicView {
   movementPlane?: LoadCharacteristicViewMovementPlaneEnum;
   /**
    *
-   * @type {LoadCharacteristicViewContractionTypeEnum}
-   * @memberof LoadCharacteristicView
-   */
-  contractionType?: LoadCharacteristicViewContractionTypeEnum;
-  /**
-   *
    * @type {LoadCharacteristicViewRangeOfMotionEnum}
    * @memberof LoadCharacteristicView
    */
   rangeOfMotion?: LoadCharacteristicViewRangeOfMotionEnum;
-  /**
-   *
-   * @type {LoadCharacteristicViewCharacteristicTypeEnum}
-   * @memberof LoadCharacteristicView
-   */
-  characteristicType?: LoadCharacteristicViewCharacteristicTypeEnum;
 }
-
-/**
- * @export
- */
-export const LoadCharacteristicViewMovementPlaneEnum = {
-  Sagittal: 'SAGITTAL',
-  Frontal: 'FRONTAL',
-  Transverse: 'TRANSVERSE',
-  Multiplanar: 'MULTIPLANAR',
-} as const;
-export type LoadCharacteristicViewMovementPlaneEnum =
-  (typeof LoadCharacteristicViewMovementPlaneEnum)[keyof typeof LoadCharacteristicViewMovementPlaneEnum];
-
-/**
- * @export
- */
-export const LoadCharacteristicViewContractionTypeEnum = {
-  Concentric: 'CONCENTRIC',
-  Eccentric: 'ECCENTRIC',
-  Isometric: 'ISOMETRIC',
-  Mixed: 'MIXED',
-} as const;
-export type LoadCharacteristicViewContractionTypeEnum =
-  (typeof LoadCharacteristicViewContractionTypeEnum)[keyof typeof LoadCharacteristicViewContractionTypeEnum];
-
-/**
- * @export
- */
-export const LoadCharacteristicViewRangeOfMotionEnum = {
-  Partial: 'PARTIAL',
-  Full: 'FULL',
-  Variable: 'VARIABLE',
-} as const;
-export type LoadCharacteristicViewRangeOfMotionEnum =
-  (typeof LoadCharacteristicViewRangeOfMotionEnum)[keyof typeof LoadCharacteristicViewRangeOfMotionEnum];
 
 /**
  * @export
@@ -101,6 +66,41 @@ export const LoadCharacteristicViewCharacteristicTypeEnum = {
 } as const;
 export type LoadCharacteristicViewCharacteristicTypeEnum =
   (typeof LoadCharacteristicViewCharacteristicTypeEnum)[keyof typeof LoadCharacteristicViewCharacteristicTypeEnum];
+
+/**
+ * @export
+ */
+export const LoadCharacteristicViewContractionTypeEnum = {
+  Concentric: 'CONCENTRIC',
+  Eccentric: 'ECCENTRIC',
+  Isometric: 'ISOMETRIC',
+  Mixed: 'MIXED',
+} as const;
+export type LoadCharacteristicViewContractionTypeEnum =
+  (typeof LoadCharacteristicViewContractionTypeEnum)[keyof typeof LoadCharacteristicViewContractionTypeEnum];
+
+/**
+ * @export
+ */
+export const LoadCharacteristicViewMovementPlaneEnum = {
+  Sagittal: 'SAGITTAL',
+  Frontal: 'FRONTAL',
+  Transverse: 'TRANSVERSE',
+  Multiplanar: 'MULTIPLANAR',
+} as const;
+export type LoadCharacteristicViewMovementPlaneEnum =
+  (typeof LoadCharacteristicViewMovementPlaneEnum)[keyof typeof LoadCharacteristicViewMovementPlaneEnum];
+
+/**
+ * @export
+ */
+export const LoadCharacteristicViewRangeOfMotionEnum = {
+  Partial: 'PARTIAL',
+  Full: 'FULL',
+  Variable: 'VARIABLE',
+} as const;
+export type LoadCharacteristicViewRangeOfMotionEnum =
+  (typeof LoadCharacteristicViewRangeOfMotionEnum)[keyof typeof LoadCharacteristicViewRangeOfMotionEnum];
 
 /**
  * Check if a given object implements the LoadCharacteristicView interface.
@@ -121,11 +121,11 @@ export function LoadCharacteristicViewFromJSONTyped(
     return json;
   }
   return {
+    characteristicType: json['characteristicType'] == null ? undefined : json['characteristicType'],
+    contractionType: json['contractionType'] == null ? undefined : json['contractionType'],
     id: json['id'] == null ? undefined : json['id'],
     movementPlane: json['movementPlane'] == null ? undefined : json['movementPlane'],
-    contractionType: json['contractionType'] == null ? undefined : json['contractionType'],
     rangeOfMotion: json['rangeOfMotion'] == null ? undefined : json['rangeOfMotion'],
-    characteristicType: json['characteristicType'] == null ? undefined : json['characteristicType'],
   };
 }
 
@@ -142,10 +142,10 @@ export function LoadCharacteristicViewToJSONTyped(
   }
 
   return {
+    characteristicType: value['characteristicType'],
+    contractionType: value['contractionType'],
     id: value['id'],
     movementPlane: value['movementPlane'],
-    contractionType: value['contractionType'],
     rangeOfMotion: value['rangeOfMotion'],
-    characteristicType: value['characteristicType'],
   };
 }

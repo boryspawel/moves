@@ -33,7 +33,7 @@ export interface Get1Request {
   participantId: string;
 }
 
-export interface Update3Request {
+export interface Update2Request {
   participantId: string;
   clientCommand: ClientCommand;
 }
@@ -248,20 +248,20 @@ export class SpecialistClientControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for update3 without sending the request
+   * Creates request options for update2 without sending the request
    */
-  async update3RequestOpts(requestParameters: Update3Request): Promise<runtime.RequestOpts> {
+  async update2RequestOpts(requestParameters: Update2Request): Promise<runtime.RequestOpts> {
     if (requestParameters['participantId'] == null) {
       throw new runtime.RequiredError(
         'participantId',
-        'Required parameter "participantId" was null or undefined when calling update3().',
+        'Required parameter "participantId" was null or undefined when calling update2().',
       );
     }
 
     if (requestParameters['clientCommand'] == null) {
       throw new runtime.RequiredError(
         'clientCommand',
-        'Required parameter "clientCommand" was null or undefined when calling update3().',
+        'Required parameter "clientCommand" was null or undefined when calling update2().',
       );
     }
 
@@ -288,11 +288,11 @@ export class SpecialistClientControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async update3Raw(
-    requestParameters: Update3Request,
+  async update2Raw(
+    requestParameters: Update2Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<ClientView>> {
-    const requestOptions = await this.update3RequestOpts(requestParameters);
+    const requestOptions = await this.update2RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) => ClientViewFromJSON(jsonValue));
@@ -300,11 +300,11 @@ export class SpecialistClientControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async update3(
-    requestParameters: Update3Request,
+  async update2(
+    requestParameters: Update2Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<ClientView> {
-    const response = await this.update3Raw(requestParameters, initOverrides);
+    const response = await this.update2Raw(requestParameters, initOverrides);
     return await response.value();
   }
 }

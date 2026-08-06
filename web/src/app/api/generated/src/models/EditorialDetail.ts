@@ -41,13 +41,13 @@ import {
   ReviewResultToJSON,
   ReviewResultToJSONTyped,
 } from './ReviewResult';
-import type { EditorView } from './EditorView';
+import type { ExerciseEditorialEditorView } from './ExerciseEditorialEditorView';
 import {
-  EditorViewFromJSON,
-  EditorViewFromJSONTyped,
-  EditorViewToJSON,
-  EditorViewToJSONTyped,
-} from './EditorView';
+  ExerciseEditorialEditorViewFromJSON,
+  ExerciseEditorialEditorViewFromJSONTyped,
+  ExerciseEditorialEditorViewToJSON,
+  ExerciseEditorialEditorViewToJSONTyped,
+} from './ExerciseEditorialEditorView';
 import type { ImportMetadata } from './ImportMetadata';
 import {
   ImportMetadataFromJSON,
@@ -82,10 +82,10 @@ export interface EditorialDetail {
   diff?: VersionDiff;
   /**
    *
-   * @type {EditorView}
+   * @type {ExerciseEditorialEditorView}
    * @memberof EditorialDetail
    */
-  editor?: EditorView;
+  editor?: ExerciseEditorialEditorView;
   /**
    *
    * @type {ImportMetadata}
@@ -137,7 +137,8 @@ export function EditorialDetailFromJSONTyped(
         ? undefined
         : (json['anatomyContributions'] as Array<any>).map(AnatomyContributionSnapshotFromJSON),
     diff: json['diff'] == null ? undefined : VersionDiffFromJSON(json['diff']),
-    editor: json['editor'] == null ? undefined : EditorViewFromJSON(json['editor']),
+    editor:
+      json['editor'] == null ? undefined : ExerciseEditorialEditorViewFromJSON(json['editor']),
     importMetadata:
       json['importMetadata'] == null ? undefined : ImportMetadataFromJSON(json['importMetadata']),
     importProblems:
@@ -168,7 +169,7 @@ export function EditorialDetailToJSONTyped(
         ? undefined
         : (value['anatomyContributions'] as Array<any>).map(AnatomyContributionSnapshotToJSON),
     diff: VersionDiffToJSON(value['diff']),
-    editor: EditorViewToJSON(value['editor']),
+    editor: ExerciseEditorialEditorViewToJSON(value['editor']),
     importMetadata: ImportMetadataToJSON(value['importMetadata']),
     importProblems:
       value['importProblems'] == null

@@ -47,6 +47,7 @@ class CatalogAndSafetyIntegrationTest {
     @Autowired JdbcTemplate jdbc;
     @Autowired EntityManagerFactory entityManagerFactory;
     @Autowired ExerciseCatalogQueryPort catalogPort;
+    @Autowired ExerciseVersionRepository versions;
 
     MockMvc mvc;
 
@@ -181,7 +182,47 @@ class CatalogAndSafetyIntegrationTest {
     }
 
     @Test
-    void concurrentNextVersionsAreSerializedWithoutRawServerError() throws Exception {
+    void editorialCatalogSupportsCurrentSearchDraftHistoryWorkflowAndReadOnlyPublishedVersions() throws Exception {
+        CreatedExercise created = createExercise("Editorial squat");
+
+        mvc.perform(get("/api/v1/admin/exercises").with(contentAdmin()).param("query", "editorial"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].versionId").value(created.versionId().toString()))
+                .andExpect(jsonPath("$.content[0].availableActions[0]").value("EDIT"));
+        mvc.perform(get("/api/v1/admin/exercises").with(participant("viewer")))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/admin/exercises/versions/{id}/editor", created.versionId()).with(contentAdmin()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.version.canonicalName").value("Editorial squat"));
+        long draftVersion = versions.findById(created.versionId()).orElseThrow().version;
+        mvc.perform(put("/api/v1/admin/exercises/versions/{id}/editorial", created.versionId()).with(contentAdmin())
+                        .contentType("application/json").content("""
+                                {"canonicalName":"Edited editorial squat","expectedVersion":%d,"version":%s}
+                                """.formatted(draftVersion, versionCommand())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.canonicalName").value("Edited editorial squat"));
+        mvc.perform(get("/api/v1/admin/exercises/{id}/versions", created.exerciseId()).with(contentAdmin()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1));
+
+        UUID structureId = createPublishedAnatomy("EDITORIAL_QUADRICEPS", "MUSCLE_GROUP");
+        completeAndPublish(created.versionId(), structureId);
+        mvc.perform(get("/api/v1/admin/exercises/versions/{id}/capabilities", created.versionId()).with(contentAdmin()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.availableActions[0]").value("CREATE_NEXT_VERSION"));
+        mvc.perform(put("/api/v1/admin/exercises/versions/{id}/editorial", created.versionId()).with(contentAdmin())
+                        .contentType("application/json").content("""
+                                {"canonicalName":"Must remain read only","expectedVersion":1,"version":%s}
+                                """.formatted(versionCommand())))
+                .andExpect(status().isConflict());
+        mvc.perform(post("/api/v1/admin/exercises/{id}/versions", created.exerciseId()).with(contentAdmin())
+                        .contentType("application/json").content(versionCommand()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.versionNumber").value(2));
+        mvc.perform(post("/api/v1/admin/exercises/versions/{id}/withdraw", created.versionId()).with(contentAdmin()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("WITHDRAWN"));
+    }
+
+    @Test
+    void draftCannotCreateParallelNextVersions() throws Exception {
         CreatedExercise base = createExercise("Concurrent exercise");
         CountDownLatch ready = new CountDownLatch(2);
         CountDownLatch start = new CountDownLatch(1);
@@ -191,12 +232,11 @@ class CatalogAndSafetyIntegrationTest {
             assertThat(ready.await(10, TimeUnit.SECONDS)).isTrue();
             start.countDown();
             assertThat(List.of(first.get(20, TimeUnit.SECONDS), second.get(20, TimeUnit.SECONDS)))
-                    .containsExactly(200, 200);
+                    .containsExactly(409, 409);
         }
-        assertThat(jdbc.queryForList("""
-                SELECT version_number FROM exercise_catalog.exercise_version
-                WHERE exercise_id = ? ORDER BY version_number
-                """, Integer.class, base.exerciseId())).containsExactly(1, 2, 3);
+        assertThat(versions.findByExerciseIdOrderByVersionNumber(base.exerciseId()))
+                .extracting(version -> version.versionNumber)
+                .containsExactly(1);
     }
 
     @Test

@@ -44,7 +44,7 @@ export interface DiffRequest {
   id: string;
 }
 
-export interface Publish1Request {
+export interface PublishReviewedExerciseVersionRequest {
   id: string;
   exerciseVersionPublishRequest: ExerciseVersionPublishRequest;
 }
@@ -111,20 +111,22 @@ export class ExerciseVersionReviewControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for publish1 without sending the request
+   * Creates request options for publishReviewedExerciseVersion without sending the request
    */
-  async publish1RequestOpts(requestParameters: Publish1Request): Promise<runtime.RequestOpts> {
+  async publishReviewedExerciseVersionRequestOpts(
+    requestParameters: PublishReviewedExerciseVersionRequest,
+  ): Promise<runtime.RequestOpts> {
     if (requestParameters['id'] == null) {
       throw new runtime.RequiredError(
         'id',
-        'Required parameter "id" was null or undefined when calling publish1().',
+        'Required parameter "id" was null or undefined when calling publishReviewedExerciseVersion().',
       );
     }
 
     if (requestParameters['exerciseVersionPublishRequest'] == null) {
       throw new runtime.RequiredError(
         'exerciseVersionPublishRequest',
-        'Required parameter "exerciseVersionPublishRequest" was null or undefined when calling publish1().',
+        'Required parameter "exerciseVersionPublishRequest" was null or undefined when calling publishReviewedExerciseVersion().',
       );
     }
 
@@ -148,11 +150,11 @@ export class ExerciseVersionReviewControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async publish1Raw(
-    requestParameters: Publish1Request,
+  async publishReviewedExerciseVersionRaw(
+    requestParameters: PublishReviewedExerciseVersionRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<PublicationResult>> {
-    const requestOptions = await this.publish1RequestOpts(requestParameters);
+    const requestOptions = await this.publishReviewedExerciseVersionRequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
@@ -162,11 +164,11 @@ export class ExerciseVersionReviewControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async publish1(
-    requestParameters: Publish1Request,
+  async publishReviewedExerciseVersion(
+    requestParameters: PublishReviewedExerciseVersionRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<PublicationResult> {
-    const response = await this.publish1Raw(requestParameters, initOverrides);
+    const response = await this.publishReviewedExerciseVersionRaw(requestParameters, initOverrides);
     return await response.value();
   }
 

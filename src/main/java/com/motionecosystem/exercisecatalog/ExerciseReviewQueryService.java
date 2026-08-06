@@ -34,7 +34,7 @@ public class ExerciseReviewQueryService {
      */
     @Transactional(readOnly = true)
     public EditorialDetail detail(UUID versionId) {
-        CatalogService.EditorView editor = catalog.editor(versionId);
+        CatalogService.ExerciseEditorialEditorView editor = catalog.editor(versionId);
         var review = workflow.status(versionId);
         var diff = workflow.diff(versionId);
         ImportRecord record = records.findByDraftVersionId(versionId).orElse(null);
@@ -107,7 +107,7 @@ public class ExerciseReviewQueryService {
     public record AnatomyContributionSnapshot(String code, String displayName, String structureType, String role,
                                              String loadChannel, String contributionBand, String confidenceClass,
                                              String evidenceGrade) {}
-    public record EditorialDetail(CatalogService.EditorView editor, ImportMetadata importMetadata,
+    public record EditorialDetail(CatalogService.ExerciseEditorialEditorView editor, ImportMetadata importMetadata,
                                   List<ImportProblem> importProblems,
                                   com.motionecosystem.exercisecatalog.api.ReviewExerciseVersion.ReviewResult review,
                                   ExerciseEditorialWorkflowService.VersionDiff diff,

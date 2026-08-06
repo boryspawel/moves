@@ -33,7 +33,16 @@ import {
   DraftUpdateCommandFromJSON,
   DraftUpdateCommandToJSON,
 } from '../models/DraftUpdateCommand';
-import { type EditorView, EditorViewFromJSON, EditorViewToJSON } from '../models/EditorView';
+import {
+  type EditorialCapabilities,
+  EditorialCapabilitiesFromJSON,
+  EditorialCapabilitiesToJSON,
+} from '../models/EditorialCapabilities';
+import {
+  type EditorialCatalogPage,
+  EditorialCatalogPageFromJSON,
+  EditorialCatalogPageToJSON,
+} from '../models/EditorialCatalogPage';
 import {
   type EvidenceCommand,
   EvidenceCommandFromJSON,
@@ -44,6 +53,16 @@ import {
   EvidenceViewFromJSON,
   EvidenceViewToJSON,
 } from '../models/EvidenceView';
+import {
+  type ExerciseEditorialEditorView,
+  ExerciseEditorialEditorViewFromJSON,
+  ExerciseEditorialEditorViewToJSON,
+} from '../models/ExerciseEditorialEditorView';
+import {
+  type ExerciseEditorialVersionView,
+  ExerciseEditorialVersionViewFromJSON,
+  ExerciseEditorialVersionViewToJSON,
+} from '../models/ExerciseEditorialVersionView';
 import {
   type LegacyContraindicationReportItem,
   LegacyContraindicationReportItemFromJSON,
@@ -74,68 +93,77 @@ import {
   VersionCommandFromJSON,
   VersionCommandToJSON,
 } from '../models/VersionCommand';
-import { type VersionView, VersionViewFromJSON, VersionViewToJSON } from '../models/VersionView';
 
-export interface AddContributionRequest {
+export interface AddEditorialContributionRequest {
   versionId: string;
   contributionCommand: ContributionCommand;
 }
 
-export interface AddEvidenceRequest {
+export interface AddEditorialEvidenceRequest {
   versionId: string;
   evidenceCommand: EvidenceCommand;
 }
 
-export interface ApproveRequest {
+export interface ApproveEditorialExerciseRequest {
   versionId: string;
 }
 
-export interface Create3Request {
+export interface CreateEditorialExerciseRequest {
   catalogCreateRequest: CatalogCreateRequest;
 }
 
-export interface CreateVersionRequest {
+export interface CreateEditorialExerciseVersionRequest {
   exerciseId: string;
   versionCommand: VersionCommand;
 }
 
-export interface Editor1Request {
+export interface GetEditorialExerciseCapabilitiesRequest {
   versionId: string;
 }
 
-export interface PublishOperationRequest {
+export interface GetEditorialExerciseEditorRequest {
+  versionId: string;
+}
+
+export interface ListEditorialExerciseVersionsRequest {
+  exerciseId: string;
+}
+
+export interface ListEditorialExercisesRequest {
+  query?: string;
+  page?: number;
+  size?: number;
+}
+
+export interface PublishEditorialExerciseRequest {
   versionId: string;
   publishRequest: PublishRequest;
 }
 
-export interface ReplaceLoadCharacteristicsRequest {
+export interface ReplaceEditorialLoadCharacteristicsRequest {
   versionId: string;
   loadCharacteristicCommand: Array<LoadCharacteristicCommand>;
 }
 
-export interface RequestChangesRequest {
+export interface RequestEditorialExerciseChangesRequest {
   versionId: string;
 }
 
-export interface SubmitReviewRequest {
+export interface SubmitEditorialExerciseForReviewRequest {
   versionId: string;
 }
 
-export interface Update2Request {
-  versionId: string;
-  versionCommand: VersionCommand;
-}
-
-export interface UpdateEditorialDraftRequest {
+export interface UpdateEditorialExerciseContentRequest {
   versionId: string;
   draftUpdateCommand: DraftUpdateCommand;
 }
 
-export interface VersionsRequest {
-  exerciseId: string;
+export interface UpdateEditorialExerciseDraftRequest {
+  versionId: string;
+  versionCommand: VersionCommand;
 }
 
-export interface WithdrawRequest {
+export interface WithdrawEditorialExerciseRequest {
   versionId: string;
 }
 
@@ -144,22 +172,22 @@ export interface WithdrawRequest {
  */
 export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
   /**
-   * Creates request options for addContribution without sending the request
+   * Creates request options for addEditorialContribution without sending the request
    */
-  async addContributionRequestOpts(
-    requestParameters: AddContributionRequest,
+  async addEditorialContributionRequestOpts(
+    requestParameters: AddEditorialContributionRequest,
   ): Promise<runtime.RequestOpts> {
     if (requestParameters['versionId'] == null) {
       throw new runtime.RequiredError(
         'versionId',
-        'Required parameter "versionId" was null or undefined when calling addContribution().',
+        'Required parameter "versionId" was null or undefined when calling addEditorialContribution().',
       );
     }
 
     if (requestParameters['contributionCommand'] == null) {
       throw new runtime.RequiredError(
         'contributionCommand',
-        'Required parameter "contributionCommand" was null or undefined when calling addContribution().',
+        'Required parameter "contributionCommand" was null or undefined when calling addEditorialContribution().',
       );
     }
 
@@ -186,11 +214,11 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async addContributionRaw(
-    requestParameters: AddContributionRequest,
+  async addEditorialContributionRaw(
+    requestParameters: AddEditorialContributionRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<ContributionView>> {
-    const requestOptions = await this.addContributionRequestOpts(requestParameters);
+    const requestOptions = await this.addEditorialContributionRequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
@@ -200,31 +228,31 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async addContribution(
-    requestParameters: AddContributionRequest,
+  async addEditorialContribution(
+    requestParameters: AddEditorialContributionRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<ContributionView> {
-    const response = await this.addContributionRaw(requestParameters, initOverrides);
+    const response = await this.addEditorialContributionRaw(requestParameters, initOverrides);
     return await response.value();
   }
 
   /**
-   * Creates request options for addEvidence without sending the request
+   * Creates request options for addEditorialEvidence without sending the request
    */
-  async addEvidenceRequestOpts(
-    requestParameters: AddEvidenceRequest,
+  async addEditorialEvidenceRequestOpts(
+    requestParameters: AddEditorialEvidenceRequest,
   ): Promise<runtime.RequestOpts> {
     if (requestParameters['versionId'] == null) {
       throw new runtime.RequiredError(
         'versionId',
-        'Required parameter "versionId" was null or undefined when calling addEvidence().',
+        'Required parameter "versionId" was null or undefined when calling addEditorialEvidence().',
       );
     }
 
     if (requestParameters['evidenceCommand'] == null) {
       throw new runtime.RequiredError(
         'evidenceCommand',
-        'Required parameter "evidenceCommand" was null or undefined when calling addEvidence().',
+        'Required parameter "evidenceCommand" was null or undefined when calling addEditorialEvidence().',
       );
     }
 
@@ -251,11 +279,11 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async addEvidenceRaw(
-    requestParameters: AddEvidenceRequest,
+  async addEditorialEvidenceRaw(
+    requestParameters: AddEditorialEvidenceRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<EvidenceView>> {
-    const requestOptions = await this.addEvidenceRequestOpts(requestParameters);
+    const requestOptions = await this.addEditorialEvidenceRequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) => EvidenceViewFromJSON(jsonValue));
@@ -263,22 +291,24 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async addEvidence(
-    requestParameters: AddEvidenceRequest,
+  async addEditorialEvidence(
+    requestParameters: AddEditorialEvidenceRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<EvidenceView> {
-    const response = await this.addEvidenceRaw(requestParameters, initOverrides);
+    const response = await this.addEditorialEvidenceRaw(requestParameters, initOverrides);
     return await response.value();
   }
 
   /**
-   * Creates request options for approve without sending the request
+   * Creates request options for approveEditorialExercise without sending the request
    */
-  async approveRequestOpts(requestParameters: ApproveRequest): Promise<runtime.RequestOpts> {
+  async approveEditorialExerciseRequestOpts(
+    requestParameters: ApproveEditorialExerciseRequest,
+  ): Promise<runtime.RequestOpts> {
     if (requestParameters['versionId'] == null) {
       throw new runtime.RequiredError(
         'versionId',
-        'Required parameter "versionId" was null or undefined when calling approve().',
+        'Required parameter "versionId" was null or undefined when calling approveEditorialExercise().',
       );
     }
 
@@ -302,11 +332,11 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async approveRaw(
-    requestParameters: ApproveRequest,
+  async approveEditorialExerciseRaw(
+    requestParameters: ApproveEditorialExerciseRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<ReviewResult>> {
-    const requestOptions = await this.approveRequestOpts(requestParameters);
+    const requestOptions = await this.approveEditorialExerciseRequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) => ReviewResultFromJSON(jsonValue));
@@ -314,22 +344,24 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async approve(
-    requestParameters: ApproveRequest,
+  async approveEditorialExercise(
+    requestParameters: ApproveEditorialExerciseRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<ReviewResult> {
-    const response = await this.approveRaw(requestParameters, initOverrides);
+    const response = await this.approveEditorialExerciseRaw(requestParameters, initOverrides);
     return await response.value();
   }
 
   /**
-   * Creates request options for create3 without sending the request
+   * Creates request options for createEditorialExercise without sending the request
    */
-  async create3RequestOpts(requestParameters: Create3Request): Promise<runtime.RequestOpts> {
+  async createEditorialExerciseRequestOpts(
+    requestParameters: CreateEditorialExerciseRequest,
+  ): Promise<runtime.RequestOpts> {
     if (requestParameters['catalogCreateRequest'] == null) {
       throw new runtime.RequiredError(
         'catalogCreateRequest',
-        'Required parameter "catalogCreateRequest" was null or undefined when calling create3().',
+        'Required parameter "catalogCreateRequest" was null or undefined when calling createEditorialExercise().',
       );
     }
 
@@ -352,43 +384,45 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async create3Raw(
-    requestParameters: Create3Request,
+  async createEditorialExerciseRaw(
+    requestParameters: CreateEditorialExerciseRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<VersionView>> {
-    const requestOptions = await this.create3RequestOpts(requestParameters);
+  ): Promise<runtime.ApiResponse<ExerciseEditorialVersionView>> {
+    const requestOptions = await this.createEditorialExerciseRequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
-    return new runtime.JSONApiResponse(response, (jsonValue) => VersionViewFromJSON(jsonValue));
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      ExerciseEditorialVersionViewFromJSON(jsonValue),
+    );
   }
 
   /**
    */
-  async create3(
-    requestParameters: Create3Request,
+  async createEditorialExercise(
+    requestParameters: CreateEditorialExerciseRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<VersionView> {
-    const response = await this.create3Raw(requestParameters, initOverrides);
+  ): Promise<ExerciseEditorialVersionView> {
+    const response = await this.createEditorialExerciseRaw(requestParameters, initOverrides);
     return await response.value();
   }
 
   /**
-   * Creates request options for createVersion without sending the request
+   * Creates request options for createEditorialExerciseVersion without sending the request
    */
-  async createVersionRequestOpts(
-    requestParameters: CreateVersionRequest,
+  async createEditorialExerciseVersionRequestOpts(
+    requestParameters: CreateEditorialExerciseVersionRequest,
   ): Promise<runtime.RequestOpts> {
     if (requestParameters['exerciseId'] == null) {
       throw new runtime.RequiredError(
         'exerciseId',
-        'Required parameter "exerciseId" was null or undefined when calling createVersion().',
+        'Required parameter "exerciseId" was null or undefined when calling createEditorialExerciseVersion().',
       );
     }
 
     if (requestParameters['versionCommand'] == null) {
       throw new runtime.RequiredError(
         'versionCommand',
-        'Required parameter "versionCommand" was null or undefined when calling createVersion().',
+        'Required parameter "versionCommand" was null or undefined when calling createEditorialExerciseVersion().',
       );
     }
 
@@ -415,34 +449,97 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async createVersionRaw(
-    requestParameters: CreateVersionRequest,
+  async createEditorialExerciseVersionRaw(
+    requestParameters: CreateEditorialExerciseVersionRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<VersionView>> {
-    const requestOptions = await this.createVersionRequestOpts(requestParameters);
+  ): Promise<runtime.ApiResponse<ExerciseEditorialVersionView>> {
+    const requestOptions = await this.createEditorialExerciseVersionRequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
-    return new runtime.JSONApiResponse(response, (jsonValue) => VersionViewFromJSON(jsonValue));
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      ExerciseEditorialVersionViewFromJSON(jsonValue),
+    );
   }
 
   /**
    */
-  async createVersion(
-    requestParameters: CreateVersionRequest,
+  async createEditorialExerciseVersion(
+    requestParameters: CreateEditorialExerciseVersionRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<VersionView> {
-    const response = await this.createVersionRaw(requestParameters, initOverrides);
+  ): Promise<ExerciseEditorialVersionView> {
+    const response = await this.createEditorialExerciseVersionRaw(requestParameters, initOverrides);
     return await response.value();
   }
 
   /**
-   * Creates request options for editor1 without sending the request
+   * Creates request options for getEditorialExerciseCapabilities without sending the request
    */
-  async editor1RequestOpts(requestParameters: Editor1Request): Promise<runtime.RequestOpts> {
+  async getEditorialExerciseCapabilitiesRequestOpts(
+    requestParameters: GetEditorialExerciseCapabilitiesRequest,
+  ): Promise<runtime.RequestOpts> {
     if (requestParameters['versionId'] == null) {
       throw new runtime.RequiredError(
         'versionId',
-        'Required parameter "versionId" was null or undefined when calling editor1().',
+        'Required parameter "versionId" was null or undefined when calling getEditorialExerciseCapabilities().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v1/admin/exercises/versions/{versionId}/capabilities`;
+    urlPath = urlPath.replace(
+      '{versionId}',
+      encodeURIComponent(String(requestParameters['versionId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   */
+  async getEditorialExerciseCapabilitiesRaw(
+    requestParameters: GetEditorialExerciseCapabilitiesRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<EditorialCapabilities>> {
+    const requestOptions =
+      await this.getEditorialExerciseCapabilitiesRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      EditorialCapabilitiesFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async getEditorialExerciseCapabilities(
+    requestParameters: GetEditorialExerciseCapabilitiesRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<EditorialCapabilities> {
+    const response = await this.getEditorialExerciseCapabilitiesRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for getEditorialExerciseEditor without sending the request
+   */
+  async getEditorialExerciseEditorRequestOpts(
+    requestParameters: GetEditorialExerciseEditorRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['versionId'] == null) {
+      throw new runtime.RequiredError(
+        'versionId',
+        'Required parameter "versionId" was null or undefined when calling getEditorialExerciseEditor().',
       );
     }
 
@@ -466,30 +563,143 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async editor1Raw(
-    requestParameters: Editor1Request,
+  async getEditorialExerciseEditorRaw(
+    requestParameters: GetEditorialExerciseEditorRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<EditorView>> {
-    const requestOptions = await this.editor1RequestOpts(requestParameters);
+  ): Promise<runtime.ApiResponse<ExerciseEditorialEditorView>> {
+    const requestOptions = await this.getEditorialExerciseEditorRequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
-    return new runtime.JSONApiResponse(response, (jsonValue) => EditorViewFromJSON(jsonValue));
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      ExerciseEditorialEditorViewFromJSON(jsonValue),
+    );
   }
 
   /**
    */
-  async editor1(
-    requestParameters: Editor1Request,
+  async getEditorialExerciseEditor(
+    requestParameters: GetEditorialExerciseEditorRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<EditorView> {
-    const response = await this.editor1Raw(requestParameters, initOverrides);
+  ): Promise<ExerciseEditorialEditorView> {
+    const response = await this.getEditorialExerciseEditorRaw(requestParameters, initOverrides);
     return await response.value();
   }
 
   /**
-   * Creates request options for legacyContraindications without sending the request
+   * Creates request options for listEditorialExerciseVersions without sending the request
    */
-  async legacyContraindicationsRequestOpts(): Promise<runtime.RequestOpts> {
+  async listEditorialExerciseVersionsRequestOpts(
+    requestParameters: ListEditorialExerciseVersionsRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['exerciseId'] == null) {
+      throw new runtime.RequiredError(
+        'exerciseId',
+        'Required parameter "exerciseId" was null or undefined when calling listEditorialExerciseVersions().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v1/admin/exercises/{exerciseId}/versions`;
+    urlPath = urlPath.replace(
+      '{exerciseId}',
+      encodeURIComponent(String(requestParameters['exerciseId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   */
+  async listEditorialExerciseVersionsRaw(
+    requestParameters: ListEditorialExerciseVersionsRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<ExerciseEditorialVersionView>>> {
+    const requestOptions = await this.listEditorialExerciseVersionsRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(ExerciseEditorialVersionViewFromJSON),
+    );
+  }
+
+  /**
+   */
+  async listEditorialExerciseVersions(
+    requestParameters: ListEditorialExerciseVersionsRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<ExerciseEditorialVersionView>> {
+    const response = await this.listEditorialExerciseVersionsRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for listEditorialExercises without sending the request
+   */
+  async listEditorialExercisesRequestOpts(
+    requestParameters: ListEditorialExercisesRequest,
+  ): Promise<runtime.RequestOpts> {
+    const queryParameters: any = {};
+
+    if (requestParameters['query'] != null) {
+      queryParameters['query'] = requestParameters['query'];
+    }
+
+    if (requestParameters['page'] != null) {
+      queryParameters['page'] = requestParameters['page'];
+    }
+
+    if (requestParameters['size'] != null) {
+      queryParameters['size'] = requestParameters['size'];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v1/admin/exercises`;
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   */
+  async listEditorialExercisesRaw(
+    requestParameters: ListEditorialExercisesRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<EditorialCatalogPage>> {
+    const requestOptions = await this.listEditorialExercisesRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      EditorialCatalogPageFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async listEditorialExercises(
+    requestParameters: ListEditorialExercisesRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<EditorialCatalogPage> {
+    const response = await this.listEditorialExercisesRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for listLegacyEditorialContraindications without sending the request
+   */
+  async listLegacyEditorialContraindicationsRequestOpts(): Promise<runtime.RequestOpts> {
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -506,10 +716,10 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async legacyContraindicationsRaw(
+  async listLegacyEditorialContraindicationsRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<Array<LegacyContraindicationReportItem>>> {
-    const requestOptions = await this.legacyContraindicationsRequestOpts();
+    const requestOptions = await this.listLegacyEditorialContraindicationsRequestOpts();
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
@@ -519,30 +729,30 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async legacyContraindications(
+  async listLegacyEditorialContraindications(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<Array<LegacyContraindicationReportItem>> {
-    const response = await this.legacyContraindicationsRaw(initOverrides);
+    const response = await this.listLegacyEditorialContraindicationsRaw(initOverrides);
     return await response.value();
   }
 
   /**
-   * Creates request options for publish without sending the request
+   * Creates request options for publishEditorialExercise without sending the request
    */
-  async publishRequestOpts(
-    requestParameters: PublishOperationRequest,
+  async publishEditorialExerciseRequestOpts(
+    requestParameters: PublishEditorialExerciseRequest,
   ): Promise<runtime.RequestOpts> {
     if (requestParameters['versionId'] == null) {
       throw new runtime.RequiredError(
         'versionId',
-        'Required parameter "versionId" was null or undefined when calling publish().',
+        'Required parameter "versionId" was null or undefined when calling publishEditorialExercise().',
       );
     }
 
     if (requestParameters['publishRequest'] == null) {
       throw new runtime.RequiredError(
         'publishRequest',
-        'Required parameter "publishRequest" was null or undefined when calling publish().',
+        'Required parameter "publishRequest" was null or undefined when calling publishEditorialExercise().',
       );
     }
 
@@ -569,11 +779,11 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async publishRaw(
-    requestParameters: PublishOperationRequest,
+  async publishEditorialExerciseRaw(
+    requestParameters: PublishEditorialExerciseRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<PublicationResult>> {
-    const requestOptions = await this.publishRequestOpts(requestParameters);
+    const requestOptions = await this.publishEditorialExerciseRequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
@@ -583,31 +793,31 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async publish(
-    requestParameters: PublishOperationRequest,
+  async publishEditorialExercise(
+    requestParameters: PublishEditorialExerciseRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<PublicationResult> {
-    const response = await this.publishRaw(requestParameters, initOverrides);
+    const response = await this.publishEditorialExerciseRaw(requestParameters, initOverrides);
     return await response.value();
   }
 
   /**
-   * Creates request options for replaceLoadCharacteristics without sending the request
+   * Creates request options for replaceEditorialLoadCharacteristics without sending the request
    */
-  async replaceLoadCharacteristicsRequestOpts(
-    requestParameters: ReplaceLoadCharacteristicsRequest,
+  async replaceEditorialLoadCharacteristicsRequestOpts(
+    requestParameters: ReplaceEditorialLoadCharacteristicsRequest,
   ): Promise<runtime.RequestOpts> {
     if (requestParameters['versionId'] == null) {
       throw new runtime.RequiredError(
         'versionId',
-        'Required parameter "versionId" was null or undefined when calling replaceLoadCharacteristics().',
+        'Required parameter "versionId" was null or undefined when calling replaceEditorialLoadCharacteristics().',
       );
     }
 
     if (requestParameters['loadCharacteristicCommand'] == null) {
       throw new runtime.RequiredError(
         'loadCharacteristicCommand',
-        'Required parameter "loadCharacteristicCommand" was null or undefined when calling replaceLoadCharacteristics().',
+        'Required parameter "loadCharacteristicCommand" was null or undefined when calling replaceEditorialLoadCharacteristics().',
       );
     }
 
@@ -634,36 +844,42 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async replaceLoadCharacteristicsRaw(
-    requestParameters: ReplaceLoadCharacteristicsRequest,
+  async replaceEditorialLoadCharacteristicsRaw(
+    requestParameters: ReplaceEditorialLoadCharacteristicsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<EditorView>> {
-    const requestOptions = await this.replaceLoadCharacteristicsRequestOpts(requestParameters);
+  ): Promise<runtime.ApiResponse<ExerciseEditorialEditorView>> {
+    const requestOptions =
+      await this.replaceEditorialLoadCharacteristicsRequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
-    return new runtime.JSONApiResponse(response, (jsonValue) => EditorViewFromJSON(jsonValue));
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      ExerciseEditorialEditorViewFromJSON(jsonValue),
+    );
   }
 
   /**
    */
-  async replaceLoadCharacteristics(
-    requestParameters: ReplaceLoadCharacteristicsRequest,
+  async replaceEditorialLoadCharacteristics(
+    requestParameters: ReplaceEditorialLoadCharacteristicsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<EditorView> {
-    const response = await this.replaceLoadCharacteristicsRaw(requestParameters, initOverrides);
+  ): Promise<ExerciseEditorialEditorView> {
+    const response = await this.replaceEditorialLoadCharacteristicsRaw(
+      requestParameters,
+      initOverrides,
+    );
     return await response.value();
   }
 
   /**
-   * Creates request options for requestChanges without sending the request
+   * Creates request options for requestEditorialExerciseChanges without sending the request
    */
-  async requestChangesRequestOpts(
-    requestParameters: RequestChangesRequest,
+  async requestEditorialExerciseChangesRequestOpts(
+    requestParameters: RequestEditorialExerciseChangesRequest,
   ): Promise<runtime.RequestOpts> {
     if (requestParameters['versionId'] == null) {
       throw new runtime.RequiredError(
         'versionId',
-        'Required parameter "versionId" was null or undefined when calling requestChanges().',
+        'Required parameter "versionId" was null or undefined when calling requestEditorialExerciseChanges().',
       );
     }
 
@@ -687,36 +903,41 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async requestChangesRaw(
-    requestParameters: RequestChangesRequest,
+  async requestEditorialExerciseChangesRaw(
+    requestParameters: RequestEditorialExerciseChangesRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<VersionView>> {
-    const requestOptions = await this.requestChangesRequestOpts(requestParameters);
+  ): Promise<runtime.ApiResponse<ExerciseEditorialVersionView>> {
+    const requestOptions = await this.requestEditorialExerciseChangesRequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
-    return new runtime.JSONApiResponse(response, (jsonValue) => VersionViewFromJSON(jsonValue));
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      ExerciseEditorialVersionViewFromJSON(jsonValue),
+    );
   }
 
   /**
    */
-  async requestChanges(
-    requestParameters: RequestChangesRequest,
+  async requestEditorialExerciseChanges(
+    requestParameters: RequestEditorialExerciseChangesRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<VersionView> {
-    const response = await this.requestChangesRaw(requestParameters, initOverrides);
+  ): Promise<ExerciseEditorialVersionView> {
+    const response = await this.requestEditorialExerciseChangesRaw(
+      requestParameters,
+      initOverrides,
+    );
     return await response.value();
   }
 
   /**
-   * Creates request options for submitReview without sending the request
+   * Creates request options for submitEditorialExerciseForReview without sending the request
    */
-  async submitReviewRequestOpts(
-    requestParameters: SubmitReviewRequest,
+  async submitEditorialExerciseForReviewRequestOpts(
+    requestParameters: SubmitEditorialExerciseForReviewRequest,
   ): Promise<runtime.RequestOpts> {
     if (requestParameters['versionId'] == null) {
       throw new runtime.RequiredError(
         'versionId',
-        'Required parameter "versionId" was null or undefined when calling submitReview().',
+        'Required parameter "versionId" was null or undefined when calling submitEditorialExerciseForReview().',
       );
     }
 
@@ -740,104 +961,49 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async submitReviewRaw(
-    requestParameters: SubmitReviewRequest,
+  async submitEditorialExerciseForReviewRaw(
+    requestParameters: SubmitEditorialExerciseForReviewRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<VersionView>> {
-    const requestOptions = await this.submitReviewRequestOpts(requestParameters);
+  ): Promise<runtime.ApiResponse<ExerciseEditorialVersionView>> {
+    const requestOptions =
+      await this.submitEditorialExerciseForReviewRequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
-    return new runtime.JSONApiResponse(response, (jsonValue) => VersionViewFromJSON(jsonValue));
-  }
-
-  /**
-   */
-  async submitReview(
-    requestParameters: SubmitReviewRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<VersionView> {
-    const response = await this.submitReviewRaw(requestParameters, initOverrides);
-    return await response.value();
-  }
-
-  /**
-   * Creates request options for update2 without sending the request
-   */
-  async update2RequestOpts(requestParameters: Update2Request): Promise<runtime.RequestOpts> {
-    if (requestParameters['versionId'] == null) {
-      throw new runtime.RequiredError(
-        'versionId',
-        'Required parameter "versionId" was null or undefined when calling update2().',
-      );
-    }
-
-    if (requestParameters['versionCommand'] == null) {
-      throw new runtime.RequiredError(
-        'versionCommand',
-        'Required parameter "versionCommand" was null or undefined when calling update2().',
-      );
-    }
-
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    headerParameters['Content-Type'] = 'application/json';
-
-    let urlPath = `/api/v1/admin/exercises/versions/{versionId}`;
-    urlPath = urlPath.replace(
-      '{versionId}',
-      encodeURIComponent(String(requestParameters['versionId'])),
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      ExerciseEditorialVersionViewFromJSON(jsonValue),
     );
-
-    return {
-      path: urlPath,
-      method: 'PUT',
-      headers: headerParameters,
-      query: queryParameters,
-      body: VersionCommandToJSON(requestParameters['versionCommand']),
-    };
   }
 
   /**
    */
-  async update2Raw(
-    requestParameters: Update2Request,
+  async submitEditorialExerciseForReview(
+    requestParameters: SubmitEditorialExerciseForReviewRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<VersionView>> {
-    const requestOptions = await this.update2RequestOpts(requestParameters);
-    const response = await this.request(requestOptions, initOverrides);
-
-    return new runtime.JSONApiResponse(response, (jsonValue) => VersionViewFromJSON(jsonValue));
-  }
-
-  /**
-   */
-  async update2(
-    requestParameters: Update2Request,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<VersionView> {
-    const response = await this.update2Raw(requestParameters, initOverrides);
+  ): Promise<ExerciseEditorialVersionView> {
+    const response = await this.submitEditorialExerciseForReviewRaw(
+      requestParameters,
+      initOverrides,
+    );
     return await response.value();
   }
 
   /**
-   * Creates request options for updateEditorialDraft without sending the request
+   * Creates request options for updateEditorialExerciseContent without sending the request
    */
-  async updateEditorialDraftRequestOpts(
-    requestParameters: UpdateEditorialDraftRequest,
+  async updateEditorialExerciseContentRequestOpts(
+    requestParameters: UpdateEditorialExerciseContentRequest,
   ): Promise<runtime.RequestOpts> {
     if (requestParameters['versionId'] == null) {
       throw new runtime.RequiredError(
         'versionId',
-        'Required parameter "versionId" was null or undefined when calling updateEditorialDraft().',
+        'Required parameter "versionId" was null or undefined when calling updateEditorialExerciseContent().',
       );
     }
 
     if (requestParameters['draftUpdateCommand'] == null) {
       throw new runtime.RequiredError(
         'draftUpdateCommand',
-        'Required parameter "draftUpdateCommand" was null or undefined when calling updateEditorialDraft().',
+        'Required parameter "draftUpdateCommand" was null or undefined when calling updateEditorialExerciseContent().',
       );
     }
 
@@ -864,34 +1030,45 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async updateEditorialDraftRaw(
-    requestParameters: UpdateEditorialDraftRequest,
+  async updateEditorialExerciseContentRaw(
+    requestParameters: UpdateEditorialExerciseContentRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<VersionView>> {
-    const requestOptions = await this.updateEditorialDraftRequestOpts(requestParameters);
+  ): Promise<runtime.ApiResponse<ExerciseEditorialVersionView>> {
+    const requestOptions = await this.updateEditorialExerciseContentRequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
-    return new runtime.JSONApiResponse(response, (jsonValue) => VersionViewFromJSON(jsonValue));
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      ExerciseEditorialVersionViewFromJSON(jsonValue),
+    );
   }
 
   /**
    */
-  async updateEditorialDraft(
-    requestParameters: UpdateEditorialDraftRequest,
+  async updateEditorialExerciseContent(
+    requestParameters: UpdateEditorialExerciseContentRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<VersionView> {
-    const response = await this.updateEditorialDraftRaw(requestParameters, initOverrides);
+  ): Promise<ExerciseEditorialVersionView> {
+    const response = await this.updateEditorialExerciseContentRaw(requestParameters, initOverrides);
     return await response.value();
   }
 
   /**
-   * Creates request options for versions without sending the request
+   * Creates request options for updateEditorialExerciseDraft without sending the request
    */
-  async versionsRequestOpts(requestParameters: VersionsRequest): Promise<runtime.RequestOpts> {
-    if (requestParameters['exerciseId'] == null) {
+  async updateEditorialExerciseDraftRequestOpts(
+    requestParameters: UpdateEditorialExerciseDraftRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['versionId'] == null) {
       throw new runtime.RequiredError(
-        'exerciseId',
-        'Required parameter "exerciseId" was null or undefined when calling versions().',
+        'versionId',
+        'Required parameter "versionId" was null or undefined when calling updateEditorialExerciseDraft().',
+      );
+    }
+
+    if (requestParameters['versionCommand'] == null) {
+      throw new runtime.RequiredError(
+        'versionCommand',
+        'Required parameter "versionCommand" was null or undefined when calling updateEditorialExerciseDraft().',
       );
     }
 
@@ -899,50 +1076,57 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
     const headerParameters: runtime.HTTPHeaders = {};
 
-    let urlPath = `/api/v1/admin/exercises/{exerciseId}/versions`;
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v1/admin/exercises/versions/{versionId}`;
     urlPath = urlPath.replace(
-      '{exerciseId}',
-      encodeURIComponent(String(requestParameters['exerciseId'])),
+      '{versionId}',
+      encodeURIComponent(String(requestParameters['versionId'])),
     );
 
     return {
       path: urlPath,
-      method: 'GET',
+      method: 'PUT',
       headers: headerParameters,
       query: queryParameters,
+      body: VersionCommandToJSON(requestParameters['versionCommand']),
     };
   }
 
   /**
    */
-  async versionsRaw(
-    requestParameters: VersionsRequest,
+  async updateEditorialExerciseDraftRaw(
+    requestParameters: UpdateEditorialExerciseDraftRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<Array<VersionView>>> {
-    const requestOptions = await this.versionsRequestOpts(requestParameters);
+  ): Promise<runtime.ApiResponse<ExerciseEditorialVersionView>> {
+    const requestOptions = await this.updateEditorialExerciseDraftRequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
-    return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(VersionViewFromJSON));
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      ExerciseEditorialVersionViewFromJSON(jsonValue),
+    );
   }
 
   /**
    */
-  async versions(
-    requestParameters: VersionsRequest,
+  async updateEditorialExerciseDraft(
+    requestParameters: UpdateEditorialExerciseDraftRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<Array<VersionView>> {
-    const response = await this.versionsRaw(requestParameters, initOverrides);
+  ): Promise<ExerciseEditorialVersionView> {
+    const response = await this.updateEditorialExerciseDraftRaw(requestParameters, initOverrides);
     return await response.value();
   }
 
   /**
-   * Creates request options for withdraw without sending the request
+   * Creates request options for withdrawEditorialExercise without sending the request
    */
-  async withdrawRequestOpts(requestParameters: WithdrawRequest): Promise<runtime.RequestOpts> {
+  async withdrawEditorialExerciseRequestOpts(
+    requestParameters: WithdrawEditorialExerciseRequest,
+  ): Promise<runtime.RequestOpts> {
     if (requestParameters['versionId'] == null) {
       throw new runtime.RequiredError(
         'versionId',
-        'Required parameter "versionId" was null or undefined when calling withdraw().',
+        'Required parameter "versionId" was null or undefined when calling withdrawEditorialExercise().',
       );
     }
 
@@ -966,23 +1150,25 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async withdrawRaw(
-    requestParameters: WithdrawRequest,
+  async withdrawEditorialExerciseRaw(
+    requestParameters: WithdrawEditorialExerciseRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<VersionView>> {
-    const requestOptions = await this.withdrawRequestOpts(requestParameters);
+  ): Promise<runtime.ApiResponse<ExerciseEditorialVersionView>> {
+    const requestOptions = await this.withdrawEditorialExerciseRequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
-    return new runtime.JSONApiResponse(response, (jsonValue) => VersionViewFromJSON(jsonValue));
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      ExerciseEditorialVersionViewFromJSON(jsonValue),
+    );
   }
 
   /**
    */
-  async withdraw(
-    requestParameters: WithdrawRequest,
+  async withdrawEditorialExercise(
+    requestParameters: WithdrawEditorialExerciseRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<VersionView> {
-    const response = await this.withdrawRaw(requestParameters, initOverrides);
+  ): Promise<ExerciseEditorialVersionView> {
+    const response = await this.withdrawEditorialExerciseRaw(requestParameters, initOverrides);
     return await response.value();
   }
 }

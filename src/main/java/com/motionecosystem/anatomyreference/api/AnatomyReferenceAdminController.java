@@ -52,7 +52,7 @@ class AnatomyReferenceAdminController {
     }
 
     @PostMapping("/{structureId}/publish")
-    @Operation(summary = "Publish an immutable anatomical structure")
+    @Operation(operationId = "publishAnatomicalStructure", summary = "Publish an immutable anatomical structure")
     AnatomyReferenceQueryPort.AnatomicalStructureSnapshot publish(
             @AuthenticationPrincipal Jwt jwt, @PathVariable UUID structureId) {
         return anatomy.publish(jwt.getSubject(), structureId);

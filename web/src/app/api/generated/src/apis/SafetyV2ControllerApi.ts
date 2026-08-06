@@ -89,7 +89,7 @@ export interface ReviseClinicalRestrictionRequest {
   restrictionCommand: RestrictionCommand;
 }
 
-export interface Withdraw2Request {
+export interface Withdraw1Request {
   restrictionId: string;
 }
 
@@ -672,13 +672,13 @@ export class SafetyV2ControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for withdraw2 without sending the request
+   * Creates request options for withdraw1 without sending the request
    */
-  async withdraw2RequestOpts(requestParameters: Withdraw2Request): Promise<runtime.RequestOpts> {
+  async withdraw1RequestOpts(requestParameters: Withdraw1Request): Promise<runtime.RequestOpts> {
     if (requestParameters['restrictionId'] == null) {
       throw new runtime.RequiredError(
         'restrictionId',
-        'Required parameter "restrictionId" was null or undefined when calling withdraw2().',
+        'Required parameter "restrictionId" was null or undefined when calling withdraw1().',
       );
     }
 
@@ -702,11 +702,11 @@ export class SafetyV2ControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async withdraw2Raw(
-    requestParameters: Withdraw2Request,
+  async withdraw1Raw(
+    requestParameters: Withdraw1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<RestrictionView>> {
-    const requestOptions = await this.withdraw2RequestOpts(requestParameters);
+    const requestOptions = await this.withdraw1RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) => RestrictionViewFromJSON(jsonValue));
@@ -714,11 +714,11 @@ export class SafetyV2ControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async withdraw2(
-    requestParameters: Withdraw2Request,
+  async withdraw1(
+    requestParameters: Withdraw1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<RestrictionView> {
-    const response = await this.withdraw2Raw(requestParameters, initOverrides);
+    const response = await this.withdraw1Raw(requestParameters, initOverrides);
     return await response.value();
   }
 }

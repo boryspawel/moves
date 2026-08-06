@@ -47,7 +47,7 @@ export interface AncestorsRequest {
   structureId: string;
 }
 
-export interface Create4Request {
+export interface Create3Request {
   createStructureRequest: CreateStructureRequest;
 }
 
@@ -55,11 +55,11 @@ export interface Get4Request {
   structureId: string;
 }
 
-export interface Publish2Request {
+export interface PublishAnatomicalStructureRequest {
   structureId: string;
 }
 
-export interface Withdraw1Request {
+export interface WithdrawRequest {
   structureId: string;
 }
 
@@ -177,13 +177,13 @@ export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for create4 without sending the request
+   * Creates request options for create3 without sending the request
    */
-  async create4RequestOpts(requestParameters: Create4Request): Promise<runtime.RequestOpts> {
+  async create3RequestOpts(requestParameters: Create3Request): Promise<runtime.RequestOpts> {
     if (requestParameters['createStructureRequest'] == null) {
       throw new runtime.RequiredError(
         'createStructureRequest',
-        'Required parameter "createStructureRequest" was null or undefined when calling create4().',
+        'Required parameter "createStructureRequest" was null or undefined when calling create3().',
       );
     }
 
@@ -207,11 +207,11 @@ export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
   /**
    * Create a draft anatomical structure
    */
-  async create4Raw(
-    requestParameters: Create4Request,
+  async create3Raw(
+    requestParameters: Create3Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AnatomicalStructureSnapshot>> {
-    const requestOptions = await this.create4RequestOpts(requestParameters);
+    const requestOptions = await this.create3RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
@@ -222,11 +222,11 @@ export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
   /**
    * Create a draft anatomical structure
    */
-  async create4(
-    requestParameters: Create4Request,
+  async create3(
+    requestParameters: Create3Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<AnatomicalStructureSnapshot> {
-    const response = await this.create4Raw(requestParameters, initOverrides);
+    const response = await this.create3Raw(requestParameters, initOverrides);
     return await response.value();
   }
 
@@ -284,13 +284,15 @@ export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for publish2 without sending the request
+   * Creates request options for publishAnatomicalStructure without sending the request
    */
-  async publish2RequestOpts(requestParameters: Publish2Request): Promise<runtime.RequestOpts> {
+  async publishAnatomicalStructureRequestOpts(
+    requestParameters: PublishAnatomicalStructureRequest,
+  ): Promise<runtime.RequestOpts> {
     if (requestParameters['structureId'] == null) {
       throw new runtime.RequiredError(
         'structureId',
-        'Required parameter "structureId" was null or undefined when calling publish2().',
+        'Required parameter "structureId" was null or undefined when calling publishAnatomicalStructure().',
       );
     }
 
@@ -315,11 +317,11 @@ export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
   /**
    * Publish an immutable anatomical structure
    */
-  async publish2Raw(
-    requestParameters: Publish2Request,
+  async publishAnatomicalStructureRaw(
+    requestParameters: PublishAnatomicalStructureRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AnatomicalStructureSnapshot>> {
-    const requestOptions = await this.publish2RequestOpts(requestParameters);
+    const requestOptions = await this.publishAnatomicalStructureRequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
@@ -330,22 +332,22 @@ export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
   /**
    * Publish an immutable anatomical structure
    */
-  async publish2(
-    requestParameters: Publish2Request,
+  async publishAnatomicalStructure(
+    requestParameters: PublishAnatomicalStructureRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<AnatomicalStructureSnapshot> {
-    const response = await this.publish2Raw(requestParameters, initOverrides);
+    const response = await this.publishAnatomicalStructureRaw(requestParameters, initOverrides);
     return await response.value();
   }
 
   /**
-   * Creates request options for withdraw1 without sending the request
+   * Creates request options for withdraw without sending the request
    */
-  async withdraw1RequestOpts(requestParameters: Withdraw1Request): Promise<runtime.RequestOpts> {
+  async withdrawRequestOpts(requestParameters: WithdrawRequest): Promise<runtime.RequestOpts> {
     if (requestParameters['structureId'] == null) {
       throw new runtime.RequiredError(
         'structureId',
-        'Required parameter "structureId" was null or undefined when calling withdraw1().',
+        'Required parameter "structureId" was null or undefined when calling withdraw().',
       );
     }
 
@@ -370,11 +372,11 @@ export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
   /**
    * Withdraw a published anatomical structure
    */
-  async withdraw1Raw(
-    requestParameters: Withdraw1Request,
+  async withdrawRaw(
+    requestParameters: WithdrawRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AnatomicalStructureSnapshot>> {
-    const requestOptions = await this.withdraw1RequestOpts(requestParameters);
+    const requestOptions = await this.withdrawRequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
@@ -385,11 +387,11 @@ export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
   /**
    * Withdraw a published anatomical structure
    */
-  async withdraw1(
-    requestParameters: Withdraw1Request,
+  async withdraw(
+    requestParameters: WithdrawRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<AnatomicalStructureSnapshot> {
-    const response = await this.withdraw1Raw(requestParameters, initOverrides);
+    const response = await this.withdrawRaw(requestParameters, initOverrides);
     return await response.value();
   }
 }
