@@ -38,6 +38,8 @@ interface ExerciseImportRecordRepository extends JpaRepository<ExerciseImportRec
     @Query("select record from ExerciseImportRecordJpaEntity record where record.id = :id")
     Optional<ExerciseImportRecordEntity> findLockedById(@Param("id") UUID id);
     List<ExerciseImportRecordEntity> findByBatchIdAndStatusOrderByRowNumberAscIdAsc(UUID batchId, String status);
+    boolean existsByBatchIdAndRowNumber(UUID batchId, long rowNumber);
+    List<ExerciseImportRecordEntity> findByBatchIdAndStatusAndDraftVersionIdIsNullOrderByRowNumberAscIdAsc(UUID batchId, String status);
     List<ExerciseImportRecordEntity> findByBatchId(UUID batchId);
     @Query("""
             select record from ExerciseImportRecordJpaEntity record
@@ -70,6 +72,7 @@ interface ExerciseImportMappingRepository extends JpaRepository<ExerciseImportMa
 interface ExerciseImportIssueRepository extends JpaRepository<ExerciseImportIssueEntity, UUID> {
     boolean existsByRecordIdAndCodeAndResolvedAtIsNull(UUID recordId, String code);
     boolean existsByBatchIdAndRecordIdAndCodeAndJsonPointer(UUID batchId, UUID recordId, String code, String jsonPointer);
+    boolean existsByBatchIdAndRecordIdIsNullAndCodeAndJsonPointer(UUID batchId, String code, String jsonPointer);
     List<ExerciseImportIssueEntity> findByRecordIdAndCodeAndResolvedAtIsNull(UUID recordId, String code);
     List<ExerciseImportIssueEntity> findByRecordIdOrderBySeverityAscCodeAscIdAsc(UUID recordId);
     List<ExerciseImportIssueEntity> findByBatchIdOrderByRowNumberAscSeverityAscCodeAscIdAsc(UUID batchId);
