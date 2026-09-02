@@ -1,14 +1,13 @@
 package com.motionecosystem.exerciseimport;
 
 import com.motionecosystem.audit.AuditRecorder;
+import com.motionecosystem.exercisecatalog.api.ImportedExerciseDraftPort;
 import com.motionecosystem.exerciseimport.api.CreateExerciseDraft;
 import com.motionecosystem.exerciseimport.api.FindExerciseMatch;
 import com.motionecosystem.exerciseimport.api.NormalizeImportRecord;
 import com.motionecosystem.exerciseimport.api.ValidateImportRecord;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -20,7 +19,6 @@ import tools.jackson.databind.node.ObjectNode;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.sql.Timestamp;
 import java.text.Normalizer;
 import java.time.Clock;
 import java.time.Instant;
@@ -45,7 +43,15 @@ public class ImportRecordUseCases implements NormalizeImportRecord, ValidateImpo
     private static final Set<String> TECHNICAL = Set.of("FOUNDATIONAL", "INTERMEDIATE", "ADVANCED");
     private static final Set<String> ENVIRONMENTS = Set.of("HOME", "GYM", "OUTDOOR", "CLINIC", "ANY");
 
-    private final JdbcTemplate jdbc;
+    private final ExerciseImportRecordRepository records;
+    private final ExerciseImportBatchRepository batches;
+    private final ExerciseImportSourceRepository sources;
+    private final ExerciseImportSourceReferenceRepository sourceReferences;
+    private final ExerciseImportMappingRepository mappings;
+    private final ExerciseImportIssueRepository issues;
+    private final ExerciseImportMatchCandidateRepository candidates;
+    private final ImportCatalogReadRepository catalog;
+    private final ImportedExerciseDraftPort drafts;
     private final ObjectMapper json;
     private final Clock clock;
     private final AuditRecorder audit;
@@ -53,7 +59,7 @@ public class ImportRecordUseCases implements NormalizeImportRecord, ValidateImpo
     @Override
     @Transactional
     public void normalize(UUID recordId) {
-        RecordData record = record(recordId, false);
+        RecordData record = record(recordId, true);
         if (!record.status.equals("PARSED")) return;
         try {
             JsonNode raw = json.readTree(record.rawPayload);
@@ -82,13 +88,13 @@ public class ImportRecordUseCases implements NormalizeImportRecord, ValidateImpo
             String canonical = json.writeValueAsString(normalized);
             String hash = sha256(canonical);
             boolean blocked = unresolvedMappings(recordId);
-            jdbc.update("""
-                    UPDATE exercise_import.import_record
-                       SET source_record_key=?, normalized_payload=CAST(? AS jsonb), normalized_sha256=?,
-                           normalization_version=?, status=?, updated_at=?, version=version+1
-                     WHERE id=?
-                    """, normalized.path("sourceRecordKey").asText(), canonical, hash,
-                    NORMALIZATION_VERSION, blocked ? "BLOCKED_BY_MAPPING" : "NORMALIZED", sql(clock.instant()), recordId);
+            ExerciseImportRecordEntity entity = lockedRecord(recordId);
+            entity.sourceRecordKey = normalized.path("sourceRecordKey").asText();
+            entity.normalizedPayload = canonical;
+            entity.normalizedSha256 = hash;
+            entity.normalizationVersion = NORMALIZATION_VERSION;
+            entity.status = blocked ? "BLOCKED_BY_MAPPING" : "NORMALIZED";
+            entity.updatedAt = clock.instant();
             for (String unsafe : List.of("contraindications", "injuries", "treatment", "safeFor")) {
                 if (raw.has(unsafe)) issue(record, "UNVERIFIED_SAFETY_FIELD", "NORMALIZE", "WARNING",
                         "/" + unsafe, "Pole bezpieczeństwa zachowano wyłącznie w raw_payload; nie tworzy reguły safety.");
@@ -103,7 +109,7 @@ public class ImportRecordUseCases implements NormalizeImportRecord, ValidateImpo
     @Override
     @Transactional
     public void validate(UUID recordId) {
-        RecordData record = record(recordId, false);
+        RecordData record = record(recordId, true);
         if (!record.status.equals("NORMALIZED")) return;
         try {
             JsonNode normalized = json.readTree(record.normalizedPayload);
@@ -134,24 +140,20 @@ public class ImportRecordUseCases implements NormalizeImportRecord, ValidateImpo
     public void findMatches(UUID recordId) {
         RecordData record = record(recordId, false);
         if (!record.status.equals("NORMALIZED")) return;
-        SourceReference reference = jdbc.query("""
-                SELECT ref.exercise_id, ref.normalized_sha256
-                  FROM exercise_import.import_source_reference ref
-                 WHERE ref.source_id=? AND ref.source_record_key=?
-                """, rs -> rs.next() ? new SourceReference(rs.getObject(1, UUID.class), rs.getString(2)) : null,
-                record.sourceId, record.sourceRecordKey);
+        ExerciseImportSourceReferenceEntity reference = sourceReferences
+                .findBySourceIdAndSourceRecordKey(record.sourceId, record.sourceRecordKey).orElse(null);
         if (reference != null) {
-            if (reference.hash.equals(record.normalizedSha256)) {
-                jdbc.update("UPDATE exercise_import.import_record SET status='UNCHANGED', matched_exercise_id=?, updated_at=?, version=version+1 WHERE id=?",
-                        reference.exerciseId, sql(clock.instant()), recordId);
-                jdbc.update("""
-                        UPDATE exercise_import.import_source_reference
-                           SET last_record_id=?,updated_at=?,version=version+1
-                         WHERE source_id=? AND source_record_key=?
-                        """, recordId, sql(clock.instant()), record.sourceId, record.sourceRecordKey);
+            ExerciseImportRecordEntity entity = lockedRecord(recordId);
+            if (reference.normalizedSha256.equals(record.normalizedSha256)) {
+                entity.status = "UNCHANGED";
+                entity.matchedExerciseId = reference.exerciseId;
+                entity.updatedAt = clock.instant();
+                reference.lastRecordId = recordId;
+                reference.updatedAt = clock.instant();
             } else {
-                jdbc.update("UPDATE exercise_import.import_record SET status='READY_FOR_DRAFT', matched_exercise_id=?, updated_at=?, version=version+1 WHERE id=?",
-                        reference.exerciseId, sql(clock.instant()), recordId);
+                entity.status = "READY_FOR_DRAFT";
+                entity.matchedExerciseId = reference.exerciseId;
+                entity.updatedAt = clock.instant();
             }
             return;
         }
@@ -161,24 +163,23 @@ public class ImportRecordUseCases implements NormalizeImportRecord, ValidateImpo
         // name-based candidates here would turn an unambiguous import into editorial
         // work and could attach a new source record to the wrong exercise.
         if (record.licenseVerified && record.sourceRecordKey != null && !record.sourceRecordKey.isBlank()) {
-            jdbc.update("DELETE FROM exercise_import.import_match_candidate WHERE record_id=?", recordId);
+            candidates.deleteByRecordId(recordId);
             setStatus(recordId, "READY_FOR_DRAFT");
             return;
         }
 
-        jdbc.update("DELETE FROM exercise_import.import_match_candidate WHERE record_id=?", recordId);
-        List<Candidate> candidates = candidates(record);
+        candidates.deleteByRecordId(recordId);
+        List<Candidate> found = candidates(record);
         int rank = 1;
-        for (Candidate candidate : candidates.stream().sorted(Comparator
+        for (Candidate candidate : found.stream().sorted(Comparator
                 .comparingDouble(Candidate::score).reversed().thenComparing(Candidate::exerciseId)).limit(5).toList()) {
-            jdbc.update("""
-                    INSERT INTO exercise_import.import_match_candidate
-                        (id,record_id,exercise_id,rank,score,reasons,algorithm_version,version)
-                    VALUES (?,?,?,?,?,CAST(? AS jsonb),?,0)
-                    """, UUID.randomUUID(), recordId, candidate.exerciseId, rank++, candidate.score,
-                    candidate.reasons, MATCH_VERSION);
+            ExerciseImportMatchCandidateEntity entity = new ExerciseImportMatchCandidateEntity();
+            entity.id = UUID.randomUUID(); entity.recordId = recordId; entity.exerciseId = candidate.exerciseId;
+            entity.rank = rank++; entity.score = java.math.BigDecimal.valueOf(candidate.score);
+            entity.reasons = candidate.reasons; entity.algorithmVersion = MATCH_VERSION;
+            candidates.save(entity);
         }
-        setStatus(recordId, candidates.isEmpty() ? "READY_FOR_DRAFT" : "MATCH_CANDIDATES");
+        setStatus(recordId, found.isEmpty() ? "READY_FOR_DRAFT" : "MATCH_CANDIDATES");
     }
 
     @Override
@@ -192,55 +193,23 @@ public class ImportRecordUseCases implements NormalizeImportRecord, ValidateImpo
         try {
             JsonNode data = json.readTree(record.normalizedPayload);
             Instant now = clock.instant();
-            UUID exerciseId = record.matchedExerciseId;
-            if (exerciseId == null) {
-                exerciseId = UUID.randomUUID();
-                jdbc.update("INSERT INTO exercise_catalog.exercise(id,canonical_name,created_at,created_by_subject) VALUES (?,?,?,?)",
-                        exerciseId, data.path("name").asText(), sql(now), actorSubject);
-            }
-            jdbc.query("SELECT pg_advisory_xact_lock(hashtextextended(?,0))", rs -> {
-                rs.next(); return null;
-            }, exerciseId.toString());
-            Integer maximum = jdbc.queryForObject(
-                    "SELECT COALESCE(MAX(version_number),0) FROM exercise_catalog.exercise_version WHERE exercise_id=?",
-                    Integer.class, exerciseId);
-            int number = maximum == null ? 1 : maximum + 1;
-            UUID versionId = UUID.randomUUID();
-            String primaryPattern = sortedStrings(data.path("movementPatterns")).getFirst();
-            String instruction = String.join("\n", sortedByInput(data.path("instructions")));
-            jdbc.update("""
-                    INSERT INTO exercise_catalog.exercise_version(
-                        id,exercise_id,version_number,status,instruction,movement_pattern,stimulus_type,
-                        fatigue_profile,technical_level,environment,created_at,profile_schema_version,
-                        locale,semantic_sha256,import_record_id,version)
-                    VALUES (?,?,?,'DRAFT',?,?,?,?,?,?,?,2,?,?,?,0)
-                    """, versionId, exerciseId, number, instruction, primaryPattern,
-                    data.path("stimulusType").asText(), data.path("fatigueProfile").asText(),
-                    data.path("technicalLevel").asText(), data.path("environment").asText(), sql(now),
-                    data.path("locale").asText(), record.normalizedSha256, recordId);
-            insertSemanticChildren(versionId, exerciseId, record.sourceId, data, actorSubject, now);
-            jdbc.update("UPDATE exercise_import.import_record SET status='DRAFTED', matched_exercise_id=?, draft_version_id=?, updated_at=?, version=version+1 WHERE id=?",
-                    exerciseId, versionId, sql(now), recordId);
-            jdbc.update("UPDATE exercise_import.import_issue SET resolved_at=? WHERE record_id=? AND code='DRAFT_CREATION_FAILED' AND resolved_at IS NULL",
-                    sql(now), recordId);
-            jdbc.update("""
-                    INSERT INTO exercise_import.import_source_reference(
-                        id,source_id,source_record_key,exercise_id,latest_exercise_version_id,
-                        normalized_sha256,first_record_id,last_record_id,updated_at,version)
-                    VALUES (?,?,?,?,?,?,?,?,?,0)
-                    ON CONFLICT(source_id,source_record_key) DO UPDATE SET
-                        exercise_id=excluded.exercise_id, latest_exercise_version_id=excluded.latest_exercise_version_id,
-                        normalized_sha256=excluded.normalized_sha256, last_record_id=excluded.last_record_id,
-                        updated_at=excluded.updated_at, version=exercise_import.import_source_reference.version+1
-                    """, UUID.randomUUID(), record.sourceId, record.sourceRecordKey, exerciseId, versionId,
-                    record.normalizedSha256, recordId, recordId, sql(now));
-            audit.record(actorSubject, number == 1 ? "IMPORTED_EXERCISE_DRAFT_CREATED" : "IMPORTED_EXERCISE_VERSION_DRAFT_CREATED",
+            UUID versionId = drafts.create(draftCommand(record, data, actorSubject));
+            ExerciseImportRecordEntity entity = lockedRecord(recordId);
+            entity.status = "DRAFTED"; entity.draftVersionId = versionId;
+            entity.matchedExerciseId = entity.matchedExerciseId == null ? exerciseIdFor(versionId) : entity.matchedExerciseId;
+            entity.updatedAt = now;
+            issues.findByRecordIdAndCodeAndResolvedAtIsNull(recordId, "DRAFT_CREATION_FAILED")
+                    .forEach(issue -> issue.resolvedAt = now);
+            ExerciseImportSourceReferenceEntity reference = sourceReferences.findBySourceIdAndSourceRecordKey(record.sourceId, record.sourceRecordKey)
+                    .orElseGet(ExerciseImportSourceReferenceEntity::new);
+            boolean newReference = reference.id == null;
+            if (newReference) { reference.id = UUID.randomUUID(); reference.sourceId = record.sourceId; reference.sourceRecordKey = record.sourceRecordKey; reference.firstRecordId = recordId; }
+            reference.exerciseId = entity.matchedExerciseId; reference.latestExerciseVersionId = versionId;
+            reference.normalizedSha256 = record.normalizedSha256; reference.lastRecordId = recordId; reference.updatedAt = now;
+            sourceReferences.save(reference);
+            audit.record(actorSubject, record.matchedExerciseId == null ? "IMPORTED_EXERCISE_DRAFT_CREATED" : "IMPORTED_EXERCISE_VERSION_DRAFT_CREATED",
                     "ExerciseVersion", versionId);
             return versionId;
-        } catch (DuplicateKeyException concurrent) {
-            RecordData existing = record(recordId, false);
-            if (existing.draftVersionId != null) return existing.draftVersionId;
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "concurrent draft creation", concurrent);
         } catch (ResponseStatusException status) {
             throw status;
         } catch (Exception invalid) {
@@ -248,147 +217,65 @@ public class ImportRecordUseCases implements NormalizeImportRecord, ValidateImpo
         }
     }
 
-    private void insertSemanticChildren(UUID versionId, UUID exerciseId, UUID sourceId, JsonNode data,
-                                        String actor, Instant now) {
-        for (String purpose : sortedStrings(data.path("purposes"))) {
-            jdbc.update("INSERT INTO exercise_catalog.exercise_version_purpose(exercise_version_id,purpose,provenance_source_id) VALUES (?,?,?)",
-                    versionId, purpose, sourceId);
+    private ImportedExerciseDraftPort.ImportedExerciseDraft draftCommand(RecordData record, JsonNode data, String actor) {
+        List<ImportedExerciseDraftPort.Contribution> contributions = new ArrayList<>();
+        for (JsonNode value : data.path("contributions")) {
+            UUID anatomy = catalog.publishedAnatomyId(value.path("anatomyCode").asText());
+            if (anatomy == null) throw new RecordProblem("UNKNOWN_ANATOMY", "/contributions", "Nieznana opublikowana anatomia.");
+            contributions.add(new ImportedExerciseDraftPort.Contribution(anatomy, value.path("role").asText(), value.path("loadChannel").asText(), value.path("band").asText(), value.path("coefficientLow").decimalValue(), value.path("coefficientHigh").decimalValue(), value.path("sideRule").asText()));
         }
-        jdbc.update("INSERT INTO exercise_catalog.exercise_version_text(id,exercise_version_id,locale,name,provenance_source_id) VALUES (?,?,?,?,?)",
-                UUID.randomUUID(), versionId, data.path("locale").asText(), data.path("name").asText(), sourceId);
-        int step = 1;
-        for (String instruction : sortedByInput(data.path("instructions"))) {
-            jdbc.update("INSERT INTO exercise_catalog.exercise_instruction_step(id,exercise_version_id,locale,step_number,instruction,provenance_source_id) VALUES (?,?,?,?,?,?)",
-                    UUID.randomUUID(), versionId, data.path("locale").asText(), step++, instruction, sourceId);
-        }
-        LinkedHashSet<String> aliases = new LinkedHashSet<>(sortedStrings(data.path("aliases")));
-        aliases.add(data.path("name").asText());
-        for (String alias : aliases) {
-            jdbc.update("""
-                    INSERT INTO exercise_catalog.exercise_alias(id,exercise_id,locale,alias,normalized_alias,provenance_source_id)
-                    VALUES (?,?,?,?,?,?) ON CONFLICT(exercise_id,locale,normalized_alias) DO NOTHING
-                    """, UUID.randomUUID(), exerciseId, data.path("locale").asText(), alias,
-                    normalizedAlias(alias), sourceId);
-        }
-        for (String pattern : sortedStrings(data.path("movementPatterns"))) {
-            jdbc.update("INSERT INTO exercise_catalog.exercise_version_movement_pattern(exercise_version_id,movement_pattern) VALUES (?,?)",
-                    versionId, pattern);
-            jdbc.update("""
-                    INSERT INTO exercise_catalog.exercise_movement_characteristic(
-                        id,exercise_version_id,movement_pattern,position_code,unilateral,load_nature,provenance_source_id)
-                    VALUES (?,?,?,?,?,?,?)
-                    """, UUID.randomUUID(), versionId, pattern, data.path("position").asText(),
-                    data.path("unilateral").asBoolean(), data.path("loadNature").asText(), sourceId);
-        }
-        for (String equipment : sortedStrings(data.path("equipment"))) {
-            jdbc.update("INSERT INTO exercise_catalog.exercise_version_equipment(exercise_version_id,equipment) VALUES (?,?)",
-                    versionId, equipment);
-            jdbc.update("INSERT INTO exercise_catalog.exercise_equipment(exercise_version_id,equipment_code,required,provenance_source_id) VALUES (?,?,TRUE,?)",
-                    versionId, equipment, sourceId);
-        }
-        for (JsonNode dose : data.path("doseCapabilities")) {
-            jdbc.update("INSERT INTO exercise_catalog.exercise_dose_capability(exercise_version_id,unit_code,minimum_value,maximum_value,provenance_source_id) VALUES (?,?,?,?,?)",
-                    versionId, dose.path("unit").asText(), decimalText(dose.path("minimum")),
-                    decimalText(dose.path("maximum")), sourceId);
-        }
-        for (JsonNode load : data.path("loadCharacteristics")) {
-            jdbc.update("""
-                    INSERT INTO exercise_catalog.exercise_load_characteristic(
-                        id,exercise_version_id,movement_plane,contraction_type,range_of_motion,
-                        characteristic_type,created_at,created_by_subject) VALUES (?,?,?,?,?,?,?,?)
-                    """, UUID.randomUUID(), versionId, load.path("movementPlane").asText(),
-                    load.path("contractionType").asText(), load.path("rangeOfMotion").asText(),
-                    load.path("characteristicType").asText(), sql(now), actor);
-        }
-        UUID evidenceId = UUID.randomUUID();
-        jdbc.update("""
-                INSERT INTO exercise_catalog.evidence_source(
-                    id,exercise_version_id,citation,evidence_grade,created_at,created_by_subject,
-                    source_type,license_code,provenance_source_id) VALUES (?,?,?,'SOURCE_ASSERTION',?,?, 'IMPORT',
-                    (SELECT license_code FROM exercise_import.import_source WHERE id=?),?)
-                """, evidenceId, versionId, "Import source record " + data.path("sourceRecordKey").asText(),
-                sql(now), actor, sourceId, sourceId);
-        for (JsonNode contribution : data.path("contributions")) {
-            UUID structure = jdbc.query("SELECT id FROM anatomy_reference.anatomical_structure WHERE code=? AND status='PUBLISHED'",
-                    rs -> rs.next() ? rs.getObject(1, UUID.class) : null, contribution.path("anatomyCode").asText());
-            if (structure == null) throw new RecordProblem("UNKNOWN_ANATOMY", "/contributions", "Nieznana opublikowana anatomia.");
-            UUID contributionId = UUID.randomUUID();
-            jdbc.update("""
-                    INSERT INTO exercise_catalog.exercise_contribution(
-                        id,exercise_version_id,anatomical_structure_id,contribution_role,load_channel,
-                        contribution_band,coefficient_low,coefficient_high,confidence_class,evidence_grade,
-                        calculation_role,side_rule,created_at,created_by_subject)
-                    VALUES (?,?,?,?,?,?,?,?,?,'SOURCE_ASSERTION','ALLOCATION',?,?,?)
-                    """, contributionId, versionId, structure, contribution.path("role").asText(),
-                    contribution.path("loadChannel").asText(), contribution.path("band").asText(),
-                    contribution.path("coefficientLow").decimalValue(), contribution.path("coefficientHigh").decimalValue(),
-                    "SOURCE_ASSERTION", contribution.path("sideRule").asText(), sql(now), actor);
-            jdbc.update("INSERT INTO exercise_catalog.exercise_contribution_evidence(id,contribution_id,evidence_source_id) VALUES (?,?,?)",
-                    UUID.randomUUID(), contributionId, evidenceId);
-        }
-        jdbc.update("INSERT INTO exercise_catalog.exercise_evidence_link(id,exercise_version_id,evidence_source_id,claim_type,json_pointer) VALUES (?,?,?,'ANATOMY_EXPOSURE',?)",
-                UUID.randomUUID(), versionId, evidenceId, "/contributions");
+        return new ImportedExerciseDraftPort.ImportedExerciseDraft(record.matchedExerciseId, record.id, record.sourceId,
+                record.sourceLicenseCode, record.sourceRecordKey, actor,
+                data.path("name").asText(), data.path("locale").asText(), record.normalizedSha256,
+                String.join("\n", sortedByInput(data.path("instructions"))), sortedStrings(data.path("movementPatterns")).getFirst(),
+                data.path("stimulusType").asText(), data.path("fatigueProfile").asText(), data.path("technicalLevel").asText(), data.path("environment").asText(),
+                sortedStrings(data.path("purposes")), sortedStrings(data.path("aliases")), sortedStrings(data.path("movementPatterns")), sortedStrings(data.path("equipment")),
+                steps(data), doses(data), characteristics(data), loads(data), contributions);
     }
+
+    private static List<ImportedExerciseDraftPort.InstructionStep> steps(JsonNode data) {
+        List<ImportedExerciseDraftPort.InstructionStep> result = new ArrayList<>(); int number = 1;
+        for (String instruction : sortedByInput(data.path("instructions"))) result.add(new ImportedExerciseDraftPort.InstructionStep(number++, instruction));
+        return result;
+    }
+    private static List<ImportedExerciseDraftPort.DoseCapability> doses(JsonNode data) {
+        List<ImportedExerciseDraftPort.DoseCapability> result = new ArrayList<>();
+        for (JsonNode value : data.path("doseCapabilities")) result.add(new ImportedExerciseDraftPort.DoseCapability(value.path("unit").asText(), decimalText(value.path("minimum")), decimalText(value.path("maximum"))));
+        return result;
+    }
+    private static List<ImportedExerciseDraftPort.MovementCharacteristic> characteristics(JsonNode data) {
+        return sortedStrings(data.path("movementPatterns")).stream().map(pattern -> new ImportedExerciseDraftPort.MovementCharacteristic(pattern, data.path("position").asText(), data.path("unilateral").asBoolean(), data.path("loadNature").asText())).toList();
+    }
+    private static List<ImportedExerciseDraftPort.LoadCharacteristic> loads(JsonNode data) {
+        List<ImportedExerciseDraftPort.LoadCharacteristic> result = new ArrayList<>();
+        for (JsonNode value : data.path("loadCharacteristics")) result.add(new ImportedExerciseDraftPort.LoadCharacteristic(value.path("movementPlane").asText(), value.path("contractionType").asText(), value.path("rangeOfMotion").asText(), value.path("characteristicType").asText()));
+        return result;
+    }
+
+    private UUID exerciseIdFor(UUID versionId) { return catalog.exerciseIdForVersion(versionId); }
 
     private List<Candidate> candidates(RecordData record) {
         try {
             JsonNode data = json.readTree(record.normalizedPayload);
             String name = normalizedAlias(data.path("name").asText());
             List<Candidate> result = new ArrayList<>();
-            jdbc.query("""
-                    SELECT DISTINCT exercise.id, lower(exercise.canonical_name),
-                           EXISTS(SELECT 1 FROM exercise_catalog.exercise_alias alias
-                                  WHERE alias.exercise_id=exercise.id AND alias.locale=? AND alias.normalized_alias=?) AS alias_match,
-                           EXISTS(SELECT 1 FROM exercise_catalog.exercise_version version
-                                  JOIN exercise_catalog.exercise_version_movement_pattern pattern ON pattern.exercise_version_id=version.id
-                                  WHERE version.exercise_id=exercise.id AND pattern.movement_pattern=?) AS pattern_match,
-                           EXISTS(SELECT 1 FROM exercise_catalog.exercise_version version
-                                  JOIN exercise_catalog.exercise_movement_characteristic characteristic ON characteristic.exercise_version_id=version.id
-                                  WHERE version.exercise_id=exercise.id AND characteristic.position_code=?) AS position_match,
-                           EXISTS(SELECT 1 FROM exercise_catalog.exercise_version version
-                                  JOIN exercise_catalog.exercise_movement_characteristic characteristic ON characteristic.exercise_version_id=version.id
-                                  WHERE version.exercise_id=exercise.id AND characteristic.unilateral=?) AS unilateral_match,
-                           EXISTS(SELECT 1 FROM exercise_catalog.exercise_version version
-                                  JOIN exercise_catalog.exercise_movement_characteristic characteristic ON characteristic.exercise_version_id=version.id
-                                  WHERE version.exercise_id=exercise.id AND characteristic.load_nature=?) AS load_nature_match,
-                           CASE WHEN ?='' THEN EXISTS(SELECT 1 FROM exercise_catalog.exercise_version version
-                                  WHERE version.exercise_id=exercise.id AND NOT EXISTS(SELECT 1 FROM exercise_catalog.exercise_equipment equipment WHERE equipment.exercise_version_id=version.id))
-                                ELSE EXISTS(SELECT 1 FROM exercise_catalog.exercise_version version
-                                  JOIN exercise_catalog.exercise_equipment equipment ON equipment.exercise_version_id=version.id
-                                  WHERE version.exercise_id=exercise.id AND equipment.equipment_code=?) END AS equipment_match
-                      FROM exercise_catalog.exercise exercise
-                     WHERE lower(exercise.canonical_name)=? OR EXISTS(
-                           SELECT 1 FROM exercise_catalog.exercise_alias alias
-                            WHERE alias.exercise_id=exercise.id AND alias.locale=? AND alias.normalized_alias=?)
-                     ORDER BY exercise.id
-                    """, rs -> {
-                        while (rs.next()) {
-                            double score = .50 + (rs.getBoolean(3) ? .10 : 0) + (rs.getBoolean(4) ? .10 : 0)
-                                    + (rs.getBoolean(5) ? .075 : 0) + (rs.getBoolean(6) ? .075 : 0)
-                                    + (rs.getBoolean(7) ? .075 : 0) + (rs.getBoolean(8) ? .075 : 0);
-                            String reasons = "{\"name\":\"exact\",\"alias\":" + rs.getBoolean(3)
-                                    + ",\"movementPattern\":" + rs.getBoolean(4)
-                                    + ",\"position\":" + rs.getBoolean(5)
-                                    + ",\"unilateral\":" + rs.getBoolean(6)
-                                    + ",\"loadNature\":" + rs.getBoolean(7)
-                                    + ",\"equipment\":" + rs.getBoolean(8) + "}";
-                            result.add(new Candidate(rs.getObject(1, UUID.class), Math.min(score, .99), reasons));
-                        }
-                    }, data.path("locale").asText(), name, data.path("movementPatterns").get(0).asText(),
-                    data.path("position").asText(), data.path("unilateral").asBoolean(),
-                    data.path("loadNature").asText(), data.path("equipment").isEmpty() ? "" : data.path("equipment").get(0).asText(),
-                    data.path("equipment").isEmpty() ? "" : data.path("equipment").get(0).asText(),
-                    name, data.path("locale").asText(), name);
-            jdbc.query("""
-                    SELECT DISTINCT ref.exercise_id FROM exercise_import.import_source_reference ref
-                     WHERE ref.normalized_sha256=? AND ref.source_id<>? ORDER BY ref.exercise_id
-                    """, rs -> {
-                        while (rs.next()) {
-                            UUID id = rs.getObject(1, UUID.class);
-                            if (result.stream().noneMatch(item -> item.exerciseId.equals(id)))
-                                result.add(new Candidate(id, 1.0, "{\"semanticChecksum\":\"identical\",\"crossSource\":true}"));
-                        }
-                    }, record.normalizedSha256, record.sourceId);
+            for (UUID id : catalog.exactNameOrAlias(data.path("locale").asText(), name)) {
+                boolean alias = catalog.aliasMatch(id, data.path("locale").asText(), name);
+                boolean pattern = catalog.patternMatch(id, data.path("movementPatterns").get(0).asText());
+                boolean position = catalog.positionMatch(id, data.path("position").asText());
+                boolean unilateral = catalog.unilateralMatch(id, data.path("unilateral").asBoolean());
+                boolean loadNature = catalog.loadNatureMatch(id, data.path("loadNature").asText());
+                boolean equipment = catalog.equipmentMatch(id, data.path("equipment").isEmpty() ? "" : data.path("equipment").get(0).asText());
+                double score = .50 + (alias ? .10 : 0) + (pattern ? .10 : 0) + (position ? .075 : 0)
+                        + (unilateral ? .075 : 0) + (loadNature ? .075 : 0) + (equipment ? .075 : 0);
+                result.add(new Candidate(id, Math.min(score, .99), "{\"name\":\"exact\",\"alias\":" + alias
+                        + ",\"movementPattern\":" + pattern + ",\"position\":" + position + ",\"unilateral\":" + unilateral
+                        + ",\"loadNature\":" + loadNature + ",\"equipment\":" + equipment + "}"));
+            }
+            for (ExerciseImportSourceReferenceEntity ref : sourceReferences.findByNormalizedSha256AndSourceIdNotOrderByExerciseId(record.normalizedSha256, record.sourceId)) {
+                if (result.stream().noneMatch(item -> item.exerciseId.equals(ref.exerciseId)))
+                    result.add(new Candidate(ref.exerciseId, 1.0, "{\"semanticChecksum\":\"identical\",\"crossSource\":true}"));
+            }
             return result;
         } catch (Exception impossible) {
             throw new IllegalStateException("stored normalized payload is invalid", impossible);
@@ -405,25 +292,16 @@ public class ImportRecordUseCases implements NormalizeImportRecord, ValidateImpo
 
     private String dictionaryValue(RecordData record, String input, String type) {
         String value = upper(input);
-        String table = switch (type) {
-            case "EQUIPMENT" -> "exercise_catalog.exercise_equipment_dictionary";
-            case "POSITION" -> "exercise_catalog.exercise_position_dictionary";
-            case "DOSE_UNIT" -> "exercise_catalog.dose_unit_dictionary";
-            default -> throw new IllegalArgumentException("unsupported dictionary");
-        };
-        Boolean canonical = jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM " + table + " WHERE code=? AND active)",
-                Boolean.class, value);
-        if (Boolean.TRUE.equals(canonical)) return value;
-        String mapped = jdbc.query("""
-                SELECT canonical_value FROM exercise_import.import_mapping
-                 WHERE source_id=? AND dictionary_type=? AND source_value=? AND status='APPROVED'
-                """, rs -> rs.next() ? rs.getString(1) : null, record.sourceId, type, value);
+        if (catalog.activeDictionaryContains(type, value)) return value;
+        Optional<ExerciseImportMappingEntity> existing = mappings.findBySourceIdAndDictionaryTypeAndSourceValue(record.sourceId, type, value);
+        String mapped = existing
+                .filter(mapping -> "APPROVED".equals(mapping.status)).map(mapping -> mapping.canonicalValue).orElse(null);
         if (mapped != null) return mapped;
-        UUID mappingId = UUID.randomUUID();
-        jdbc.update("""
-                INSERT INTO exercise_import.import_mapping(id,source_id,dictionary_type,source_value,status,created_at,version)
-                VALUES (?,?,?,?,'PENDING',?,0) ON CONFLICT(source_id,dictionary_type,source_value) DO NOTHING
-                """, mappingId, record.sourceId, type, value, sql(clock.instant()));
+        if (existing.isEmpty()) {
+            ExerciseImportMappingEntity mapping = new ExerciseImportMappingEntity();
+            mapping.id = UUID.randomUUID(); mapping.sourceId = record.sourceId; mapping.dictionaryType = type;
+            mapping.sourceValue = value; mapping.status = "PENDING"; mapping.createdAt = clock.instant(); mappings.save(mapping);
+        }
         issue(record, "MAPPING_REQUIRED", "NORMALIZE", "ERROR", "/" + type.toLowerCase(Locale.ROOT),
                 "Wartość '" + value + "' wymaga zatwierdzonego mapowania " + type + ".");
         return value;
@@ -464,9 +342,7 @@ public class ImportRecordUseCases implements NormalizeImportRecord, ValidateImpo
         for (JsonNode item : source) {
             ObjectNode value = json.createObjectNode();
             String anatomyCode = upper(item.path("anatomyCode").asText());
-            Boolean exists = jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM anatomy_reference.anatomical_structure WHERE code=? AND status='PUBLISHED')",
-                    Boolean.class, anatomyCode);
-            if (!Boolean.TRUE.equals(exists)) throw new RecordProblem("UNKNOWN_ANATOMY", "/contributions/anatomyCode", "Nieznana opublikowana anatomia: " + anatomyCode);
+            if (catalog.publishedAnatomyId(anatomyCode) == null) throw new RecordProblem("UNKNOWN_ANATOMY", "/contributions/anatomyCode", "Nieznana opublikowana anatomia: " + anatomyCode);
             value.put("anatomyCode", anatomyCode);
             value.put("role", upper(item.path("role").asText("PRIMARY")));
             value.put("loadChannel", upper(item.path("loadChannel").asText("DYN_EXU")));
@@ -527,34 +403,29 @@ public class ImportRecordUseCases implements NormalizeImportRecord, ValidateImpo
     }
 
     private boolean unresolvedMappings(UUID recordId) {
-        Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_issue WHERE record_id=? AND code='MAPPING_REQUIRED' AND resolved_at IS NULL",
-                Integer.class, recordId);
-        return count != null && count > 0;
+        return issues.existsByRecordIdAndCodeAndResolvedAtIsNull(recordId, "MAPPING_REQUIRED");
     }
 
     private RecordData record(UUID id, boolean lock) {
-        String suffix = lock ? " FOR UPDATE OF record" : "";
-        RecordData record = jdbc.query("""
-                SELECT record.id,record.batch_id,batch.source_id,record.row_number,record.source_record_key,
-                       record.status,record.raw_payload::text,record.normalized_payload::text,
-                       record.normalized_sha256,record.matched_exercise_id,record.draft_version_id,
-                       source.default_locale,source.license_verified
-                  FROM exercise_import.import_record record
-                  JOIN exercise_import.import_batch batch ON batch.id=record.batch_id
-                  JOIN exercise_import.import_source source ON source.id=batch.source_id
-                 WHERE record.id=?
-                """ + suffix, rs -> rs.next() ? new RecordData(
-                rs.getObject(1, UUID.class), rs.getObject(2, UUID.class), rs.getObject(3, UUID.class),
-                rs.getLong(4), rs.getString(5), rs.getString(6), rs.getString(7), rs.getString(8),
-                rs.getString(9), rs.getObject(10, UUID.class), rs.getObject(11, UUID.class),
-                rs.getString(12), rs.getBoolean(13)) : null, id);
-        if (record == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "import record not found");
-        return record;
+        ExerciseImportRecordEntity entity = lock ? lockedRecord(id) : records.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "import record not found"));
+        ExerciseImportBatchEntity batch = batches.findById(entity.batchId).orElseThrow(() -> new IllegalStateException("import batch not found"));
+        // A source is the common parent for mapping and source-reference natural keys.
+        // Serializing writers on it keeps their check-then-insert operations idempotent
+        // without swallowing unrelated database constraint violations.
+        ExerciseImportSourceEntity source = (lock ? sources.findLockedById(batch.sourceId) : sources.findById(batch.sourceId))
+                .orElseThrow(() -> new IllegalStateException("import source not found"));
+        return new RecordData(entity.id, entity.batchId, source.id, entity.rowNumber, entity.sourceRecordKey, entity.status,
+                entity.rawPayload, entity.normalizedPayload, entity.normalizedSha256, entity.matchedExerciseId, entity.draftVersionId,
+                source.defaultLocale, source.licenseVerified, source.licenseCode);
+    }
+
+    private ExerciseImportRecordEntity lockedRecord(UUID id) {
+        return records.findLockedById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "import record not found"));
     }
 
     private void setStatus(UUID recordId, String status) {
-        jdbc.update("UPDATE exercise_import.import_record SET status=?,updated_at=?,version=version+1 WHERE id=?",
-                status, sql(clock.instant()), recordId);
+        ExerciseImportRecordEntity entity = lockedRecord(recordId); entity.status = status; entity.updatedAt = clock.instant();
     }
 
     private void invalidate(RecordData record, String stage, RecordProblem problem) {
@@ -567,12 +438,11 @@ public class ImportRecordUseCases implements NormalizeImportRecord, ValidateImpo
     }
 
     private void issue(RecordData record, String code, String stage, String severity, String pointer, String message) {
-        jdbc.update("""
-                INSERT INTO exercise_import.import_issue(
-                    id,batch_id,record_id,row_number,code,stage,severity,json_pointer,message,created_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING
-                """, UUID.randomUUID(), record.batchId, record.id, record.rowNumber, code, stage,
-                severity, pointer, message, sql(clock.instant()));
+        if (!issues.existsByBatchIdAndRecordIdAndCodeAndJsonPointer(record.batchId, record.id, code, pointer)) {
+            ExerciseImportIssueEntity issue = new ExerciseImportIssueEntity(); issue.id = UUID.randomUUID(); issue.batchId = record.batchId;
+            issue.recordId = record.id; issue.rowNumber = record.rowNumber; issue.code = code; issue.stage = stage; issue.severity = severity;
+            issue.jsonPointer = pointer; issue.message = message; issue.createdAt = clock.instant(); issues.save(issue);
+        }
     }
 
     private static String normalizeLocale(String value) {
@@ -615,13 +485,11 @@ public class ImportRecordUseCases implements NormalizeImportRecord, ValidateImpo
         return value.isMissingNode() || value.isNull() ? null : value.decimalValue();
     }
 
-    private static Timestamp sql(Instant value) { return Timestamp.from(value); }
-
     private record RecordData(UUID id, UUID batchId, UUID sourceId, long rowNumber,
                               String sourceRecordKey, String status, String rawPayload,
                               String normalizedPayload, String normalizedSha256,
                               UUID matchedExerciseId, UUID draftVersionId,
-                              String defaultLocale, boolean licenseVerified) {
+                              String defaultLocale, boolean licenseVerified, String sourceLicenseCode) {
     }
     private record SourceReference(UUID exerciseId, String hash) {
     }

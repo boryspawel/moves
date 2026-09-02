@@ -10,6 +10,7 @@ public interface ImportedExerciseDraftPort {
     UUID create(ImportedExerciseDraft command);
 
     record ImportedExerciseDraft(UUID existingExerciseId, UUID importRecordId, UUID sourceId,
+                                 String sourceLicenseCode, String sourceRecordKey,
                                  String actorSubject, String canonicalName, String locale,
                                  String semanticSha256, String instruction, String primaryMovementPattern,
                                  String stimulusType, String fatigueProfile, String technicalLevel,

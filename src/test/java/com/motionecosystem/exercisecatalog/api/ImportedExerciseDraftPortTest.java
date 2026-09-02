@@ -30,9 +30,17 @@ class ImportedExerciseDraftPortTest {
                 .isInstanceOf(NullPointerException.class);
     }
 
+    @Test
+    void retainsImportProvenanceValues() {
+        var draft = draft(List.of("STRENGTH"));
+
+        assertThat(draft.sourceLicenseCode()).isEqualTo("CC0-1.0");
+        assertThat(draft.sourceRecordKey()).isEqualTo("source-record-1");
+    }
+
     private ImportedExerciseDraftPort.ImportedExerciseDraft draft(List<String> purposes) {
         return new ImportedExerciseDraftPort.ImportedExerciseDraft(null, UUID.randomUUID(), UUID.randomUUID(),
-                "importer", "Squat", "en", "hash", "Brace and squat", "SQUAT", "STRENGTH",
+                "CC0-1.0", "source-record-1", "importer", "Squat", "en", "hash", "Brace and squat", "SQUAT", "STRENGTH",
                 "MODERATE", "BEGINNER", "GYM", purposes, List.of(), List.of("SQUAT"), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of());
     }

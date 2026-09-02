@@ -3,6 +3,8 @@ package com.motionecosystem.exerciseimport;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -132,4 +134,35 @@ class ExerciseImportMatchCandidateEntity {
     @Column(name = "decided_by_subject") String decidedBySubject;
     @Column(name = "decided_at") Instant decidedAt;
     @Version long version;
+}
+
+@Entity(name = "ExerciseImportEquipmentDictionaryJpaEntity")
+@Table(name = "exercise_equipment_dictionary", schema = "exercise_catalog")
+class ExerciseImportEquipmentDictionaryEntity {
+    @Id String code;
+    @Column(nullable = false) boolean active;
+}
+
+@Entity(name = "ExerciseImportPositionDictionaryJpaEntity")
+@Table(name = "exercise_position_dictionary", schema = "exercise_catalog")
+class ExerciseImportPositionDictionaryEntity {
+    @Id String code;
+    @Column(nullable = false) boolean active;
+}
+
+@Entity(name = "ExerciseImportDoseUnitDictionaryJpaEntity")
+@Table(name = "dose_unit_dictionary", schema = "exercise_catalog")
+class ExerciseImportDoseUnitDictionaryEntity {
+    @Id String code;
+    @Column(nullable = false) boolean active;
+}
+
+@Entity(name = "ImportCatalogVersionMatchJpaEntity")
+@Table(name = "exercise_version", schema = "exercise_catalog")
+class ImportCatalogVersionMatchEntity {
+    @Id UUID id;
+    @Column(name = "exercise_id", nullable = false) UUID exerciseId;
+    @jakarta.persistence.ElementCollection
+    @jakarta.persistence.CollectionTable(name = "exercise_version_movement_pattern", schema = "exercise_catalog", joinColumns = @jakarta.persistence.JoinColumn(name = "exercise_version_id"))
+    @Column(name = "movement_pattern") Set<String> movementPatterns = new LinkedHashSet<>();
 }
