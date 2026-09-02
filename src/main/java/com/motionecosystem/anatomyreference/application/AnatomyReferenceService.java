@@ -130,6 +130,12 @@ public class AnatomyReferenceService implements AnatomyReferenceQueryPort {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<AnatomicalStructureSnapshot> findPublishedStructureByCode(String code) {
+        return persistence.findPublishedByCode(code).map(AnatomyReferenceService::snapshot);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<UUID, AnatomicalStructureSnapshot> findStructures(Collection<UUID> structureIds) {
         if (structureIds == null || structureIds.isEmpty()) {
             return Map.of();

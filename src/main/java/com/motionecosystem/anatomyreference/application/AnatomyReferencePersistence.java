@@ -17,6 +17,8 @@ public interface AnatomyReferencePersistence {
 
     Optional<AnatomicalStructure> find(UUID structureId);
 
+    Optional<AnatomicalStructure> findPublishedByCode(String code);
+
     Map<UUID, AnatomicalStructure> findAll(Collection<UUID> structureIds);
 
     void update(AnatomicalStructure structure);

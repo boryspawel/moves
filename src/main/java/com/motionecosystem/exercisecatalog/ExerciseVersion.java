@@ -102,6 +102,11 @@ class ExerciseVersion {
         apply(command);
     }
 
+    void markImported(UUID recordId, String semanticHash) {
+        importRecordId = recordId;
+        semanticSha256 = semanticHash;
+    }
+
     void update(CatalogService.VersionCommand command) {
         requireEditable();
         apply(command);
