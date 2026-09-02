@@ -25,7 +25,8 @@ import {
   ExerciseSetControllerApi,
   ExerciseCatalogSearchControllerApi,
   AnatomyReferenceControllerApi,
-  ParticipantGoalControllerApi
+  ParticipantGoalControllerApi,
+  ParticipantDocumentationControllerApi
 } from '../api/generated/src';
 import { Middleware } from '../api/generated/src/runtime';
 import { AuthService } from './auth.service';
@@ -71,6 +72,7 @@ export class ApiFacade {
   readonly catalogSearch: ExerciseCatalogSearchControllerApi;
   readonly anatomyReference: AnatomyReferenceControllerApi;
   readonly participantGoals: ParticipantGoalControllerApi;
+  readonly participantDocumentation: ParticipantDocumentationControllerApi;
 
   constructor() {
     const auth = inject(AuthService);
@@ -103,5 +105,6 @@ export class ApiFacade {
     this.catalogSearch = new ExerciseCatalogSearchControllerApi(configuration);
     this.anatomyReference = new AnatomyReferenceControllerApi(configuration);
     this.participantGoals = new ParticipantGoalControllerApi(configuration);
+    this.participantDocumentation = new ParticipantDocumentationControllerApi(configuration);
   }
 }

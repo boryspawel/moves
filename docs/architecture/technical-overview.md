@@ -62,6 +62,10 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
   odrzucany. `participantId` jest granicą nowych ścieżek kartoteki, a link
   dostępu jest wyłącznym przejściem do konta. Moduły nieprzeniesione korzystają
   wyłącznie z kontrolowanych, lokalnych mostów legacy `*AccountId`.
+- `V056__create_participant_documentation` tworzy odrębną granicę dokumentacji
+  specjalisty w schemacie `participant_documentation`. Wywiady, odpowiedzi,
+  notatki, idempotencja i zdarzenia dokumentacji zawsze wskazują kanoniczne
+  `participant.participant_record`; nie tworzą ani nie zastępują kartoteki.
 - `GET /api/v1/specialist/today?date=YYYY-MM-DD` wyznacza dzień w utrwalonej strefie specjalisty i zwraca terminy, dostępność oraz sprawy worklisty; wolne sloty są wyliczane z dostępności pomniejszonej o zajęte terminy przy skonfigurowanym kroku. Dla bieżącego dnia slot jest możliwy do działania tylko, gdy leży w przyszłości. `operationalTasks` deterministycznie zawiera `APPOINTMENT_OUTCOME_REQUIRED` dla zaległego, aktywnego terminu `SCHEDULED`, `CONFIRMED` albo `IN_PROGRESS`; nie jest trwałą worklistą i nie powoduje automatycznej zmiany lifecycle.
 - Cykliczne okna dostępności nie są slotami terminów. Frontend przy tworzeniu terminu domyślnie proponuje 60 minut i oferuje 15/30/45/60/90/120 minut albo własny czas; koniec jest wyliczany automatycznie, dopóki specjalista nie nadpisze go ręcznie. Dokładne terminy mogą zaczynać się o dowolnej porze i mieć dowolny czas trwania, lecz muszą w całości mieścić się w odpowiednim oknie dostępności.
 - Nakładające się cykliczne okna dostępności są akceptowane i sygnalizowane w UI jedynie jako miękkie ostrzeżenie. Konflikt aktywnych terminów pozostaje twardą regułą serwera (`409`); terminy anulowane nie blokują nowego terminu.
@@ -84,7 +88,8 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
 - Workspace i timeline wykonują odczyty w granicy `participantId` po centralnym
   sprawdzeniu capability, aktywnej relacji i zgody w kontekście zawodowym.
   Timeline nie jest źródłem danych: kompozycja obejmuje wyłącznie dozwolone
-  projekcje spotkań, planowanych sesji i wykonań. UI steruje zakresem (2 tygodnie,
+  projekcje spotkań, planowanych sesji, wykonań oraz neutralnych zdarzeń wywiadów
+  i notatek. UI steruje zakresem (2 tygodnie,
   3 miesiące, 12 miesięcy), typami, widokiem osi/listy i wybranym zdarzeniem przez
   URL; panel szczegółów używa etykiet prezentacyjnych i nie pokazuje UUID ani
   nieznanych kodów jako samodzielnych nazw. Wybór „następnego spotkania” jest
@@ -116,11 +121,13 @@ neutralny audit. P10 dostarcza `analytics.adherencemetrics` w V032: wyłącznie
 techniczne identyfikatory, kody zdarzeń/reguł/wariantów i czas; rekordy wygasają
 po 180 dniach, a automatyczny, codzienny cleanup wywołuje wewnętrzny job przez
 `purgeExpired()`.
-# Participant records (test vertical)
+# Participant documentation (test vertical)
 
-Participant records are separate from access accounts. The generated specialist
-client API and Angular flow create, list, open, update and archive account-free
-records using `participantId`; workspace and timeline use the same identifier.
+Canonical participant records are separate from access accounts. Participant
+documentation is a specialist-owned boundary for interviews and notes over that
+canonical record. The generated specialist client API and Angular flow create,
+list, open, update and archive documentation using `participantId`; workspace
+and timeline use the same identifier.
 `participant.participant_access_link` represents the optional account boundary.
 The explicit `TEST_DEFAULT` override is available only in `local` or `test`,
 never in `prod`; see [test participant-record consent debt](../test-participant-record-consent-debt.md).

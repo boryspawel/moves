@@ -23,6 +23,7 @@ import type { AppointmentView } from '../api/generated/src/models/AppointmentVie
 import type { ParticipantGoalView } from '../api/generated/src/models/ParticipantGoalView';
 import type { PresetView } from '../api/generated/src/models/PresetView';
 import type { CreateFromPresetRequestPresetIdEnum, CreateFromPresetRequestTargetComparatorEnum } from '../api/generated/src/models/CreateFromPresetRequest';
+import { ParticipantDocumentationComponent, type RecordPanelType } from './participant-documentation.component';
 import {
   groupEvents,
   rangeDates,
@@ -204,7 +205,7 @@ export class PatientTimelineFiltersComponent {
     { key: '12m' as const, label: '12 mies.' },
   ];
   protected categoryLabel = (type: string) =>
-    ({ APPOINTMENT: 'Spotkania', SESSION: 'Planowane sesje', EXECUTION: 'Wykonania' })[type] ??
+    ({ APPOINTMENT: 'Spotkania', SESSION: 'Planowane sesje', EXECUTION: 'Wykonania', INTERVIEW: 'Wywiady', NOTE: 'Notatki' })[type] ??
     type;
   protected toggle(type: TimelineCategory) {
     this.selectedChange.emit(
@@ -315,6 +316,7 @@ export class PatientTimelineListViewComponent {
     <button type="button" aria-label="Zamknij szczegóły zdarzenia" (click)="closed.emit()">
       ×
     </button>
+    <p class="event-category">{{ category(event.category) }}</p>
     <h2 id="event-panel-title">{{ title(event) }}</h2>
     @if (outsideRange) {
       <p role="status">Zdarzenie znajduje się poza aktualnie wybranym zakresem historii.</p>
@@ -389,6 +391,7 @@ export class PatientTimelineEventPanelComponent {
   @Output() closed = new EventEmitter<void>();
   @Output() outcome = new EventEmitter<'COMPLETE' | 'MARK_NO_SHOW'>();
   protected appointmentType = appointmentTypeLabel;
+  protected category = categoryLabel;
   protected description = eventDescription;
   protected goalPerspective = (value?: string) => goalPerspective[value ?? ''] ?? 'Brak danych';
   protected goalStatus = (value?: string) => goalStatus[value ?? ''] ?? 'Brak danych';
@@ -502,6 +505,7 @@ const comparator: Record<string, string> = { AT_LEAST: 'co najmniej', AT_MOST: '
   standalone: true,
   imports: [MatButtonModule, MatInputModule, ReactiveFormsModule, DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: [`.goal-card.mat-mdc-outlined-button{display:flex;flex-direction:column;align-items:stretch;min-width:0;gap:var(--space-2);text-align:left}.goal-card.mat-mdc-outlined-button .goal-card-title,.goal-card.mat-mdc-outlined-button .goal-card-target,.goal-card.mat-mdc-outlined-button .goal-card-observation{display:block;min-width:0;text-align:left}`],
   template: `<section class="goals-workspace" aria-labelledby="goals-title">
     <div class="goals-heading">
       <div>
@@ -525,13 +529,9 @@ const comparator: Record<string, string> = { AT_LEAST: 'co najmniej', AT_MOST: '
         @for (goal of active(); track goal.id) {
           <button mat-stroked-button type="button" class="goal-card" (click)="open(goal)">
             <strong class="goal-card-title">{{ goal.title }}</strong>
-            <span class="goal-card-meta">{{ status(goal.status) }} · {{ perspective(goal.category) }}</span>
             @for (outcome of goal.outcomes ?? []; track outcome.id) {
-              <span class="goal-card-target">{{ outcomeLabel(outcome.metricCode) }}: {{ comparatorLabel(outcome.targetComparator) }} {{ outcome.targetValue }} {{ outcome.unit }}</span>
-              <span class="goal-card-observation">Ostatni pomiar: {{ outcome.latestObservation ? outcome.latestObservation.value + ' ' + outcome.unit : 'Brak pomiarów' }}</span>
-              @if (hasMeaningfulProgress(outcome.progressState)) {
-                <span class="goal-card-progress">Postęp: {{ progressLabel(outcome.progressState) }}</span>
-              }
+              <span class="goal-card-target">Cel: {{ outcome.targetValue }} {{ outcome.unit }}</span>
+              <span class="goal-card-observation">{{ outcome.latestObservation ? 'Ostatni pomiar: ' + outcome.latestObservation.value + ' ' + outcome.unit : 'Brak pomiarów' }}</span>
             }
           </button>
         }
@@ -543,13 +543,9 @@ const comparator: Record<string, string> = { AT_LEAST: 'co najmniej', AT_MOST: '
             @for (goal of completed(); track goal.id) {
               <button mat-stroked-button type="button" class="goal-card" (click)="open(goal)">
                 <strong class="goal-card-title">{{ goal.title }}</strong>
-                <span class="goal-card-meta">{{ status(goal.status) }} · {{ perspective(goal.category) }}</span>
                 @for (outcome of goal.outcomes ?? []; track outcome.id) {
-                  <span class="goal-card-target">{{ outcomeLabel(outcome.metricCode) }}: {{ comparatorLabel(outcome.targetComparator) }} {{ outcome.targetValue }} {{ outcome.unit }}</span>
-                  <span class="goal-card-observation">Ostatni pomiar: {{ outcome.latestObservation ? outcome.latestObservation.value + ' ' + outcome.unit : 'Brak pomiarów' }}</span>
-                  @if (hasMeaningfulProgress(outcome.progressState)) {
-                    <span class="goal-card-progress">Postęp: {{ progressLabel(outcome.progressState) }}</span>
-                  }
+                  <span class="goal-card-target">Cel: {{ outcome.targetValue }} {{ outcome.unit }}</span>
+                  <span class="goal-card-observation">{{ outcome.latestObservation ? 'Ostatni pomiar: ' + outcome.latestObservation.value + ' ' + outcome.unit : 'Brak pomiarów' }}</span>
                 }
               </button>
             }
@@ -1065,6 +1061,7 @@ export class ParticipantGoalsComponent {
     ParticipantWorkspaceHeaderComponent,
     ParticipantSummaryStripComponent,
     ParticipantGoalsComponent,
+    ParticipantDocumentationComponent,
     PatientTimelineFiltersComponent,
     PatientTimelineComponent,
     PatientTimelineListViewComponent,
@@ -1101,6 +1098,16 @@ export class ParticipantGoalsComponent {
       /><app-participant-summary-strip [workspace]="data" /><app-participant-goals
         [participantId]="participantId()"
         [role]="actingContext()"
+        (changed)="reload()"
+      />
+      <app-participant-documentation
+        [participantId]="participantId()"
+        [role]="actingContext()"
+        [panelType]="recordPanelType()"
+        [panelId]="recordPanelId()"
+        [panelMode]="recordPanelMode()"
+        (opened)="openRecord($event)"
+        (closed)="closeRecord()"
         (changed)="reload()"
       />
       <section class="workspace-content">
@@ -1199,6 +1206,9 @@ export class SpecialistParticipantWorkspacePage {
   protected readonly currentGoalUnavailable = signal(false);
   protected readonly savingOutcome = signal(false);
   protected readonly selectedOutsideRange = signal(false);
+  protected readonly recordPanelType = signal<RecordPanelType | null>(null);
+  protected readonly recordPanelId = signal<string | null>(null);
+  protected readonly recordPanelMode = signal<'view' | 'edit'>('view');
   protected readonly groups = computed(() =>
     groupEvents(this.events(), rangeDates(this.range()).granularity),
   );
@@ -1219,6 +1229,10 @@ export class SpecialistParticipantWorkspacePage {
           ),
       );
       const id = params.get('eventId');
+      const recordType = params.get('recordType');
+      this.recordPanelType.set(recordType === 'interview' || recordType === 'note' ? recordType : null);
+      this.recordPanelId.set(params.get('recordId'));
+      this.recordPanelMode.set(params.get('recordMode') === 'edit' ? 'edit' : 'view');
       const participantId = this.route.snapshot.paramMap.get('participantId');
       if (!participantId) return;
       this.participantId.set(participantId);
@@ -1288,7 +1302,13 @@ export class SpecialistParticipantWorkspacePage {
   }
   protected open(event: ParticipantTimelineEvent) {
     this.opener = document.activeElement as HTMLElement | null;
-    void this.navigate({ eventId: event.eventId ?? null });
+    const type = event.category === 'INTERVIEW' ? 'interview' : event.category === 'NOTE' ? 'note' : null;
+    void this.navigate({
+      eventId: event.eventId ?? null,
+      recordType: type,
+      recordId: type ? event.detail?.referenceId ?? null : null,
+      recordMode: null,
+    });
     this.focusPanel();
   }
   protected close() {
@@ -1296,6 +1316,15 @@ export class SpecialistParticipantWorkspacePage {
     queueMicrotask(() => {
       if (this.opener?.isConnected) this.opener.focus();
     });
+  }
+  protected openRecord(record: { type: RecordPanelType; id: string; mode?: 'view' | 'edit' }) {
+    this.opener = document.activeElement as HTMLElement | null;
+    void this.navigate({ recordType: record.type, recordId: record.id, recordMode: record.mode === 'edit' ? 'edit' : null });
+    this.focusRecordPanel();
+  }
+  protected closeRecord() {
+    void this.navigate({ eventId: null, recordType: null, recordId: null, recordMode: null });
+    queueMicrotask(() => { if (this.opener?.isConnected) this.opener.focus(); });
   }
   protected async recordOutcome(action: 'COMPLETE' | 'MARK_NO_SHOW'): Promise<void> {
     const event = this.selected();
@@ -1437,6 +1466,7 @@ export class SpecialistParticipantWorkspacePage {
     const listed = items.find((event) => event.eventId === eventId);
     if (listed) {
       this.selected.set(listed);
+      this.openRecordForEvent(listed);
       void this.loadCurrentAppointment(listed);
       void this.loadCurrentGoal(listed);
       return;
@@ -1447,6 +1477,7 @@ export class SpecialistParticipantWorkspacePage {
       const listEvent = this.events().find((item) => item.eventId === event.eventId);
       const selected = listEvent ?? event;
       this.selected.set(selected);
+      this.openRecordForEvent(selected);
       this.selectedOutsideRange.set(!listEvent);
       void this.loadCurrentAppointment(selected);
       void this.loadCurrentGoal(selected);
@@ -1482,6 +1513,17 @@ export class SpecialistParticipantWorkspacePage {
   private focusPanel() {
     queueMicrotask(() => {
       const panel = this.host.nativeElement.querySelector('.event-panel');
+      if (panel instanceof HTMLElement) panel.focus();
+    });
+  }
+  private openRecordForEvent(event: ParticipantTimelineEvent) {
+    const type = event.category === 'INTERVIEW' ? 'interview' : event.category === 'NOTE' ? 'note' : null;
+    const id = event.detail?.referenceId;
+    if (type && id && !this.recordPanelId()) void this.navigate({ recordType: type, recordId: id, recordMode: null });
+  }
+  private focusRecordPanel() {
+    queueMicrotask(() => {
+      const panel = this.host.nativeElement.querySelector('.record-panel');
       if (panel instanceof HTMLElement) panel.focus();
     });
   }

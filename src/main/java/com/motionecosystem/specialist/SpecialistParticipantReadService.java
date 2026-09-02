@@ -9,6 +9,7 @@ import com.motionecosystem.participant.api.ParticipantContextQueryPort;
 import com.motionecosystem.participant.api.ParticipantClientPort;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort;
 import com.motionecosystem.participantgoals.api.ParticipantGoalEventQueryPort;
+import com.motionecosystem.participantdocumentation.api.ParticipantDocumentationEventQueryPort;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.Capability;
 import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ProfessionalRole;
@@ -50,6 +51,7 @@ public class SpecialistParticipantReadService {
     private final PlanRevisionQueryPort revisions;
     private final ParticipantExecutionHistoryQueryPort executionHistory;
     private final ParticipantGoalEventQueryPort goalEvents;
+    private final ParticipantDocumentationEventQueryPort recordEvents;
     private final ParticipantSpecialistRelationshipRepository relationships;
     private final SpecialistWorklistService worklist;
     private final AuditRecorder audit;
@@ -59,11 +61,11 @@ public class SpecialistParticipantReadService {
     public SpecialistParticipantReadService(CurrentAccountService accounts, SpecialistProfileService profiles, SpecialistAuthorizationPort authorization,
             ParticipantClientPort participantClients, ParticipantContextQueryPort participantContexts, SpecialistAppointmentQueryPort appointments,
             SpecialistAppointmentEventQueryPort appointmentEvents, PlanRevisionQueryPort revisions,
-            ParticipantExecutionHistoryQueryPort executionHistory, ParticipantGoalEventQueryPort goalEvents,
+            ParticipantExecutionHistoryQueryPort executionHistory, ParticipantGoalEventQueryPort goalEvents, ParticipantDocumentationEventQueryPort recordEvents,
             ParticipantSpecialistRelationshipRepository relationships, SpecialistWorklistService worklist, AuditRecorder audit, Clock clock) {
         this.accounts = accounts; this.profiles = profiles; this.authorization = authorization; this.participantClients = participantClients;
         this.participantContexts = participantContexts; this.appointments = appointments; this.appointmentEvents = appointmentEvents;
-        this.revisions = revisions; this.executionHistory = executionHistory; this.goalEvents = goalEvents; this.relationships = relationships;
+        this.revisions = revisions; this.executionHistory = executionHistory; this.goalEvents = goalEvents; this.recordEvents = recordEvents; this.relationships = relationships;
         this.worklist = worklist; this.audit = audit; this.clock = clock;
     }
 
@@ -74,7 +76,7 @@ public class SpecialistParticipantReadService {
             ParticipantExecutionHistoryQueryPort executionHistory, ParticipantSpecialistRelationshipRepository relationships,
             SpecialistWorklistService worklist, AuditRecorder audit, Clock clock) {
         this(accounts, profiles, authorization, participantClients, participantContexts, appointments, appointmentEvents, revisions,
-                executionHistory, null, relationships, worklist, audit, clock);
+                executionHistory, null, null, relationships, worklist, audit, clock);
     }
 
     public SpecialistParticipantWorkspaceView workspace(String subject, UUID participantId) {
@@ -116,6 +118,9 @@ public class SpecialistParticipantReadService {
             goalEvents.timeline(participantId, normalized.from(), normalized.to(), goalEventCursor(cursor), MAX_LIMIT)
                     .forEach(item -> events.add(goalEvent(item)));
         }
+        if (recordEvents != null) recordEvents.timeline(participantId, normalized.from(), normalized.to()).stream()
+                .filter(item -> normalized.types().contains("INTERVIEW".equals(item.recordType()) ? TimelineType.INTERVIEW : TimelineType.NOTE))
+                .forEach(item -> events.add(recordEvent(item)));
         Optional<PlanRevisionQueryPort.PlanRevisionSnapshot> revision = revisions.findActiveRevision(participantId);
         revision.ifPresent(value -> addPlanEvents(events, value, normalized));
         if (normalized.types().contains(TimelineType.EXECUTION) && canViewExecutionHistory(access, participantId)) {
@@ -149,6 +154,9 @@ public class SpecialistParticipantReadService {
             UUID eventId = goalEventId(publicEventId);
             resolved = goalEvents.findByParticipantId(participantId, eventId).map(SpecialistParticipantReadService::goalEvent)
                     .orElseThrow(SpecialistParticipantReadService::timelineEventNotFound);
+        } else if (publicEventId != null && (publicEventId.startsWith("participant-interview-event:") || publicEventId.startsWith("participant-note-event:")) && recordEvents != null) {
+            String prefix = publicEventId.startsWith("participant-interview-event:") ? "participant-interview-event:" : "participant-note-event:";
+            try { resolved = recordEvents.find(participantId, UUID.fromString(publicEventId.substring(prefix.length()))).map(SpecialistParticipantReadService::recordEvent).orElseThrow(SpecialistParticipantReadService::timelineEventNotFound); } catch (IllegalArgumentException ex) { throw timelineEventNotFound(); }
         } else throw timelineEventNotFound();
         audit.record(subject, "SPECIALIST_PARTICIPANT_TIMELINE_EVENT_VIEWED", "ParticipantAccount", participantId);
         return resolved;
@@ -304,6 +312,11 @@ public class SpecialistParticipantReadService {
                 null, "PARTICIPANT_GOAL_EVENT", List.of(item.goalId()), null, null,
                 item.observationValue() == null ? null : new Measurement(item.metricCode(), item.observationValue(), item.observationUnit()), null,
                 List.of("OPEN_GOAL"), new EventDetail("PARTICIPANT_GOAL_EVENT", item.eventId().toString(), null, null, null, item.goalId()));
+    }
+    private static ParticipantTimelineEvent recordEvent(ParticipantDocumentationEventQueryPort.Event item) {
+        String category = "INTERVIEW".equals(item.recordType()) ? "INTERVIEW" : "NOTE";
+        String prefix = "INTERVIEW".equals(item.recordType()) ? "participant-interview-event:" : "participant-note-event:";
+        return new ParticipantTimelineEvent(prefix + item.eventId(), "PARTICIPANT_" + category + "_" + item.action(), category, item.action(), item.effectiveAt(), null, item.recordedAt(), null, item.neutralTitle(), item.neutralTitle(), "NORMAL", "OPERATIONAL", null, "PARTICIPANT_RECORD_EVENT", List.of(item.recordId()), null, null, null, null, List.of("OPEN_" + category), new EventDetail("PARTICIPANT_RECORD_EVENT", item.recordId().toString()));
     }
     private static String goalEventType(ParticipantGoalEventQueryPort.ParticipantGoalEventSummary item) {
         if (!"BASELINE".equals(item.eventType())) return "PARTICIPANT_GOAL_" + item.eventType();
@@ -461,7 +474,7 @@ public class SpecialistParticipantReadService {
     private static ResponseStatusException bad(String message) { return new ResponseStatusException(HttpStatus.BAD_REQUEST, message); }
 
     public enum Granularity { DETAIL, WEEK, MONTH }
-    public enum TimelineType { APPOINTMENT, SESSION, EXECUTION, GOAL }
+    public enum TimelineType { APPOINTMENT, SESSION, EXECUTION, GOAL, INTERVIEW, NOTE }
     public record TimelineQuery(Instant from, Instant to, Set<TimelineType> types, Granularity granularity, String cursor, Integer limit) { }
     public record SpecialistParticipantWorkspaceView(Instant generatedAt, ParticipantHeader participant, RelationshipView relationship,
                                                       List<String> capabilities, AppointmentView nextAppointment, ActivePlanView activePlan,

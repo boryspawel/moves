@@ -2,7 +2,7 @@ import type { ParticipantTimelineEvent } from '../api/generated/src/models/Parti
 
 export type WorkspaceRange = '2w' | '3m' | '12m';
 export type WorkspaceView = 'timeline' | 'list';
-export const timelineCategories = ['APPOINTMENT', 'SESSION', 'EXECUTION'] as const;
+export const timelineCategories = ['APPOINTMENT', 'SESSION', 'EXECUTION', 'INTERVIEW', 'NOTE'] as const;
 export type TimelineCategory = typeof timelineCategories[number];
 
 export function rangeDates(range: WorkspaceRange, now = new Date()): { from?: Date; to: Date; granularity: 'DETAIL' | 'WEEK' | 'MONTH' } {

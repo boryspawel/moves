@@ -22,7 +22,8 @@ public interface SpecialistAuthorizationPort {
         ACKNOWLEDGE_PERFORMANCE_WARNING,
         OVERRIDE_CLINICAL_BLOCK,
         VIEW_ADHERENCE_WORKLIST,
-        RESPOND_TO_PARTICIPANT_ISSUE
+        RESPOND_TO_PARTICIPANT_ISSUE,
+        MANAGE_PARTICIPANT_RECORDS
     }
 
     enum ProfessionalRole {

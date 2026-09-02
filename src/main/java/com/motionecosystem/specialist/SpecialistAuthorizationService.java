@@ -53,7 +53,8 @@ class SpecialistAuthorizationService implements SpecialistAuthorizationPort {
                         Capability.VIEW_EFFECTIVE_RESTRICTION,
                         Capability.ACKNOWLEDGE_PERFORMANCE_WARNING,
                         Capability.VIEW_ADHERENCE_WORKLIST,
-                        Capability.RESPOND_TO_PARTICIPANT_ISSUE)
+                        Capability.RESPOND_TO_PARTICIPANT_ISSUE,
+                        Capability.MANAGE_PARTICIPANT_RECORDS)
                 : EnumSet.of(
                         Capability.PLAN_FUNCTIONAL_RECOVERY,
                         Capability.SET_CLINICAL_RESTRICTION,
@@ -61,7 +62,8 @@ class SpecialistAuthorizationService implements SpecialistAuthorizationPort {
                         Capability.VIEW_CLINICAL_RATIONALE,
                         Capability.OVERRIDE_CLINICAL_BLOCK,
                         Capability.VIEW_ADHERENCE_WORKLIST,
-                        Capability.RESPOND_TO_PARTICIPANT_ISSUE);
+                        Capability.RESPOND_TO_PARTICIPANT_ISSUE,
+                        Capability.MANAGE_PARTICIPANT_RECORDS);
         if (!granted.containsAll(required)) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN, "required domain capability is missing");

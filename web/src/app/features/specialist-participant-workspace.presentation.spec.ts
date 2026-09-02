@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { attentionSummary, categoryLabel, eventTimeLabel, goalsSummary, humanEventTitle, outcomeMetricLabel, realizationSummary, safeText, statusLabel, typeLabel } from './specialist-participant-workspace.presentation';
+import { attentionSummary, categoryLabel, eventDescription, eventTimeLabel, goalsSummary, humanEventTitle, outcomeMetricLabel, questionTitle, realizationSummary, safeText, selectionLabel, statusLabel, typeLabel } from './specialist-participant-workspace.presentation';
 
 describe('participant workspace presentation', () => {
   it('uses Polish appointment labels and a 24-hour range', () => {
@@ -37,5 +37,30 @@ describe('participant workspace presentation', () => {
     expect(outcomeMetricLabel('BODY_CIRCUMFERENCE:HIPS')).toBe('Obwód bioder');
     expect(outcomeMetricLabel('BODY_CIRCUMFERENCE:CHEST')).toBe('Obwód klatki piersiowej');
     expect(outcomeMetricLabel('INTERNAL_METRIC')).toBe('Wynik');
+  });
+
+  it('maps documentation timeline events and never exposes technical event text', () => {
+    expect(humanEventTitle({ category: 'INTERVIEW', eventType: 'STARTED', title: 'Interview started' })).toBe('Rozpoczęto wywiad');
+    expect(humanEventTitle({ category: 'INTERVIEW', eventType: 'UPDATED' })).toBe('Zaktualizowano wywiad');
+    expect(humanEventTitle({ category: 'INTERVIEW', eventType: 'COMPLETED' })).toBe('Zakończono wywiad');
+    expect(humanEventTitle({ category: 'INTERVIEW', eventType: 'SUPERSEDED' })).toBe('Dodano nowszy wywiad');
+    expect(humanEventTitle({ category: 'NOTE', eventType: 'NOTE_FINALSED', title: 'Note finalised' })).toBe('Notatka');
+  });
+
+  it('normalizes interview variants and suppresses backend supplemental text', () => {
+    const started = { category: 'PARTICIPANT_INTERVIEW', eventType: 'PARTICIPANT_INTERVIEW_STARTED', title: 'Interview started', summary: 'Interview started', status: 'STARTED' };
+    const completed = { category: 'INTERVIEW', eventType: 'INTERVIEW_COMPLETED', title: 'Interview completed', summary: 'Interview completed', status: 'COMPLETED' };
+    expect(categoryLabel(started.category)).toBe('Wywiad');
+    expect(humanEventTitle(started)).toBe('Rozpoczęto wywiad');
+    expect(humanEventTitle(completed)).toBe('Zakończono wywiad');
+    expect(eventDescription(started)).toBeUndefined();
+    expect(statusLabel(completed)).toBeUndefined();
+  });
+
+  it('uses Polish question labels and safe fallbacks for unknown documentation values', () => {
+    expect(questionTitle({ code: 'presenting_concern', title: 'Interview question' })).toBe('Z czym uczestnik zgłasza się dziś?');
+    expect(questionTitle({ code: 'internal_question_code', title: 'QUESTION_CODE' })).toBe('Nie podano');
+    expect(selectionLabel({ code: 'activity_level' }, 'LOW')).toBe('Niski');
+    expect(selectionLabel({ code: 'activity_level' }, 'INTERNAL_SELECTION')).toBe('Nie podano');
   });
 });

@@ -132,7 +132,7 @@ describe('ParticipantGoalsComponent', () => {
     component.goals.set([goal]);
     component.state.set('loaded');
     fixture.detectChanges();
-    expect((fixture.nativeElement as HTMLElement).querySelector('.goal-card')?.textContent).toContain('Obwód talii');
+    expect((fixture.nativeElement as HTMLElement).querySelector('.goal-card')?.textContent).toContain('Cel: 5 km');
     expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('BODY_CIRCUMFERENCE:WAIST');
 
     await component.open(goal);
@@ -176,12 +176,15 @@ describe('ParticipantGoalsComponent', () => {
     fixture.detectChanges();
 
     const card = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.goal-card')!;
+    expect(Array.from(card.querySelectorAll('.goal-card-title, .goal-card-target, .goal-card-observation')).map((element) => element.textContent?.trim())).toEqual(['Pobiec 5 km', 'Cel: 5 km', 'Brak pomiarów']);
     expect(card.querySelector('.goal-card-title')?.textContent).toContain('Pobiec 5 km');
-    expect(card.querySelector('.goal-card-meta')?.textContent).toContain('Aktywny · Wynik sportowy');
-    expect(card.querySelector('.goal-card-target')?.textContent).toContain('Obwód talii: co najmniej 5 km');
-    expect(card.querySelector('.goal-card-observation')?.textContent).toContain('Ostatni pomiar: Brak pomiarów');
+    expect(card.querySelector('.goal-card-meta')).toBeNull();
+    expect(card.querySelector('.goal-card-target')?.textContent).toContain('Cel: 5 km');
+    expect(card.querySelector('.goal-card-observation')?.textContent).toContain('Brak pomiarów');
     expect(card.querySelector('.goal-card-progress')).toBeNull();
     expect(card.textContent).not.toContain('BODY_CIRCUMFERENCE:WAIST');
+    expect(card.textContent).not.toContain('Aktywny');
+    expect(card.textContent).not.toContain('Wynik sportowy');
 
     card.click();
     await fixture.whenStable();
@@ -451,6 +454,34 @@ describe('PatientTimelineEventPanelComponent', () => {
     expect((panelFixture.nativeElement as HTMLElement).textContent).toContain('Trening');
     expect((panelFixture.nativeElement as HTMLElement).querySelector('dd.stale')).not.toBeNull();
   });
+
+  it('renders interview start and completion as one Polish business line without backend text or status', async () => {
+    await TestBed.configureTestingModule({
+      imports: [PatientTimelineEventPanelComponent, TimelineEventComponent],
+    }).compileComponents();
+
+    for (const event of [
+      { category: 'PARTICIPANT_INTERVIEW', eventType: 'PARTICIPANT_INTERVIEW_STARTED', title: 'Interview started', summary: 'Interview started', status: 'STARTED', effectiveFrom: new Date('2026-08-03T09:00:00') },
+      { category: 'INTERVIEW', eventType: 'INTERVIEW_COMPLETED', title: 'Interview completed', summary: 'Interview completed', status: 'COMPLETED', effectiveFrom: new Date('2026-08-03T10:00:00') },
+    ]) {
+      const timelineFixture = TestBed.createComponent(TimelineEventComponent);
+      timelineFixture.componentInstance.event = event;
+      timelineFixture.detectChanges();
+      const panelFixture = TestBed.createComponent(PatientTimelineEventPanelComponent);
+      panelFixture.componentInstance.event = event;
+      panelFixture.detectChanges();
+      const expected = event.eventType.endsWith('STARTED') ? 'Rozpoczęto wywiad' : 'Zakończono wywiad';
+
+      for (const text of [(timelineFixture.nativeElement as HTMLElement).textContent ?? '', (panelFixture.nativeElement as HTMLElement).textContent ?? '']) {
+        expect(text).toContain('Wywiad');
+        expect(text).toContain(expected);
+        expect(text).not.toContain(event.title);
+        expect(text).not.toContain(event.summary);
+        expect(text).not.toContain('Status:');
+        expect(text).not.toContain(event.status);
+      }
+    }
+  });
 });
 
 describe('SpecialistParticipantWorkspacePage appointment outcomes', () => {
@@ -630,6 +661,50 @@ describe('SpecialistParticipantWorkspacePage event deep links', () => {
     opener.remove();
   });
 
+  it('closes a record event panel once, preserves other query parameters, and restores focus on Escape', async () => {
+    const event = {
+      eventId: 'record-event-1',
+      category: 'INTERVIEW',
+      detail: { referenceId: 'interview-1' },
+    };
+    const { fixture, router, params } = await pageFixture([event], [event], appointmentApi());
+    await (fixture.componentInstance as any).load('participant-1', null);
+    fixture.detectChanges();
+    const opener = document.createElement('button');
+    document.body.append(opener);
+    (fixture.componentInstance as any).opener = opener;
+    params.next(convertToParamMap({
+      eventId: event.eventId,
+      recordType: 'interview',
+      recordId: 'interview-1',
+      range: '2w',
+      view: 'timeline',
+      source: 'history',
+    }));
+    await fixture.whenStable();
+    await (fixture.componentInstance as any).resolveSelection('participant-1', event.eventId, [event]);
+    fixture.detectChanges();
+    router.navigate.mockClear();
+
+    (fixture.nativeElement as HTMLElement).querySelector('.record-panel')!.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape' }),
+    );
+    params.next(convertToParamMap({ range: '2w', view: 'timeline', source: 'history' }));
+    await fixture.whenStable();
+
+    expect(router.navigate).toHaveBeenCalledWith(
+      [],
+      expect.objectContaining({
+        queryParams: { eventId: null, recordType: null, recordId: null, recordMode: null },
+        queryParamsHandling: 'merge',
+      }),
+    );
+    expect((fixture.componentInstance as any).selected()).toBeNull();
+    expect((fixture.componentInstance as any).recordPanelId()).toBeNull();
+    expect(document.activeElement).toBe(opener);
+    opener.remove();
+  });
+
   it('preserves the historical goal event while loading its current goal snapshot by referenceId', async () => {
     const event = goalEvent('goal-event-1', 'goal-1');
     const getParticipantGoal = vi
@@ -771,6 +846,7 @@ async function pageFixture(
     onboarding: { state: vi.fn().mockResolvedValue({ profile: { specialistKind: 'TRAINER' } }) },
     appointments: { ...appointments, noShow: vi.fn(), create2: vi.fn() },
     participantGoals: { getParticipantGoal, listParticipantGoals: vi.fn().mockResolvedValue([]) },
+    participantDocumentation: { listParticipantDocumentationInterviews: vi.fn().mockResolvedValue([]), listParticipantDocumentationNotes: vi.fn().mockResolvedValue([]) },
   };
   await TestBed.configureTestingModule({
     imports: [SpecialistParticipantWorkspacePage],

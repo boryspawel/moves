@@ -220,3 +220,24 @@ footer {
     width: 100%;
   }
 }
+
+.goal-panel,
+.record-panel {
+  position: fixed;
+  right: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--app-surface);
+  box-shadow: var(--shadow-overlay);
+}
+
+.goal-panel-header,
+.record-panel-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--app-border);
+}

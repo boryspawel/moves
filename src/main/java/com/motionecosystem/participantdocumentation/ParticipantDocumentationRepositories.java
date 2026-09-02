@@ -1,0 +1,7 @@
+package com.motionecosystem.participantdocumentation;
+import java.util.*; import org.springframework.data.jpa.repository.JpaRepository;
+interface ParticipantInterviewRepository extends JpaRepository<ParticipantInterview,UUID> { List<ParticipantInterview> findByParticipantIdAndSpecialistIdOrderByCreatedAtDesc(UUID p,UUID s); Optional<ParticipantInterview> findByIdAndParticipantIdAndSpecialistId(UUID id,UUID p,UUID s); }
+interface InterviewResponseRepository extends JpaRepository<InterviewResponse,UUID> { List<InterviewResponse> findByInterviewId(UUID id); void deleteByInterviewId(UUID id); }
+interface ParticipantNoteRepository extends JpaRepository<ParticipantNote,UUID> { List<ParticipantNote> findByParticipantIdAndSpecialistIdOrderByUpdatedAtDesc(UUID p,UUID s); Optional<ParticipantNote> findByIdAndParticipantIdAndSpecialistId(UUID id,UUID p,UUID s); }
+interface RecordIdempotencyRepository extends JpaRepository<RecordIdempotency,UUID> { Optional<RecordIdempotency> findBySpecialistIdAndOperationAndKey(UUID s,String o,String k); }
+interface ParticipantDocumentationEventRepository extends JpaRepository<ParticipantDocumentationEvent,UUID> { List<ParticipantDocumentationEvent> findByParticipantIdAndEffectiveAtGreaterThanEqualAndEffectiveAtLessThanOrderByEffectiveAtDesc(UUID p,java.time.Instant from,java.time.Instant to); Optional<ParticipantDocumentationEvent> findByIdAndParticipantId(UUID id,UUID p); }

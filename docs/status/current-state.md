@@ -190,8 +190,11 @@ biomechaniczną ani kliniczną. SET-07B może rozpocząć prototyp techniczny.
   `principalAccountId`. Starsze `*AccountId` pozostają lokalnymi mostami
   odczytowymi modułów, które nie zostały jeszcze przeniesione.
 - Brak konta nie blokuje pracy specjalisty: można utworzyć i otworzyć kartotekę,
-  planować terminy oraz prowadzić workspace. Niedostępne pozostają wyłącznie
+  planować terminy, prowadzić workspace oraz dokumentować wywiady i notatki. Niedostępne pozostają wyłącznie
   działania wymagające samodzielnego konta uczestnika.
+- `V056__create_participant_documentation` utrwala dokumentację specjalisty w
+  odrębnym schemacie `participant_documentation`; jej `participant_id` zawsze
+  referuje kanoniczne `participant.participant_record`, a nie nową kartotekę.
 
 ## Workspace specjalisty i lokalne operacje
 
@@ -206,6 +209,8 @@ biomechaniczną ani kliniczną. SET-07B może rozpocząć prototyp techniczny.
   `IN_PROGRESS`; statusy końcowe nie są kandydatami. Timeline obsługuje spotkania,
   planowane sesje i wykonania, z zakresem 2 tygodni / 3 miesięcy / 12 miesięcy,
   filtrem typu, kursorem wcześniejszych wyników oraz przełącznikiem osi/listy.
+  Neutralne zdarzenia wywiadów i notatek otwierają chronione panele po referencji,
+  bez ujawniania odpowiedzi ani treści na osi czasu.
   Zakres, typy, widok i wybrane zdarzenie są kontrolowane przez URL.
 - Sygnały uwagi są prezentowane jako minimalne, bezpieczne komunikaty. Zdarzenia
   mają etykiety kategorii, typu, statusu, źródła i czasu; UUID lub nieznany kod nie
@@ -293,3 +298,6 @@ aktywnych terminów `SCHEDULED`, `CONFIRMED` i `IN_PROGRESS`. To nie jest trwał
 worklista ani automatyczna zmiana lifecycle: specjalista wybiera idempotentną akcję
 lifecycle z wersją terminu. Deep link do szczegółu zdarzenia zachowuje kontekst
 uczestnika i wymaga aktywnej relacji oraz capability właściwych dla tego kontekstu.
+# Participant documentation
+
+The specialist participant workspace backend now exposes specialist-owned initial interviews and notes as participant documentation over canonical participant IDs. Historical access is intentionally denied after relationship termination pending a retention/consent policy; see `docs/architecture/participant-documentation.md`.
