@@ -34,6 +34,11 @@ class ImportCatalogReadRepository {
                 .setParameter("id", versionId).getSingleResult();
     }
 
+    String canonicalName(UUID exerciseId) {
+        return entityManager.createQuery("select exercise.canonicalName from Exercise exercise where exercise.id = :id", String.class)
+                .setParameter("id", exerciseId).getResultStream().findFirst().orElse(null);
+    }
+
     List<UUID> exactNameOrAlias(String locale, String name) {
         return entityManager.createQuery("""
                 select exercise.id from Exercise exercise

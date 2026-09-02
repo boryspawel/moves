@@ -51,6 +51,19 @@ class ExerciseImportBatchEntity {
     @Version long version;
 }
 
+@Entity(name = "ExerciseImportArtifactJpaEntity")
+@Table(name = "import_artifact", schema = "exercise_import")
+class ExerciseImportArtifactEntity {
+    @Id UUID id;
+    @Column(name = "batch_id", nullable = false) UUID batchId;
+    @Column(name = "storage_key", nullable = false) String storageKey;
+    @Column(name = "original_filename", nullable = false) String originalFilename;
+    @Column(name = "media_type", nullable = false) String mediaType;
+    @Column(name = "byte_size", nullable = false) long byteSize;
+    @Column(nullable = false) String sha256;
+    @Column(name = "created_at", nullable = false, updatable = false) Instant createdAt;
+}
+
 @Entity(name = "ExerciseImportRecordJpaEntity")
 @Table(name = "import_record", schema = "exercise_import")
 class ExerciseImportRecordEntity {
