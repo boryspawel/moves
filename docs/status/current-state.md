@@ -237,9 +237,10 @@ biomechaniczną ani kliniczną. SET-07B może rozpocząć prototyp techniczny.
 
 CI wykonuje `mvn verify`, deterministyczną instalację zależności frontendu,
 testy jednostkowe bez watch mode, produkcyjny build Angulara oraz weryfikację
-snapshotu i generatora OpenAPI. Smoke test Docker Compose wymaga dostępnego
-silnika Docker i nie jest zastępstwem dla tych weryfikacji w środowisku bez
-socketu Dockera.
+snapshotu i generatora OpenAPI. Lokalną walidację integracyjną uruchamia się
+przez `docker compose up --build` oraz `scripts/compose-smoke.sh`. Testy JVM
+oparte na Testcontainers wymagają działającego Docker Engine; Compose smoke
+test uzupełnia, ale nie zastępuje pełnej weryfikacji CI.
 
 Weryfikacja OpenAPI odświeża specyfikację i klient przez `npm run api:refresh`,
 a następnie wymaga braku różnic. Wygenerowane pliki są aktualizowane wyłącznie
