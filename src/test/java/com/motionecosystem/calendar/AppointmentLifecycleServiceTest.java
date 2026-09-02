@@ -13,8 +13,7 @@ import com.motionecosystem.availability.RecurringAvailabilityService;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
-import com.motionecosystem.specialist.SpecialistProfileService;
-import com.motionecosystem.specialist.SpecialistRelationshipService;
+import com.motionecosystem.calendar.api.CalendarSpecialistContextPort;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -41,7 +40,7 @@ class AppointmentLifecycleServiceTest {
         assertThatThrownBy(() -> fixture.service.update("specialist", appointment.id, "update-key", command))
                 .isInstanceOf(ResponseStatusException.class).hasMessageContaining("cannot update");
 
-        verify(fixture.relationships, never()).requireActive(any(), any());
+        verify(fixture.relationships, never()).requireActiveRelationship(any(), any());
         verify(fixture.availability, never()).windows(any(), any());
         verify(fixture.appointments, never()).hasActiveOverlap(any(), any(), any(), any());
     }
@@ -81,7 +80,7 @@ class AppointmentLifecycleServiceTest {
         assertThat(result.appointmentId()).isEqualTo(appointment.id);
         assertThat(result.version()).isEqualTo(appointment.version);
         assertThat(result.availableActions()).contains("COMPLETE");
-        verify(fixture.relationships).requireActive(fixture.specialistId, fixture.participantId);
+        verify(fixture.relationships).requireActiveRelationship(fixture.specialistId, fixture.participantId);
     }
 
     @Test
@@ -113,12 +112,12 @@ class AppointmentLifecycleServiceTest {
         AppointmentRepository appointments = mock(AppointmentRepository.class);
         AppointmentEventRepository events = mock(AppointmentEventRepository.class);
         AppointmentIdempotencyRepository idempotency = mock(AppointmentIdempotencyRepository.class);
-        SpecialistRelationshipService relationships = mock(SpecialistRelationshipService.class);
+        CalendarSpecialistContextPort specialistContext = mock(CalendarSpecialistContextPort.class);
         RecurringAvailabilityService availability = mock(RecurringAvailabilityService.class);
         AuditRecorder audit = mock(AuditRecorder.class);
-        return new Fixture(specialistId, UUID.randomUUID(), appointments, events, idempotency, relationships, availability, audit,
-                new AppointmentService(appointments, events, idempotency, accounts, relationships, availability,
-                        mock(SpecialistProfileService.class), audit, Clock.fixed(NOW, ZoneOffset.UTC)));
+        return new Fixture(specialistId, UUID.randomUUID(), appointments, events, idempotency, specialistContext, availability, audit,
+                new AppointmentService(appointments, events, idempotency, accounts, specialistContext, availability,
+                        audit, Clock.fixed(NOW, ZoneOffset.UTC)));
     }
 
     private static Appointment appointment(UUID specialist, UUID participant, Instant startsAt, Instant endsAt) {
@@ -127,6 +126,6 @@ class AppointmentLifecycleServiceTest {
     }
 
     private record Fixture(UUID specialistId, UUID participantId, AppointmentRepository appointments, AppointmentEventRepository events,
-                           AppointmentIdempotencyRepository idempotency, SpecialistRelationshipService relationships,
+                           AppointmentIdempotencyRepository idempotency, CalendarSpecialistContextPort relationships,
                            RecurringAvailabilityService availability, AuditRecorder audit, AppointmentService service) { }
 }

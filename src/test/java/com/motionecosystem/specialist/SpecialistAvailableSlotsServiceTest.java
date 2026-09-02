@@ -5,7 +5,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.motionecosystem.availability.RecurringAvailabilityService;
-import com.motionecosystem.calendar.AppointmentService;
+import com.motionecosystem.calendar.api.SpecialistAppointmentQueryPort;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
@@ -24,7 +24,7 @@ class SpecialistAvailableSlotsServiceTest {
     private final CurrentAccountService accounts = mock(CurrentAccountService.class);
     private final SpecialistProfileService profiles = mock(SpecialistProfileService.class);
     private final RecurringAvailabilityService availability = mock(RecurringAvailabilityService.class);
-    private final AppointmentService appointments = mock(AppointmentService.class);
+    private final SpecialistAppointmentQueryPort appointments = mock(SpecialistAppointmentQueryPort.class);
 
     @Test
     void returns_only_full_grid_slots_that_do_not_collide() {
@@ -33,7 +33,7 @@ class SpecialistAvailableSlotsServiceTest {
         when(availability.windows(specialistId, date)).thenReturn(List.of(new RecurringAvailabilityService.Window(
                 Instant.parse("2030-06-10T08:00:00Z"), Instant.parse("2030-06-10T10:00:00Z"))));
         when(appointments.blockingInRange(specialistId, Instant.parse("2030-06-10T00:00:00Z"), Instant.parse("2030-06-11T00:00:00Z")))
-                .thenReturn(List.of(new AppointmentService.TimeRange(Instant.parse("2030-06-10T09:00:00Z"), Instant.parse("2030-06-10T09:30:00Z"))));
+                .thenReturn(List.of(new SpecialistAppointmentQueryPort.BlockingTimeRange(Instant.parse("2030-06-10T09:00:00Z"), Instant.parse("2030-06-10T09:30:00Z"))));
 
         var result = service.list("specialist", date, 60);
 

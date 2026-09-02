@@ -9,8 +9,6 @@ import static org.mockito.Mockito.when;
 
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.availability.RecurringAvailabilityService;
-import com.motionecosystem.calendar.Appointment;
-import com.motionecosystem.calendar.AppointmentService;
 import com.motionecosystem.calendar.api.SpecialistAppointmentQueryPort;
 import com.motionecosystem.calendar.api.SpecialistAppointmentEventQueryPort;
 import com.motionecosystem.calendar.api.SpecialistOverdueAppointmentQueryPort;
@@ -43,7 +41,7 @@ class SpecialistCalendarParticipantIdTest {
         SpecialistProfileService profiles = mock(SpecialistProfileService.class);
         SpecialistRelationshipService relationships = mock(SpecialistRelationshipService.class);
         ParticipantClientPort participants = mock(ParticipantClientPort.class);
-        AppointmentService appointments = mock(AppointmentService.class);
+        SpecialistAppointmentQueryPort appointments = mock(SpecialistAppointmentQueryPort.class);
         SpecialistOverdueAppointmentQueryPort overdueAppointments = mock(SpecialistOverdueAppointmentQueryPort.class);
         AuditRecorder audit = mock(AuditRecorder.class);
         when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(specialistId, "specialist", ProfileType.SPECIALIST));
@@ -53,9 +51,9 @@ class SpecialistCalendarParticipantIdTest {
         when(participants.find(participantId)).thenReturn(Optional.of(new ParticipantClientPort.ClientRecord(
                 participantId, "Account-free client", ParticipantClientPort.RelationshipContext.CLIENT,
                 ParticipantClientPort.RecordStatus.ACTIVE, 0)));
-        AppointmentService.AppointmentView appointment = new AppointmentService.AppointmentView(UUID.randomUUID(), participantId,
-                NOW.plusSeconds(3600), NOW.plusSeconds(7200), Appointment.Type.CONSULTATION, Appointment.Status.SCHEDULED,
-                Appointment.LocationMode.REMOTE, null, "Check-in", false, false, List.of("OPEN_APPOINTMENT"), 0);
+        SpecialistAppointmentQueryPort.OperationalAppointment appointment = new SpecialistAppointmentQueryPort.OperationalAppointment(UUID.randomUUID(), participantId,
+                NOW.plusSeconds(3600), NOW.plusSeconds(7200), "CONSULTATION", "SCHEDULED",
+                "REMOTE", null, "Check-in", false, List.of("OPEN_APPOINTMENT"), 0);
         when(appointments.inRange(eq(specialistId), any(), any(), eq(Set.of(participantId)), eq(NOW))).thenReturn(List.of(appointment));
         UUID eventId = UUID.randomUUID();
         when(overdueAppointments.overdueOutcomeAppointments(specialistId, Set.of(participantId), NOW)).thenReturn(List.of(
