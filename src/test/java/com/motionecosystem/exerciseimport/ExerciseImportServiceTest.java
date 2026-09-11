@@ -87,6 +87,15 @@ class ExerciseImportServiceTest {
                 .contains("order by record.rowNumber, record.id");
     }
 
+    @Test
+    void blockedRecordsQueryCastsJsonPayloadBeforeCaseInsensitiveSearch() throws NoSuchMethodException {
+        Method method = ExerciseImportRecordRepository.class.getDeclaredMethod(
+                "findBlockedForMapping", UUID.class, String.class, String.class);
+
+        assertThat(method.getAnnotation(org.springframework.data.jpa.repository.Query.class).value())
+                .contains("lower(cast(record.rawPayload as string))");
+    }
+
     private static ExerciseImportService service(ExerciseImportSourceRepository sources,
                                                  ExerciseImportBatchRepository batches,
                                                  ExerciseImportArtifactRepository artifactsRepository,

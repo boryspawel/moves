@@ -7,7 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 interface ImportedExerciseVersionPurposeRepository extends JpaRepository<ImportedExerciseVersionPurpose, ImportedExerciseVersionPurposeId> {}
 interface ImportedExerciseVersionTextRepository extends JpaRepository<ImportedExerciseVersionText, UUID> {}
 interface ImportedExerciseInstructionStepRepository extends JpaRepository<ImportedExerciseInstructionStep, UUID> {}
-interface ImportedExerciseAliasRepository extends JpaRepository<ImportedExerciseAlias, UUID> {}
+interface ImportedExerciseAliasRepository extends JpaRepository<ImportedExerciseAlias, UUID> {
+    boolean existsByExerciseIdAndLocaleAndNormalizedAlias(UUID exerciseId, String locale, String normalizedAlias);
+}
 interface ImportedExerciseMovementCharacteristicRepository extends JpaRepository<ImportedExerciseMovementCharacteristic, UUID> {}
 interface ImportedExerciseEquipmentRepository extends JpaRepository<ImportedExerciseEquipment, ImportedExerciseEquipmentId> {}
 interface ImportedExerciseDoseCapabilityRepository extends JpaRepository<ImportedExerciseDoseCapability, ImportedExerciseDoseCapabilityId> {}

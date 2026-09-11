@@ -17,6 +17,7 @@ import java.util.UUID;
 class JpaImportedExerciseDraftAdapter implements ImportedExerciseDraftPort {
     private final ExerciseRepository exercises;
     private final ExerciseVersionRepository versions;
+    private final ImportedExerciseAliasRepository aliases;
     private final EntityManager entityManager;
     private final Clock clock;
 
@@ -46,7 +47,7 @@ class JpaImportedExerciseDraftAdapter implements ImportedExerciseDraftPort {
         command.purposes().forEach(value -> { var item = new ImportedExerciseVersionPurpose(); item.id = new ImportedExerciseVersionPurposeId(); item.id.versionId = versionId; item.id.purpose = value; item.sourceId = command.sourceId(); entityManager.persist(item); });
         var text = new ImportedExerciseVersionText(); text.id = UUID.randomUUID(); text.versionId = versionId; text.locale = command.locale(); text.name = command.canonicalName(); text.sourceId = command.sourceId(); entityManager.persist(text);
         command.instructionSteps().forEach(value -> { var item = new ImportedExerciseInstructionStep(); item.id = UUID.randomUUID(); item.versionId = versionId; item.locale = command.locale(); item.stepNumber = value.number(); item.instruction = value.instruction(); item.sourceId = command.sourceId(); entityManager.persist(item); });
-        java.util.LinkedHashSet<String> aliases = new java.util.LinkedHashSet<>(command.aliases()); aliases.add(command.canonicalName()); aliases.forEach(value -> { var item = new ImportedExerciseAlias(); item.id = UUID.randomUUID(); item.exerciseId = exerciseId; item.locale = command.locale(); item.alias = value; item.normalizedAlias = value.trim().toLowerCase(Locale.ROOT); item.sourceId = command.sourceId(); entityManager.persist(item); });
+        java.util.LinkedHashSet<String> aliases = new java.util.LinkedHashSet<>(command.aliases()); aliases.add(command.canonicalName()); aliases.forEach(value -> persistAliasIfAbsent(command, exerciseId, value));
         command.movementCharacteristics().forEach(value -> { var item = new ImportedExerciseMovementCharacteristic(); item.id = UUID.randomUUID(); item.versionId = versionId; item.movementPattern = value.movementPattern(); item.positionCode = value.position(); item.unilateral = value.unilateral(); item.loadNature = value.loadNature(); item.sourceId = command.sourceId(); entityManager.persist(item); });
         command.equipment().forEach(value -> { var item = new ImportedExerciseEquipment(); item.id = new ImportedExerciseEquipmentId(); item.id.versionId = versionId; item.id.equipmentCode = value; item.required = true; item.sourceId = command.sourceId(); entityManager.persist(item); });
         command.doseCapabilities().forEach(value -> { var item = new ImportedExerciseDoseCapability(); item.id = new ImportedExerciseDoseCapabilityId(); item.id.versionId = versionId; item.id.unitCode = value.unit(); item.minimum = value.minimum(); item.maximum = value.maximum(); item.sourceId = command.sourceId(); entityManager.persist(item); });
@@ -56,5 +57,20 @@ class JpaImportedExerciseDraftAdapter implements ImportedExerciseDraftPort {
         UUID evidenceId = UUID.randomUUID(); var evidence = new ImportedEvidenceSource(); evidence.id = evidenceId; evidence.versionId = versionId; evidence.citation = "Import source record " + command.sourceRecordKey(); evidence.evidenceGrade = "SOURCE_ASSERTION"; evidence.createdAt = now; evidence.createdBySubject = command.actorSubject(); evidence.sourceType = "IMPORT"; evidence.licenseCode = command.sourceLicenseCode(); evidence.sourceId = command.sourceId(); entityManager.persist(evidence);
         command.contributions().forEach(value -> { var contribution = new ExerciseContribution(versionId, value.anatomicalStructureId(), ContributionRole.valueOf(value.role()), LoadChannel.valueOf(value.loadChannel()), ContributionBand.valueOf(value.band()), value.coefficientLow(), value.coefficientHigh(), "SOURCE_ASSERTION", "SOURCE_ASSERTION", CalculationRole.ALLOCATION, null, ContributionSideRule.valueOf(value.sideRule()), command.actorSubject(), now); entityManager.persist(contribution); entityManager.persist(new ExerciseContributionEvidence(contribution.id, evidenceId)); });
         var link = new ImportedExerciseEvidenceLink(); link.id = UUID.randomUUID(); link.versionId = versionId; link.evidenceSourceId = evidenceId; link.claimType = "ANATOMY_EXPOSURE"; link.jsonPointer = "/contributions"; entityManager.persist(link);
+    }
+
+    private void persistAliasIfAbsent(ImportedExerciseDraft command, UUID exerciseId, String value) {
+        String normalizedAlias = value.trim().toLowerCase(Locale.ROOT);
+        if (aliases.existsByExerciseIdAndLocaleAndNormalizedAlias(exerciseId, command.locale(), normalizedAlias)) {
+            return;
+        }
+        var item = new ImportedExerciseAlias();
+        item.id = UUID.randomUUID();
+        item.exerciseId = exerciseId;
+        item.locale = command.locale();
+        item.alias = value;
+        item.normalizedAlias = normalizedAlias;
+        item.sourceId = command.sourceId();
+        entityManager.persist(item);
     }
 }

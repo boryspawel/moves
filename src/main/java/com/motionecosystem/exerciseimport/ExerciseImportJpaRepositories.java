@@ -55,7 +55,7 @@ interface ExerciseImportRecordRepository extends JpaRepository<ExerciseImportRec
             select record from ExerciseImportRecordJpaEntity record
             join ExerciseImportBatchJpaEntity batch on batch.id = record.batchId
             where batch.sourceId = :sourceId and record.status = :status
-              and lower(record.rawPayload) like lower(concat('%', :sourceValue, '%'))
+              and lower(cast(record.rawPayload as string)) like lower(concat('%', :sourceValue, '%'))
             order by record.id
             """)
     List<ExerciseImportRecordEntity> findBlockedForMapping(@Param("sourceId") UUID sourceId,

@@ -17,12 +17,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 
 class JpaImportedExerciseDraftAdapterTest {
     @Test
     void persistsSourceLicenseAndRecordKeyOnImportEvidence() {
         ExerciseRepository exercises = mock(ExerciseRepository.class);
         ExerciseVersionRepository versions = mock(ExerciseVersionRepository.class);
+        ImportedExerciseAliasRepository aliases = mock(ImportedExerciseAliasRepository.class);
         EntityManager entityManager = mock(EntityManager.class);
         UUID exerciseId = UUID.randomUUID();
         Exercise exercise = new Exercise();
@@ -30,7 +32,7 @@ class JpaImportedExerciseDraftAdapterTest {
         when(exercises.findLockedById(exerciseId)).thenReturn(Optional.of(exercise));
         when(versions.findFirstByExerciseIdOrderByVersionNumberDesc(exerciseId)).thenReturn(Optional.empty());
         when(versions.saveAndFlush(any(ExerciseVersion.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        JpaImportedExerciseDraftAdapter adapter = new JpaImportedExerciseDraftAdapter(exercises, versions, entityManager,
+        JpaImportedExerciseDraftAdapter adapter = new JpaImportedExerciseDraftAdapter(exercises, versions, aliases, entityManager,
                 Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC));
 
         adapter.create(command(exerciseId));
@@ -43,6 +45,28 @@ class JpaImportedExerciseDraftAdapterTest {
                 .findFirst().orElseThrow();
         assertThat(evidence.licenseCode).isEqualTo("CC0-1.0");
         assertThat(evidence.citation).isEqualTo("Import source record squat-source-001");
+    }
+
+    @Test
+    void doesNotPersistAnAliasAlreadyAssignedToTheExercise() {
+        ExerciseRepository exercises = mock(ExerciseRepository.class);
+        ExerciseVersionRepository versions = mock(ExerciseVersionRepository.class);
+        ImportedExerciseAliasRepository aliases = mock(ImportedExerciseAliasRepository.class);
+        EntityManager entityManager = mock(EntityManager.class);
+        UUID exerciseId = UUID.randomUUID();
+        Exercise exercise = new Exercise();
+        exercise.id = exerciseId;
+        when(exercises.findLockedById(exerciseId)).thenReturn(Optional.of(exercise));
+        when(versions.findFirstByExerciseIdOrderByVersionNumberDesc(exerciseId)).thenReturn(Optional.empty());
+        when(versions.saveAndFlush(any(ExerciseVersion.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(aliases.existsByExerciseIdAndLocaleAndNormalizedAlias(exerciseId, "en", "squat")).thenReturn(true);
+        JpaImportedExerciseDraftAdapter adapter = new JpaImportedExerciseDraftAdapter(exercises, versions, aliases, entityManager,
+                Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC));
+
+        adapter.create(command(exerciseId));
+
+        verify(aliases).existsByExerciseIdAndLocaleAndNormalizedAlias(exerciseId, "en", "squat");
+        verify(entityManager, never()).persist(org.mockito.ArgumentMatchers.any(ImportedExerciseAlias.class));
     }
 
     private ImportedExerciseDraftPort.ImportedExerciseDraft command(UUID exerciseId) {

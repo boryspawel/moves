@@ -60,7 +60,8 @@ class ExerciseImportArtifactEntity {
     @Column(name = "original_filename", nullable = false) String originalFilename;
     @Column(name = "media_type", nullable = false) String mediaType;
     @Column(name = "byte_size", nullable = false) long byteSize;
-    @Column(nullable = false) String sha256;
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(nullable = false, length = 64) String sha256;
     @Column(name = "created_at", nullable = false, updatable = false) Instant createdAt;
 }
 
@@ -74,9 +75,11 @@ class ExerciseImportRecordEntity {
     @Column(nullable = false) String status;
     /** Raw input is immutable in the database; V017's trigger remains the authority. */
     @JdbcTypeCode(SqlTypes.JSON) @Column(name = "raw_payload", nullable = false, updatable = false, columnDefinition = "jsonb") String rawPayload;
-    @Column(name = "raw_sha256", nullable = false, updatable = false) String rawSha256;
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(name = "raw_sha256", nullable = false, updatable = false, length = 64) String rawSha256;
     @JdbcTypeCode(SqlTypes.JSON) @Column(name = "normalized_payload", columnDefinition = "jsonb") String normalizedPayload;
-    @Column(name = "normalized_sha256") String normalizedSha256;
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(name = "normalized_sha256", length = 64) String normalizedSha256;
     @Column(name = "normalization_version") String normalizationVersion;
     @Column(name = "matched_exercise_id") UUID matchedExerciseId;
     @Column(name = "draft_version_id") UUID draftVersionId;
@@ -94,7 +97,8 @@ class ExerciseImportSourceReferenceEntity {
     @Column(name = "source_record_key", nullable = false) String sourceRecordKey;
     @Column(name = "exercise_id", nullable = false) UUID exerciseId;
     @Column(name = "latest_exercise_version_id", nullable = false) UUID latestExerciseVersionId;
-    @Column(name = "normalized_sha256", nullable = false) String normalizedSha256;
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(name = "normalized_sha256", nullable = false, length = 64) String normalizedSha256;
     @Column(name = "first_record_id", nullable = false) UUID firstRecordId;
     @Column(name = "last_record_id", nullable = false) UUID lastRecordId;
     @Column(name = "updated_at", nullable = false) Instant updatedAt;

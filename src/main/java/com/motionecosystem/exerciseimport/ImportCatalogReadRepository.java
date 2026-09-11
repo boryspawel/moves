@@ -25,8 +25,9 @@ class ImportCatalogReadRepository {
     }
 
     UUID publishedAnatomyId(String code) {
-        return entityManager.createQuery("select item.id from AnatomicalStructureJpaEntity item where item.code = :code and item.status = com.motionecosystem.anatomyreference.domain.PublicationStatus.PUBLISHED", UUID.class)
-                .setParameter("code", code).setMaxResults(1).getResultStream().findFirst().orElse(null);
+        List<UUID> anatomyIds = entityManager.createQuery("select item.id from AnatomicalStructureJpaEntity item where item.code = :code and item.status = com.motionecosystem.anatomyreference.domain.PublicationStatus.PUBLISHED", UUID.class)
+                .setParameter("code", code).setMaxResults(1).getResultList();
+        return anatomyIds.isEmpty() ? null : anatomyIds.getFirst();
     }
 
     UUID exerciseIdForVersion(UUID versionId) {
@@ -35,8 +36,12 @@ class ImportCatalogReadRepository {
     }
 
     String canonicalName(UUID exerciseId) {
-        return entityManager.createQuery("select exercise.canonicalName from Exercise exercise where exercise.id = :id", String.class)
-                .setParameter("id", exerciseId).getResultStream().findFirst().orElse(null);
+        List<String> canonicalNames = entityManager.createQuery(
+                        "select exercise.canonicalName from Exercise exercise where exercise.id = :id", String.class)
+                .setParameter("id", exerciseId)
+                .setMaxResults(1)
+                .getResultList();
+        return canonicalNames.isEmpty() ? null : canonicalNames.getFirst();
     }
 
     List<UUID> exactNameOrAlias(String locale, String name) {
