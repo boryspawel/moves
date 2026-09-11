@@ -93,11 +93,10 @@ class OnboardingIntegrationTest {
         put("participant-one", "/availability", availability("Europe/Warsaw", "10:00", "09:00", null))
                 .andExpect(status().isBadRequest());
         put("participant-one", "/availability", availability("Europe/Warsaw", "09:00", "11:00", "10:00"))
-                .andExpect(status().isBadRequest());
-
-        put("participant-one", "/availability", availability("Europe/Warsaw", "09:00", "11:00", null))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.stage").value("READY"));
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM availability.recurring_slot", Integer.class))
+                .isEqualTo(2);
 
         assertThat(jdbc.queryForObject(
                 "SELECT COUNT(*) FROM audit.audit_event WHERE actor_subject = ?", Long.class, "participant-one"))

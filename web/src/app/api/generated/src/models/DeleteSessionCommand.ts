@@ -16,53 +16,53 @@ import { mapValues } from '../runtime';
 /**
  *
  * @export
- * @interface AddGoalCommand
+ * @interface DeleteSessionCommand
  */
-export interface AddGoalCommand {
+export interface DeleteSessionCommand {
   /**
    *
    * @type {number}
-   * @memberof AddGoalCommand
+   * @memberof DeleteSessionCommand
    */
   expectedVersion?: number;
   /**
    *
    * @type {string}
-   * @memberof AddGoalCommand
+   * @memberof DeleteSessionCommand
    */
-  participantGoalId?: string;
+  sessionId?: string;
 }
 
 /**
- * Check if a given object implements the AddGoalCommand interface.
+ * Check if a given object implements the DeleteSessionCommand interface.
  */
-export function instanceOfAddGoalCommand(value: object): value is AddGoalCommand {
+export function instanceOfDeleteSessionCommand(value: object): value is DeleteSessionCommand {
   return true;
 }
 
-export function AddGoalCommandFromJSON(json: any): AddGoalCommand {
-  return AddGoalCommandFromJSONTyped(json, false);
+export function DeleteSessionCommandFromJSON(json: any): DeleteSessionCommand {
+  return DeleteSessionCommandFromJSONTyped(json, false);
 }
 
-export function AddGoalCommandFromJSONTyped(
+export function DeleteSessionCommandFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
-): AddGoalCommand {
+): DeleteSessionCommand {
   if (json == null) {
     return json;
   }
   return {
     expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
-    participantGoalId: json['participantGoalId'] == null ? undefined : json['participantGoalId'],
+    sessionId: json['sessionId'] == null ? undefined : json['sessionId'],
   };
 }
 
-export function AddGoalCommandToJSON(json: any): AddGoalCommand {
-  return AddGoalCommandToJSONTyped(json, false);
+export function DeleteSessionCommandToJSON(json: any): DeleteSessionCommand {
+  return DeleteSessionCommandToJSONTyped(json, false);
 }
 
-export function AddGoalCommandToJSONTyped(
-  value?: AddGoalCommand | null,
+export function DeleteSessionCommandToJSONTyped(
+  value?: DeleteSessionCommand | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
@@ -71,6 +71,6 @@ export function AddGoalCommandToJSONTyped(
 
   return {
     expectedVersion: value['expectedVersion'],
-    participantGoalId: value['participantGoalId'],
+    sessionId: value['sessionId'],
   };
 }

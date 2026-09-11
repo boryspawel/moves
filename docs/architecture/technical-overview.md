@@ -26,7 +26,8 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
 - `anatomyreference`: wersjonowana taksonomia struktur anatomicznych;
 - `exercisecatalog`: ćwiczenia, niezmienne wersje i publikacja;
 - `exerciseimport`: artefakty JSONL, staging, mapowania, deduplikacja i przekazanie szkicu do katalogu;
-- `trainingplanning`: cel, owner, collaborators, rewizja, cykl, mikrocykl, sesja i recepta;
+- `trainingplanning`: wersjonowana orkiestracja celu uczestnika, cykli, mikrocykli, sesji i
+  materializowanych recept; nie jest właścicielem niezależnego celu ani definicji zestawu;
 - `loadanalysis`: wersjonowane profile planned i executed load bez globalnego score;
 - `planworkflow`: walidacja, acknowledgement i atomowa aktywacja rewizji;
 - `trainingexecution`: append-only wykonanie i dawka rzeczywista, projekcje, raport bólu/post24h, alerty i korekty;
@@ -74,6 +75,29 @@ Kod produkcyjny używa neutralnego prefiksu `com.motionecosystem`. Moduł jest g
 - Operacje podatne na retry używają klucza idempotencji i unikalnego ograniczenia w bazie.
 
 ## Bezpieczeństwo i prywatność
+
+## Planning source snapshots (P1)
+
+`trainingplanning` depends on `participantgoals.api` and `exercisesets.api`. `ParticipantGoal` and
+an exact `ExerciseSetVersion` are authoring sources. Revision construction snapshots their meaning
+locally; activated revisions and execution read those immutable local snapshots. V057 keeps legacy
+rows read-only when canonical provenance is unavailable.
+
+Goal attachment snapshots source ID/version, title, category, target date, status and outcomes after
+matching `participantId` and specialist capability. Session attachment accepts an exact PUBLISHED set
+version and materializes ordered typed doses plus item/catalog/instruction/load-analysis data. Flattened
+`ExercisePrescription` columns are compatibility projections only; the full typed source payload is
+stored locally for plan and execution reads. Clone copies local snapshots and source references without
+refresh. Draft validation and activation recheck current eligibility; active revisions are immutable
+historical facts even when a goal changes or a set version retires.
+
+New P1 authoring is specialist-only under existing authorization and supports `SPECIALIST` and
+`COLLABORATIVE` plan modes. `SELF_DIRECTED` records remain historical/read-only; sharing is P2.
+Variants select materialized prescription items and cannot override dose. A draft-local legacy goal or
+session may be deleted and replaced by a sourced attachment; finalized revisions cannot be changed.
+When an applicable catalog load channel needs an unavailable exact canonical dose, load analysis emits
+a persisted completeness issue and safety persists a non-overridable `HARD_BLOCK`; unrelated channels
+do not become a synthetic zero-load result.
 
 - OAuth2 Resource Server waliduje issuer i audience; role Keycloak są mapowane do `ROLE_*`.
 - Health i kontrakt OpenAPI mogą być publiczne; domenowe API domyślnie wymaga tokenu.

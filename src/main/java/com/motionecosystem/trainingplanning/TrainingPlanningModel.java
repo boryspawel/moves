@@ -24,7 +24,7 @@ public final class TrainingPlanningModel {
     public enum ValidationResult { PASS, FAIL }
     public enum SessionVariantType { STANDARD, SHORT, MINIMUM }
 
-    public record PlanDraft(UUID id, UUID participantAccountId, String name, String purpose,
+    public record PlanDraft(UUID id, UUID participantId, String name, String purpose,
                             UUID ownerAccountId, PlanMode mode, PlanStatus status,
                             UUID currentRevisionId, UUID createdByAccountId, Instant createdAt) {
     }
@@ -36,10 +36,13 @@ public final class TrainingPlanningModel {
                            Instant draftUpdatedAt, Instant createdAt, long version) {
     }
 
-    public record Goal(UUID id, UUID revisionId, UUID participantAccountId,
+    /** Revision-owned immutable snapshot of a ParticipantGoal, never an authoring aggregate. */
+    public record Goal(UUID id, UUID revisionId, UUID participantId,
                        GoalPerspective perspective, String category, String title,
                        String description, int priority, GoalStatus status,
-                       LocalDate targetDate, UUID createdByAccountId, Instant createdAt) {
+                       LocalDate targetDate, UUID createdByAccountId, Instant createdAt,
+                       UUID sourceParticipantGoalId, Long sourceParticipantGoalVersion,
+                       Instant snapshottedAt) {
     }
 
     public record GoalOutcome(UUID id, UUID goalId, String metricCode, BigDecimal baseline,
@@ -57,9 +60,11 @@ public final class TrainingPlanningModel {
                                String phaseIntent, String phaseGoal) {
     }
 
-    public record Session(UUID id, UUID microcycleId, UUID participantAccountId, String title,
+    public record Session(UUID id, UUID microcycleId, UUID participantId, String title,
                           LocalDate scheduledDate, Instant availableFrom, Instant availableTo,
-                          int expectedDurationMinutes, Instant createdAt) {
+                          int expectedDurationMinutes, Instant createdAt,
+                          UUID sourceExerciseSetId, UUID sourceExerciseSetVersionId,
+                          String sourceSnapshot) {
     }
 
     public record Prescription(UUID id, UUID plannedSessionId, UUID exerciseVersionId,
@@ -69,7 +74,9 @@ public final class TrainingPlanningModel {
                                BigDecimal externalLoadValue, String externalLoadUnit,
                                IntensityType intensityType, BigDecimal intensityValue,
                                String intensityZone, String tempo, String rangeOfMotion,
-                               Integer restSeconds, String substituteGroup, String notes) {
+                               Integer restSeconds, String substituteGroup, String notes,
+                               UUID sourceExerciseSetItemId, UUID sourceExerciseSetVersionId,
+                               String canonicalDoseType, String materializedSnapshot) {
     }
 
     public record SessionVariant(UUID id, UUID plannedSessionId, SessionVariantType type,

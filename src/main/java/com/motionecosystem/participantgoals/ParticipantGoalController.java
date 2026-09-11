@@ -1,7 +1,7 @@
 package com.motionecosystem.participantgoals;
 
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ProfessionalRole;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;

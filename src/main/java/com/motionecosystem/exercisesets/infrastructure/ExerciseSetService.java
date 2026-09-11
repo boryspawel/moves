@@ -9,6 +9,7 @@ import com.motionecosystem.exercisecatalog.api.ExerciseCatalogQueryPort;
 import com.motionecosystem.anatomyreference.api.AnatomyReferenceQueryPort;
 import com.motionecosystem.exercisecatalog.api.ExerciseCatalogQueryPort.PublishedExerciseVersionSnapshot;
 import com.motionecosystem.exercisesets.api.ExerciseSetDtos;
+import com.motionecosystem.exercisesets.api.ExerciseSetVersionQueryPort;
 import com.motionecosystem.exercisesets.api.ExerciseSetDtos.*;
 import com.motionecosystem.exercisesets.domain.ExerciseSetModel.*;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
@@ -21,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service @RequiredArgsConstructor
-public class ExerciseSetService {
+public class ExerciseSetService implements ExerciseSetVersionQueryPort {
     private final ExerciseSetRepository sets; private final ExerciseSetVersionRepository versions; private final ExerciseSetAnalysisRunRepository analysisRuns; private final ExerciseSetAnatomyAnalysisRunRepository anatomyAnalysisRuns;
     private final ExerciseCatalogQueryPort catalog; private final AnatomyReferenceQueryPort anatomyReference; private final CurrentAccountService accounts; private final Clock clock; private final ObjectMapper json;
 
@@ -38,6 +39,22 @@ public class ExerciseSetService {
     @Transactional(readOnly=true) public AnalysisView analysis(String subject, UUID setId, UUID versionId) { owned(subject,setId); var version=requireVersion(versionId,setId); if(version.status == VersionStatus.DRAFT) return analyze(version, true); return storedRun(version.id).map(this::storedAnalysis).orElseThrow(()->conflict("ANALYSIS_NOT_AVAILABLE","versionId","historical version has no persisted analysis")); }
     @Transactional(readOnly=true) public AnatomyAnalysisView anatomy(String subject, UUID setId, UUID versionId) { owned(subject,setId); var version=requireVersion(versionId,setId); if(version.status == VersionStatus.DRAFT) return analyzeAnatomy(version, true); return storedAnatomyRun(version.id).map(this::storedAnatomy).orElseThrow(()->conflict("ANATOMY_ANALYSIS_NOT_AVAILABLE","versionId","historical version has no persisted anatomy analysis")); }
     @Transactional(readOnly=true) public List<VersionSummary> listVersions(String subject, UUID setId) { owned(subject,setId); return versions.findByExerciseSetIdOrderByVersionNumberDesc(setId).stream().map(v -> new VersionSummary(v.id,v.versionNumber,v.status,v.title,v.profile,v.variantKind,v.variantOfVersionId)).toList(); }
+
+    @Override @Transactional(readOnly=true)
+    public Optional<ExerciseSetVersionSnapshot> findById(UUID versionId) {
+        return versions.findWithItemsById(versionId).flatMap(version -> sets.findById(version.exerciseSetId)
+                .map(set -> new ExerciseSetVersionSnapshot(set.id, version.id, version.versionNumber,
+                        version.status.name(), set.ownerAccountId, version.title,
+                        version.profile == null ? null : version.profile.name(), version.description, version.targetLevel,
+                        strings(version.tags), version.createdAt, version.publishedAt,
+                        storedRun(version.id).map(this::storedAnalysis).map(this::json).orElse(null),
+                        storedAnatomyRun(version.id).map(this::storedAnatomy).map(this::json).orElse(null), version.items.stream().map(item -> new ExerciseSetVersionQueryPort.ItemSnapshot(item.id,
+                                item.exerciseVersionId, item.position, item.phase.name(),
+                                new ExerciseSetVersionQueryPort.ExerciseSnapshot(item.canonicalName, item.exerciseVersionNumber,
+                                        item.profileSchemaVersion, strings(item.movementPatterns),
+                                        strings(item.requiredEquipment)), queryDose(item.dose),
+                                item.participantInstruction, item.specialistInstruction)).toList())));
+    }
 
     @Transactional public VersionView updateMetadata(String subject, UUID setId, UUID versionId, MetadataRequest request) {
         var version=editable(subject,setId,versionId,request.expectedVersion()); version.profile=request.profile(); version.title=nullable(request.title(),160); version.description=nullable(request.description(),2000); version.targetLevel=nullable(request.targetLevel(),32); version.tags=json(request.tags()==null?List.of():request.tags()); return flushedView(version);
@@ -64,8 +81,27 @@ public class ExerciseSetService {
     private void validateDose(Dose d){ if(d==null)throw bad("DOSE_REQUIRED","dose","dose is required"); switch(d){case StrengthDose x->{positive(x.sets(),"sets");if(x.reps()==null&&(x.repMin()==null||x.repMax()==null))throw bad("INVALID_DOSE","dose","strength needs reps or range");positiveIf(x.reps(),"reps");positiveIf(x.repMin(),"repMin");positiveIf(x.repMax(),"repMax");if(x.repMin()!=null&&x.repMax()!=null&&x.repMin()>x.repMax())throw bad("INVALID_DOSE","dose","rep range is invalid");nonnegative(x.restSeconds(),"restSeconds");rpe(x.rpe());if(x.rir()!=null&&(x.rir()<0||x.rir()>10))throw bad("INVALID_DOSE","dose","RIR must be 0..10");}case IsometricDose x->{positive(x.sets(),"sets");positive(x.holdSeconds(),"holdSeconds");nonnegative(x.restSeconds(),"restSeconds");}case MobilityDose x->{if(x.reps()==null&&x.durationSeconds()==null)throw bad("INVALID_DOSE","dose","mobility needs reps or duration");positiveIf(x.reps(),"reps");positiveIf(x.durationSeconds(),"durationSeconds");if(blank(x.rangeTarget()))throw bad("INVALID_DOSE","dose","mobility needs range target");}case StretchDose x->{positive(x.holdSeconds(),"holdSeconds");positive(x.repetitions(),"repetitions");if(x.side()==null)throw bad("INVALID_DOSE","dose","stretch needs side");}case BreathingDose x->{if(x.durationSeconds()==null&&x.cycles()==null)throw bad("INVALID_DOSE","dose","breathing needs duration or cycles");positiveIf(x.durationSeconds(),"durationSeconds");positiveIf(x.cycles(),"cycles");}case AerobicDose x->{positive(x.durationSeconds(),"durationSeconds");positiveIf(x.distanceMeters(),"distanceMeters");rpe(x.rpe());}} }
     private void validatePublication(ExerciseSetEntities.ExerciseSetVersionEntity v){for(int i=0;i<v.items.size();i++){var item=v.items.get(i);if(item.position!=i+1)throw bad("INVALID_SEQUENCE","items["+i+"].position","item positions must be contiguous");if(item.exerciseVersionId==null||item.dose==null)throw bad("INVALID_ITEM","items["+i+"]","item needs an exercise version and dose");validateDose(toDose(item.dose));}if(v.variantKind==VariantKind.BASE&&v.variantOfVersionId!=null)throw bad("INVALID_VARIANT","variantOfVersionId","base cannot have source");if(v.variantKind!=VariantKind.BASE){if(v.variantOfVersionId==null)throw bad("INVALID_VARIANT","variantOfVersionId","variant needs source");var source=versions.findWithItemsById(v.variantOfVersionId).orElseThrow(()->bad("INVALID_VARIANT","variantOfVersionId","variant source does not exist"));if(!source.exerciseSetId.equals(v.exerciseSetId)||source.status!=VersionStatus.PUBLISHED)throw bad("INVALID_VARIANT","variantOfVersionId","variant source must be a published version of the same set");Set<UUID> seen=new HashSet<>();for(var current=source;current.variantOfVersionId!=null;){if(!seen.add(current.id)||current.id.equals(v.id))throw bad("VARIANT_CYCLE","variantOfVersionId","variant provenance must not contain a cycle");current=versions.findWithItemsById(current.variantOfVersionId).orElseThrow(()->bad("INVALID_VARIANT","variantOfVersionId","variant source does not exist"));}}}
     private Dose toDose(ExerciseSetEntities.DoseEntity e){ return switch(e){case ExerciseSetEntities.StrengthDoseEntity x->new StrengthDose(x.sets,x.reps,x.repMin,x.repMax,x.restSeconds,x.tempo,x.loadValue,x.loadUnit,x.rpe,x.rir,x.side);case ExerciseSetEntities.IsometricDoseEntity x->new IsometricDose(x.sets,x.holdSeconds,x.restSeconds,x.intensity,x.side);case ExerciseSetEntities.MobilityDoseEntity x->new MobilityDose(x.reps,x.durationSeconds,x.rangeTarget,x.side,x.tempo);case ExerciseSetEntities.StretchDoseEntity x->new StretchDose(x.holdSeconds,x.repetitions,x.side,x.intensity);case ExerciseSetEntities.BreathingDoseEntity x->new BreathingDose(x.durationSeconds,x.cycles,x.rhythm);case ExerciseSetEntities.AerobicDoseEntity x->new AerobicDose(x.durationSeconds,x.distanceMeters,x.intensity,x.zone,x.rpe);default->throw new IllegalStateException("unknown dose");}; }
+    private ExerciseSetVersionQueryPort.DoseSnapshot queryDose(ExerciseSetEntities.DoseEntity dose) {
+        return switch (dose) {
+            case ExerciseSetEntities.StrengthDoseEntity value -> new ExerciseSetVersionQueryPort.StrengthDoseSnapshot(
+                    value.sets, value.reps, value.repMin, value.repMax, value.restSeconds, value.tempo,
+                    value.loadValue, value.loadUnit, value.rpe, value.rir, side(value.side));
+            case ExerciseSetEntities.IsometricDoseEntity value -> new ExerciseSetVersionQueryPort.IsometricDoseSnapshot(
+                    value.sets, value.holdSeconds, value.restSeconds, value.intensity, side(value.side));
+            case ExerciseSetEntities.MobilityDoseEntity value -> new ExerciseSetVersionQueryPort.MobilityDoseSnapshot(
+                    value.reps, value.durationSeconds, value.rangeTarget, side(value.side), value.tempo);
+            case ExerciseSetEntities.StretchDoseEntity value -> new ExerciseSetVersionQueryPort.StretchDoseSnapshot(
+                    value.holdSeconds, value.repetitions, side(value.side), value.intensity);
+            case ExerciseSetEntities.BreathingDoseEntity value -> new ExerciseSetVersionQueryPort.BreathingDoseSnapshot(
+                    value.durationSeconds, value.cycles, value.rhythm);
+            case ExerciseSetEntities.AerobicDoseEntity value -> new ExerciseSetVersionQueryPort.AerobicDoseSnapshot(
+                    value.durationSeconds, value.distanceMeters, value.intensity, value.zone, value.rpe);
+            default -> throw new IllegalStateException("unknown dose");
+        };
+    }
+    private static String side(Side side) { return side == null ? null : side.name(); }
     private VersionView flushedView(ExerciseSetEntities.ExerciseSetVersionEntity version) { version.updatedAt=clock.instant(); versions.flush(); return view(version); }
-    private VersionView view(ExerciseSetEntities.ExerciseSetVersionEntity v){return new VersionView(v.id,v.exerciseSetId,v.versionNumber,v.status,v.profile,v.title,v.description,v.targetLevel,strings(v.tags),v.variantKind,v.variantOfVersionId,v.createdAt,v.publishedAt,v.retiredAt,v.version,v.items.stream().map(i->new ItemView(i.id,i.exerciseVersionId,i.phase,i.position,new ExerciseSnapshot(i.canonicalName,i.exerciseVersionNumber,i.profileSchemaVersion,strings(i.movementPatterns),strings(i.requiredEquipment)),toDose(i.dose),i.participantInstruction,i.specialistInstruction)).toList(), storedRun(v.id).map(this::storedAnalysis).orElse(null));}
+    private VersionView view(ExerciseSetEntities.ExerciseSetVersionEntity v){return new VersionView(v.id,v.exerciseSetId,v.versionNumber,v.status,v.profile,v.title,v.description,v.targetLevel,strings(v.tags),v.variantKind,v.variantOfVersionId,v.createdAt,v.publishedAt,v.retiredAt,v.version,v.items.stream().map(i->new ItemView(i.id,i.exerciseVersionId,i.phase,i.position,new ExerciseSetDtos.ExerciseSnapshot(i.canonicalName,i.exerciseVersionNumber,i.profileSchemaVersion,strings(i.movementPatterns),strings(i.requiredEquipment)),toDose(i.dose),i.participantInstruction,i.specialistInstruction)).toList(), storedRun(v.id).map(this::storedAnalysis).orElse(null));}
     private AnalysisView analyze(ExerciseSetEntities.ExerciseSetVersionEntity version, boolean draft) { var result=new ExerciseSetAnalyzer().analyze(version,draft); return new AnalysisView(result.status(),result.policyVersion(),result.analyzedLockVersion(),clock.instant(),result.draft(),result.published(),result.metrics(),result.findings()); }
     private AnatomyAnalysisView analyzeAnatomy(ExerciseSetEntities.ExerciseSetVersionEntity version, boolean draft) {
         var snapshots=new HashMap<UUID, ExerciseSetAnalyzer.ItemAnatomySnapshot>();

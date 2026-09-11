@@ -200,9 +200,9 @@ class GamificationIntegrationTest {
                 """, UUID.class, sessionId);
         jdbc.update("""
                 INSERT INTO safety.participant_restriction
-                    (id, account_id, contraindication_tag, recorded_at)
-                VALUES (?, ?, 'ACUTE_KNEE_PAIN', now())
-                """, UUID.randomUUID(), participantId);
+                    (id, account_id, participant_id, contraindication_tag, recorded_at)
+                VALUES (?, ?, ?, 'ACUTE_KNEE_PAIN', now())
+                """, UUID.randomUUID(), participantId, participantId);
 
         mvc.perform(post("/api/v1/planned-sessions/{id}/executions", sessionId)
                         .with(participant())

@@ -6,7 +6,7 @@ import java.util.UUID;
 
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.consent.api.ConsentDecisionPort;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -31,6 +31,19 @@ class SpecialistAuthorizationService implements SpecialistAuthorizationPort {
     }
 
     @Override
+    public void requireActiveRelationship(UUID specialistAccountId, UUID participantId) {
+        if (specialistAccountId == null || participantId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "specialist account and participant are required");
+        }
+        if (!relationships.existsBySpecialistAccountIdAndParticipantIdAndStatus(
+                specialistAccountId, participantId, ParticipantSpecialistRelationship.Status.ACTIVE)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "active specialist relationship is required");
+        }
+    }
+
+    @Override
     public AuthorizationDecision requireCapabilities(UUID actor, UUID participant, ActingContext context,
             Set<Capability> required, Purpose purpose) {
         if (actor==null || participant==null || context==null || context.role()==null
@@ -41,11 +54,7 @@ class SpecialistAuthorizationService implements SpecialistAuthorizationPort {
         }
         SpecialistKind kind = SpecialistKind.valueOf(context.role().name());
         requireVerifiedScope(actor, kind);
-        if (!relationships.existsBySpecialistAccountIdAndParticipantIdAndStatus(
-                actor, participant, ParticipantSpecialistRelationship.Status.ACTIVE)) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "active specialist relationship is required");
-        }
+        requireActiveRelationship(actor, participant);
         Set<Capability> granted = kind == SpecialistKind.TRAINER
                 ? EnumSet.of(
                         Capability.PLAN_PERFORMANCE,

@@ -47,6 +47,18 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
     }
 
     @Override
+    public void deleteGoal(UUID revisionId, long expectedVersion, UUID goalId, Instant updatedAt) {
+        touch(revisionId, expectedVersion, updatedAt);
+        Long count = entityManager.createQuery("SELECT COUNT(goal.id) FROM TrainingGoalJpaEntity goal WHERE goal.id = :goalId AND goal.revisionId = :revisionId", Long.class)
+                .setParameter("goalId", goalId).setParameter("revisionId", revisionId).getSingleResult();
+        if (count != 1) throw new IllegalArgumentException("goal does not belong to revision");
+        entityManager.createQuery("DELETE FROM GoalOutcomeJpaEntity outcome WHERE outcome.goalId = :goalId").setParameter("goalId", goalId).executeUpdate();
+        entityManager.createQuery("DELETE FROM TrainingGoalJpaEntity goal WHERE goal.id = :goalId AND goal.revisionId = :revisionId")
+                .setParameter("goalId", goalId).setParameter("revisionId", revisionId).executeUpdate();
+        entityManager.flush();
+    }
+
+    @Override
     public void addCycle(UUID revisionId, long expectedVersion,
                          TrainingPlanningModel.Cycle cycle, Instant updatedAt) {
         touch(revisionId, expectedVersion, updatedAt);
@@ -68,12 +80,31 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
 
     @Override
     public void addSession(UUID revisionId, long expectedVersion,
-                           TrainingPlanningModel.Session session, Instant updatedAt) {
+                           TrainingPlanningModel.Session session,
+                           List<TrainingPlanningModel.Prescription> prescriptions, Instant updatedAt) {
         touch(revisionId, expectedVersion, updatedAt);
         if (!microcycleBelongsToRevision(session.microcycleId(), revisionId)) {
             throw new IllegalArgumentException("microcycle does not belong to revision");
         }
         entityManager.persist(new PlannedSessionJpaEntity(session));
+        prescriptions.forEach(item -> entityManager.persist(new ExercisePrescriptionJpaEntity(item)));
+        entityManager.flush();
+    }
+
+    @Override
+    public void deleteSession(UUID revisionId, long expectedVersion, UUID sessionId, Instant updatedAt) {
+        touch(revisionId, expectedVersion, updatedAt);
+        if (!sessionBelongsToRevision(sessionId, revisionId)) throw new IllegalArgumentException("session does not belong to revision");
+        List<UUID> variantIds = entityManager.createQuery("SELECT variant.id FROM PlannedSessionVariantJpaEntity variant WHERE variant.plannedSessionId = :sessionId", UUID.class)
+                .setParameter("sessionId", sessionId).getResultList();
+        if (!variantIds.isEmpty()) entityManager.createQuery("DELETE FROM PlannedSessionVariantItemJpaEntity item WHERE item.sessionVariantId IN :variantIds")
+                .setParameter("variantIds", variantIds).executeUpdate();
+        entityManager.createQuery("DELETE FROM PlannedSessionVariantJpaEntity variant WHERE variant.plannedSessionId = :sessionId")
+                .setParameter("sessionId", sessionId).executeUpdate();
+        entityManager.createQuery("DELETE FROM ExercisePrescriptionJpaEntity prescription WHERE prescription.plannedSessionId = :sessionId")
+                .setParameter("sessionId", sessionId).executeUpdate();
+        entityManager.createQuery("DELETE FROM PlannedSessionJpaEntity session WHERE session.id = :sessionId")
+                .setParameter("sessionId", sessionId).executeUpdate();
         entityManager.flush();
     }
 
@@ -153,7 +184,7 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
                 source.phaseIntent, source.validFrom, source.validTo, authorAccountId, authorCapability,
                 "NATIVE_V2", "NOT_ASSESSED", now, now, 0);
         entityManager.persist(new PlanRevisionJpaEntity(revision));
-        cloneTree(source.id, revisionId, planId, plan.participantAccountId, authorAccountId, now);
+        cloneTree(source.id, revisionId, planId, plan.participantId, authorAccountId, now);
         if ("DRAFT".equals(plan.status)) {
             plan.currentRevision(revisionId);
         }
@@ -190,7 +221,7 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
         if (plan == null) return Optional.empty();
         PlanRevisionJpaEntity revision = plan.currentRevisionId == null ? null
                 : entityManager.find(PlanRevisionJpaEntity.class, plan.currentRevisionId);
-        return Optional.of(new PlanAccess(plan.id, plan.participantAccountId,
+        return Optional.of(new PlanAccess(plan.id, plan.participantId,
                 plan.name, plan.purpose, plan.ownerAccountId, plan.mode, plan.status, plan.currentRevisionId,
                 revision == null ? "LEGACY_AUTHOR" : revision.authorCapability));
     }
@@ -202,7 +233,7 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
             return Optional.empty();
         }
         TrainingPlanJpaEntity plan = entityManager.find(TrainingPlanJpaEntity.class, revision.planId);
-        return Optional.of(new RevisionAccess(revision.id, revision.planId, plan.participantAccountId,
+        return Optional.of(new RevisionAccess(revision.id, revision.planId, plan.participantId,
                 plan.ownerAccountId, plan.mode, revision.status, revision.revisionNumber, revision.version,
                 revision.authorCapability));
     }
@@ -248,7 +279,7 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
                 SELECT budget FROM PlanLoadBudgetJpaEntity budget
                 WHERE budget.revisionId = :revisionId ORDER BY budget.channel, budget.unit
                 """, PlanLoadBudgetJpaEntity.class).setParameter("revisionId", revisionId).getResultList();
-        return Optional.of(new PlanRevisionSnapshot(revision.id, revision.planId, plan.participantAccountId,
+        return Optional.of(new PlanRevisionSnapshot(revision.id, revision.planId, plan.participantId,
                 revision.revisionNumber, revision.basedOnRevisionId, revision.version, revision.status,
                 revision.authorAccountId, revision.authorCapability, revision.createdAt,
                 revision.migrationOrigin, revision.assessmentStatus, revision.phaseIntent,
@@ -261,14 +292,14 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
     }
 
     @Override
-    public Optional<PlanRevisionSnapshot> findActiveRevision(UUID participantAccountId) {
+    public Optional<PlanRevisionSnapshot> findActiveRevision(UUID participantId) {
         List<UUID> revisionIds = entityManager.createQuery("""
                 SELECT plan.currentRevisionId FROM TrainingPlanJpaEntity plan
-                WHERE plan.participantAccountId = :participantAccountId
+                WHERE plan.participantId = :participantId
                   AND plan.status = 'ACTIVE' AND plan.currentRevisionId IS NOT NULL
                 ORDER BY plan.id
                 """, UUID.class)
-                .setParameter("participantAccountId", participantAccountId)
+                .setParameter("participantId", participantId)
                 .setMaxResults(1)
                 .getResultList();
         return revisionIds.stream().findFirst().flatMap(this::findRevision);
@@ -323,10 +354,11 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
             TrainingPlanningModel.Goal goal = new TrainingPlanningModel.Goal(newId, targetRevisionId,
                     participantId, TrainingPlanningModel.GoalPerspective.valueOf(source.perspective),
                     source.category, source.title, source.description, source.priority,
-                    TrainingPlanningModel.GoalStatus.valueOf(source.status), source.targetDate, actorId, now);
+                    TrainingPlanningModel.GoalStatus.valueOf(source.status), source.targetDate, actorId, now,
+                    source.sourceParticipantGoalId, source.sourceParticipantGoalVersion, source.snapshottedAt);
             entityManager.persist(new TrainingGoalJpaEntity(goal));
         }
-        for (GoalOutcomeJpaEntity source : outcomes(goalIds.keySet()).values().stream()
+        for (GoalOutcomeJpaEntity source : outcomes(new java.util.HashSet<>(goalIds.keySet())).values().stream()
                 .flatMap(List::stream).toList()) {
             entityManager.persist(new GoalOutcomeJpaEntity(new TrainingPlanningModel.GoalOutcome(
                     UUID.randomUUID(), goalIds.get(source.goalId), source.metricCode, source.baseline,
@@ -365,7 +397,8 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
                             microId, participantId, sourceSession.title, sourceSession.scheduledDate,
                             sourceSession.availableFrom, sourceSession.availableTo,
                             sourceSession.expectedDurationMinutes == null ? 60 : sourceSession.expectedDurationMinutes,
-                            now)));
+                            now, sourceSession.sourceExerciseSetId, sourceSession.sourceExerciseSetVersionId,
+                            sourceSession.sourceSnapshot)));
                 }
             }
         }
@@ -411,7 +444,8 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
                 source.externalLoadUnit, source.intensityType == null ? null
                 : TrainingPlanningModel.IntensityType.valueOf(source.intensityType), source.intensityValue,
                 source.intensityZone, source.tempo, source.rangeOfMotion, source.restSeconds,
-                source.substituteGroup, source.notes);
+                source.substituteGroup, source.notes, source.sourceExerciseSetItemId,
+                source.sourceExerciseSetVersionId, source.canonicalDoseType, source.materializedSnapshot);
     }
 
     private static String inferLegacyDose(ExercisePrescriptionJpaEntity source) {
@@ -493,7 +527,8 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
     }
     private static GoalSnapshot goalSnapshot(TrainingGoalJpaEntity goal,
                                              List<GoalOutcomeJpaEntity> outcomes) {
-        return new GoalSnapshot(goal.id, goal.perspective, goal.category, goal.title, goal.priority,
+        return new GoalSnapshot(goal.id, goal.sourceParticipantGoalId, goal.sourceParticipantGoalVersion,
+                goal.snapshottedAt, goal.perspective, goal.category, goal.title, goal.priority,
                 goal.status, goal.targetDate, outcomes.stream().map(item -> new GoalOutcomeSnapshot(item.id,
                         item.metricCode, item.baseline, item.target, item.unit, item.measurementMethod,
                         item.evidenceSource)).toList());
@@ -517,9 +552,10 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
                                                    List<ExercisePrescriptionJpaEntity> prescriptions,
                                                    List<PlannedSessionVariantJpaEntity> variants,
                                                    Map<UUID, List<PlannedSessionVariantItemJpaEntity>> variantItems) {
-        return new SessionSnapshot(session.id, session.title, session.scheduledDate, session.availableFrom,
+        return new SessionSnapshot(session.id, session.sourceExerciseSetId, session.sourceExerciseSetVersionId,
+                session.title, session.scheduledDate, session.availableFrom,
                 session.availableTo, session.expectedDurationMinutes == null ? 0 : session.expectedDurationMinutes,
-                session.status.name(), prescriptions.stream().map(JpaTrainingPlanningV2Adapter::prescriptionSnapshot).toList(),
+                session.status.name(), session.sourceSnapshot, prescriptions.stream().map(JpaTrainingPlanningV2Adapter::prescriptionSnapshot).toList(),
                 variants.stream().map(variant -> new SessionVariantSnapshot(variant.id, variant.variantType,
                         variant.expectedDurationMinutes, variantItems.getOrDefault(variant.id, List.of()).stream()
                         .map(item -> new SessionVariantItemSnapshot(item.id, item.basePrescriptionId, item.position,
@@ -528,7 +564,8 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
     }
 
     private static PrescriptionSnapshot prescriptionSnapshot(ExercisePrescriptionJpaEntity item) {
-        return new PrescriptionSnapshot(item.id, item.exerciseVersionId, item.position, item.side,
+        return new PrescriptionSnapshot(item.id, item.sourceExerciseSetItemId, item.sourceExerciseSetVersionId,
+                item.materializedSnapshot, item.canonicalDoseType, item.exerciseVersionId, item.position, item.side,
                 item.doseType, item.targetSets, item.targetRepetitions, item.targetDurationSeconds,
                 item.distanceMeters, item.contacts, item.externalLoadValue, item.externalLoadUnit,
                 item.intensityType, item.intensityValue, item.intensityZone, item.tempo, item.rangeOfMotion,

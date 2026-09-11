@@ -20,6 +20,13 @@ import {
   ObservationToJSON,
   ObservationToJSONTyped,
 } from './Observation';
+import type { CompletenessIssue } from './CompletenessIssue';
+import {
+  CompletenessIssueFromJSON,
+  CompletenessIssueFromJSONTyped,
+  CompletenessIssueToJSON,
+  CompletenessIssueToJSONTyped,
+} from './CompletenessIssue';
 import type { Aggregate } from './Aggregate';
 import {
   AggregateFromJSON,
@@ -58,6 +65,12 @@ export interface LoadProfile {
    * @memberof LoadProfile
    */
   catalogProfileVersion?: string;
+  /**
+   *
+   * @type {Array<CompletenessIssue>}
+   * @memberof LoadProfile
+   */
+  completenessIssues?: Array<CompletenessIssue>;
   /**
    *
    * @type {string}
@@ -114,6 +127,10 @@ export function LoadProfileFromJSONTyped(json: any, ignoreDiscriminator: boolean
     calculatedAt: json['calculatedAt'] == null ? undefined : new Date(json['calculatedAt']),
     catalogProfileVersion:
       json['catalogProfileVersion'] == null ? undefined : json['catalogProfileVersion'],
+    completenessIssues:
+      json['completenessIssues'] == null
+        ? undefined
+        : (json['completenessIssues'] as Array<any>).map(CompletenessIssueFromJSON),
     configurationVersion:
       json['configurationVersion'] == null ? undefined : json['configurationVersion'],
     inputChecksum: json['inputChecksum'] == null ? undefined : json['inputChecksum'],
@@ -147,6 +164,10 @@ export function LoadProfileToJSONTyped(
     calculatedAt:
       value['calculatedAt'] == null ? value['calculatedAt'] : value['calculatedAt'].toISOString(),
     catalogProfileVersion: value['catalogProfileVersion'],
+    completenessIssues:
+      value['completenessIssues'] == null
+        ? undefined
+        : (value['completenessIssues'] as Array<any>).map(CompletenessIssueToJSON),
     configurationVersion: value['configurationVersion'],
     inputChecksum: value['inputChecksum'],
     observations:

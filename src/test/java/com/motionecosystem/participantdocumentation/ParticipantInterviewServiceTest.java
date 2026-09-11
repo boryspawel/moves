@@ -11,10 +11,9 @@ import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
-import com.motionecosystem.specialist.SpecialistRelationshipService;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ProfessionalRole;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -83,7 +82,7 @@ class ParticipantInterviewServiceTest {
                 .thenReturn(Optional.empty());
 
         assertStatus(HttpStatus.NOT_FOUND, () -> fixture.service.get("specialist", fixture.participantId, foreignInterview, trainer()));
-        verify(fixture.relationships).requireActive(fixture.specialistId, fixture.participantId);
+        verify(fixture.authorization).requireCapabilities(any(), any(), any(), any(), any());
 
         ParticipantInterview existing = new ParticipantInterview(fixture.participantId, fixture.specialistId, NOW);
         RecordIdempotency replay = new RecordIdempotency(fixture.specialistId, "INTERVIEW_START:" + fixture.participantId,
@@ -130,14 +129,14 @@ class ParticipantInterviewServiceTest {
         ParticipantInterviewRepository interviews = org.mockito.Mockito.mock(ParticipantInterviewRepository.class);
         InterviewResponseRepository responses = org.mockito.Mockito.mock(InterviewResponseRepository.class);
         RecordIdempotencyRepository idempotency = org.mockito.Mockito.mock(RecordIdempotencyRepository.class);
-        SpecialistRelationshipService relationships = org.mockito.Mockito.mock(SpecialistRelationshipService.class);
-        return new Fixture(specialistId, UUID.randomUUID(), interviews, responses, idempotency, relationships,
+        SpecialistAuthorizationPort authorization = org.mockito.Mockito.mock(SpecialistAuthorizationPort.class);
+        return new Fixture(specialistId, UUID.randomUUID(), interviews, responses, idempotency, authorization,
                 new ParticipantDocumentationService(interviews, responses,
                         org.mockito.Mockito.mock(ParticipantNoteRepository.class), org.mockito.Mockito.mock(ParticipantDocumentationEventRepository.class),
-                        idempotency, accounts, relationships,
-                        org.mockito.Mockito.mock(SpecialistAuthorizationPort.class), org.mockito.Mockito.mock(AuditRecorder.class), Clock.fixed(NOW, ZoneOffset.UTC)));
+                        idempotency, accounts,
+                        authorization, org.mockito.Mockito.mock(AuditRecorder.class), Clock.fixed(NOW, ZoneOffset.UTC)));
     }
     private record Fixture(UUID specialistId, UUID participantId, ParticipantInterviewRepository interviews,
-                           InterviewResponseRepository responses, RecordIdempotencyRepository idempotency,
-                           SpecialistRelationshipService relationships, ParticipantDocumentationService service) { }
+                           InterviewResponseRepository responses, RecordIdempotencyRepository idempotency, SpecialistAuthorizationPort authorization,
+                           ParticipantDocumentationService service) { }
 }

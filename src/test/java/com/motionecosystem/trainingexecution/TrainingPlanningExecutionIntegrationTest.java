@@ -204,9 +204,9 @@ class TrainingPlanningExecutionIntegrationTest {
                 "SELECT id FROM training_planning.exercise_prescription", UUID.class);
         jdbc.update("""
                 INSERT INTO safety.participant_restriction
-                    (id, account_id, contraindication_tag, recorded_at)
-                VALUES (?, ?, 'ACUTE_KNEE_PAIN', now())
-                """, UUID.randomUUID(), participantId);
+                    (id, account_id, participant_id, contraindication_tag, recorded_at)
+                VALUES (?, ?, ?, 'ACUTE_KNEE_PAIN', now())
+                """, UUID.randomUUID(), participantId, participantId);
 
         mvc.perform(post("/api/v1/planned-sessions/{id}/executions", sessionId)
                         .with(role("participant", "PARTICIPANT"))
@@ -434,14 +434,18 @@ class TrainingPlanningExecutionIntegrationTest {
                 .andExpect(jsonPath("$.paths['/api/v2/training-plans']").exists())
                 .andExpect(jsonPath("$.paths['/api/v2/training-plans/revisions/{revisionId}/goals']").exists())
                 .andExpect(jsonPath("$.paths['/api/v2/training-plans/revisions/{revisionId}/prescriptions']")
+                        .doesNotExist())
+                .andExpect(jsonPath("$.paths['/api/v2/training-plans/revisions/{revisionId}/sessions']")
                         .exists())
+                .andExpect(jsonPath("$.components.schemas.AddGoalCommand.properties.participantGoalId").exists())
+                .andExpect(jsonPath("$.components.schemas.AddSessionCommand.properties.exerciseSetVersionId").exists())
                 .andExpect(jsonPath("$.paths['/api/v2/training-plans/revisions/{revisionId}/structural-validation']")
                         .exists())
                 .andExpect(jsonPath("$.paths['/api/v1/training-plans/revisions/{revisionId}/load-preview']")
                         .exists())
                 .andExpect(jsonPath("$.paths['/api/v1/planned-sessions/{sessionId}/executions']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/session-executions/{executionId}/corrections']").exists())
-                .andExpect(jsonPath("$.paths['/api/v1/specialist/participants/{participantAccountId}/executions']")
+                .andExpect(jsonPath("$.paths['/api/v1/specialist/participants/{participantId}/executions']")
                         .exists());
     }
 

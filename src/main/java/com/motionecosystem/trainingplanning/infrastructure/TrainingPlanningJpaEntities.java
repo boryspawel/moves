@@ -25,7 +25,7 @@ import jakarta.persistence.Version;
 @Table(name = "training_goal", schema = "training_planning")
 class TrainingGoalJpaEntity {
     @Id UUID id;
-    @Column(name = "participant_id", nullable = false) UUID participantAccountId;
+    @Column(name = "participant_id", nullable = false) UUID participantId;
     @Column(nullable = false) String name;
     @Column(name = "created_by_account_id", nullable = false) UUID createdByAccountId;
     @Column(name = "created_at", nullable = false, updatable = false) Instant createdAt;
@@ -37,13 +37,16 @@ class TrainingGoalJpaEntity {
     @Column Integer priority;
     @Column String status;
     @Column(name = "target_date") LocalDate targetDate;
+    @Column(name = "source_participant_goal_id") UUID sourceParticipantGoalId;
+    @Column(name = "source_participant_goal_version") Long sourceParticipantGoalVersion;
+    @Column(name = "snapshotted_at") Instant snapshottedAt;
 
     protected TrainingGoalJpaEntity() {
     }
 
     TrainingGoalJpaEntity(TrainingGoal source) {
         id = source.id();
-        participantAccountId = source.participantAccountId();
+        participantId = source.participantAccountId();
         name = source.name();
         createdByAccountId = source.createdByAccountId();
         createdAt = source.createdAt();
@@ -51,7 +54,7 @@ class TrainingGoalJpaEntity {
 
     TrainingGoalJpaEntity(TrainingPlanningModel.Goal source) {
         id = source.id();
-        participantAccountId = source.participantAccountId();
+        participantId = source.participantId();
         name = source.title();
         createdByAccountId = source.createdByAccountId();
         createdAt = source.createdAt();
@@ -63,6 +66,9 @@ class TrainingGoalJpaEntity {
         priority = source.priority();
         status = source.status().name();
         targetDate = source.targetDate();
+        sourceParticipantGoalId = source.sourceParticipantGoalId();
+        sourceParticipantGoalVersion = source.sourceParticipantGoalVersion();
+        snapshottedAt = source.snapshottedAt();
     }
 }
 
@@ -71,7 +77,7 @@ class TrainingGoalJpaEntity {
 class TrainingPlanJpaEntity {
     @Id UUID id;
     @Column(name = "goal_id") UUID goalId;
-    @Column(name = "participant_id", nullable = false) UUID participantAccountId;
+    @Column(name = "participant_id", nullable = false) UUID participantId;
     @Column(name = "created_by_account_id", nullable = false) UUID createdByAccountId;
     @Column(nullable = false) String name;
     @Column(name = "plan_mode", nullable = false) String mode;
@@ -88,7 +94,7 @@ class TrainingPlanJpaEntity {
     TrainingPlanJpaEntity(TrainingPlan source) {
         id = source.id();
         goalId = source.goalId();
-        participantAccountId = source.participantAccountId();
+        participantId = source.participantAccountId();
         createdByAccountId = source.createdByAccountId();
         name = source.name();
         mode = source.mode().name();
@@ -100,7 +106,7 @@ class TrainingPlanJpaEntity {
 
     TrainingPlanJpaEntity(TrainingPlanningModel.PlanDraft source) {
         id = source.id();
-        participantAccountId = source.participantAccountId();
+        participantId = source.participantId();
         createdByAccountId = source.createdByAccountId();
         name = source.name();
         purpose = source.purpose();
@@ -189,7 +195,7 @@ class MicrocycleJpaEntity {
 class PlannedSessionJpaEntity {
     @Id UUID id;
     @Column(name = "microcycle_id", nullable = false) UUID microcycleId;
-    @Column(name = "participant_id", nullable = false) UUID participantAccountId;
+    @Column(name = "participant_id", nullable = false) UUID participantId;
     @Column(nullable = false) String title;
     @Enumerated(EnumType.STRING) @Column(name = "session_kind", nullable = false) PlannedSession.SessionKind kind;
     @Enumerated(EnumType.STRING) @Column(nullable = false) PlannedSession.SessionStatus status;
@@ -199,6 +205,10 @@ class PlannedSessionJpaEntity {
     @Column(name = "available_from") Instant availableFrom;
     @Column(name = "available_to") Instant availableTo;
     @Column(name = "expected_duration_minutes") Integer expectedDurationMinutes;
+    @Column(name = "source_exercise_set_id") UUID sourceExerciseSetId;
+    @Column(name = "source_exercise_set_version_id") UUID sourceExerciseSetVersionId;
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Column(name = "source_snapshot", columnDefinition = "jsonb") String sourceSnapshot;
 
     protected PlannedSessionJpaEntity() {
     }
@@ -206,7 +216,7 @@ class PlannedSessionJpaEntity {
     PlannedSessionJpaEntity(PlannedSession source) {
         id = source.id();
         microcycleId = source.microcycleId();
-        participantAccountId = source.participantAccountId();
+        participantId = source.participantAccountId();
         title = source.title();
         kind = source.kind();
         status = source.status();
@@ -217,7 +227,7 @@ class PlannedSessionJpaEntity {
     PlannedSessionJpaEntity(TrainingPlanningModel.Session source) {
         id = source.id();
         microcycleId = source.microcycleId();
-        participantAccountId = source.participantAccountId();
+        participantId = source.participantId();
         title = source.title();
         kind = PlannedSession.SessionKind.SELF_GUIDED;
         status = PlannedSession.SessionStatus.DRAFT;
@@ -227,6 +237,9 @@ class PlannedSessionJpaEntity {
         availableFrom = source.availableFrom();
         availableTo = source.availableTo();
         expectedDurationMinutes = source.expectedDurationMinutes();
+        sourceExerciseSetId = source.sourceExerciseSetId();
+        sourceExerciseSetVersionId = source.sourceExerciseSetVersionId();
+        sourceSnapshot = source.sourceSnapshot();
     }
 
     void complete() {
@@ -237,7 +250,8 @@ class PlannedSessionJpaEntity {
     }
 
     UUID id() { return id; }
-    UUID participantAccountId() { return participantAccountId; }
+    UUID participantId() { return participantId; }
+     UUID participantAccountId() { return participantId; }
     String title() { return title; }
     PlannedSession.SessionKind kind() { return kind; }
     PlannedSession.SessionStatus status() { return status; }
@@ -269,6 +283,11 @@ class ExercisePrescriptionJpaEntity {
     @Column(name = "range_of_motion") String rangeOfMotion;
     @Column(name = "rest_seconds") Integer restSeconds;
     @Column(name = "substitute_group") String substituteGroup;
+    @Column(name = "source_exercise_set_item_id") UUID sourceExerciseSetItemId;
+    @Column(name = "source_exercise_set_version_id") UUID sourceExerciseSetVersionId;
+    @Column(name = "canonical_dose_type") String canonicalDoseType;
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Column(name = "materialized_snapshot", columnDefinition = "jsonb") String materializedSnapshot;
 
     protected ExercisePrescriptionJpaEntity() {
     }
@@ -292,7 +311,12 @@ class ExercisePrescriptionJpaEntity {
         exerciseVersionId = source.exerciseVersionId();
         position = source.position();
         side = source.side().name();
-        doseType = source.doseType().name();
+        doseType = switch (source.canonicalDoseType() == null ? "" : source.canonicalDoseType()) {
+            case "STRETCH" -> "LEGACY_UNTYPED";
+            case "STRENGTH" -> source.repetitions() == null ? "LEGACY_UNTYPED" : source.doseType().name();
+            case "BREATHING" -> source.durationSeconds() == null ? "LEGACY_UNTYPED" : source.doseType().name();
+            default -> source.canonicalDoseType() == null ? "LEGACY_UNTYPED" : source.doseType().name();
+        };
         targetSets = source.sets();
         targetRepetitions = source.repetitions();
         targetDurationSeconds = source.durationSeconds();
@@ -308,6 +332,10 @@ class ExercisePrescriptionJpaEntity {
         restSeconds = source.restSeconds();
         substituteGroup = source.substituteGroup();
         notes = source.notes();
+        sourceExerciseSetItemId = source.sourceExerciseSetItemId();
+        sourceExerciseSetVersionId = source.sourceExerciseSetVersionId();
+        canonicalDoseType = source.canonicalDoseType();
+        materializedSnapshot = source.materializedSnapshot();
     }
 
     void position(int value) { position = value; }

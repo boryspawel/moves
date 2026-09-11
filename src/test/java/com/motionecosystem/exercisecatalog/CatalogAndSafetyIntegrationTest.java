@@ -283,6 +283,7 @@ class CatalogAndSafetyIntegrationTest {
 
     @Test
     void safetyInputsRemainNonDiagnosticAndLegacyReplaceAllIsRemoved() throws Exception {
+        canonicalParticipant("first");
         mvc.perform(get("/api/v1/safety/me")).andExpect(status().isUnauthorized());
         mvc.perform(put("/api/v1/safety/me/restrictions").with(participant("first"))
                         .contentType("application/json")
@@ -462,6 +463,25 @@ class CatalogAndSafetyIntegrationTest {
     private static JwtRequestPostProcessor participant(String subject) {
         return jwt().jwt(builder -> builder.subject(subject).audience(List.of("motion-api")))
                 .authorities(new SimpleGrantedAuthority("ROLE_PARTICIPANT"));
+    }
+
+    private void canonicalParticipant(String subject) {
+        UUID id = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO identity_access.principal_account
+                    (id, external_subject, status, profile_type, created_at, version)
+                VALUES (?, ?, 'ACTIVE', 'PARTICIPANT', now(), 0)
+                """, id, subject);
+        jdbc.update("""
+                INSERT INTO participant.participant_record
+                    (id, display_name, record_status, relationship_context, created_by_specialist_id, created_at, updated_at, version)
+                VALUES (?, 'Catalog safety participant', 'ACTIVE', 'CLIENT', ?, now(), now(), 0)
+                """, id, id);
+        jdbc.update("""
+                INSERT INTO participant.participant_access_link
+                    (id, participant_id, principal_account_id, access_status, linked_at, activated_at, version)
+                VALUES (?, ?, ?, 'ACTIVE', now(), now(), 0)
+                """, UUID.randomUUID(), id, id);
     }
 
     private static JwtRequestPostProcessor contentAdmin() {

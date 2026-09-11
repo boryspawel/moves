@@ -13,8 +13,8 @@ import com.motionecosystem.safety.SafetyV2Service.RestrictionCommand;
 import com.motionecosystem.safety.SafetyV2Service.TargetCommand;
 import com.motionecosystem.safety.api.SafetyAssessmentPort.Result;
 import com.motionecosystem.safety.domain.SafetyRules.SemanticType;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ProfessionalRole;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
 import com.motionecosystem.support.PostgresTestConfiguration;
 import com.motionecosystem.planworkflow.PlanRevisionWorkflowService;
 import com.motionecosystem.planworkflow.PlanRevisionWorkflowService.AcknowledgeWarningCommand;
@@ -26,20 +26,20 @@ import com.motionecosystem.trainingplanning.PlanCollaborationService.Collaborato
 import com.motionecosystem.trainingplanning.PlanCollaborationService.ReviewDecision;
 import com.motionecosystem.trainingplanning.PlanCollaborationService.ReviewDecisionCommand;
 import com.motionecosystem.trainingplanning.PlanCollaborationService.ReviewRequestCommand;
-import com.motionecosystem.trainingplanning.TrainingPlanningModel.DoseType;
-import com.motionecosystem.trainingplanning.TrainingPlanningModel.GoalPerspective;
-import com.motionecosystem.trainingplanning.TrainingPlanningModel.IntensityType;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.PlanMode;
-import com.motionecosystem.trainingplanning.TrainingPlanningModel.PrescriptionSide;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.AddCycleCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.AddGoalCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.AddMicrocycleCommand;
-import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.AddPrescriptionCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.AddSessionCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.CreateDraftCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.CreateRevisionCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.EditorView;
 import com.motionecosystem.trainingplanning.api.PlanRevisionWorkflowPersistence.ActivationOutcome;
+import com.motionecosystem.exercisesets.application.ExerciseSetApplicationService;
+import com.motionecosystem.exercisesets.api.ExerciseSetDtos;
+import com.motionecosystem.exercisesets.domain.ExerciseSetModel;
+import com.motionecosystem.participantgoals.ParticipantGoalService;
+import com.motionecosystem.participantgoals.ParticipantGoalService.ParticipantGoalVersionCommand;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -71,6 +71,8 @@ class PlanRevisionWorkflowIntegrationTest {
     @Autowired ConsentGrantService consents;
     @Autowired TransactionalOutbox dispatcher;
     @Autowired JdbcTemplate jdbc;
+    @Autowired ExerciseSetApplicationService exerciseSets;
+    @Autowired ParticipantGoalService participantGoals;
 
     UUID participant;
     UUID otherParticipant;
@@ -78,6 +80,7 @@ class PlanRevisionWorkflowIntegrationTest {
     UUID physio;
     UUID structure;
     UUID exerciseVersion;
+    UUID exerciseSetVersion;
 
     @BeforeEach
     void setUp() {
@@ -101,6 +104,7 @@ class PlanRevisionWorkflowIntegrationTest {
                 ConsentDecisionPort.DataScope.CLINICAL_RATIONALE);
         structure = publishedStructure();
         exerciseVersion = publishedExerciseProfile();
+        exerciseSetVersion = publishedSetVersion();
     }
 
     @AfterEach
@@ -130,18 +134,18 @@ class PlanRevisionWorkflowIntegrationTest {
 
     @Test
     void passActivationIsAtomicRetrySafeAndPublishesOnlyNeutralEvents() {
-        EditorView editor = completePlan("workflow-participant", null, PlanMode.SELF_DIRECTED);
+        EditorView editor = completePlan("workflow-trainer", participant, PlanMode.SPECIALIST);
         UUID revisionId = editor.revision().revisionId();
 
-        var validation = workflow.validate("workflow-participant", revisionId,
-                new ValidateWorkflowCommand(version(editor), null));
+        var validation = workflow.validate("workflow-trainer", revisionId,
+                new ValidateWorkflowCommand(version(editor), new ActingContext(ProfessionalRole.TRAINER)));
         assertThat(validation.status()).isEqualTo("READY");
         assertThat(validation.assessment().recordedResult()).isEqualTo(Result.PASS);
 
-        ActivationOutcome first = workflow.activate("workflow-participant", revisionId, "activate-pass",
-                new ActivateWorkflowCommand(null));
-        ActivationOutcome retry = workflow.activate("workflow-participant", revisionId, "activate-pass",
-                new ActivateWorkflowCommand(null));
+        ActivationOutcome first = workflow.activate("workflow-trainer", revisionId, "activate-pass",
+                new ActivateWorkflowCommand(new ActingContext(ProfessionalRole.TRAINER)));
+        ActivationOutcome retry = workflow.activate("workflow-trainer", revisionId, "activate-pass",
+                new ActivateWorkflowCommand(new ActingContext(ProfessionalRole.TRAINER)));
 
         assertThat(first.repeated()).isFalse();
         assertThat(retry.repeated()).isTrue();
@@ -170,36 +174,36 @@ class PlanRevisionWorkflowIntegrationTest {
     void warningRequiresFactorAcknowledgementAndNewRestrictionRequiresRevalidation() {
         var restriction = safety.declareParticipantRestriction(
                 "workflow-participant", participantRestriction(SemanticType.CAUTION));
-        EditorView editor = completePlan("workflow-participant", null, PlanMode.SELF_DIRECTED);
+        EditorView editor = completePlan("workflow-trainer", participant, PlanMode.SPECIALIST);
         UUID revisionId = editor.revision().revisionId();
-        var validation = workflow.validate("workflow-participant", revisionId,
-                new ValidateWorkflowCommand(version(editor), null));
+        var validation = workflow.validate("workflow-trainer", revisionId,
+                new ValidateWorkflowCommand(version(editor), new ActingContext(ProfessionalRole.TRAINER)));
 
         assertThat(validation.status()).isEqualTo("NEEDS_REVIEW");
-        assertConflict(() -> workflow.activate("workflow-participant", revisionId, "before-ack",
-                new ActivateWorkflowCommand(null)));
+        assertConflict(() -> workflow.activate("workflow-trainer", revisionId, "before-ack",
+                new ActivateWorkflowCommand(new ActingContext(ProfessionalRole.TRAINER))));
         Set<UUID> warnings = validation.assessment().factors().stream()
                 .filter(factor -> factor.result() == Result.WARNING)
                 .map(item -> item.id())
                 .collect(java.util.stream.Collectors.toSet());
-        workflow.acknowledge("workflow-participant", revisionId,
-                new AcknowledgeWarningCommand(warnings, "I reviewed the plan warning.", null));
-        workflow.activate("workflow-participant", revisionId, "after-ack",
-                new ActivateWorkflowCommand(null));
+        workflow.acknowledge("workflow-trainer", revisionId,
+                new AcknowledgeWarningCommand(warnings, "I reviewed the plan warning.", new ActingContext(ProfessionalRole.TRAINER)));
+        workflow.activate("workflow-trainer", revisionId, "after-ack",
+                new ActivateWorkflowCommand(new ActingContext(ProfessionalRole.TRAINER)));
 
         safety.withdrawParticipantRestriction("workflow-participant", restriction.id());
-        EditorView second = completePlan("workflow-participant", null, PlanMode.SELF_DIRECTED);
+        EditorView second = completePlan("workflow-trainer", participant, PlanMode.SPECIALIST);
         UUID secondRevision = second.revision().revisionId();
-        workflow.validate("workflow-participant", secondRevision,
-                new ValidateWorkflowCommand(version(second), null));
+        workflow.validate("workflow-trainer", secondRevision,
+                new ValidateWorkflowCommand(version(second), new ActingContext(ProfessionalRole.TRAINER)));
         safety.declareParticipantRestriction(
                 "workflow-participant", participantRestriction(SemanticType.CAUTION));
-        assertConflict(() -> workflow.activate("workflow-participant", secondRevision, "stale",
-                new ActivateWorkflowCommand(null)));
-        long currentVersion = planning.editor("workflow-participant", secondRevision)
+        assertConflict(() -> workflow.activate("workflow-trainer", secondRevision, "stale",
+                new ActivateWorkflowCommand(new ActingContext(ProfessionalRole.TRAINER))));
+        long currentVersion = planning.editor("workflow-trainer", secondRevision)
                 .revision().revisionVersion();
-        assertThat(workflow.validate("workflow-participant", secondRevision,
-                new ValidateWorkflowCommand(currentVersion, null)).status()).isEqualTo("NEEDS_REVIEW");
+        assertThat(workflow.validate("workflow-trainer", secondRevision,
+                new ValidateWorkflowCommand(currentVersion, new ActingContext(ProfessionalRole.TRAINER))).status()).isEqualTo("NEEDS_REVIEW");
     }
 
     @Test
@@ -209,14 +213,14 @@ class PlanRevisionWorkflowIntegrationTest {
                 participant,
                 new ActingContext(ProfessionalRole.PHYSIOTHERAPIST),
                 clinicalRestriction());
-        EditorView editor = completePlan("workflow-participant", null, PlanMode.SELF_DIRECTED);
+        EditorView editor = completePlan("workflow-trainer", participant, PlanMode.SPECIALIST);
         UUID revisionId = editor.revision().revisionId();
-        var validation = workflow.validate("workflow-participant", revisionId,
-                new ValidateWorkflowCommand(version(editor), null));
+        var validation = workflow.validate("workflow-trainer", revisionId,
+                new ValidateWorkflowCommand(version(editor), new ActingContext(ProfessionalRole.TRAINER)));
         assertThat(validation.status()).isEqualTo("BLOCKED");
 
-        assertThatThrownBy(() -> workflow.activate("workflow-participant", revisionId, "blocked",
-                new ActivateWorkflowCommand(null)))
+        assertThatThrownBy(() -> workflow.activate("workflow-trainer", revisionId, "blocked",
+                new ActivateWorkflowCommand(new ActingContext(ProfessionalRole.TRAINER))))
                 .isInstanceOfSatisfying(SafetyBlockException.class, error ->
                         assertThat(error.explanationCodes())
                                 .containsExactly("SAFETY_RESTRICTION_INTERSECTION")
@@ -235,8 +239,8 @@ class PlanRevisionWorkflowIntegrationTest {
                         "THIS_FACTOR",
                         null,
                         Instant.now().plus(2, ChronoUnit.HOURS)));
-        assertThat(workflow.activate("workflow-participant", revisionId, "overridden",
-                new ActivateWorkflowCommand(null)).repeated()).isFalse();
+        assertThat(workflow.activate("workflow-trainer", revisionId, "overridden",
+                new ActivateWorkflowCommand(new ActingContext(ProfessionalRole.TRAINER))).repeated()).isFalse();
     }
 
     @Test
@@ -307,20 +311,21 @@ class PlanRevisionWorkflowIntegrationTest {
 
     @Test
     void concurrentActivationSupersedesPreviousRevisionAndRejectsUnauthorizedActors() throws Exception {
-        EditorView first = completePlan("workflow-participant", null, PlanMode.SELF_DIRECTED);
+        EditorView first = completePlan("workflow-trainer", participant, PlanMode.SPECIALIST);
         UUID firstRevision = first.revision().revisionId();
-        workflow.validate("workflow-participant", firstRevision,
-                new ValidateWorkflowCommand(version(first), null));
-        workflow.activate("workflow-participant", firstRevision, "first", new ActivateWorkflowCommand(null));
+        workflow.validate("workflow-trainer", firstRevision,
+                new ValidateWorkflowCommand(version(first), new ActingContext(ProfessionalRole.TRAINER)));
+        workflow.activate("workflow-trainer", firstRevision, "first", new ActivateWorkflowCommand(new ActingContext(ProfessionalRole.TRAINER)));
 
         EditorView next = planning.createRevision(
-                "workflow-participant", first.planId(), new CreateRevisionCommand(firstRevision));
+                "workflow-trainer", first.planId(), new CreateRevisionCommand(firstRevision, new ActingContext(ProfessionalRole.TRAINER)));
         UUID nextRevision = next.revision().revisionId();
-        workflow.validate("workflow-participant", nextRevision,
-                new ValidateWorkflowCommand(version(next), null));
+        workflow.validate("workflow-trainer", nextRevision,
+                new ValidateWorkflowCommand(version(next), new ActingContext(ProfessionalRole.TRAINER)));
         assertForbidden(() -> workflow.workflow("workflow-other", nextRevision, null));
-        assertForbidden(() -> workflow.workflow(
-                "workflow-trainer", nextRevision, new ActingContext(ProfessionalRole.TRAINER)));
+        assertThat(workflow.workflow(
+                "workflow-trainer", nextRevision, new ActingContext(ProfessionalRole.TRAINER)).state().revisionId())
+                .isEqualTo(nextRevision);
 
         CountDownLatch ready = new CountDownLatch(2);
         CountDownLatch start = new CountDownLatch(1);
@@ -356,45 +361,104 @@ class PlanRevisionWorkflowIntegrationTest {
                         version(physioPlan), new ActingContext(ProfessionalRole.PHYSIOTHERAPIST))).status())
                 .isEqualTo("READY");
 
-        EditorView invalid = planning.createDraft("workflow-participant", new CreateDraftCommand(
+        assertThatThrownBy(() -> planning.createDraft("workflow-participant", new CreateDraftCommand(
                 null, "Invalid workflow", "Rollback case", PlanMode.SELF_DIRECTED,
-                "No structure", LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31)));
-        int eventsBefore = jdbc.queryForObject("SELECT count(*) FROM audit.outbox_event", Integer.class);
-        assertConflict(() -> workflow.validate("workflow-participant", invalid.revision().revisionId(),
-                new ValidateWorkflowCommand(version(invalid), null)));
-        assertThat(jdbc.queryForObject("SELECT count(*) FROM audit.outbox_event", Integer.class))
-                .isEqualTo(eventsBefore);
-        assertThat(jdbc.queryForObject(
-                "SELECT count(*) FROM safety.plan_safety_assessment WHERE revision_id=?",
-                Integer.class, invalid.revision().revisionId())).isZero();
+                "No structure", LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31))))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.GONE));
     }
 
     @Test
     void withdrawnExerciseVersionPreventsNewAssignmentAfterValidation() {
-        EditorView editor = completePlan("workflow-participant", null, PlanMode.SELF_DIRECTED);
+        EditorView editor = completePlan("workflow-trainer", participant, PlanMode.SPECIALIST);
         UUID revisionId = editor.revision().revisionId();
-        workflow.validate("workflow-participant", revisionId,
-                new ValidateWorkflowCommand(version(editor), null));
+        workflow.validate("workflow-trainer", revisionId,
+                new ValidateWorkflowCommand(version(editor), new ActingContext(ProfessionalRole.TRAINER)));
 
         jdbc.update("UPDATE exercise_catalog.exercise_version SET status='WITHDRAWN', withdrawn_at=now() WHERE id=?",
                 exerciseVersion);
 
-        assertConflict(() -> workflow.activate("workflow-participant", revisionId, "withdrawn",
-                new ActivateWorkflowCommand(null)));
+        assertConflict(() -> workflow.activate("workflow-trainer", revisionId, "withdrawn",
+                new ActivateWorkflowCommand(new ActingContext(ProfessionalRole.TRAINER))));
         assertThat(jdbc.queryForObject(
                 "SELECT count(*) FROM audit.outbox_event WHERE event_type='PlanRevisionActivated'",
                 Integer.class)).isZero();
+    }
+
+    @Test
+    void sourceLifecycleChangesDoNotRewriteSnapshotsButBlockNewActivation() {
+        EditorView editor = completePlan("workflow-trainer", participant, PlanMode.COLLABORATIVE);
+        UUID revisionId = editor.revision().revisionId();
+        var before = editor.revision().cycles().getFirst().microcycles().getFirst().sessions().getFirst();
+        String originalDose = before.prescriptions().getFirst().materializedSnapshot();
+        UUID goalId = editor.revision().goals().getFirst().sourceParticipantGoalId();
+        UUID setId = exerciseSets.list("workflow-trainer").stream()
+                .filter(set -> set.versions().stream().anyMatch(version -> version.id().equals(exerciseSetVersion)))
+                .findFirst().orElseThrow().id();
+        var v2 = exerciseSets.nextDraft("workflow-trainer", setId, exerciseSetVersion);
+        var item = v2.items().getFirst();
+        exerciseSets.updateItem("workflow-trainer", setId, v2.id(), item.id(),
+                new ExerciseSetDtos.ItemRequest(exerciseVersion, ExerciseSetModel.Phase.MAIN,
+                        new ExerciseSetDtos.StrengthDose(5, 5, null, null, 60, "2-0-2",
+                                BigDecimal.valueOf(25), "kg", BigDecimal.valueOf(8), null,
+                                ExerciseSetModel.Side.LEFT), "Changed v2", null, v2.lockVersion()));
+        exerciseSets.publish("workflow-trainer", setId, v2.id(), 1);
+        assertThat(planning.editor("workflow-trainer", revisionId).revision().cycles().getFirst()
+                .microcycles().getFirst().sessions().getFirst().sourceExerciseSetVersionId()).isEqualTo(exerciseSetVersion);
+        assertThat(planning.editor("workflow-trainer", revisionId).revision().cycles().getFirst()
+                .microcycles().getFirst().sessions().getFirst().prescriptions().getFirst().materializedSnapshot())
+                .contains("\"sets\": 3", "\"reps\": 8", "\"tempo\": \"3-1-1\"")
+                .doesNotContain("\"sets\": 5", "\"reps\": 5");
+
+        workflow.validate("workflow-trainer", revisionId,
+                new ValidateWorkflowCommand(version(editor), new ActingContext(ProfessionalRole.TRAINER)));
+        workflow.activate("workflow-trainer", revisionId, "activate-before-retire",
+                new ActivateWorkflowCommand(new ActingContext(ProfessionalRole.TRAINER)));
+        exerciseSets.retire("workflow-trainer", setId, exerciseSetVersion);
+        assertThat(workflow.activate("workflow-trainer", revisionId, "activate-before-retire",
+                new ActivateWorkflowCommand(new ActingContext(ProfessionalRole.TRAINER))).repeated()).isTrue();
+        assertThat(planning.editor("workflow-trainer", revisionId).revision().cycles().getFirst()
+                .microcycles().getFirst().sessions().getFirst().prescriptions().getFirst().materializedSnapshot())
+                .contains("\"sets\": 3", "\"reps\": 8");
+
+        EditorView retiredDraft = completePlan("workflow-trainer", participant, PlanMode.SPECIALIST, publishedSetVersion());
+        UUID retiredRevision = retiredDraft.revision().revisionId();
+        UUID retiredSource = retiredDraft.revision().cycles().getFirst().microcycles().getFirst().sessions().getFirst().sourceExerciseSetVersionId();
+        UUID retiredSet = exerciseSets.list("workflow-trainer").stream().filter(set -> set.versions().stream()
+                .anyMatch(version -> version.id().equals(retiredSource))).findFirst().orElseThrow().id();
+        workflow.validate("workflow-trainer", retiredRevision,
+                new ValidateWorkflowCommand(version(retiredDraft), new ActingContext(ProfessionalRole.TRAINER)));
+        exerciseSets.retire("workflow-trainer", retiredSet, retiredSource);
+        assertConflict(() -> workflow.activate("workflow-trainer", retiredRevision, "retired-source",
+                new ActivateWorkflowCommand(new ActingContext(ProfessionalRole.TRAINER))));
+
+        EditorView goalPlan = completePlan("workflow-trainer", participant, PlanMode.SPECIALIST, publishedSetVersion());
+        UUID goalRevision = goalPlan.revision().revisionId();
+        UUID sourceGoal = goalPlan.revision().goals().getFirst().sourceParticipantGoalId();
+        String title = goalPlan.revision().goals().getFirst().title();
+        workflow.validate("workflow-trainer", goalRevision,
+                new ValidateWorkflowCommand(version(goalPlan), new ActingContext(ProfessionalRole.TRAINER)));
+        participantGoals.achieve("workflow-trainer", participant, sourceGoal,
+                new ActingContext(ProfessionalRole.TRAINER), "achieve-after-ready", new ParticipantGoalVersionCommand(0L));
+        assertConflict(() -> workflow.activate("workflow-trainer", goalRevision, "achieved-goal",
+                new ActivateWorkflowCommand(new ActingContext(ProfessionalRole.TRAINER))));
+        assertThat(planning.editor("workflow-trainer", goalRevision).revision().goals().getFirst().title()).isEqualTo(title);
     }
 
     private boolean activateConcurrently(UUID revisionId, CountDownLatch ready, CountDownLatch start)
             throws Exception {
         ready.countDown();
         assertThat(start.await(10, TimeUnit.SECONDS)).isTrue();
-        return workflow.activate("workflow-participant", revisionId, "parallel-key",
-                new ActivateWorkflowCommand(null)).repeated();
+        return workflow.activate("workflow-trainer", revisionId, "parallel-key",
+                new ActivateWorkflowCommand(new ActingContext(ProfessionalRole.TRAINER))).repeated();
     }
 
     private EditorView completePlan(String subject, UUID targetParticipant, PlanMode mode) {
+        return completePlan(subject, targetParticipant, mode,
+                subject.contains("physio") ? publishedSetVersion("workflow-physio") : exerciseSetVersion);
+    }
+
+    private EditorView completePlan(String subject, UUID targetParticipant, PlanMode mode, UUID sourceSetVersion) {
         EditorView editor = planning.createDraft(subject, new CreateDraftCommand(
                 targetParticipant,
                 "Workflow plan " + UUID.randomUUID(),
@@ -407,17 +471,7 @@ class PlanRevisionWorkflowIntegrationTest {
                         ? ProfessionalRole.PHYSIOTHERAPIST : ProfessionalRole.TRAINER)));
         UUID revisionId = editor.revision().revisionId();
         editor = planning.addGoal(subject, revisionId, new AddGoalCommand(
-                version(editor),
-                mode == PlanMode.SELF_DIRECTED ? GoalPerspective.GENERAL_FITNESS
-                        : subject.contains("physio")
-                                ? GoalPerspective.FUNCTIONAL_RECOVERY : GoalPerspective.PERFORMANCE,
-                "CAPACITY",
-                "Build controlled capacity",
-                "Progress without exceeding constraints",
-                1,
-                null,
-                LocalDate.of(2026, 8, 31),
-                List.of()));
+                version(editor), canonicalGoal(targetParticipant, subject.contains("physio") ? "FUNCTIONAL" : "PERFORMANCE")));
         editor = planning.addCycle(subject, revisionId, new AddCycleCommand(
                 version(editor), 1, "Foundation", LocalDate.of(2026, 8, 1),
                 LocalDate.of(2026, 8, 31), "Build tolerance", "Complete sessions"));
@@ -428,14 +482,42 @@ class PlanRevisionWorkflowIntegrationTest {
         UUID microcycle = editor.revision().cycles().getFirst().microcycles().getFirst().id();
         editor = planning.addSession(subject, revisionId, new AddSessionCommand(
                 version(editor), microcycle, "Strength session", LocalDate.of(2026, 8, 2),
-                Instant.parse("2026-08-02T06:00:00Z"), Instant.parse("2026-08-02T20:00:00Z"), 45));
-        UUID session = editor.revision().cycles().getFirst().microcycles().getFirst()
-                .sessions().getFirst().id();
-        return planning.addPrescription(subject, revisionId, new AddPrescriptionCommand(
-                version(editor), session, exerciseVersion, 1, PrescriptionSide.LEFT,
-                DoseType.DYNAMIC_RESISTANCE, 3, 8, null, null, null,
-                null, null, IntensityType.RPE, BigDecimal.valueOf(7), null,
-                null, "FULL", 60, null, null));
+                Instant.parse("2026-08-02T06:00:00Z"), Instant.parse("2026-08-02T20:00:00Z"), 45,
+                sourceSetVersion));
+        return editor;
+    }
+
+    private UUID canonicalGoal(UUID participantId, String category) {
+        UUID goal = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO participant_goals.participant_goal
+                    (id, participant_id, specialist_account_id, category, title, description, priority,
+                     target_date, status, created_at, updated_at, version)
+                VALUES (?, ?, ?, ?, 'Workflow capacity', 'Canonical workflow goal', 1,
+                        '2026-08-31', 'ACTIVE', now(), now(), 0)
+                """, goal, participantId, category.equals("FUNCTIONAL") ? physio : trainer, category);
+        jdbc.update("""
+                INSERT INTO participant_goals.goal_outcome
+                    (id, goal_id, metric_code, baseline, target_value, unit, position, created_at)
+                VALUES (?, ?, 'CAPACITY', 1, 2, 'score', 0, now())
+                """, UUID.randomUUID(), goal);
+        return goal;
+    }
+
+    private UUID publishedSetVersion() { return publishedSetVersion("workflow-trainer"); }
+
+    private UUID publishedSetVersion(String ownerSubject) {
+        var set = exerciseSets.create(ownerSubject);
+        UUID version = set.versions().getFirst().id();
+        exerciseSets.updateMetadata(ownerSubject, set.id(), version,
+                new ExerciseSetDtos.MetadataRequest(ExerciseSetModel.SetProfile.MAIN_MODULE,
+                        "Workflow strength", null, null, List.of(), 0));
+        exerciseSets.addItem(ownerSubject, set.id(), version,
+                new ExerciseSetDtos.ItemRequest(exerciseVersion, ExerciseSetModel.Phase.MAIN,
+                        new ExerciseSetDtos.StrengthDose(3, 8, null, null, 60, "3-1-1",
+                                BigDecimal.valueOf(20), "kg", BigDecimal.valueOf(7), null,
+                                ExerciseSetModel.Side.LEFT), "Controlled split squat", null, 1));
+        return exerciseSets.publish(ownerSubject, set.id(), version, 2).id();
     }
 
     private RestrictionCommand participantRestriction(SemanticType type) {

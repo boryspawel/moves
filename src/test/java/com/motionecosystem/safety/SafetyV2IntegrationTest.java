@@ -8,13 +8,14 @@ import com.motionecosystem.consent.ConsentGrantService;
 import com.motionecosystem.consent.api.ConsentDecisionPort;
 import com.motionecosystem.loadanalysis.api.PlannedLoadCalculationPort.LoadProfile;
 import com.motionecosystem.loadanalysis.api.PlannedLoadCalculationPort.Observation;
+import com.motionecosystem.loadanalysis.api.PlannedLoadCalculationPort.CompletenessIssue;
 import com.motionecosystem.safety.SafetyV2Service.OverrideCommand;
 import com.motionecosystem.safety.SafetyV2Service.RestrictionCommand;
 import com.motionecosystem.safety.SafetyV2Service.TargetCommand;
 import com.motionecosystem.safety.api.SafetyAssessmentPort.Result;
 import com.motionecosystem.safety.domain.SafetyRules.SemanticType;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ProfessionalRole;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
 import com.motionecosystem.support.PostgresTestConfiguration;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort.CycleSnapshot;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort.MicrocycleSnapshot;
@@ -212,6 +213,34 @@ class SafetyV2IntegrationTest {
         assertThat(jdbc.queryForObject(
                 "SELECT count(*) FROM safety.restriction WHERE participant_explanation LIKE '%LEGACY_KNEE%'",
                 Integer.class)).isZero();
+    }
+
+    @Test
+    void unavailableRequiredLoadIsPersistedAsANonOverridableHardBlock() {
+        PlanRevisionSnapshot revision = revision();
+        LoadProfile complete = load(revision);
+        UUID prescription = UUID.randomUUID();
+        LoadProfile incomplete = new LoadProfile(
+                complete.snapshotId(), complete.revisionId(), complete.inputChecksum(),
+                complete.algorithmVersion(), complete.configurationVersion(), complete.catalogProfileVersion(),
+                complete.calculatedAt(), complete.observations(), complete.aggregates(),
+                List.of(new CompletenessIssue(prescription, UUID.randomUUID(), UUID.randomUUID(),
+                        revision.cycles().getFirst().microcycles().getFirst().sessions().getFirst().id(),
+                        "DYN_EXU", "STRENGTH", "EXACT_REPETITIONS_REQUIRED")));
+
+        var assessment = safety.assess(participant, revision, incomplete);
+        var factor = assessment.factors().stream()
+                .filter(item -> item.explanationCode().equals("LOAD_COMPLETENESS_REQUIRED"))
+                .findFirst().orElseThrow();
+
+        assertThat(assessment.recordedResult()).isEqualTo(Result.HARD_BLOCK);
+        assertThat(factor.evidenceGrade()).isEqualTo("UNAVAILABLE");
+        assertThat(factor.overridable()).isFalse();
+        assertThat(safety.findAssessment(assessment.id(), Instant.now()).orElseThrow().recordedResult())
+                .isEqualTo(Result.HARD_BLOCK);
+        denied(() -> safety.overrideFactor(
+                physio, participant, context(ProfessionalRole.PHYSIOTHERAPIST), assessment.id(), factor.id(),
+                new OverrideCommand("REVIEWED_CASE", "THIS_FACTOR", null, Instant.now().plus(1, ChronoUnit.HOURS))));
     }
 
     private RestrictionCommand participantCommand(SemanticType semantic, Validity validity) {

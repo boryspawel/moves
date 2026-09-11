@@ -16,7 +16,7 @@ import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.participant.api.ParticipantClientPort;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
 import com.motionecosystem.trainingexecution.api.ParticipantExecutionHistoryQueryPort;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort;
 import java.time.Clock;

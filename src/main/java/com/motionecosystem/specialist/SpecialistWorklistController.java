@@ -1,8 +1,8 @@
 package com.motionecosystem.specialist;
 
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ProfessionalRole;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.Purpose;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.Purpose;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.util.List;
 import java.util.UUID;

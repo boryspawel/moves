@@ -1,13 +1,19 @@
-package com.motionecosystem.specialist.api;
+package com.motionecosystem.identityaccess.api;
 
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Neutral authorization boundary for consumers that need a specialist's
+ * relationship and scoped professional capabilities.
+ */
 public interface SpecialistAuthorizationPort {
+
+    void requireActiveRelationship(UUID specialistAccountId, UUID participantId);
 
     AuthorizationDecision requireCapabilities(
             UUID actorAccountId,
-            UUID participantAccountId,
+            UUID participantId,
             ActingContext actingContext,
             Set<Capability> requiredCapabilities,
             Purpose purpose);
@@ -42,7 +48,7 @@ public interface SpecialistAuthorizationPort {
 
     record AuthorizationDecision(
             UUID actorAccountId,
-            UUID participantAccountId,
+            UUID participantId,
             ProfessionalRole actingRole,
             Purpose purpose,
             Set<Capability> grantedCapabilities) {

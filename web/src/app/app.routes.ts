@@ -26,7 +26,7 @@ export const routes: Routes = [
     canActivate: [authGuard, completedOnboardingGuard, roleGuard('CONTENT_ADMIN')],
     loadComponent: () => import('./features/exercise-review-detail.page').then(m => m.ExerciseReviewDetailPage)
   },
-  { path: 'plan', pathMatch: 'full', redirectTo: 'exercise-sets' },
+  { path: 'plan', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/plan.page').then(m => m.PlanPage) },
   { path: 'exercise-sets', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/exercise-sets/exercise-set-list.page').then(m => m.ExerciseSetListPage) },
   { path: 'exercise-sets/new', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/exercise-sets/exercise-set-editor.page').then(m => m.ExerciseSetEditorPage) },
   { path: 'exercise-sets/:exerciseSetId/versions/:versionId/edit', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/exercise-sets/exercise-set-editor.page').then(m => m.ExerciseSetEditorPage) },

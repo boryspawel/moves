@@ -20,6 +20,7 @@ import com.motionecosystem.loadanalysis.api.PlannedLoadCalculationPort.Aggregate
 import com.motionecosystem.loadanalysis.api.PlannedLoadCalculationPort.LoadCalculationVersion;
 import com.motionecosystem.loadanalysis.api.PlannedLoadCalculationPort.LoadProfile;
 import com.motionecosystem.loadanalysis.api.PlannedLoadCalculationPort.Observation;
+import com.motionecosystem.loadanalysis.api.PlannedLoadCalculationPort.CompletenessIssue;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort.PlanRevisionSnapshot;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort.PrescriptionSnapshot;
 
@@ -33,6 +34,7 @@ public final class LoadCalculator {
                                  LoadCalculationVersion version, UUID snapshotId,
                                  String checksum, Instant calculatedAt) {
         List<Observation> observations = new ArrayList<>();
+        List<CompletenessIssue> issues = new ArrayList<>();
         Map<Key, Range> aggregates = new LinkedHashMap<>();
         for (var cycle : plan.cycles()) {
             for (var micro : cycle.microcycles()) {
@@ -45,7 +47,10 @@ public final class LoadCalculator {
                                     || contribution.variantCondition() != null
                                     && !"STANDARD".equals(contribution.variantCondition())) continue;
                             Dose dose = dose(prescription, contribution.loadChannel().name());
-                            if (dose == null) continue;
+                            if (dose == null) {
+                                completenessIssue(prescription, contribution, session.id()).ifPresent(issues::add);
+                                continue;
+                            }
                             BigDecimal low = rounded(dose.value.multiply(contribution.coefficientLow(), MATH));
                             BigDecimal high = rounded(dose.value.multiply(contribution.coefficientHigh(), MATH));
                             String side = side(prescription.side(), contribution.sideRule());
@@ -85,8 +90,11 @@ public final class LoadCalculator {
                 .toList();
         String catalogVersion = catalog.values().stream().map(item -> "v" + item.profileSchemaVersion())
                 .distinct().sorted().collect(java.util.stream.Collectors.joining(","));
+        issues.sort(Comparator.comparing((CompletenessIssue item) -> item.sessionId().toString())
+                .thenComparing(item -> item.prescriptionId().toString())
+                .thenComparing(item -> item.contributionId().toString()));
         return new LoadProfile(snapshotId, plan.revisionId(), checksum, version.algorithmVersion(),
-                version.configurationVersion(), catalogVersion, calculatedAt, observations, result);
+                version.configurationVersion(), catalogVersion, calculatedAt, observations, result, issues);
     }
 
     private static void addScopes(Map<Key, Range> values, Observation item, String day, UUID revisionId) {
@@ -110,12 +118,15 @@ public final class LoadCalculator {
     private static Dose dose(PrescriptionSnapshot item, String channel) {
         return switch (item.doseType()) {
             case "DYNAMIC_RESISTANCE" -> "DYN_EXU".equals(channel)
+                    && item.sets() != null && item.repetitions() != null
                     ? new Dose(channel, "EXU", BigDecimal.valueOf((long) item.sets() * item.repetitions()),
                     "SETS_X_REPETITIONS") : null;
             case "ISOMETRIC" -> "ISO_SEC".equals(channel)
+                    && item.sets() != null && item.durationSeconds() != null
                     ? new Dose(channel, "s", BigDecimal.valueOf((long) item.sets() * item.durationSeconds()),
                     "SETS_X_DURATION_SECONDS") : null;
             case "IMPACT" -> "IMPACT_CONTACTS".equals(channel)
+                    && item.sets() != null && item.contacts() != null
                     ? new Dose(channel, "contacts", BigDecimal.valueOf((long) item.sets() * item.contacts()),
                     "SETS_X_CONTACTS") : null;
             case "ENDURANCE" -> "ENDURANCE_MIN_ZONE".equals(channel) && item.durationSeconds() != null
@@ -124,6 +135,24 @@ public final class LoadCalculator {
                     .divide(BigDecimal.valueOf(60), MATH), "DURATION_MINUTES_" + item.intensityZone()) : null;
             default -> null;
         };
+    }
+
+    private static java.util.Optional<CompletenessIssue> completenessIssue(
+            PrescriptionSnapshot item, ContributionSnapshot contribution, UUID sessionId) {
+        String type = item.canonicalDoseType();
+        String channel = contribution.loadChannel().name();
+        String code = switch (type == null ? "" : type) {
+            case "STRENGTH" -> "DYN_EXU".equals(channel) && (item.sets() == null || item.repetitions() == null)
+                    ? "EXACT_REPETITIONS_REQUIRED" : null;
+            case "ISOMETRIC" -> "ISO_SEC".equals(channel) && (item.sets() == null || item.durationSeconds() == null)
+                    ? "EXACT_HOLD_SECONDS_REQUIRED" : null;
+            case "AEROBIC" -> "ENDURANCE_MIN_ZONE".equals(channel)
+                    && (item.durationSeconds() == null || !"ZONE".equals(item.intensityType()) || item.intensityZone() == null)
+                    ? "EXACT_DURATION_AND_ZONE_REQUIRED" : null;
+            default -> null;
+        };
+        return code == null ? java.util.Optional.empty() : java.util.Optional.of(new CompletenessIssue(
+                item.id(), item.exerciseVersionId(), contribution.id(), sessionId, channel, type, code));
     }
 
     private static String side(String prescribed, SideRuleValue rule) {

@@ -21,6 +21,12 @@ import { mapValues } from '../runtime';
 export interface PrescriptionSnapshot {
   /**
    *
+   * @type {string}
+   * @memberof PrescriptionSnapshot
+   */
+  canonicalDoseType?: string;
+  /**
+   *
    * @type {number}
    * @memberof PrescriptionSnapshot
    */
@@ -90,6 +96,12 @@ export interface PrescriptionSnapshot {
    * @type {string}
    * @memberof PrescriptionSnapshot
    */
+  materializedSnapshot?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PrescriptionSnapshot
+   */
   notes?: string;
   /**
    *
@@ -132,6 +144,18 @@ export interface PrescriptionSnapshot {
    * @type {string}
    * @memberof PrescriptionSnapshot
    */
+  sourceExerciseSetItemId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PrescriptionSnapshot
+   */
+  sourceExerciseSetVersionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PrescriptionSnapshot
+   */
   substituteGroup?: string;
   /**
    *
@@ -160,6 +184,7 @@ export function PrescriptionSnapshotFromJSONTyped(
     return json;
   }
   return {
+    canonicalDoseType: json['canonicalDoseType'] == null ? undefined : json['canonicalDoseType'],
     contacts: json['contacts'] == null ? undefined : json['contacts'],
     distanceMeters: json['distanceMeters'] == null ? undefined : json['distanceMeters'],
     doseType: json['doseType'] == null ? undefined : json['doseType'],
@@ -171,6 +196,8 @@ export function PrescriptionSnapshotFromJSONTyped(
     intensityType: json['intensityType'] == null ? undefined : json['intensityType'],
     intensityValue: json['intensityValue'] == null ? undefined : json['intensityValue'],
     intensityZone: json['intensityZone'] == null ? undefined : json['intensityZone'],
+    materializedSnapshot:
+      json['materializedSnapshot'] == null ? undefined : json['materializedSnapshot'],
     notes: json['notes'] == null ? undefined : json['notes'],
     position: json['position'] == null ? undefined : json['position'],
     rangeOfMotion: json['rangeOfMotion'] == null ? undefined : json['rangeOfMotion'],
@@ -178,6 +205,10 @@ export function PrescriptionSnapshotFromJSONTyped(
     restSeconds: json['restSeconds'] == null ? undefined : json['restSeconds'],
     sets: json['sets'] == null ? undefined : json['sets'],
     side: json['side'] == null ? undefined : json['side'],
+    sourceExerciseSetItemId:
+      json['sourceExerciseSetItemId'] == null ? undefined : json['sourceExerciseSetItemId'],
+    sourceExerciseSetVersionId:
+      json['sourceExerciseSetVersionId'] == null ? undefined : json['sourceExerciseSetVersionId'],
     substituteGroup: json['substituteGroup'] == null ? undefined : json['substituteGroup'],
     tempo: json['tempo'] == null ? undefined : json['tempo'],
   };
@@ -196,6 +227,7 @@ export function PrescriptionSnapshotToJSONTyped(
   }
 
   return {
+    canonicalDoseType: value['canonicalDoseType'],
     contacts: value['contacts'],
     distanceMeters: value['distanceMeters'],
     doseType: value['doseType'],
@@ -207,6 +239,7 @@ export function PrescriptionSnapshotToJSONTyped(
     intensityType: value['intensityType'],
     intensityValue: value['intensityValue'],
     intensityZone: value['intensityZone'],
+    materializedSnapshot: value['materializedSnapshot'],
     notes: value['notes'],
     position: value['position'],
     rangeOfMotion: value['rangeOfMotion'],
@@ -214,6 +247,8 @@ export function PrescriptionSnapshotToJSONTyped(
     restSeconds: value['restSeconds'],
     sets: value['sets'],
     side: value['side'],
+    sourceExerciseSetItemId: value['sourceExerciseSetItemId'],
+    sourceExerciseSetVersionId: value['sourceExerciseSetVersionId'],
     substituteGroup: value['substituteGroup'],
     tempo: value['tempo'],
   };

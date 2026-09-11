@@ -4,9 +4,8 @@ import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.participantgoals.api.ParticipantGoalQueryPort;
-import com.motionecosystem.specialist.SpecialistRelationshipService;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.*;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.*;
 import java.math.BigDecimal;
 import java.time.*;
 import java.util.*;
@@ -26,7 +25,6 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort {
     private final GoalObservationIdempotencyRepository observationIdempotency;
     private final ParticipantGoalEventRepository events;
     private final CurrentAccountService accounts;
-    private final SpecialistRelationshipService relationships;
     private final SpecialistAuthorizationPort authorization;
     private final AuditRecorder audit;
     private final Clock clock;
@@ -35,25 +33,25 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort {
     @Autowired
     public ParticipantGoalService(ParticipantGoalRepository goals, GoalOutcomeRepository outcomes, GoalIdempotencyRepository idempotency,
             GoalObservationRepository observations, GoalObservationIdempotencyRepository observationIdempotency, ParticipantGoalEventRepository events,
-            CurrentAccountService accounts, SpecialistRelationshipService relationships, SpecialistAuthorizationPort authorization,
+            CurrentAccountService accounts, SpecialistAuthorizationPort authorization,
             AuditRecorder audit, Clock clock) {
         this.goals = goals; this.outcomes = outcomes; this.idempotency = idempotency; this.observations = observations;
-        this.observationIdempotency = observationIdempotency; this.events = events; this.accounts = accounts; this.relationships = relationships;
+        this.observationIdempotency = observationIdempotency; this.events = events; this.accounts = accounts;
         this.authorization = authorization; this.audit = audit; this.clock = clock;
     }
 
     /** Compatibility constructor for existing focused callers; observation operations require the full constructor. */
     ParticipantGoalService(ParticipantGoalRepository goals, GoalOutcomeRepository outcomes, GoalIdempotencyRepository idempotency,
-            CurrentAccountService accounts, SpecialistRelationshipService relationships, SpecialistAuthorizationPort authorization,
+            CurrentAccountService accounts, SpecialistAuthorizationPort authorization,
             AuditRecorder audit, Clock clock) {
-        this(goals, outcomes, idempotency, null, null, null, accounts, relationships, authorization, audit, clock);
+        this(goals, outcomes, idempotency, null, null, null, accounts, authorization, audit, clock);
     }
 
     ParticipantGoalService(ParticipantGoalRepository goals, GoalOutcomeRepository outcomes, GoalIdempotencyRepository idempotency,
             GoalObservationRepository observations, GoalObservationIdempotencyRepository observationIdempotency,
-            CurrentAccountService accounts, SpecialistRelationshipService relationships, SpecialistAuthorizationPort authorization,
+            CurrentAccountService accounts, SpecialistAuthorizationPort authorization,
             AuditRecorder audit, Clock clock) {
-        this(goals, outcomes, idempotency, observations, observationIdempotency, null, accounts, relationships, authorization, audit, clock);
+        this(goals, outcomes, idempotency, observations, observationIdempotency, null, accounts, authorization, audit, clock);
     }
 
     @Transactional
@@ -206,8 +204,6 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort {
         ParticipantGoal.Category effective = category == null ? null : category;
         if (effective == ParticipantGoal.Category.GENERAL_FITNESS) throw forbidden("GENERAL_FITNESS goals are not supported");
         if (effective != null && !matches(context.role(), effective)) throw forbidden("goal category does not match specialist acting context");
-        // Existing authorization performs capability, consent and purpose checks; relationship is also explicitly active.
-        relationships.requireActive(account.id(), participantId);
         ProfessionalRole role = context.role();
         authorization.requireCapabilities(account.id(), participantId, context,
                 Set.of(role == ProfessionalRole.TRAINER ? Capability.PLAN_PERFORMANCE : Capability.PLAN_FUNCTIONAL_RECOVERY),

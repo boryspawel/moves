@@ -33,6 +33,12 @@ export interface AddSessionCommand {
   availableTo?: Date;
   /**
    *
+   * @type {string}
+   * @memberof AddSessionCommand
+   */
+  exerciseSetVersionId?: string;
+  /**
+   *
    * @type {number}
    * @memberof AddSessionCommand
    */
@@ -84,6 +90,8 @@ export function AddSessionCommandFromJSONTyped(
   return {
     availableFrom: json['availableFrom'] == null ? undefined : new Date(json['availableFrom']),
     availableTo: json['availableTo'] == null ? undefined : new Date(json['availableTo']),
+    exerciseSetVersionId:
+      json['exerciseSetVersionId'] == null ? undefined : json['exerciseSetVersionId'],
     expectedDurationMinutes:
       json['expectedDurationMinutes'] == null ? undefined : json['expectedDurationMinutes'],
     expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
@@ -112,6 +120,7 @@ export function AddSessionCommandToJSONTyped(
         : value['availableFrom'].toISOString(),
     availableTo:
       value['availableTo'] == null ? value['availableTo'] : value['availableTo'].toISOString(),
+    exerciseSetVersionId: value['exerciseSetVersionId'],
     expectedDurationMinutes: value['expectedDurationMinutes'],
     expectedVersion: value['expectedVersion'],
     microcycleId: value['microcycleId'],

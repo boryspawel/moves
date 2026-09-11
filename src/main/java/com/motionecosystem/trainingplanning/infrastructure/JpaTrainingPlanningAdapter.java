@@ -42,7 +42,7 @@ public class JpaTrainingPlanningAdapter implements TrainingPlanningPersistence, 
     public List<StoredSession> findParticipantSessions(UUID participantAccountId) {
         List<PlannedSessionJpaEntity> sessions = entityManager.createQuery("""
                 SELECT session FROM PlannedSessionJpaEntity session
-                WHERE session.participantAccountId = :participantAccountId
+                WHERE session.participantId = :participantAccountId
                   AND session.status <> :draftStatus
                 ORDER BY session.assignedAt, session.id
                 """, PlannedSessionJpaEntity.class)
@@ -91,7 +91,7 @@ public class JpaTrainingPlanningAdapter implements TrainingPlanningPersistence, 
         return entityManager.createQuery("""
                 SELECT session, cycle.revisionId FROM PlannedSessionJpaEntity session,
                   MicrocycleJpaEntity microcycle, TrainingCycleJpaEntity cycle
-                WHERE session.participantAccountId=:participant AND session.microcycleId=microcycle.id
+                WHERE session.participantId=:participant AND session.microcycleId=microcycle.id
                   AND microcycle.cycleId=cycle.id AND session.availableTo IS NOT NULL AND session.availableTo<=:before
                 ORDER BY session.availableTo DESC, session.id DESC
                 """, Object[].class).setParameter("participant", participantAccountId).setParameter("before", before)
@@ -104,9 +104,9 @@ public class JpaTrainingPlanningAdapter implements TrainingPlanningPersistence, 
     @Override
     public List<UUID> participantsWithCompletedWindows(Instant before, int limit, int offset) {
         return entityManager.createQuery("""
-                SELECT DISTINCT session.participantAccountId FROM PlannedSessionJpaEntity session
+                SELECT DISTINCT session.participantId FROM PlannedSessionJpaEntity session
                 WHERE session.availableTo IS NOT NULL AND session.availableTo<=:before
-                ORDER BY session.participantAccountId
+                ORDER BY session.participantId
                 """, UUID.class).setParameter("before", before).setFirstResult(offset).setMaxResults(limit).getResultList();
     }
 

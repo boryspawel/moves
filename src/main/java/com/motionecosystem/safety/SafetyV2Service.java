@@ -12,9 +12,9 @@ import com.motionecosystem.safety.domain.SafetyRules.RestrictionFact;
 import com.motionecosystem.safety.domain.SafetyRules.SemanticType;
 import com.motionecosystem.safety.domain.SafetyRules.SourceType;
 import com.motionecosystem.safety.domain.SafetyRules.TargetFact;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.Capability;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.Capability;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort.PlanRevisionSnapshot;
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -207,7 +207,7 @@ public class SafetyV2Service implements SafetyAssessmentPort {
                 .flatMap(microcycle -> microcycle.sessions().stream())
                 .filter(session -> session.scheduledDate() != null)
                 .collect(Collectors.toMap(session -> session.id(), session -> session.scheduledDate()));
-        var evaluation = rules.evaluate(
+        var evaluated = rules.evaluate(
                 active.stream().map(SafetyV2Service::fact).toList(),
                 loadProfile.observations().stream().map(item -> new ObservationFact(
                         item.sessionId(),
@@ -222,6 +222,13 @@ public class SafetyV2Service implements SafetyAssessmentPort {
                         item.evidenceGrade())).toList(),
                 ancestors,
                 dates);
+        List<SafetyRules.Factor> factors = new java.util.ArrayList<>(evaluated.factors());
+        loadProfile.completenessIssues().forEach(issue -> factors.add(new SafetyRules.Factor(
+                SafetyRules.Result.HARD_BLOCK, "LOAD_COMPLETENESS", issue.prescriptionId().toString(),
+                issue.channel(), null, null, null, null, null,
+                "LOAD_COMPLETENESS_REQUIRED", "UNAVAILABLE", false)));
+        SafetyRules.Result evaluationResult = factors.stream().map(SafetyRules.Factor::result)
+                .max(Comparator.comparingInt(SafetyRules.Result::ordinal)).orElse(SafetyRules.Result.PASS);
         SafetyAssessmentEntity assessment = new SafetyAssessmentEntity();
         assessment.id = UUID.randomUUID();
         assessment.participantId = participantAccountId;
@@ -232,7 +239,7 @@ public class SafetyV2Service implements SafetyAssessmentPort {
                 loadProfile.algorithmVersion() + "/" + loadProfile.configurationVersion();
         assessment.rulesetCode = SafetyRules.RULESET_CODE;
         assessment.rulesetVersion = SafetyRules.RULESET_VERSION;
-        assessment.result = Result.valueOf(evaluation.result().name());
+        assessment.result = Result.valueOf(evaluationResult.name());
         assessment.restrictionSnapshot = active.stream()
                 .map(SafetyV2Service::restrictionSnapshot)
                 .sorted()
@@ -245,7 +252,7 @@ public class SafetyV2Service implements SafetyAssessmentPort {
                 "LOW_CONFIDENCE_MAPPING");
         assessment.loadSnapshot = loadProfile.toString();
         assessment.assessedAt = now;
-        evaluation.factors().forEach(factor -> assessment.factors.add(entity(assessment, factor)));
+        factors.forEach(factor -> assessment.factors.add(entity(assessment, factor)));
         assessments.save(assessment);
         audit.record("system:safety", "PLAN_SAFETY_ASSESSED", "PlanSafetyAssessment", assessment.id);
         return snapshot(assessment, now);
@@ -512,7 +519,7 @@ public class SafetyV2Service implements SafetyAssessmentPort {
     private static void requireAssessmentInput(
             UUID participant, PlanRevisionSnapshot revision, LoadProfile load) {
         if (participant == null || revision == null || load == null
-                || !participant.equals(revision.participantAccountId())
+                || !participant.equals(revision.participantId())
                 || !revision.revisionId().equals(load.revisionId())) {
             throw badRequest("participant, revision and matching saved load snapshot are required");
         }

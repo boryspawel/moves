@@ -16,53 +16,53 @@ import { mapValues } from '../runtime';
 /**
  *
  * @export
- * @interface AddGoalCommand
+ * @interface DeleteGoalCommand
  */
-export interface AddGoalCommand {
+export interface DeleteGoalCommand {
   /**
    *
    * @type {number}
-   * @memberof AddGoalCommand
+   * @memberof DeleteGoalCommand
    */
   expectedVersion?: number;
   /**
    *
    * @type {string}
-   * @memberof AddGoalCommand
+   * @memberof DeleteGoalCommand
    */
-  participantGoalId?: string;
+  goalId?: string;
 }
 
 /**
- * Check if a given object implements the AddGoalCommand interface.
+ * Check if a given object implements the DeleteGoalCommand interface.
  */
-export function instanceOfAddGoalCommand(value: object): value is AddGoalCommand {
+export function instanceOfDeleteGoalCommand(value: object): value is DeleteGoalCommand {
   return true;
 }
 
-export function AddGoalCommandFromJSON(json: any): AddGoalCommand {
-  return AddGoalCommandFromJSONTyped(json, false);
+export function DeleteGoalCommandFromJSON(json: any): DeleteGoalCommand {
+  return DeleteGoalCommandFromJSONTyped(json, false);
 }
 
-export function AddGoalCommandFromJSONTyped(
+export function DeleteGoalCommandFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
-): AddGoalCommand {
+): DeleteGoalCommand {
   if (json == null) {
     return json;
   }
   return {
     expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
-    participantGoalId: json['participantGoalId'] == null ? undefined : json['participantGoalId'],
+    goalId: json['goalId'] == null ? undefined : json['goalId'],
   };
 }
 
-export function AddGoalCommandToJSON(json: any): AddGoalCommand {
-  return AddGoalCommandToJSONTyped(json, false);
+export function DeleteGoalCommandToJSON(json: any): DeleteGoalCommand {
+  return DeleteGoalCommandToJSONTyped(json, false);
 }
 
-export function AddGoalCommandToJSONTyped(
-  value?: AddGoalCommand | null,
+export function DeleteGoalCommandToJSONTyped(
+  value?: DeleteGoalCommand | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
@@ -71,6 +71,6 @@ export function AddGoalCommandToJSONTyped(
 
   return {
     expectedVersion: value['expectedVersion'],
-    participantGoalId: value['participantGoalId'],
+    goalId: value['goalId'],
   };
 }

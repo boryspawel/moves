@@ -13,13 +13,13 @@ public interface PlanRevisionQueryPort {
 
     Optional<PlanRevisionSnapshot> findRevision(UUID revisionId);
 
-    Optional<PlanRevisionSnapshot> findActiveRevision(UUID participantAccountId);
+    Optional<PlanRevisionSnapshot> findActiveRevision(UUID participantId);
 
     /** Bounded owner-side history lookup for consumers composing participant timelines. */
     List<PlanRevisionSnapshot> findRevisions(Collection<UUID> revisionIds);
 
     record PlanRevisionSnapshot(
-            UUID revisionId, UUID planId, UUID participantAccountId, int revisionNumber,
+            UUID revisionId, UUID planId, UUID participantId, int revisionNumber,
             UUID basedOnRevisionId, long revisionVersion, String status,
             UUID authorAccountId, String authorCapability, Instant createdAt,
             String migrationOrigin, String assessmentStatus,
@@ -32,7 +32,8 @@ public interface PlanRevisionQueryPort {
         }
     }
 
-    record GoalSnapshot(UUID id, String perspective, String category, String title,
+    record GoalSnapshot(UUID id, UUID sourceParticipantGoalId, Long sourceParticipantGoalVersion,
+                        Instant snapshottedAt, String perspective, String category, String title,
                         int priority, String status, LocalDate targetDate,
                         List<GoalOutcomeSnapshot> outcomes) {
         public GoalSnapshot { outcomes = List.copyOf(outcomes); }
@@ -55,9 +56,10 @@ public interface PlanRevisionQueryPort {
         public MicrocycleSnapshot { sessions = List.copyOf(sessions); }
     }
 
-    record SessionSnapshot(UUID id, String title, LocalDate scheduledDate,
+    record SessionSnapshot(UUID id, UUID sourceExerciseSetId, UUID sourceExerciseSetVersionId,
+                           String title, LocalDate scheduledDate,
                            Instant availableFrom, Instant availableTo,
-                           int expectedDurationMinutes, String status,
+                           int expectedDurationMinutes, String status, String sourceSnapshot,
                            List<PrescriptionSnapshot> prescriptions, List<SessionVariantSnapshot> variants) {
         public SessionSnapshot { prescriptions = List.copyOf(prescriptions); variants = List.copyOf(variants); }
         /** Compatibility constructor for consumers which predate approved session variants. */
@@ -65,8 +67,14 @@ public interface PlanRevisionQueryPort {
                                Instant availableFrom, Instant availableTo,
                                int expectedDurationMinutes, String status,
                                List<PrescriptionSnapshot> prescriptions) {
-            this(id, title, scheduledDate, availableFrom, availableTo, expectedDurationMinutes,
-                    status, prescriptions, List.of());
+            this(id, null, null, title, scheduledDate, availableFrom, availableTo, expectedDurationMinutes, status, null,
+                    prescriptions, List.of());
+        }
+        public SessionSnapshot(UUID id, String title, LocalDate scheduledDate, Instant availableFrom,
+                               Instant availableTo, int expectedDurationMinutes, String status,
+                               List<PrescriptionSnapshot> prescriptions, List<SessionVariantSnapshot> variants) {
+            this(id, null, null, title, scheduledDate, availableFrom, availableTo, expectedDurationMinutes, status, null,
+                    prescriptions, variants);
         }
     }
 
@@ -81,13 +89,26 @@ public interface PlanRevisionQueryPort {
     }
 
     record PrescriptionSnapshot(
-            UUID id, UUID exerciseVersionId, int position, String side, String doseType,
+            UUID id, UUID sourceExerciseSetItemId, UUID sourceExerciseSetVersionId,
+            String materializedSnapshot, String canonicalDoseType, UUID exerciseVersionId, int position, String side, String doseType,
             Integer sets, Integer repetitions, Integer durationSeconds,
             BigDecimal distanceMeters, Integer contacts,
             BigDecimal externalLoadValue, String externalLoadUnit,
             String intensityType, BigDecimal intensityValue, String intensityZone,
             String tempo, String rangeOfMotion, Integer restSeconds,
             String substituteGroup, String notes) {
+        public PrescriptionSnapshot(UUID id, UUID exerciseVersionId, int position, String side, String doseType,
+                                    Integer sets, Integer repetitions, Integer durationSeconds,
+                                    BigDecimal distanceMeters, Integer contacts,
+                                    BigDecimal externalLoadValue, String externalLoadUnit,
+                                    String intensityType, BigDecimal intensityValue, String intensityZone,
+                                    String tempo, String rangeOfMotion, Integer restSeconds,
+                                    String substituteGroup, String notes) {
+            this(id, null, null, null, null, exerciseVersionId, position, side, doseType, sets, repetitions,
+                    durationSeconds, distanceMeters, contacts, externalLoadValue, externalLoadUnit,
+                    intensityType, intensityValue, intensityZone, tempo, rangeOfMotion, restSeconds,
+                    substituteGroup, notes);
+        }
     }
 
     record LoadBudgetSnapshot(UUID id, String channel, BigDecimal low, BigDecimal high,

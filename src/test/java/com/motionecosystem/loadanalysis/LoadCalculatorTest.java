@@ -50,6 +50,7 @@ class LoadCalculatorTest {
         });
         assertThat(profile.aggregates()).allSatisfy(item ->
                 assertThat(item.channel()).isNotEqualTo("SESSION_S_RPE"));
+        assertThat(profile.completenessIssues()).isEmpty();
     }
 
     @Test
@@ -65,6 +66,34 @@ class LoadCalculatorTest {
         assertThat(first.observations().getFirst().low()).isEqualByComparingTo("0.333333");
         assertThat(first.observations().getFirst().high()).isEqualByComparingTo("0.666667");
         assertThat(first.algorithmVersion()).isNotEqualTo(second.algorithmVersion());
+    }
+
+    @Test
+    void reportsExactDoseCompletenessInsteadOfInventingStrengthRangeLoad() {
+        var rangeOnly = new PrescriptionSnapshot(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+                "{\"dose\":{\"type\":\"STRENGTH\",\"repMin\":6,\"repMax\":10}}", "STRENGTH",
+                exerciseVersion, 1, "BILATERAL", "LEGACY_UNTYPED", 3, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null);
+        var profile = new LoadCalculator().calculate(plan(List.of(rangeOnly)), Map.of(exerciseVersion,
+                exercise(List.of(contribution("DYN_EXU", "ALLOCATION", "AS_PRESCRIBED", ".25", ".50")))),
+                Map.of(), new LoadCalculationVersion("v1", "default"), UUID.randomUUID(), "checksum", Instant.EPOCH);
+        assertThat(profile.observations()).isEmpty();
+        assertThat(profile.completenessIssues()).singleElement().satisfies(issue -> {
+            assertThat(issue.code()).isEqualTo("EXACT_REPETITIONS_REQUIRED");
+            assertThat(issue.canonicalDoseType()).isEqualTo("STRENGTH");
+        });
+    }
+
+    @Test
+    void doesNotReportUnrelatedChannelForCanonicalMobilityDose() {
+        var mobility = new PrescriptionSnapshot(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+                "{\"dose\":{\"type\":\"MOBILITY\"}}", "MOBILITY", exerciseVersion, 1,
+                "BILATERAL", "LEGACY_UNTYPED", null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null);
+        var profile = new LoadCalculator().calculate(plan(List.of(mobility)), Map.of(exerciseVersion,
+                exercise(List.of(contribution("DYN_EXU", "ALLOCATION", "AS_PRESCRIBED", ".25", ".50")))),
+                Map.of(), new LoadCalculationVersion("v1", "default"), UUID.randomUUID(), "checksum", Instant.EPOCH);
+        assertThat(profile.completenessIssues()).isEmpty();
     }
 
     @Test
@@ -95,9 +124,15 @@ class LoadCalculatorTest {
 
     private PrescriptionSnapshot prescription(int position, String side, String type,
                                               Integer sets, Integer reps, Integer duration, Integer contacts) {
-        return new PrescriptionSnapshot(UUID.randomUUID(), exerciseVersion, position, side, type,
-                sets, reps, duration, null, contacts, null, null, null, null, null,
-                null, null, null, null, null);
+        String canonicalDoseType = switch (type) {
+            case "DYNAMIC_RESISTANCE" -> "STRENGTH";
+            case "ISOMETRIC" -> "ISOMETRIC";
+            default -> null;
+        };
+        return new PrescriptionSnapshot(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+                "{\"dose\":{\"type\":\"" + canonicalDoseType + "\"}}", canonicalDoseType,
+                exerciseVersion, position, side, type, sets, reps, duration, null, contacts,
+                null, null, null, null, null, null, null, null, null, null);
     }
 
     private PublishedExerciseVersionSnapshot exercise(List<ContributionSnapshot> contributions) {

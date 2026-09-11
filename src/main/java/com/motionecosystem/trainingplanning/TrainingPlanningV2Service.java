@@ -18,12 +18,15 @@ import com.motionecosystem.exercisecatalog.api.ExerciseCatalogQueryPort;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.Capability;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ProfessionalRole;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.Purpose;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.Capability;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.Purpose;
 import com.motionecosystem.participant.api.ParticipantClientPort;
+import com.motionecosystem.participantgoals.api.ParticipantGoalQueryPort;
+import com.motionecosystem.exercisesets.api.ExerciseSetVersionQueryPort;
+import tools.jackson.databind.ObjectMapper;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.BudgetAction;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.DoseType;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.GoalPerspective;
@@ -55,6 +58,9 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
     private final SpecialistAuthorizationPort authorization;
     private final PlanCollaborationPersistence collaborations;
     private final ExerciseCatalogQueryPort catalog;
+    private final ParticipantGoalQueryPort participantGoals;
+    private final ExerciseSetVersionQueryPort exerciseSetVersions;
+    private final ObjectMapper json;
     private final TrainingPlanningV2Persistence persistence;
     private final PlanRevisionQueryPort revisions;
     private final AuditRecorder audit;
@@ -69,22 +75,15 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
         UUID participantId = command.participantId();
         PlanMode mode = command.mode();
         if (actor.profileType() == ProfileType.PARTICIPANT) {
-            UUID linkedParticipantId = participantIdFor(actor);
-            participantId = participantId == null ? linkedParticipantId : participantId;
-            if (!linkedParticipantId.equals(participantId)) {
-                throw forbidden("participant can only create their own plan");
-            }
-            mode = mode == null ? PlanMode.SELF_DIRECTED : mode;
-            if (mode != PlanMode.SELF_DIRECTED) {
-                throw forbidden("participant can only create a self-directed plan");
-            }
+            throw new ResponseStatusException(HttpStatus.GONE,
+                    "new self-directed planning is historical-only; specialist authoring is required");
         } else if (actor.profileType() == ProfileType.SPECIALIST) {
             if (participantId == null) {
                 throw badRequest("participantId is required");
             }
             mode = mode == null ? PlanMode.SPECIALIST : mode;
             if (mode == PlanMode.SELF_DIRECTED) {
-                throw badRequest("specialist-authored plan must be specialist or collaborative");
+                throw badRequest("new self-directed planning is historical-only; specialist authoring is required");
             }
             requireSpecialistPlanning(actor.id(), participantId, command.actingContext());
         } else {
@@ -110,43 +109,28 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
     @Transactional
     public EditorView addGoal(String subject, UUID revisionId, AddGoalCommand command) {
         var access = requireEditable(subject, revisionId, command == null ? null : command.expectedVersion());
-        if (command.perspective() == null) {
-            throw badRequest("goal perspective is required");
+        if (command.participantGoalId() == null) throw badRequest("participantGoalId is required");
+        var source = participantGoals.findById(command.participantGoalId())
+                .orElseThrow(() -> badRequest("participant goal not found"));
+        if (!access.participantId().equals(source.participantId())) {
+            throw forbidden("participant goal belongs to another participant");
         }
-        if (access.actingRole() == ProfessionalRole.TRAINER
-                && command.perspective() != GoalPerspective.PERFORMANCE) {
-            throw forbidden("trainer context can create only performance goals");
-        }
-        if (access.actingRole() == ProfessionalRole.PHYSIOTHERAPIST
-                && command.perspective() != GoalPerspective.FUNCTIONAL_RECOVERY) {
-            throw forbidden("physiotherapist context can create only functional recovery goals");
-        }
-        List<OutcomeCommand> requested = command.outcomes() == null ? List.of() : List.copyOf(command.outcomes());
-        if (requested.stream().anyMatch(Objects::isNull)) {
-            throw badRequest("goal outcome is required");
-        }
-        Set<String> metricCodes = requested.stream().map(item -> text(item.metricCode(), 80, "metric code"))
-                .collect(java.util.stream.Collectors.toSet());
-        if (metricCodes.size() != requested.size()) {
-            throw badRequest("goal outcome metric codes must be unique");
+        if (!"ACTIVE".equals(source.status())) throw badRequest("participant goal must be active");
+        GoalPerspective perspective = goalPerspective(source.category());
+        if (access.actingRole() == ProfessionalRole.TRAINER && perspective != GoalPerspective.PERFORMANCE
+                || access.actingRole() == ProfessionalRole.PHYSIOTHERAPIST && perspective != GoalPerspective.FUNCTIONAL_RECOVERY) {
+            throw forbidden("participant goal category is incompatible with the specialist planning context");
         }
         Instant now = clock.instant();
         UUID goalId = UUID.randomUUID();
-        var goal = new TrainingPlanningModel.Goal(goalId, revisionId, access.participantAccountId(),
-                command.perspective(), text(command.category(), 80, "goal category"),
-                text(command.title(), 160, "goal title"), optional(command.description(), 1000, "goal description"),
-                range(command.priority(), 1, 100, "goal priority"),
-                command.status() == null ? GoalStatus.ACTIVE : command.status(), command.targetDate(),
-                access.actor().id(), now);
-        List<TrainingPlanningModel.GoalOutcome> outcomes = requested.stream().map(item -> {
-            if (item.target() == null || item.unit() == null || item.measurementMethod() == null) {
-                throw badRequest("outcome target, unit and measurement method are required");
-            }
+        var goal = new TrainingPlanningModel.Goal(goalId, revisionId, access.participantId(),
+                perspective, source.category(), source.title(), source.description(), source.priority(),
+                GoalStatus.valueOf(source.status()), source.targetDate(), access.actor().id(), now,
+                source.id(), source.version(), now);
+        List<TrainingPlanningModel.GoalOutcome> outcomes = source.outcomes().stream().map(item -> {
             return new TrainingPlanningModel.GoalOutcome(UUID.randomUUID(), goalId,
-                    text(item.metricCode(), 80, "metric code"), item.baseline(), item.target(),
-                    text(item.unit(), 40, "outcome unit"),
-                    text(item.measurementMethod(), 500, "measurement method"),
-                    optional(item.evidenceSource(), 500, "evidence source"));
+                    item.metricCode(), item.baseline(), item.targetValue(), item.unit(),
+                    "participant-goal:" + item.metricCode(), null);
         }).toList();
         mutate(() -> persistence.addGoal(revisionId, command.expectedVersion(), goal, outcomes, now));
         return editorView(access.planId(), revisionId);
@@ -199,32 +183,19 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
             requireContained(command.scheduledDate(), command.scheduledDate(),
                     parent.startDate(), parent.endDate(), "session");
         }
-        var session = new TrainingPlanningModel.Session(UUID.randomUUID(), command.microcycleId(),
-                access.participantAccountId(), text(command.title(), 160, "session title"), command.scheduledDate(),
-                command.availableFrom(), command.availableTo(), command.expectedDurationMinutes(), clock.instant());
-        mutate(() -> persistence.addSession(revisionId, command.expectedVersion(), session, clock.instant()));
-        return editorView(access.planId(), revisionId);
-    }
-
-    @Transactional
-    public EditorView addPrescription(String subject, UUID revisionId, AddPrescriptionCommand command) {
-        var access = requireEditable(subject, revisionId, command == null ? null : command.expectedVersion());
-        if (command.exerciseVersionId() == null || command.side() == null || command.doseType() == null) {
-            throw badRequest("exercise version, side and dose type are required");
-        }
-        positive(command.position(), "prescription position");
-        validateDose(command);
-        catalog.findPublishedVersion(command.exerciseVersionId())
-                .orElseThrow(() -> badRequest("prescription requires a published exercise version"));
-        var prescription = new TrainingPlanningModel.Prescription(UUID.randomUUID(), command.sessionId(),
-                command.exerciseVersionId(), command.position(), command.side(), command.doseType(),
-                command.sets(), command.repetitions(), command.durationSeconds(), command.distanceMeters(),
-                command.contacts(), command.externalLoadValue(), optional(command.externalLoadUnit(), 24, "load unit"),
-                command.intensityType(), command.intensityValue(), optional(command.intensityZone(), 40, "intensity zone"),
-                optional(command.tempo(), 40, "tempo"), optional(command.rangeOfMotion(), 40, "range of motion"),
-                command.restSeconds(), optional(command.substituteGroup(), 80, "substitute group"),
-                optional(command.notes(), 500, "prescription notes"));
-        mutate(() -> persistence.addPrescription(revisionId, command.expectedVersion(), prescription, clock.instant()));
+        if (command.exerciseSetVersionId() == null) throw badRequest("exerciseSetVersionId is required");
+        var source = exerciseSetVersions.findById(command.exerciseSetVersionId())
+                .orElseThrow(() -> badRequest("exercise set version not found"));
+        if (!"PUBLISHED".equals(source.status())) throw badRequest("exercise set version must be published");
+        if (!access.actor().id().equals(source.ownerAccountId())) throw forbidden("exercise set belongs to another specialist");
+        UUID sessionId = UUID.randomUUID();
+        var session = new TrainingPlanningModel.Session(sessionId, command.microcycleId(),
+                access.participantId(), text(command.title(), 160, "session title"), command.scheduledDate(),
+                command.availableFrom(), command.availableTo(), command.expectedDurationMinutes(), clock.instant(),
+                source.exerciseSetId(), source.exerciseSetVersionId(), sourceSnapshot(source));
+        List<TrainingPlanningModel.Prescription> prescriptions = source.items().stream()
+                .map(item -> materialize(sessionId, source.exerciseSetVersionId(), item)).toList();
+        mutate(() -> persistence.addSession(revisionId, command.expectedVersion(), session, prescriptions, clock.instant()));
         return editorView(access.planId(), revisionId);
     }
 
@@ -260,8 +231,7 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
         UUID variantId = UUID.randomUUID();
         var variant = new TrainingPlanningModel.SessionVariant(variantId, command.sessionId(), command.type(), command.expectedDurationMinutes());
         var items = command.items().stream().map(item -> new TrainingPlanningModel.SessionVariantItem(
-                UUID.randomUUID(), variantId, item.basePrescriptionId(), item.position(), item.overrideSets(),
-                item.overrideRepetitions(), item.overrideDurationSeconds(), item.overrideContacts())).toList();
+                UUID.randomUUID(), variantId, item.basePrescriptionId(), item.position(), null, null, null, null)).toList();
         mutate(() -> persistence.defineSessionVariant(revisionId, command.expectedVersion(), variant, items, clock.instant()));
         return editorView(access.planId(), revisionId);
     }
@@ -273,7 +243,7 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
             if (access.actingRole() != ProfessionalRole.TRAINER) {
                 throw forbidden("only trainer context can set a performance load budget");
             }
-            authorization.requireCapabilities(access.actor().id(), access.participantAccountId(),
+            authorization.requireCapabilities(access.actor().id(), access.participantId(),
                     new ActingContext(access.actingRole()), Set.of(Capability.SET_PERFORMANCE_BUDGET),
                     Purpose.PERFORMANCE_PLANNING);
         }
@@ -285,6 +255,22 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
                 text(command.channel(), 40, "load channel"), command.low(), command.high(),
                 text(command.unit(), 40, "load budget unit"), command.action(), access.actor().id(), clock.instant());
         mutate(() -> persistence.addLoadBudget(revisionId, command.expectedVersion(), budget, clock.instant()));
+        return editorView(access.planId(), revisionId);
+    }
+
+    @Transactional
+    public EditorView deleteGoal(String subject, UUID revisionId, DeleteGoalCommand command) {
+        var access = requireEditable(subject, revisionId, command == null ? null : command.expectedVersion());
+        if (command.goalId() == null) throw badRequest("goalId is required");
+        mutate(() -> persistence.deleteGoal(revisionId, command.expectedVersion(), command.goalId(), clock.instant()));
+        return editorView(access.planId(), revisionId);
+    }
+
+    @Transactional
+    public EditorView deleteSession(String subject, UUID revisionId, DeleteSessionCommand command) {
+        var access = requireEditable(subject, revisionId, command == null ? null : command.expectedVersion());
+        if (command.sessionId() == null) throw badRequest("sessionId is required");
+        mutate(() -> persistence.deleteSession(revisionId, command.expectedVersion(), command.sessionId(), clock.instant()));
         return editorView(access.planId(), revisionId);
     }
 
@@ -358,6 +344,17 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
     private List<String> structuralViolations(PlanRevisionSnapshot snapshot) {
         java.util.ArrayList<String> violations = new java.util.ArrayList<>();
         if (snapshot.goals().isEmpty()) violations.add("GOAL_REQUIRED");
+        for (var goal : snapshot.goals()) {
+            if (goal.sourceParticipantGoalId() == null) {
+                violations.add("LEGACY_GOAL_SOURCE_REQUIRED:" + goal.id());
+                continue;
+            }
+            var source = participantGoals.findById(goal.sourceParticipantGoalId()).orElse(null);
+            if (source == null || !source.participantId().equals(snapshot.participantId())
+                    || !"ACTIVE".equals(source.status())) {
+                violations.add("PARTICIPANT_GOAL_REVALIDATION_REQUIRED:" + goal.id());
+            }
+        }
         if (snapshot.cycles().isEmpty()) violations.add("CYCLE_REQUIRED");
         Set<UUID> versions = new java.util.HashSet<>();
         for (var cycle : snapshot.cycles()) {
@@ -365,10 +362,25 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
             for (var micro : cycle.microcycles()) {
                 if (micro.sessions().isEmpty()) violations.add("SESSION_REQUIRED:" + micro.id());
                 for (var session : micro.sessions()) {
+                    if (session.sourceExerciseSetVersionId() == null) {
+                        violations.add("LEGACY_EXERCISE_SET_SOURCE_REQUIRED:" + session.id());
+                    } else {
+                        var source = exerciseSetVersions.findById(session.sourceExerciseSetVersionId()).orElse(null);
+                        if (source == null || !"PUBLISHED".equals(source.status())
+                                || !source.exerciseSetId().equals(session.sourceExerciseSetId())
+                                || !matchesMaterialization(session, source)) {
+                            violations.add("EXERCISE_SET_VERSION_REVALIDATION_REQUIRED:" + session.id());
+                        }
+                    }
+                    if (session.sourceSnapshot() == null) violations.add("SESSION_SOURCE_SNAPSHOT_REQUIRED:" + session.id());
                     if (session.prescriptions().isEmpty()) violations.add("PRESCRIPTION_REQUIRED:" + session.id());
                     int position = 1;
                     for (var prescription : session.prescriptions()) {
                         if (prescription.position() != position++) violations.add("PRESCRIPTION_ORDER:" + session.id());
+                        if (prescription.materializedSnapshot() == null || prescription.sourceExerciseSetVersionId() == null
+                                || !session.sourceExerciseSetVersionId().equals(prescription.sourceExerciseSetVersionId())) {
+                            violations.add("MATERIALIZED_PRESCRIPTION_REQUIRED:" + prescription.id());
+                        }
                         versions.add(prescription.exerciseVersionId());
                     }
                 }
@@ -402,12 +414,16 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
     }
 
     private void requireOwnerForEdit(Access access) {
+        if ("SELF_DIRECTED".equals(access.mode())) {
+            throw new ResponseStatusException(HttpStatus.GONE,
+                    "self-directed plans are historical-only and cannot be authored or revised");
+        }
         if (!access.ownerAccountId().equals(access.actor().id())
                 && !access.collaborationScopes().contains("EDIT_DRAFT")) {
             throw forbidden("plan edit requires ownership or EDIT_DRAFT collaboration scope");
         }
-        if (access.actor().profileType() == ProfileType.PARTICIPANT && !"SELF_DIRECTED".equals(access.mode())) {
-            throw forbidden("participant can only edit a self-directed plan");
+        if (access.actor().profileType() == ProfileType.PARTICIPANT) {
+            throw forbidden("participants cannot author training plans");
         }
     }
 
@@ -415,9 +431,9 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
         CurrentAccount actor = accounts.requireActive(subject);
         var access = persistence.findRevisionAccess(revisionId)
                 .orElseThrow(() -> notFound("plan revision not found"));
-        var resource = authorizeResource(actor, access.planId(), access.participantAccountId(),
+        var resource = authorizeResource(actor, access.planId(), access.participantId(),
                 access.ownerAccountId(), access.authorCapability());
-        return new Access(actor, access.planId(), access.participantAccountId(), access.ownerAccountId(),
+        return new Access(actor, access.planId(), access.participantId(), access.ownerAccountId(),
                 access.mode(), access.status(), access.revisionNumber(), access.version(),
                 resource.role(), resource.scopes());
     }
@@ -425,9 +441,9 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
     private Access requirePlanView(String subject, UUID planId) {
         CurrentAccount actor = accounts.requireActive(subject);
         var access = persistence.findPlanAccess(planId).orElseThrow(() -> notFound("training plan not found"));
-        var resource = authorizeResource(actor, access.planId(), access.participantAccountId(),
+        var resource = authorizeResource(actor, access.planId(), access.participantId(),
                 access.ownerAccountId(), access.ownerCapability());
-        return new Access(actor, access.planId(), access.participantAccountId(), access.ownerAccountId(),
+        return new Access(actor, access.planId(), access.participantId(), access.ownerAccountId(),
                 access.mode(), access.status(), 0, 0, resource.role(), resource.scopes());
     }
 
@@ -460,7 +476,7 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
 
     private EditorView editorView(UUID planId, UUID revisionId) {
         var plan = persistence.findPlanAccess(planId).orElseThrow();
-        return new EditorView(plan.planId(), plan.participantAccountId(), plan.name(), plan.purpose(),
+        return new EditorView(plan.planId(), plan.participantId(), plan.name(), plan.purpose(),
                 plan.ownerAccountId(), plan.mode(), plan.status(), plan.currentRevisionId(),
                 requireSnapshot(revisionId));
     }
@@ -481,66 +497,83 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
                 .orElseThrow(() -> forbidden("an active participant access link is required"));
     }
 
-    private static void validateDose(AddPrescriptionCommand command) {
-        positiveNullable(command.sets(), "sets");
-        positiveNullable(command.repetitions(), "repetitions");
-        positiveNullable(command.durationSeconds(), "duration");
-        positiveDecimal(command.distanceMeters(), "distance");
-        positiveNullable(command.contacts(), "contacts");
-        nonNegative(command.externalLoadValue(), "external load");
-        if ((command.externalLoadValue() == null) != (command.externalLoadUnit() == null
-                || command.externalLoadUnit().isBlank())) {
-            throw badRequest("external load value and unit must be provided together");
-        }
-        if (command.restSeconds() != null && command.restSeconds() < 0) {
-            throw badRequest("rest must not be negative");
-        }
-        switch (command.doseType()) {
-            case DYNAMIC_RESISTANCE -> requireOnly(command.sets() != null && command.repetitions() != null
-                    && command.durationSeconds() == null && command.distanceMeters() == null
-                    && command.contacts() == null, "dynamic resistance requires sets and repetitions");
-            case ISOMETRIC -> requireOnly(command.sets() != null && command.durationSeconds() != null
-                    && command.repetitions() == null && command.distanceMeters() == null
-                    && command.contacts() == null, "isometric dose requires sets and duration");
-            case IMPACT -> requireOnly(command.sets() != null && command.contacts() != null
-                    && command.repetitions() == null && command.durationSeconds() == null
-                    && command.distanceMeters() == null, "impact dose requires sets and contacts");
-            case ENDURANCE -> requireOnly(command.sets() == null && command.repetitions() == null
-                    && command.contacts() == null && (command.durationSeconds() != null
-                    ^ command.distanceMeters() != null), "endurance requires duration or distance");
-            case MOBILITY_CONTROL -> requireOnly(command.contacts() == null && command.distanceMeters() == null
-                    && (command.repetitions() != null ^ command.durationSeconds() != null),
-                    "mobility/control requires repetitions or duration");
-        }
-        if (command.intensityType() == null) {
-            if (command.intensityValue() != null || command.intensityZone() != null) {
-                throw badRequest("intensity type is required for an intensity target");
-            }
-        } else if (command.intensityType() == IntensityType.ZONE) {
-            if (command.intensityValue() != null || command.intensityZone() == null
-                    || command.intensityZone().isBlank()) throw badRequest("zone intensity requires a zone");
-        } else {
-            if (command.intensityValue() == null || command.intensityZone() != null) {
-                throw badRequest("numeric intensity requires a value");
-            }
-            BigDecimal value = command.intensityValue();
-            if (value.signum() < 0 || command.intensityType() == IntensityType.RPE
-                    && value.compareTo(BigDecimal.TEN) > 0
-                    || command.intensityType() == IntensityType.PERCENT_1RM
-                    && value.compareTo(BigDecimal.valueOf(100)) > 0) {
-                throw badRequest("intensity value is outside range");
-            }
-        }
-    }
-
-    private static String checksum(PlanRevisionSnapshot snapshot) {
+    static String checksum(PlanRevisionSnapshot snapshot) {
         try {
+            String content = snapshot.revisionId() + "|" + snapshot.planId() + "|"
+                    + snapshot.participantId() + "|" + snapshot.phaseIntent() + "|"
+                    + snapshot.validFrom() + "|" + snapshot.validTo() + "|" + snapshot.goals()
+                    + "|" + snapshot.cycles() + "|" + snapshot.loadBudgets();
             byte[] digest = MessageDigest.getInstance("SHA-256")
-                    .digest(snapshot.toString().getBytes(StandardCharsets.UTF_8));
+                    .digest(content.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(digest);
         } catch (NoSuchAlgorithmException impossible) {
             throw new IllegalStateException(impossible);
         }
+    }
+
+    private TrainingPlanningModel.Prescription materialize(UUID sessionId, UUID setVersionId,
+                                                            ExerciseSetVersionQueryPort.ItemSnapshot item) {
+        ExerciseSetVersionQueryPort.DoseSnapshot dose = item.dose();
+        Integer sets = null, repetitions = null, duration = null, contacts = null, rest = null;
+        BigDecimal distance = null, load = null, intensityValue = null;
+        String loadUnit = null, intensityZone = null, tempo = null, range = null;
+        PrescriptionSide side = PrescriptionSide.NOT_APPLICABLE;
+        DoseType type;
+        if (dose instanceof ExerciseSetVersionQueryPort.StrengthDoseSnapshot value) {
+            type = value.reps() == null ? null : DoseType.DYNAMIC_RESISTANCE; sets = value.sets(); repetitions = value.reps();
+            rest = value.restSeconds(); tempo = value.tempo(); load = value.loadValue(); loadUnit = value.loadUnit();
+            intensityValue = value.rpe(); side = side(value.side());
+        } else if (dose instanceof ExerciseSetVersionQueryPort.IsometricDoseSnapshot value) {
+            type = DoseType.ISOMETRIC; sets = value.sets(); duration = value.holdSeconds(); rest = value.restSeconds(); side = side(value.side());
+        } else if (dose instanceof ExerciseSetVersionQueryPort.MobilityDoseSnapshot value) {
+            type = DoseType.MOBILITY_CONTROL; repetitions = value.reps(); duration = value.durationSeconds(); tempo = value.tempo(); range = value.rangeTarget(); side = side(value.side());
+        } else if (dose instanceof ExerciseSetVersionQueryPort.AerobicDoseSnapshot value) {
+            type = DoseType.ENDURANCE; duration = value.durationSeconds(); distance = value.distanceMeters() == null ? null : BigDecimal.valueOf(value.distanceMeters()); intensityZone = value.zone(); intensityValue = value.rpe();
+        } else if (dose instanceof ExerciseSetVersionQueryPort.BreathingDoseSnapshot value) {
+            type = value.durationSeconds() == null ? null : DoseType.ENDURANCE; duration = value.durationSeconds();
+        } else if (dose instanceof ExerciseSetVersionQueryPort.StretchDoseSnapshot value) {
+            type = null; side = side(value.side());
+        } else {
+            throw badRequest("unsupported exercise set dose");
+        }
+        String snapshot;
+        try { snapshot = json.writeValueAsString(item); }
+        catch (Exception failure) { throw new IllegalStateException("cannot materialize exercise set item", failure); }
+        return new TrainingPlanningModel.Prescription(UUID.randomUUID(), sessionId, item.exerciseVersionId(),
+                item.position(), side, type == null ? DoseType.DYNAMIC_RESISTANCE : type, sets, repetitions, duration, distance, contacts, load, loadUnit,
+                intensityZone == null && intensityValue == null ? null : intensityZone == null ? IntensityType.RPE : IntensityType.ZONE,
+                intensityValue, intensityZone, tempo, range, rest, null, item.participantInstruction(),
+                item.itemId(), setVersionId, dose.type(), snapshot);
+    }
+
+    private String sourceSnapshot(ExerciseSetVersionQueryPort.ExerciseSetVersionSnapshot source) {
+        try { return json.writeValueAsString(source); }
+        catch (Exception failure) { throw new IllegalStateException("cannot materialize exercise set version snapshot", failure); }
+    }
+
+    private static boolean matchesMaterialization(PlanRevisionQueryPort.SessionSnapshot session,
+                                                   ExerciseSetVersionQueryPort.ExerciseSetVersionSnapshot source) {
+        if (session.prescriptions().size() != source.items().size()) return false;
+        java.util.Map<UUID, ExerciseSetVersionQueryPort.ItemSnapshot> items = source.items().stream()
+                .collect(java.util.stream.Collectors.toMap(ExerciseSetVersionQueryPort.ItemSnapshot::itemId, item -> item));
+        return session.prescriptions().stream().allMatch(prescription -> {
+            var item = items.get(prescription.sourceExerciseSetItemId());
+            return item != null && item.exerciseVersionId().equals(prescription.exerciseVersionId())
+                    && source.exerciseSetVersionId().equals(prescription.sourceExerciseSetVersionId());
+        });
+    }
+
+    private static PrescriptionSide side(String value) {
+        return value == null ? PrescriptionSide.NOT_APPLICABLE : PrescriptionSide.valueOf(value);
+    }
+
+    private static GoalPerspective goalPerspective(String category) {
+        return switch (category) {
+            case "PERFORMANCE" -> GoalPerspective.PERFORMANCE;
+            case "FUNCTIONAL" -> GoalPerspective.FUNCTIONAL_RECOVERY;
+            case "GENERAL_FITNESS" -> throw badRequest("GENERAL_FITNESS goals are not supported by specialist planning");
+            default -> throw badRequest("participant goal category is unsupported by planning");
+        };
     }
 
     private void requireSpecialistPlanning(UUID actor, UUID participant, ActingContext context) {
@@ -650,7 +683,7 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
         return new ResponseStatusException(HttpStatus.CONFLICT, message, cause);
     }
 
-    private record Access(CurrentAccount actor, UUID planId, UUID participantAccountId,
+    private record Access(CurrentAccount actor, UUID planId, UUID participantId,
                           UUID ownerAccountId, String mode, String revisionStatus,
                           int revisionNumber, long revisionVersion, ProfessionalRole actingRole,
                           Set<String> collaborationScopes) {
@@ -666,41 +699,24 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
             this(participantId, name, purpose, mode, phaseIntent, validFrom, validTo, null);
         }
     }
-    public record AddGoalCommand(long expectedVersion, GoalPerspective perspective, String category,
-                                 String title, String description, Integer priority, GoalStatus status,
-                                 LocalDate targetDate, List<OutcomeCommand> outcomes) {
-    }
-    public record OutcomeCommand(String metricCode, BigDecimal baseline, BigDecimal target, String unit,
-                                 String measurementMethod, String evidenceSource) {
-    }
+    public record AddGoalCommand(long expectedVersion, UUID participantGoalId) { }
     public record AddCycleCommand(long expectedVersion, Integer sequenceNumber, String name,
                                   LocalDate startDate, LocalDate endDate, String phaseIntent, String phaseGoal) {
     }
     public record AddMicrocycleCommand(long expectedVersion, UUID cycleId, Integer sequenceNumber, String name,
                                        LocalDate startDate, LocalDate endDate, String phaseIntent, String phaseGoal) {
     }
+    public record DeleteGoalCommand(long expectedVersion, UUID goalId) { }
+    public record DeleteSessionCommand(long expectedVersion, UUID sessionId) { }
     public record AddSessionCommand(long expectedVersion, UUID microcycleId, String title,
                                     LocalDate scheduledDate, Instant availableFrom, Instant availableTo,
-                                    Integer expectedDurationMinutes) {
-    }
-    public record AddPrescriptionCommand(long expectedVersion, UUID sessionId, UUID exerciseVersionId,
-                                          Integer position, PrescriptionSide side, DoseType doseType,
-                                          Integer sets, Integer repetitions, Integer durationSeconds,
-                                          BigDecimal distanceMeters, Integer contacts,
-                                          BigDecimal externalLoadValue, String externalLoadUnit,
-                                          IntensityType intensityType, BigDecimal intensityValue,
-                                          String intensityZone, String tempo, String rangeOfMotion,
-                                          Integer restSeconds, String substituteGroup, String notes) {
-    }
+                                    Integer expectedDurationMinutes, UUID exerciseSetVersionId) { }
     public record ReorderCommand(long expectedVersion, UUID sessionId, List<UUID> prescriptionIds) {
     }
     public record DefineSessionVariantCommand(long expectedVersion, UUID sessionId, SessionVariantType type,
                                               Integer expectedDurationMinutes, List<VariantItemCommand> items) {
     }
-    public record VariantItemCommand(UUID basePrescriptionId, Integer position, Integer overrideSets,
-                                     Integer overrideRepetitions, Integer overrideDurationSeconds,
-                                     Integer overrideContacts) {
-    }
+    public record VariantItemCommand(UUID basePrescriptionId, Integer position) { }
     public record AddLoadBudgetCommand(long expectedVersion, String channel, BigDecimal low,
                                        BigDecimal high, String unit, BudgetAction action) {
     }

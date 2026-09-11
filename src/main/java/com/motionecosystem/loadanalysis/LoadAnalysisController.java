@@ -4,9 +4,9 @@ import java.util.UUID;
 
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
 import com.motionecosystem.loadanalysis.api.PlannedLoadCalculationPort.LoadCalculationVersion;
 import com.motionecosystem.loadanalysis.api.PlannedLoadCalculationPort.LoadProfile;
-import com.motionecosystem.specialist.SpecialistRelationshipService;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,7 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 class LoadAnalysisController {
     private final CurrentAccountService accounts;
-    private final SpecialistRelationshipService relationships;
+    private final SpecialistAuthorizationPort authorization;
     private final PlanRevisionQueryPort revisions;
     private final PlannedLoadService loads;
 
@@ -38,10 +38,10 @@ class LoadAnalysisController {
         var revision = revisions.findRevision(revisionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "revision not found"));
         if (actor.profileType() == ProfileType.PARTICIPANT) {
-            if (!actor.id().equals(revision.participantAccountId()))
+            if (!actor.id().equals(revision.participantId()))
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "revision belongs to another participant");
         } else if (actor.profileType() == ProfileType.SPECIALIST) {
-            relationships.requireActive(actor.id(), revision.participantAccountId());
+            authorization.requireActiveRelationship(actor.id(), revision.participantId());
         } else {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "profile cannot preview planned load");
         }

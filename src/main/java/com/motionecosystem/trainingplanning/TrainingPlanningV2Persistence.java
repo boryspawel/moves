@@ -25,12 +25,17 @@ public interface TrainingPlanningV2Persistence {
     void addGoal(UUID revisionId, long expectedVersion, Goal goal,
                  List<GoalOutcome> outcomes, Instant updatedAt);
 
+    void deleteGoal(UUID revisionId, long expectedVersion, UUID goalId, Instant updatedAt);
+
     void addCycle(UUID revisionId, long expectedVersion, Cycle cycle, Instant updatedAt);
 
     void addMicrocycle(UUID revisionId, long expectedVersion,
                        MicrocycleV2 microcycle, Instant updatedAt);
 
-    void addSession(UUID revisionId, long expectedVersion, Session session, Instant updatedAt);
+    void addSession(UUID revisionId, long expectedVersion, Session session,
+                    List<Prescription> prescriptions, Instant updatedAt);
+
+    void deleteSession(UUID revisionId, long expectedVersion, UUID sessionId, Instant updatedAt);
 
     void addPrescription(UUID revisionId, long expectedVersion,
                          Prescription prescription, Instant updatedAt);
@@ -55,12 +60,12 @@ public interface TrainingPlanningV2Persistence {
 
     List<RevisionHistoryItem> revisionHistory(UUID planId);
 
-    record PlanAccess(UUID planId, UUID participantAccountId, String name, String purpose,
+    record PlanAccess(UUID planId, UUID participantId, String name, String purpose,
                       UUID ownerAccountId, String mode, String status, UUID currentRevisionId,
                       String ownerCapability) {
     }
 
-    record RevisionAccess(UUID revisionId, UUID planId, UUID participantAccountId,
+    record RevisionAccess(UUID revisionId, UUID planId, UUID participantId,
                           UUID ownerAccountId, String mode, String status,
                           int revisionNumber, long version, String authorCapability) {
     }

@@ -75,6 +75,24 @@ export interface SessionSnapshot {
    * @type {string}
    * @memberof SessionSnapshot
    */
+  sourceExerciseSetId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof SessionSnapshot
+   */
+  sourceExerciseSetVersionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof SessionSnapshot
+   */
+  sourceSnapshot?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof SessionSnapshot
+   */
   status?: string;
   /**
    *
@@ -119,6 +137,11 @@ export function SessionSnapshotFromJSONTyped(
         ? undefined
         : (json['prescriptions'] as Array<any>).map(PrescriptionSnapshotFromJSON),
     scheduledDate: json['scheduledDate'] == null ? undefined : new Date(json['scheduledDate']),
+    sourceExerciseSetId:
+      json['sourceExerciseSetId'] == null ? undefined : json['sourceExerciseSetId'],
+    sourceExerciseSetVersionId:
+      json['sourceExerciseSetVersionId'] == null ? undefined : json['sourceExerciseSetVersionId'],
+    sourceSnapshot: json['sourceSnapshot'] == null ? undefined : json['sourceSnapshot'],
     status: json['status'] == null ? undefined : json['status'],
     title: json['title'] == null ? undefined : json['title'],
     variants:
@@ -157,6 +180,9 @@ export function SessionSnapshotToJSONTyped(
       value['scheduledDate'] == null
         ? value['scheduledDate']
         : value['scheduledDate'].toISOString().substring(0, 10),
+    sourceExerciseSetId: value['sourceExerciseSetId'],
+    sourceExerciseSetVersionId: value['sourceExerciseSetVersionId'],
+    sourceSnapshot: value['sourceSnapshot'],
     status: value['status'],
     title: value['title'],
     variants:

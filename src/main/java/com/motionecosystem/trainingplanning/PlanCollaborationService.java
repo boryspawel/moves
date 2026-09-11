@@ -4,11 +4,11 @@ import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.Capability;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ProfessionalRole;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.Purpose;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.Capability;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.Purpose;
 import com.motionecosystem.trainingplanning.PlanCollaborationPersistence.CollaboratorData;
 import com.motionecosystem.trainingplanning.PlanCollaborationPersistence.ReviewData;
 import java.time.Clock;
@@ -36,7 +36,7 @@ public class PlanCollaborationService {
         CurrentAccount owner = accounts.requireActive(subject);
         var plan = plans.findPlanAccess(planId).orElseThrow(() -> notFound("training plan not found"));
         if (!owner.id().equals(plan.ownerAccountId())) throw forbidden("only the plan owner can add collaborators");
-        authorizeOwner(owner, plan.participantAccountId(), ownerContext);
+        authorizeOwner(owner, plan.participantId(), ownerContext);
         if (command == null || command.specialistAccountId() == null || command.actingRole() == null
                 || command.scopes() == null || command.scopes().isEmpty()) {
             throw badRequest("collaborator, professional role and scopes are required");
@@ -44,7 +44,7 @@ public class PlanCollaborationService {
         if (command.specialistAccountId().equals(owner.id())) throw badRequest("plan owner is not a collaborator");
         Set<String> scopes = command.scopes().stream().map(Enum::name)
                 .collect(java.util.stream.Collectors.toUnmodifiableSet());
-        authorization.requireCapabilities(command.specialistAccountId(), plan.participantAccountId(),
+        authorization.requireCapabilities(command.specialistAccountId(), plan.participantId(),
                 new ActingContext(command.actingRole()), Set.of(planCapability(command.actingRole())),
                 purpose(command.actingRole()));
         CollaboratorData collaborator = new CollaboratorData(UUID.randomUUID(), planId,
@@ -61,7 +61,7 @@ public class PlanCollaborationService {
         CurrentAccount owner = accounts.requireActive(subject);
         var plan = plans.findPlanAccess(planId).orElseThrow(() -> notFound("training plan not found"));
         if (!owner.id().equals(plan.ownerAccountId())) throw forbidden("only the plan owner can end collaboration");
-        authorizeOwner(owner, plan.participantAccountId(), ownerContext);
+        authorizeOwner(owner, plan.participantId(), ownerContext);
         try {
             CollaboratorData ended = persistence.endCollaborator(collaboratorId, planId, clock.instant());
             audit.record(subject, "PLAN_COLLABORATOR_ENDED", "TrainingPlan", planId);
@@ -79,7 +79,7 @@ public class PlanCollaborationService {
         var revision = plans.findRevisionAccess(revisionId)
                 .orElseThrow(() -> notFound("plan revision not found"));
         if (!owner.id().equals(revision.ownerAccountId())) throw forbidden("only the plan owner can request review");
-        authorizeOwner(owner, revision.participantAccountId(), owner.hasProfile(ProfileType.SPECIALIST)
+        authorizeOwner(owner, revision.participantId(), owner.hasProfile(ProfileType.SPECIALIST)
                 ? new ActingContext(role(revision.authorCapability())) : null);
         if (!Set.of("BLOCKED", "NEEDS_REVIEW").contains(revision.status())) {
             throw conflict("only a blocked or review-needed revision can be sent to review");
@@ -93,7 +93,7 @@ public class PlanCollaborationService {
         if (role != ProfessionalRole.PHYSIOTHERAPIST) {
             throw forbidden("safety review requires physiotherapist collaboration context");
         }
-        authorization.requireCapabilities(reviewer.specialistId(), revision.participantAccountId(),
+        authorization.requireCapabilities(reviewer.specialistId(), revision.participantId(),
                 new ActingContext(role), Set.of(Capability.PLAN_FUNCTIONAL_RECOVERY), Purpose.FUNCTIONAL_RECOVERY);
         ReviewData review = new ReviewData(UUID.randomUUID(), revisionId, owner.id(), reviewer.specialistId(),
                 "OPEN", text(command.requestReference(), "review reference"), null, clock.instant(), null);
@@ -116,7 +116,7 @@ public class PlanCollaborationService {
                 .filter(item -> ProfessionalRole.PHYSIOTHERAPIST.name().equals(item.professionalRole()))
                 .filter(item -> item.scopes().contains(CollaborationScope.REVIEW_SAFETY.name()))
                 .orElseThrow(() -> forbidden("active physiotherapist REVIEW_SAFETY collaboration is required"));
-        authorization.requireCapabilities(reviewer.id(), revision.participantAccountId(), context,
+        authorization.requireCapabilities(reviewer.id(), revision.participantId(), context,
                 Set.of(Capability.PLAN_FUNCTIONAL_RECOVERY), Purpose.FUNCTIONAL_RECOVERY);
         if (command == null || command.decision() == null) throw badRequest("review decision is required");
         String status = switch (command.decision()) {

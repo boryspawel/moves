@@ -3,9 +3,10 @@
 ## Implemented
 
 `participant_goals` owns specialist-authored outcome goals for a canonical
-`participant.participant_record`. A goal is independent of `training_planning.training_goal`:
-the latter belongs to a particular plan revision, while this module records a participant-level
-desired outcome. Neither module writes into the other. GOALS-01 through GOALS-05 are complete.
+`participant.participant_record`. `ParticipantGoal` is the sole authoring source for a participant-level
+desired outcome. `training_planning.training_goal` is a revision-owned immutable snapshot, never a
+second goal aggregate; planning reaches this module only through its public query port. GOALS-01 through
+GOALS-05 and the P1 revision integration are complete.
 
 GOALS-05 adds the read-only, versioned-in-code `GoalMetricPresetCatalog` and a dedicated
 create-from-preset command. The catalog is not persisted or administrable: it supplies display
@@ -16,8 +17,8 @@ flow deliberately never exposes metric codes, methods, priority or multiple/reor
 
 Goals are created active with immutable outcome snapshots. Only title, description, priority and
 target date may be updated while active. Achieved and cancelled are terminal states. Achievement
-is an explicit specialist action; there is no integration, migration, or automatic achievement
-from sessions, plans, observations, or execution data.
+is an explicit specialist action; sessions, plans, observations and execution do not automatically
+achieve a goal.
 
 Every specialist mutation requires an idempotency key and records an audit event. Access requires
 an active relationship plus the existing capability/consent authorization boundary: trainer / performance
@@ -37,12 +38,19 @@ Goal mutations also write one append-only `participant_goal_event` snapshot in t
 
 The specialist backend timeline consumes those events through a neutral query port, exposes category `GOAL`, and preserves each event separately. Baselines are presented as the corresponding created/achieved/cancelled goal event, never as a technical baseline.
 
-The specialist participant workspace now presents goals in its existing summary area, not in a new route or dashboard. It obtains the explicit acting context only from onboarding `ProfileSummary.specialistKind` and only exposes trainer/performance or physiotherapist/functional work. The UI uses generated participant-goal APIs, renders lifecycle controls only from `availableActions`, and fetches observation history only after a goal is opened. It does not provide plan integration, participant self-service, automatic achievement, charts, or measurement edits/deletes.
+The specialist participant workspace now presents goals in its existing summary area, not in a new route or dashboard. It obtains the explicit acting context only from onboarding `ProfileSummary.specialistKind` and only exposes trainer/performance or physiotherapist/functional work. The UI uses generated participant-goal APIs, renders lifecycle controls only from `availableActions`, and fetches observation history only after a goal is opened. It does not provide participant self-service, automatic achievement, charts or measurement edits/deletes.
+
+## P1 plan-revision snapshots
+
+Adding a goal to an editable specialist revision accepts `participantGoalId`, verifies identical
+`participantId`, goal lifecycle and the existing trainer/performance or physiotherapist/functional
+capability, then copies its metadata, status and outcomes into revision-owned rows with source ID,
+source version and snapshot time. A later goal mutation, achievement or cancellation never rewrites
+that revision. Clone copies this provenance and snapshot without refreshing it. Validation/activation
+checks the current source eligibility only for a draft; active history is read as stored.
 
 ## Deliberate limitations
 
-- Goals have no association with a training-plan revision, and neither goal model writes to the
-  other.
 - Achievement is an explicit specialist action; observations, sessions, plans and execution data
   do not automatically achieve a goal.
 - Observations are append-only records: there are no correction, edit or delete operations, unit
@@ -53,10 +61,8 @@ The specialist participant workspace now presents goals in its existing summary 
 
 ## Future integrations / roadmap
 
-- **Training plans:** link participant goals to a plan revision, snapshot the associations in that
-  revision and copy them when a new revision is created. Validate participant, perspective and
-  authorization, define a transition strategy for legacy `training_planning.training_goal`, and
-  never automatically back-propagate associations to historic revisions.
+- **Plan authoring UI:** provide a specialist source picker and revision/history surface. The backend
+  P1 source link and snapshot semantics are already implemented.
 - **Observations:** introduce an append-only correcting event, explicit unit conversions, session
   and research-result integrations, plus charts and aggregate projections.
 - **Participant access:** add `GENERAL_FITNESS` self-service for own-goal reading and only allowed
