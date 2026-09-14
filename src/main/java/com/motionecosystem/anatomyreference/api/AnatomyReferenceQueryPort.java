@@ -10,6 +10,9 @@ public interface AnatomyReferenceQueryPort {
 
     Optional<AnatomicalStructureSnapshot> findStructure(UUID structureId);
 
+    /** Stable-code lookup for internal import validation; only published anatomy is returned. */
+    Optional<AnatomicalStructureSnapshot> findPublishedStructureByCode(String code);
+
     Map<UUID, AnatomicalStructureSnapshot> findStructures(java.util.Collection<UUID> structureIds);
 
     List<AncestorPath> ancestorPaths(UUID structureId);

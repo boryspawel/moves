@@ -16,12 +16,24 @@ public interface PlannedLoadCalculationPort {
     record LoadProfile(UUID snapshotId, UUID revisionId, String inputChecksum,
                        String algorithmVersion, String configurationVersion,
                        String catalogProfileVersion, Instant calculatedAt,
-                       List<Observation> observations, List<Aggregate> aggregates) {
+                       List<Observation> observations, List<Aggregate> aggregates,
+                       List<CompletenessIssue> completenessIssues) {
         public LoadProfile {
             observations = List.copyOf(observations);
             aggregates = List.copyOf(aggregates);
+            completenessIssues = List.copyOf(completenessIssues);
+        }
+        public LoadProfile(UUID snapshotId, UUID revisionId, String inputChecksum,
+                           String algorithmVersion, String configurationVersion,
+                           String catalogProfileVersion, Instant calculatedAt,
+                           List<Observation> observations, List<Aggregate> aggregates) {
+            this(snapshotId, revisionId, inputChecksum, algorithmVersion, configurationVersion,
+                    catalogProfileVersion, calculatedAt, observations, aggregates, List.of());
         }
     }
+
+    record CompletenessIssue(UUID prescriptionId, UUID exerciseVersionId, UUID contributionId,
+                             UUID sessionId, String channel, String canonicalDoseType, String code) { }
 
     record Observation(UUID prescriptionId, UUID exerciseVersionId, UUID contributionId,
                        UUID sessionId, UUID microcycleId, UUID cycleId, UUID structureId,

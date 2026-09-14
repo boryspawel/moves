@@ -34,11 +34,6 @@ import {
   AddMicrocycleCommandToJSON,
 } from '../models/AddMicrocycleCommand';
 import {
-  type AddPrescriptionCommand,
-  AddPrescriptionCommandFromJSON,
-  AddPrescriptionCommandToJSON,
-} from '../models/AddPrescriptionCommand';
-import {
   type AddSessionCommand,
   AddSessionCommandFromJSON,
   AddSessionCommandToJSON,
@@ -58,12 +53,17 @@ import {
   DefineSessionVariantCommandFromJSON,
   DefineSessionVariantCommandToJSON,
 } from '../models/DefineSessionVariantCommand';
-import { type EditorView, EditorViewFromJSON, EditorViewToJSON } from '../models/EditorView';
 import {
-  type ReorderCommand,
-  ReorderCommandFromJSON,
-  ReorderCommandToJSON,
-} from '../models/ReorderCommand';
+  type DeleteGoalCommand,
+  DeleteGoalCommandFromJSON,
+  DeleteGoalCommandToJSON,
+} from '../models/DeleteGoalCommand';
+import {
+  type DeleteSessionCommand,
+  DeleteSessionCommandFromJSON,
+  DeleteSessionCommandToJSON,
+} from '../models/DeleteSessionCommand';
+import { type EditorView, EditorViewFromJSON, EditorViewToJSON } from '../models/EditorView';
 import {
   type RevisionHistoryItem,
   RevisionHistoryItemFromJSON,
@@ -100,11 +100,6 @@ export interface AddMicrocycleRequest {
   addMicrocycleCommand: AddMicrocycleCommand;
 }
 
-export interface AddPrescriptionRequest {
-  revisionId: string;
-  addPrescriptionCommand: AddPrescriptionCommand;
-}
-
 export interface AddSessionRequest {
   revisionId: string;
   addSessionCommand: AddSessionCommand;
@@ -124,17 +119,22 @@ export interface DefineSessionVariantRequest {
   defineSessionVariantCommand: DefineSessionVariantCommand;
 }
 
+export interface DeleteGoalRequest {
+  revisionId: string;
+  deleteGoalCommand: DeleteGoalCommand;
+}
+
+export interface DeleteSessionRequest {
+  revisionId: string;
+  deleteSessionCommand: DeleteSessionCommand;
+}
+
 export interface EditorRequest {
   revisionId: string;
 }
 
 export interface HistoryRequest {
   planId: string;
-}
-
-export interface ReorderRequest {
-  revisionId: string;
-  reorderCommand: ReorderCommand;
 }
 
 export interface ValidateStructurallyRequest {
@@ -395,69 +395,6 @@ export class TrainingPlanningV2ControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for addPrescription without sending the request
-   */
-  async addPrescriptionRequestOpts(
-    requestParameters: AddPrescriptionRequest,
-  ): Promise<runtime.RequestOpts> {
-    if (requestParameters['revisionId'] == null) {
-      throw new runtime.RequiredError(
-        'revisionId',
-        'Required parameter "revisionId" was null or undefined when calling addPrescription().',
-      );
-    }
-
-    if (requestParameters['addPrescriptionCommand'] == null) {
-      throw new runtime.RequiredError(
-        'addPrescriptionCommand',
-        'Required parameter "addPrescriptionCommand" was null or undefined when calling addPrescription().',
-      );
-    }
-
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    headerParameters['Content-Type'] = 'application/json';
-
-    let urlPath = `/api/v2/training-plans/revisions/{revisionId}/prescriptions`;
-    urlPath = urlPath.replace(
-      '{revisionId}',
-      encodeURIComponent(String(requestParameters['revisionId'])),
-    );
-
-    return {
-      path: urlPath,
-      method: 'POST',
-      headers: headerParameters,
-      query: queryParameters,
-      body: AddPrescriptionCommandToJSON(requestParameters['addPrescriptionCommand']),
-    };
-  }
-
-  /**
-   */
-  async addPrescriptionRaw(
-    requestParameters: AddPrescriptionRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<EditorView>> {
-    const requestOptions = await this.addPrescriptionRequestOpts(requestParameters);
-    const response = await this.request(requestOptions, initOverrides);
-
-    return new runtime.JSONApiResponse(response, (jsonValue) => EditorViewFromJSON(jsonValue));
-  }
-
-  /**
-   */
-  async addPrescription(
-    requestParameters: AddPrescriptionRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<EditorView> {
-    const response = await this.addPrescriptionRaw(requestParameters, initOverrides);
-    return await response.value();
-  }
-
-  /**
    * Creates request options for addSession without sending the request
    */
   async addSessionRequestOpts(requestParameters: AddSessionRequest): Promise<runtime.RequestOpts> {
@@ -696,6 +633,130 @@ export class TrainingPlanningV2ControllerApi extends runtime.BaseAPI {
   }
 
   /**
+   * Creates request options for deleteGoal without sending the request
+   */
+  async deleteGoalRequestOpts(requestParameters: DeleteGoalRequest): Promise<runtime.RequestOpts> {
+    if (requestParameters['revisionId'] == null) {
+      throw new runtime.RequiredError(
+        'revisionId',
+        'Required parameter "revisionId" was null or undefined when calling deleteGoal().',
+      );
+    }
+
+    if (requestParameters['deleteGoalCommand'] == null) {
+      throw new runtime.RequiredError(
+        'deleteGoalCommand',
+        'Required parameter "deleteGoalCommand" was null or undefined when calling deleteGoal().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v2/training-plans/revisions/{revisionId}/goals`;
+    urlPath = urlPath.replace(
+      '{revisionId}',
+      encodeURIComponent(String(requestParameters['revisionId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'DELETE',
+      headers: headerParameters,
+      query: queryParameters,
+      body: DeleteGoalCommandToJSON(requestParameters['deleteGoalCommand']),
+    };
+  }
+
+  /**
+   */
+  async deleteGoalRaw(
+    requestParameters: DeleteGoalRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<EditorView>> {
+    const requestOptions = await this.deleteGoalRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => EditorViewFromJSON(jsonValue));
+  }
+
+  /**
+   */
+  async deleteGoal(
+    requestParameters: DeleteGoalRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<EditorView> {
+    const response = await this.deleteGoalRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for deleteSession without sending the request
+   */
+  async deleteSessionRequestOpts(
+    requestParameters: DeleteSessionRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['revisionId'] == null) {
+      throw new runtime.RequiredError(
+        'revisionId',
+        'Required parameter "revisionId" was null or undefined when calling deleteSession().',
+      );
+    }
+
+    if (requestParameters['deleteSessionCommand'] == null) {
+      throw new runtime.RequiredError(
+        'deleteSessionCommand',
+        'Required parameter "deleteSessionCommand" was null or undefined when calling deleteSession().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v2/training-plans/revisions/{revisionId}/sessions`;
+    urlPath = urlPath.replace(
+      '{revisionId}',
+      encodeURIComponent(String(requestParameters['revisionId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'DELETE',
+      headers: headerParameters,
+      query: queryParameters,
+      body: DeleteSessionCommandToJSON(requestParameters['deleteSessionCommand']),
+    };
+  }
+
+  /**
+   */
+  async deleteSessionRaw(
+    requestParameters: DeleteSessionRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<EditorView>> {
+    const requestOptions = await this.deleteSessionRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => EditorViewFromJSON(jsonValue));
+  }
+
+  /**
+   */
+  async deleteSession(
+    requestParameters: DeleteSessionRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<EditorView> {
+    const response = await this.deleteSessionRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
    * Creates request options for editor without sending the request
    */
   async editorRequestOpts(requestParameters: EditorRequest): Promise<runtime.RequestOpts> {
@@ -793,67 +854,6 @@ export class TrainingPlanningV2ControllerApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<Array<RevisionHistoryItem>> {
     const response = await this.historyRaw(requestParameters, initOverrides);
-    return await response.value();
-  }
-
-  /**
-   * Creates request options for reorder without sending the request
-   */
-  async reorderRequestOpts(requestParameters: ReorderRequest): Promise<runtime.RequestOpts> {
-    if (requestParameters['revisionId'] == null) {
-      throw new runtime.RequiredError(
-        'revisionId',
-        'Required parameter "revisionId" was null or undefined when calling reorder().',
-      );
-    }
-
-    if (requestParameters['reorderCommand'] == null) {
-      throw new runtime.RequiredError(
-        'reorderCommand',
-        'Required parameter "reorderCommand" was null or undefined when calling reorder().',
-      );
-    }
-
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    headerParameters['Content-Type'] = 'application/json';
-
-    let urlPath = `/api/v2/training-plans/revisions/{revisionId}/prescriptions/order`;
-    urlPath = urlPath.replace(
-      '{revisionId}',
-      encodeURIComponent(String(requestParameters['revisionId'])),
-    );
-
-    return {
-      path: urlPath,
-      method: 'PUT',
-      headers: headerParameters,
-      query: queryParameters,
-      body: ReorderCommandToJSON(requestParameters['reorderCommand']),
-    };
-  }
-
-  /**
-   */
-  async reorderRaw(
-    requestParameters: ReorderRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<EditorView>> {
-    const requestOptions = await this.reorderRequestOpts(requestParameters);
-    const response = await this.request(requestOptions, initOverrides);
-
-    return new runtime.JSONApiResponse(response, (jsonValue) => EditorViewFromJSON(jsonValue));
-  }
-
-  /**
-   */
-  async reorder(
-    requestParameters: ReorderRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<EditorView> {
-    const response = await this.reorderRaw(requestParameters, initOverrides);
     return await response.value();
   }
 

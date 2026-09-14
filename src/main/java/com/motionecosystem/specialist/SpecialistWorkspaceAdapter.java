@@ -1,10 +1,10 @@
 package com.motionecosystem.specialist;
 
 import com.motionecosystem.participant.api.ParticipantClientPort.RelationshipContext;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ProfessionalRole;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.Purpose;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.Capability;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.Purpose;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.Capability;
 import com.motionecosystem.specialist.api.SpecialistWorkspacePort;
 import java.time.Instant;
 import java.util.List;

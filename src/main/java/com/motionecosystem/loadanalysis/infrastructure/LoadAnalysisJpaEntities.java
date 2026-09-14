@@ -7,6 +7,8 @@ import java.util.UUID;
 import com.motionecosystem.loadanalysis.api.PlannedLoadCalculationPort.Aggregate;
 import com.motionecosystem.loadanalysis.api.PlannedLoadCalculationPort.LoadProfile;
 import com.motionecosystem.loadanalysis.api.PlannedLoadCalculationPort.Observation;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
@@ -38,11 +40,13 @@ class LoadSnapshotEntity {
     @Column(name="configuration_version") String configuration;
     @Column(name="catalog_profile_version") String catalogVersion;
     @Column(name="calculated_at") Instant calculatedAt;
+    @JdbcTypeCode(SqlTypes.JSON) @Column(name="completeness_issues", columnDefinition="jsonb") String completenessIssues = "[]";
     protected LoadSnapshotEntity() { }
     LoadSnapshotEntity(LoadProfile value) {
         id=value.snapshotId(); revisionId=value.revisionId(); checksum=value.inputChecksum();
         algorithm=value.algorithmVersion(); configuration=value.configurationVersion();
         catalogVersion=value.catalogProfileVersion(); calculatedAt=value.calculatedAt();
+        completenessIssues = "[]";
     }
 }
 

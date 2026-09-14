@@ -201,7 +201,7 @@ class JpaPlanRevisionWorkflowAdapter implements PlanRevisionWorkflowPersistence 
         return new WorkflowState(
                 revision.id,
                 revision.planId,
-                plan.participantAccountId,
+                plan.participantId,
                 plan.ownerAccountId,
                 plan.mode,
                 revision.status,

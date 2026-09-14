@@ -3,6 +3,8 @@ package com.motionecosystem.planworkflow;
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.analytics.adherencemetrics.AdherenceMetricsService;
 import com.motionecosystem.exercisecatalog.api.ExerciseCatalogQueryPort;
+import com.motionecosystem.exercisesets.api.ExerciseSetVersionQueryPort;
+import com.motionecosystem.participantgoals.api.ParticipantGoalQueryPort;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
@@ -11,9 +13,9 @@ import com.motionecosystem.loadanalysis.api.PlannedLoadCalculationPort.LoadCalcu
 import com.motionecosystem.safety.api.SafetyAssessmentPort;
 import com.motionecosystem.safety.api.SafetyAssessmentPort.AssessmentSnapshot;
 import com.motionecosystem.safety.api.SafetyAssessmentPort.Result;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.Capability;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.Capability;
 import com.motionecosystem.trainingplanning.api.PlanRevisionWorkflowPersistence;
 import com.motionecosystem.trainingplanning.api.PlanRevisionWorkflowPersistence.ActivationOutcome;
 import com.motionecosystem.trainingplanning.api.PlanRevisionWorkflowPersistence.WorkflowState;
@@ -51,6 +53,8 @@ public class PlanRevisionWorkflowService {
     private final SafetyAssessmentPort safety;
     private final SpecialistAuthorizationPort authorization;
     private final ExerciseCatalogQueryPort catalog;
+    private final ParticipantGoalQueryPort participantGoals;
+    private final ExerciseSetVersionQueryPort exerciseSetVersions;
     private final PlanRevisionWorkflowPersistence persistence;
     private final AdherenceMetricsService metrics;
     private final AuditRecorder audit;
@@ -63,8 +67,10 @@ public class PlanRevisionWorkflowService {
             throw badRequest("expected draft version is required");
         }
         WorkflowState state = requireState(revisionId);
+        rejectLegacySelfDirectedAuthoring(state);
         CurrentAccount actor = authorize(subject, state, command.actingContext(), true);
         PlanRevisionSnapshot revision = requireRevision(revisionId);
+        requireCurrentSources(revision);
         String checksum = contentChecksum(revision);
         var structural = planning.validateForWorkflow(subject, revisionId, command.expectedVersion());
         if (!structural.passed()) {
@@ -139,12 +145,15 @@ public class PlanRevisionWorkflowService {
             throw badRequest("Idempotency-Key and activation command are required");
         }
         WorkflowState state = requireState(revisionId);
-        CurrentAccount actor = authorize(subject, state, command.actingContext(), true);
         if ("ACTIVE".equals(state.revisionStatus())) {
+            CurrentAccount actor = authorize(subject, state, command.actingContext(), true);
             return mutate(() -> persistence.activate(
                     revisionId, state.validationChecksum(), key, actor.id(), clock.instant()));
         }
+        rejectLegacySelfDirectedAuthoring(state);
+        CurrentAccount actor = authorize(subject, state, command.actingContext(), true);
         PlanRevisionSnapshot revision = requireRevision(revisionId);
+        requireCurrentSources(revision);
         String checksum = contentChecksum(revision);
         if (!checksum.equals(state.validationChecksum())) {
             throw conflict("revision changed after validation");
@@ -228,6 +237,13 @@ public class PlanRevisionWorkflowService {
         return actor;
     }
 
+    private static void rejectLegacySelfDirectedAuthoring(WorkflowState state) {
+        if ("SELF_DIRECTED".equals(state.mode())) {
+            throw new ResponseStatusException(HttpStatus.GONE,
+                    "self-directed plans are historical-only and cannot be validated or activated");
+        }
+    }
+
     private AssessmentSnapshot requireAssessment(WorkflowState state) {
         if (state.assessmentId() == null) {
             throw conflict("revision has no safety assessment");
@@ -250,9 +266,46 @@ public class PlanRevisionWorkflowService {
                         HttpStatus.NOT_FOUND, "plan revision not found"));
     }
 
+    /** Draft/ready revisions are revalidated against sources; active history is never reinterpreted. */
+    private void requireCurrentSources(PlanRevisionSnapshot revision) {
+        for (var goal : revision.goals()) {
+            if (goal.sourceParticipantGoalId() == null) {
+                throw conflict("legacy goal snapshot has no participant-goal source; replace it before activation");
+            }
+            var current = participantGoals.findById(goal.sourceParticipantGoalId()).orElse(null);
+            if (current == null || !revision.participantId().equals(current.participantId())
+                    || !"ACTIVE".equals(current.status())) {
+                throw conflict("participant goal requires revalidation before activation");
+            }
+        }
+        for (var cycle : revision.cycles()) for (var micro : cycle.microcycles()) for (var session : micro.sessions()) {
+            if (session.sourceExerciseSetVersionId() == null) {
+                throw conflict("legacy session has no exercise-set-version source; replace it before activation");
+            }
+            var current = exerciseSetVersions.findById(session.sourceExerciseSetVersionId()).orElse(null);
+            if (current == null || !"PUBLISHED".equals(current.status())
+                    || !current.exerciseSetId().equals(session.sourceExerciseSetId())
+                    || session.sourceSnapshot() == null || !matchesMaterialization(session, current)) {
+                throw conflict("exercise set version requires revalidation before activation");
+            }
+        }
+    }
+
+    private static boolean matchesMaterialization(PlanRevisionQueryPort.SessionSnapshot session,
+                                                   com.motionecosystem.exercisesets.api.ExerciseSetVersionQueryPort.ExerciseSetVersionSnapshot source) {
+        if (session.prescriptions().size() != source.items().size()) return false;
+        java.util.Map<UUID, com.motionecosystem.exercisesets.api.ExerciseSetVersionQueryPort.ItemSnapshot> items = source.items().stream()
+                .collect(java.util.stream.Collectors.toMap(com.motionecosystem.exercisesets.api.ExerciseSetVersionQueryPort.ItemSnapshot::itemId, item -> item));
+        return session.prescriptions().stream().allMatch(prescription -> {
+            var item = items.get(prescription.sourceExerciseSetItemId());
+            return item != null && item.exerciseVersionId().equals(prescription.exerciseVersionId())
+                    && source.exerciseSetVersionId().equals(prescription.sourceExerciseSetVersionId());
+        });
+    }
+
     private static String contentChecksum(PlanRevisionSnapshot revision) {
         String content = revision.revisionId() + "|" + revision.planId() + "|"
-                + revision.participantAccountId() + "|" + revision.phaseIntent() + "|"
+                + revision.participantId() + "|" + revision.phaseIntent() + "|"
                 + revision.validFrom() + "|" + revision.validTo() + "|"
                 + revision.goals() + "|" + revision.cycles() + "|" + revision.loadBudgets();
         try {

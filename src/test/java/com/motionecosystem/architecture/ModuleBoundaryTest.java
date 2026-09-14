@@ -232,6 +232,14 @@ class ModuleBoundaryTest {
                 .check(productionClasses);
     }
 
+    @Test
+    void trainingPlanningConsumesParticipantGoalsAndExerciseSetsOnlyThroughApiPorts() {
+        classes().that().resideInAPackage("com.motionecosystem.trainingplanning..")
+                .should(onlyDependOnPublicApiOf("com.motionecosystem.participantgoals",
+                        "com.motionecosystem.exercisesets"))
+                .check(productionClasses);
+    }
+
     private static ArchCondition<JavaClass> onlyDependOnJpaRepositoriesInTheirOwnModule() {
         return new ArchCondition<>("only depend on JPA repositories in their own top-level module") {
             @Override
@@ -243,6 +251,22 @@ class ModuleBoundaryTest {
                             && target.isAssignableTo(JpaRepository.class)
                             && !sourceModule.equals(topLevelModule(target))) {
                         events.add(SimpleConditionEvent.violated(source, dependency.getDescription()));
+                    }
+                }
+            }
+        };
+    }
+
+    private static ArchCondition<JavaClass> onlyDependOnPublicApiOf(String... providers) {
+        return new ArchCondition<>("only depend on provider public api packages") {
+            @Override
+            public void check(JavaClass source, ConditionEvents events) {
+                for (Dependency dependency : source.getDirectDependenciesFromSelf()) {
+                    String target = dependency.getTargetClass().getPackageName();
+                    for (String provider : providers) {
+                        if (target.startsWith(provider) && !target.startsWith(provider + ".api")) {
+                            events.add(SimpleConditionEvent.violated(source, dependency.getDescription()));
+                        }
                     }
                 }
             }

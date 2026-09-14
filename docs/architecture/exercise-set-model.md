@@ -57,11 +57,9 @@ klient TypeScript (w tym `ExerciseSetControllerApi` i modele dawek) oraz
 `api:refresh`/`api:verify`. Testy MockMvc/PostgreSQL/Testcontainers pokrywają pion
 create/read/update/publish oraz utrwalenie typowanych dawek.
 
-Skupione walidacje pionu SET-02 są zielone. Formalne kryterium pełnej walidacji etapu
-pozostaje otwarte wyłącznie dlatego, że globalny `ModuleBoundaryTest` i pełne
-`mvn verify` kończą się niezerowo na zastanym cyklu modułów oraz legacy fixtures po V036.
-Nie wskazują one defektu ani zakazanej zależności `exercisesets`; pion jest gotowy jako
-wejście do SET-03.
+P1 wykorzystuje go jako źródło dokładnej wersji zestawu przy materializacji rewizji.
+P1 jest ukończone: `mvn verify` (242 testy), ArchUnit (14/14), Flyway/Hibernate,
+160 testów frontendu, build produkcyjny, `api:verify` i Compose smoke są zielone.
 
 ### Wybór katalogowy SET-03
 
@@ -90,8 +88,9 @@ Publish przekazuje `expectedVersion` w kontrakcie HTTP i wygenerowanym kliencie,
 jak pozostałe mutacje drafu.
 
 Następujące elementy tego dokumentu nadal są celem kolejnych etapów, a nie obecną
-implementacją: rozszerzone profilowe reguły kompletności i analiza anatomii zestawu,
-assignment, integracja z planowaniem i wykonaniem oraz migracja `/plan`. Wdrożony zakres
+implementacją: assignment, współdzielone użycie zestawów oraz dedykowany UI authoringu planu.
+P1 już integruje opublikowaną dokładną wersję zestawu z planowaniem i wykonaniem przez
+materializowany snapshot rewizji; `/plan` zachowano jako widok read-only. Wdrożony zakres
 analizatora SET-05 opisuje [analiza Exercise Set](exercise-set-analysis.md).
 
 ## As-is: inwentaryzacja i problem
@@ -100,13 +99,13 @@ analizatora SET-05 opisuje [analiza Exercise Set](exercise-set-analysis.md).
 |---|---|---|---|---|
 | Katalog | `Exercise`/wersjonowane `ExerciseVersion`, publikacja i podgląd treści ćwiczenia | `exercisecatalog` | nie ma zasobu zestawu | dokładna opublikowana wersja jest referencją pozycji zestawu |
 | Import i akceptacja | import tworzy rekordy/drafty katalogu, review publikuje wersję; obecna implementacja importu używa `JdbcTemplate` | `exerciseimport` + `exercisecatalog` | import nie jest builderem zestawów; JDBC nie jest wzorcem dla nowej domeny | zaakceptowane wersje i metadane; SET-02 używa JPA/Hibernate |
-| Plan | `TrainingPlan`, `PlanRevision`, `TrainingGoal`, `TrainingCycle`, `Microcycle` | `trainingplanning` | plan zawiera jednocześnie strukturę i osobę | zachować rewizje oraz kolejność cykli |
-| Sesja/recepta | `PlannedSession` ma datę/okno; `ExercisePrescription` wskazuje wersję ćwiczenia, pozycję, płaskie serie/powtórzenia | `trainingplanning` | recepty są per sesja i nie są reużywalnym zestawem | legacy odczyt/mapping do pozycji zestawu |
-| Wariant | V021: `planned_session_variant` i `planned_session_variant_item` (`STANDARD`/`SHORT`/`MINIMUM`) nadpisują płaskie pola recept pojedynczej sesji | `trainingplanning` | wariant jest sprzężony z `PlannedSession` i `ExercisePrescription`, nie wersją zestawu | zachować historycznie; nie utożsamiać z targetowym wariantem |
+| Plan | `TrainingPlan`, immutable `PlanRevision`, cykle i mikrocykle | `trainingplanning` | rewizja orkiestruje źródła zewnętrzne, nie definiuje drugiego celu | zachowuje kolejność i lokalne snapshoty |
+| Sesja/recepta | `PlannedSession` ma datę/okno i dokładne `ExerciseSetVersion`; `ExercisePrescription` jest materializowaną projekcją | `trainingplanning` | recepty nie są już edytorem zestawu | pełny typed snapshot oraz legacy płaskie pola do odczytu |
+| Wariant | V021 variants wskazują pozycje materializowanej sesji | `trainingplanning` | historyczne override dawek nie są nowym authoringiem | nowe warianty są selection-only |
 | Tożsamość uczestnika | V036: `participant.participant_record` i `participant_id` są kanoniczne; `participant_account_id` został nullable legacy bridge w planach, sesjach i wykonaniu | `participant` + właściciele tabel | wcześniejsze flow wiążą dane z kontem, a nie kartoteką | przyszłe `ParticipantAssignment` referencjonuje kanoniczny `participantId` |
 | Wykonanie | `SessionExecution` i elementy wykonania zapisują wykonanie/historyczne obciążenie | `trainingexecution` | nie może stać się częścią definicji zestawu | append-only referencja do snapshotu przydziału/sesji |
 | Bezpieczeństwo | oceny i ograniczenia zależą od uczestnika, relacji/capabilities i kontekstu | `safety` | bezpieczeństwo generyczne miesza się w formularzu planu | oddzielić ocenę przypisania i gotowość dnia |
-| UI „Nowy plan” | route `/plan`, `PlanPage`; ładuje aktywnych uczestników i `/api/v1/exercises`, tworzy draft V2, cel, cykl, mikrocykl, sesję, `ExercisePrescription`, warianty i walidacje | Angular + `trainingplanning` | jeden formularz wiąże uczestnika, ćwiczenie, datę, dawkę i warianty | legacy do zastąpienia etapowo |
+| UI `/plan` | zachowany bookmark specjalisty | Angular | nie może być drugim edytorem celu/dawki | read-only; picker authoringu jest późniejszym etapem |
 
 Aktualny endpoint katalogu to `GET /api/v1/exercises` (`ExerciseCatalogController`),
 z paginacją offsetową oraz filtrami `query`, `movementPattern`, `technicalLevel`,
@@ -127,7 +126,8 @@ V017 i kolejne rozbudowują katalog/import.
 | **ExerciseSetVersion** | zaimplementowany `exercisesets`; UUID, `setId`, rosnący `versionNumber`; `DRAFT → PUBLISHED → RETIRED`; published niemutowalna | pozycje, profil, minimalny snapshot katalogu | uczestnik, planowana data, wykonanie, indywidualna safety |
 | **ExerciseSetItem** | zaimplementowana encja podrzędna wersji; UUID, ciągła unikalna pozycja; edytowalna tylko w drafcie | dokładny `ExerciseVersionId`, typowana dawka, faza | dane wykonania i osobiste ograniczenia |
 | **ExerciseSetPhase** | VO/enum pozycji: `PREPARATION`, `MAIN`, `ACCESSORY`, `COOLDOWN` | profil zestawu nadaje semantykę | kliniczna ocena osoby |
-| **Goal** | `trainingplanning`; UUID w rewizji planu; wersjonowany z rewizją i edytowalny wyłącznie przed jej zamknięciem | plan revision | nie jest globalnym celem zestawu ani diagnozą |
+| **ParticipantGoal** | `participantgoals`; kanoniczny UUID uczestnika, lifecycle i outcomes | rewizja przechowuje local snapshot/source ID | nie jest globalnym celem zestawu ani diagnozą |
+| **PlanGoalSnapshot** | `trainingplanning`; revision-owned snapshot `ParticipantGoal` z source/version/time | historyczna rewizja | nie jest mutable goal aggregate |
 | **TrainingPlan** | `trainingplanning`; UUID i rewizje; struktura sekwencji użycia zestawów/sesji | plan revision, cycle/microcycle/planned session | definicja katalogowa zestawu, wykonanie |
 | **PlannedSession** | `trainingplanning`; UUID; konkretna data/okno w rewizji; mutowalna zgodnie z rewizją | `ExerciseSetVersionId` **albo** legacy recepty podczas migracji | treść zestawu, historia wykonania |
 | **ParticipantAssignment** | przyszły `assignment`; UUID; aktywne/zakończone/anulowane, z niezmiennym snapshotem kontekstu | participant + set version **lub** plan revision; overrides/restrictions | mutacja opublikowanego zestawu, zapis wykonania |
@@ -210,9 +210,10 @@ scheduled/execution context.
 
 `TrainingPlan` remains the root that versions/revises a sequence of cycles and
 microcycles. `PlannedSession` is a concrete element with date/window and references one
-exact `ExerciseSetVersion` once target integration is enabled; legacy
-`ExercisePrescription` remains allowed only during migration. `SessionVariant` is a
-legacy per-session concept, not an `ExerciseSet` variant.
+exact PUBLISHED `ExerciseSetVersion`; attachment materializes the complete ordered source
+snapshot. `ExercisePrescription` remains as that immutable execution/load/safety projection,
+with flattened legacy columns only for compatibility. `SessionVariant` is a per-session
+selection concept, not an `ExerciseSet` variant and new variants cannot override doses.
 
 `ParticipantAssignment` is a distinct aggregate for participant + exact set version or
 plan revision, individualized allowed overrides and restrictions, source/author/audit
@@ -247,7 +248,9 @@ Range validation requires positive counts/times, `min ≤ max`, valid enum units
 chosen intensity representation where applicable, and a dose capability declared by
 `ExerciseVersion`. No generic free-form fallback exists in SET-02; a future capability-
 compatible typed variant requires a new discriminator/versioned schema. Existing flat
-`ExercisePrescription` (sets/repetitions etc.) is legacy mapping input, not the target.
+`ExercisePrescription` fields are compatibility projections, not authoring input. A source
+range is retained faithfully; load analysis never invents exact repetitions or treats a missing
+applicable contribution as zero, and safety blocks activation until an exact-load issue is resolved.
 
 ## Warianty i wersjonowanie
 
@@ -367,18 +370,15 @@ flowchart LR
 
 ## Incremental migration (no big bang)
 
-1. Add JPA/Hibernate `exercisesets` schema and read/write ports beside legacy; future
-   Flyway migrations only, no edits to V004/V009/V014/V017.
-2. Release builder for drafts/published sets while `/plan` remains unchanged.
-3. Let new `PlannedSession` reference exact set version, retaining legacy prescriptions.
-4. Move active creation flows to choose/publish then plan/assign; map only compatible flat
-   legacy doses to typed variants and flag ambiguous records.
-5. Retire the New Plan creation UI/endpoints from new navigation after parity; retain
-   legacy read views.
-6. Keep historic plans, `ExercisePrescription`, `SessionVariant` and executions frozen;
-   show their legacy provenance rather than inventing target versions.
-7. After retention, exports and all read dependencies are migrated, remove legacy writes
-   and then legacy tables/contracts in a separately approved release.
+1. P1 adds public set-version query access and V057 source IDs/materialized snapshots without
+   editing historical migrations.
+2. New specialist planning attaches one exact PUBLISHED set version and materializes it locally;
+   manual prescription authoring is removed.
+3. Preserve historic plans, prescriptions, variant overrides and executions as read-only history;
+   never invent a missing canonical source.
+4. Draft-local delete and reattach is the correction path for a legacy goal/session. Active and
+   finalized revisions remain immutable.
+5. Assignment, set sharing and a dedicated source-picker UI remain separate, approved future work.
 
 Risks: historical records can lack a compatible typed dose or immutable catalog snapshot;
 participant/account bridges need mapping to `participantId`; current import uses JDBC;

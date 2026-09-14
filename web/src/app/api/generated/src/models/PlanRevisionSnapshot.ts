@@ -100,7 +100,7 @@ export interface PlanRevisionSnapshot {
    * @type {string}
    * @memberof PlanRevisionSnapshot
    */
-  participantAccountId?: string;
+  participantId?: string;
   /**
    *
    * @type {string}
@@ -186,8 +186,7 @@ export function PlanRevisionSnapshotFromJSONTyped(
         ? undefined
         : (json['loadBudgets'] as Array<any>).map(LoadBudgetSnapshotFromJSON),
     migrationOrigin: json['migrationOrigin'] == null ? undefined : json['migrationOrigin'],
-    participantAccountId:
-      json['participantAccountId'] == null ? undefined : json['participantAccountId'],
+    participantId: json['participantId'] == null ? undefined : json['participantId'],
     phaseIntent: json['phaseIntent'] == null ? undefined : json['phaseIntent'],
     planId: json['planId'] == null ? undefined : json['planId'],
     revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
@@ -228,7 +227,7 @@ export function PlanRevisionSnapshotToJSONTyped(
         ? undefined
         : (value['loadBudgets'] as Array<any>).map(LoadBudgetSnapshotToJSON),
     migrationOrigin: value['migrationOrigin'],
-    participantAccountId: value['participantAccountId'],
+    participantId: value['participantId'],
     phaseIntent: value['phaseIntent'],
     planId: value['planId'],
     revisionId: value['revisionId'],

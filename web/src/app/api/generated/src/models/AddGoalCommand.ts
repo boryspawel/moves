@@ -13,14 +13,6 @@
  */
 
 import { mapValues } from '../runtime';
-import type { OutcomeCommand } from './OutcomeCommand';
-import {
-  OutcomeCommandFromJSON,
-  OutcomeCommandFromJSONTyped,
-  OutcomeCommandToJSON,
-  OutcomeCommandToJSONTyped,
-} from './OutcomeCommand';
-
 /**
  *
  * @export
@@ -29,81 +21,17 @@ import {
 export interface AddGoalCommand {
   /**
    *
-   * @type {string}
-   * @memberof AddGoalCommand
-   */
-  category?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof AddGoalCommand
-   */
-  description?: string;
-  /**
-   *
    * @type {number}
    * @memberof AddGoalCommand
    */
   expectedVersion?: number;
   /**
    *
-   * @type {Array<OutcomeCommand>}
-   * @memberof AddGoalCommand
-   */
-  outcomes?: Array<OutcomeCommand>;
-  /**
-   *
-   * @type {AddGoalCommandPerspectiveEnum}
-   * @memberof AddGoalCommand
-   */
-  perspective?: AddGoalCommandPerspectiveEnum;
-  /**
-   *
-   * @type {number}
-   * @memberof AddGoalCommand
-   */
-  priority?: number;
-  /**
-   *
-   * @type {AddGoalCommandStatusEnum}
-   * @memberof AddGoalCommand
-   */
-  status?: AddGoalCommandStatusEnum;
-  /**
-   *
-   * @type {Date}
-   * @memberof AddGoalCommand
-   */
-  targetDate?: Date;
-  /**
-   *
    * @type {string}
    * @memberof AddGoalCommand
    */
-  title?: string;
+  participantGoalId?: string;
 }
-
-/**
- * @export
- */
-export const AddGoalCommandPerspectiveEnum = {
-  Performance: 'PERFORMANCE',
-  FunctionalRecovery: 'FUNCTIONAL_RECOVERY',
-  GeneralFitness: 'GENERAL_FITNESS',
-} as const;
-export type AddGoalCommandPerspectiveEnum =
-  (typeof AddGoalCommandPerspectiveEnum)[keyof typeof AddGoalCommandPerspectiveEnum];
-
-/**
- * @export
- */
-export const AddGoalCommandStatusEnum = {
-  Active: 'ACTIVE',
-  Achieved: 'ACHIEVED',
-  Cancelled: 'CANCELLED',
-} as const;
-export type AddGoalCommandStatusEnum =
-  (typeof AddGoalCommandStatusEnum)[keyof typeof AddGoalCommandStatusEnum];
 
 /**
  * Check if a given object implements the AddGoalCommand interface.
@@ -124,18 +52,8 @@ export function AddGoalCommandFromJSONTyped(
     return json;
   }
   return {
-    category: json['category'] == null ? undefined : json['category'],
-    description: json['description'] == null ? undefined : json['description'],
     expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
-    outcomes:
-      json['outcomes'] == null
-        ? undefined
-        : (json['outcomes'] as Array<any>).map(OutcomeCommandFromJSON),
-    perspective: json['perspective'] == null ? undefined : json['perspective'],
-    priority: json['priority'] == null ? undefined : json['priority'],
-    status: json['status'] == null ? undefined : json['status'],
-    targetDate: json['targetDate'] == null ? undefined : new Date(json['targetDate']),
-    title: json['title'] == null ? undefined : json['title'],
+    participantGoalId: json['participantGoalId'] == null ? undefined : json['participantGoalId'],
   };
 }
 
@@ -152,20 +70,7 @@ export function AddGoalCommandToJSONTyped(
   }
 
   return {
-    category: value['category'],
-    description: value['description'],
     expectedVersion: value['expectedVersion'],
-    outcomes:
-      value['outcomes'] == null
-        ? undefined
-        : (value['outcomes'] as Array<any>).map(OutcomeCommandToJSON),
-    perspective: value['perspective'],
-    priority: value['priority'],
-    status: value['status'],
-    targetDate:
-      value['targetDate'] == null
-        ? value['targetDate']
-        : value['targetDate'].toISOString().substring(0, 10),
-    title: value['title'],
+    participantGoalId: value['participantGoalId'],
   };
 }

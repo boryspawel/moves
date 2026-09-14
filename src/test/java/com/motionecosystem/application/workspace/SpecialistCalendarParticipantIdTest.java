@@ -50,7 +50,7 @@ class SpecialistCalendarParticipantIdTest {
         when(participants.find(participantId)).thenReturn(Optional.of(new ParticipantClientPort.ClientRecord(
                 participantId, "Account-free client", ParticipantClientPort.RelationshipContext.CLIENT,
                 ParticipantClientPort.RecordStatus.ACTIVE, 0)));
-        SpecialistAppointmentQueryPort.ScheduledAppointment appointment = new SpecialistAppointmentQueryPort.ScheduledAppointment(UUID.randomUUID(), participantId,
+        SpecialistAppointmentQueryPort.OperationalAppointment appointment = new SpecialistAppointmentQueryPort.OperationalAppointment(UUID.randomUUID(), participantId,
                 NOW.plusSeconds(3600), NOW.plusSeconds(7200), "CONSULTATION", "SCHEDULED",
                 "REMOTE", null, "Check-in", false, List.of("OPEN_APPOINTMENT"), 0);
         when(appointments.inRange(eq(specialistId), any(), any(), eq(Set.of(participantId)), eq(NOW))).thenReturn(List.of(appointment));

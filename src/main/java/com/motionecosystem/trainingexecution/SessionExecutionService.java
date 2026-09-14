@@ -13,8 +13,8 @@ import com.motionecosystem.audit.api.TransactionalOutbox;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
 import com.motionecosystem.participant.api.ParticipantClientPort;
-import com.motionecosystem.specialist.SpecialistRelationshipService;
 import com.motionecosystem.trainingexecution.SessionExecutionPersistence.AlertData;
 import com.motionecosystem.trainingexecution.SessionExecutionPersistence.CorrectionData;
 import com.motionecosystem.trainingexecution.SessionExecutionPersistence.ExecutionAggregate;
@@ -36,7 +36,7 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
 
     private final CurrentAccountService accounts;
     private final ParticipantClientPort participants;
-    private final SpecialistRelationshipService relationships;
+    private final SpecialistAuthorizationPort authorization;
     private final PlannedSessionExecutionPort plannedSessions;
     private final SessionExecutionPersistence persistence;
     private final AuditRecorder audit;
@@ -153,7 +153,7 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "execution belongs to another participant");
             }
         } else if (actor.profileType() == ProfileType.SPECIALIST) {
-            relationships.requireActive(actor.id(), owner.participantAccountId());
+            authorization.requireActiveRelationship(actor.id(), owner.participantAccountId());
         } else {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "profile is not allowed to correct execution");
         }
@@ -211,7 +211,7 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
     public List<ExecutionView> specialistExecutions(String subject, UUID participantId) {
         CurrentAccount specialist = accounts.requireActive(subject);
         requireProfile(specialist, ProfileType.SPECIALIST, "specialist profile is required");
-        relationships.requireActive(specialist.id(), participantId);
+        authorization.requireActiveRelationship(specialist.id(), participantId);
         return persistence.findByParticipant(participantId).stream().map(this::view).toList();
     }
 

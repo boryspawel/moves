@@ -46,12 +46,12 @@ class SpecialistTodayService {
         Instant now = clock.instant();
         Set<UUID> activeParticipants = specialistWorkspace.activeParticipantIds(account.id());
         Map<UUID, String> labels = participantLabels(activeParticipants);
-        List<SpecialistAppointmentQueryPort.ScheduledAppointment> raw = appointments.inRange(account.id(), start, end, activeParticipants, now);
-        Optional<SpecialistAppointmentQueryPort.ScheduledAppointment> current = raw.stream().filter(item -> item.current() && active(item)).findFirst();
+        List<SpecialistAppointmentQueryPort.OperationalAppointment> raw = appointments.inRange(account.id(), start, end, activeParticipants, now);
+        Optional<SpecialistAppointmentQueryPort.OperationalAppointment> current = raw.stream().filter(item -> item.current() && active(item)).findFirst();
         Optional<UUID> nextId = raw.stream().filter(item -> !"CANCELLED".equals(item.status())
                         && !"COMPLETED".equals(item.status()) && item.startsAt().isAfter(now))
-                .min(Comparator.comparing(SpecialistAppointmentQueryPort.ScheduledAppointment::startsAt))
-                .map(SpecialistAppointmentQueryPort.ScheduledAppointment::appointmentId);
+                .min(Comparator.comparing(SpecialistAppointmentQueryPort.OperationalAppointment::startsAt))
+                .map(SpecialistAppointmentQueryPort.OperationalAppointment::appointmentId);
         List<AppointmentView> appointmentViews = raw.stream().map(item -> appointmentView(item, labels.get(item.participantId()), nextId.filter(item.appointmentId()::equals).isPresent())).toList();
         List<AvailabilityWindowView> windows = windows(slots, localDate);
         List<AttentionItemView> attention = attention(subject, account.id(), profile, labels);
@@ -64,7 +64,7 @@ class SpecialistTodayService {
                 appointmentViews, windows, attention, operationalTasks,
                 new Counts(appointmentViews.size(), attention.size(), operationalTasks.size(), current.isPresent() ? 1 : 0));
     }
-    private static boolean active(SpecialistAppointmentQueryPort.ScheduledAppointment item) { return !Set.of("CANCELLED", "COMPLETED", "NO_SHOW").contains(item.status()); }
+    private static boolean active(SpecialistAppointmentQueryPort.OperationalAppointment item) { return !Set.of("CANCELLED", "COMPLETED", "NO_SHOW").contains(item.status()); }
     private Map<UUID, String> participantLabels(Set<UUID> participantIds) {
         return participantIds.stream().map(participantId -> participants.find(participantId)
                         .map(record -> Map.entry(participantId, record.displayName())))
@@ -99,7 +99,7 @@ class SpecialistTodayService {
     }
     private static List<AvailabilityWindowView> windows(List<RecurringAvailabilityService.Slot> slots, LocalDate date) { return slots.stream().filter(slot -> slot.dayOfWeek() == date.getDayOfWeek()).map(slot -> new AvailabilityWindowView(
             date.atTime(slot.startTime()).atZone(ZoneId.of(slot.timeZone())).toInstant(), date.atTime(slot.endTime()).atZone(ZoneId.of(slot.timeZone())).toInstant(), "STANDARD_AVAILABILITY")).toList(); }
-    private static AppointmentView appointmentView(SpecialistAppointmentQueryPort.ScheduledAppointment item, String label, boolean next) { return new AppointmentView(item.appointmentId(), item.participantId(), label == null ? "Uczestnik" : label, item.startsAt(), item.endsAt(), item.type(), item.status(), item.locationMode(), item.location(), item.shortPurpose(), item.current(), next, item.availableActions(), item.version()); }
+    private static AppointmentView appointmentView(SpecialistAppointmentQueryPort.OperationalAppointment item, String label, boolean next) { return new AppointmentView(item.appointmentId(), item.participantId(), label == null ? "Uczestnik" : label, item.startsAt(), item.endsAt(), item.type(), item.status(), item.locationMode(), item.location(), item.shortPurpose(), item.current(), next, item.availableActions(), item.version()); }
     private static VisibleRange range(ZoneId zone, LocalDate date, List<AvailabilityWindowView> windows, List<AppointmentView> appointments) {
         List<Instant> points = new ArrayList<>(); windows.forEach(item -> { points.add(item.startsAt()); points.add(item.endsAt()); }); appointments.forEach(item -> { points.add(item.startsAt()); points.add(item.endsAt()); });
         if (points.isEmpty()) return new VisibleRange(date.atTime(8, 0).atZone(zone).toInstant(), date.atTime(18, 0).atZone(zone).toInstant(), 30);

@@ -13,27 +13,27 @@ import java.util.UUID;
 import com.motionecosystem.application.MotionEcosystemApplication;
 import com.motionecosystem.consent.ConsentGrantService;
 import com.motionecosystem.consent.api.ConsentDecisionPort;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ProfessionalRole;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
 import com.motionecosystem.support.PostgresTestConfiguration;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.BudgetAction;
-import com.motionecosystem.trainingplanning.TrainingPlanningModel.DoseType;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.GoalPerspective;
-import com.motionecosystem.trainingplanning.TrainingPlanningModel.IntensityType;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.PlanMode;
-import com.motionecosystem.trainingplanning.TrainingPlanningModel.PrescriptionSide;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.AddCycleCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.AddGoalCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.AddLoadBudgetCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.AddMicrocycleCommand;
-import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.AddPrescriptionCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.AddSessionCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.CreateDraftCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.CreateRevisionCommand;
+import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.DefineSessionVariantCommand;
+import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.DeleteGoalCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.EditorView;
-import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.OutcomeCommand;
-import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.ReorderCommand;
+import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.VariantItemCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.ValidateCommand;
+import com.motionecosystem.exercisesets.application.ExerciseSetApplicationService;
+import com.motionecosystem.exercisesets.api.ExerciseSetDtos;
+import com.motionecosystem.exercisesets.domain.ExerciseSetModel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,12 +51,14 @@ class TrainingPlanningV2IntegrationTest {
     @Autowired TrainingPlanningV2Service planning;
     @Autowired ConsentGrantService consents;
     @Autowired JdbcTemplate jdbc;
+    @Autowired ExerciseSetApplicationService exerciseSets;
 
     UUID participantId;
     UUID otherParticipantId;
     UUID specialistId;
     UUID foreignSpecialistId;
     UUID exerciseVersionId;
+    UUID exerciseSetVersionId;
 
     @BeforeEach
     void setUp() {
@@ -74,6 +76,7 @@ class TrainingPlanningV2IntegrationTest {
                 specialistId, ConsentDecisionPort.Purpose.PERFORMANCE_PLANNING, template,
                 java.util.Set.of(ConsentDecisionPort.DataScope.PLAN), null, null));
         exerciseVersionId = publishedExerciseVersion();
+        exerciseSetVersionId = publishedSetVersion();
     }
 
     @AfterEach
@@ -102,11 +105,8 @@ class TrainingPlanningV2IntegrationTest {
         assertThat(editor.revision().status()).isEqualTo("DRAFT");
         assertThat(editor.revision().assessmentStatus()).isEqualTo("NOT_ASSESSED");
 
-        editor = planning.addGoal("planning-specialist", revisionId, new AddGoalCommand(
-                version(editor), GoalPerspective.PERFORMANCE, "STRENGTH", "Build squat capacity",
-                "Progress controlled lower-body strength", 1, null, LocalDate.of(2026, 9, 30),
-                List.of(new OutcomeCommand("SQUAT_REPS", BigDecimal.valueOf(5), BigDecimal.TEN,
-                        "repetitions", "standardized set", "coach observation"))));
+        editor = planning.addGoal("planning-specialist", revisionId,
+                new AddGoalCommand(version(editor), canonicalGoal(participantId)));
         long currentVersion = version(editor);
 
         assertStatus(HttpStatus.CONFLICT, () -> planning.addCycle("planning-specialist", revisionId,
@@ -123,27 +123,26 @@ class TrainingPlanningV2IntegrationTest {
         UUID microcycleId = editor.revision().cycles().getFirst().microcycles().getFirst().id();
         editor = planning.addSession("planning-specialist", revisionId, new AddSessionCommand(
                 version(editor), microcycleId, "MVP modalities", LocalDate.of(2026, 8, 2),
-                Instant.parse("2026-08-02T06:00:00Z"), Instant.parse("2026-08-02T20:00:00Z"), 60));
+                Instant.parse("2026-08-02T06:00:00Z"), Instant.parse("2026-08-02T20:00:00Z"), 60, exerciseSetVersionId));
         UUID sessionId = editor.revision().cycles().getFirst().microcycles().getFirst().sessions().getFirst().id();
 
-        editor = addDose(editor, sessionId, 1, DoseType.DYNAMIC_RESISTANCE,
-                3, 8, null, null, null, IntensityType.PERCENT_1RM, "70", null);
-        editor = addDose(editor, sessionId, 2, DoseType.ISOMETRIC,
-                3, null, 30, null, null, IntensityType.RPE, "7", null);
-        editor = addDose(editor, sessionId, 3, DoseType.IMPACT,
-                4, null, null, null, 12, null, null, null);
-        editor = addDose(editor, sessionId, 4, DoseType.ENDURANCE,
-                null, null, 1200, null, null, IntensityType.ZONE, null, "Z2");
-        editor = addDose(editor, sessionId, 5, DoseType.MOBILITY_CONTROL,
-                2, 10, null, null, null, IntensityType.RIR, "3", null);
-
-        List<UUID> originalOrder = editor.revision().cycles().getFirst().microcycles().getFirst()
-                .sessions().getFirst().prescriptions().stream().map(item -> item.id()).toList();
-        List<UUID> reverseOrder = originalOrder.reversed();
-        editor = planning.reorder("planning-specialist", revisionId,
-                new ReorderCommand(version(editor), sessionId, reverseOrder));
         assertThat(editor.revision().cycles().getFirst().microcycles().getFirst().sessions().getFirst()
-                .prescriptions().stream().map(item -> item.id())).containsExactlyElementsOf(reverseOrder);
+                .sourceExerciseSetVersionId()).isEqualTo(exerciseSetVersionId);
+        assertThat(editor.revision().cycles().getFirst().microcycles().getFirst().sessions().getFirst()
+                .sourceSnapshot()).contains("exerciseSetVersionId");
+        assertThat(editor.revision().cycles().getFirst().microcycles().getFirst().sessions().getFirst()
+                .prescriptions()).singleElement().satisfies(item -> {
+                    assertThat(item.exerciseVersionId()).isEqualTo(exerciseVersionId);
+                    assertThat(item.canonicalDoseType()).isEqualTo("STRENGTH");
+                    assertThat(item.materializedSnapshot()).contains("STRENGTH");
+                });
+        UUID prescriptionId = editor.revision().cycles().getFirst().microcycles().getFirst().sessions().getFirst()
+                .prescriptions().getFirst().id();
+        EditorView beforeVariant = editor;
+        editor = planning.defineSessionVariant("planning-specialist", revisionId,
+                new DefineSessionVariantCommand(version(beforeVariant), sessionId,
+                        TrainingPlanningModel.SessionVariantType.SHORT, 30,
+                        List.of(new VariantItemCommand(prescriptionId, 1))));
 
         editor = planning.addLoadBudget("planning-specialist", revisionId, new AddLoadBudgetCommand(
                 version(editor), "DYN_EXU", BigDecimal.valueOf(100), BigDecimal.valueOf(180),
@@ -168,45 +167,59 @@ class TrainingPlanningV2IntegrationTest {
 
     @Test
     void enforcesSelfDirectedSpecialistAndResourceOwnership() {
-        EditorView self = planning.createDraft("planning-participant", new CreateDraftCommand(
+        assertStatus(HttpStatus.GONE, () -> planning.createDraft("planning-participant", new CreateDraftCommand(
                 null, "My plan", "Independent training", null, "Build consistency",
-                LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31)));
-        assertThat(self.mode()).isEqualTo("SELF_DIRECTED");
-        assertThat(self.participantId()).isEqualTo(participantId);
+                LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31))));
 
-        assertStatus(HttpStatus.FORBIDDEN, () -> planning.createDraft("planning-participant",
+        assertStatus(HttpStatus.GONE, () -> planning.createDraft("planning-participant",
                 new CreateDraftCommand(otherParticipantId, "Wrong", "Wrong owner", PlanMode.SELF_DIRECTED,
                         "No access", null, null)));
-        assertStatus(HttpStatus.FORBIDDEN, () -> planning.editor(
-                "foreign-planning-specialist", self.revision().revisionId()));
-
         EditorView assigned = specialistDraft();
         assertThat(assigned.mode()).isEqualTo("SPECIALIST");
         assertThat(assigned.ownerAccountId()).isEqualTo(specialistId);
+        assertStatus(HttpStatus.FORBIDDEN, () -> planning.editor(
+                "foreign-planning-specialist", assigned.revision().revisionId()));
         assertStatus(HttpStatus.FORBIDDEN, () -> planning.addGoal("planning-participant",
-                assigned.revision().revisionId(), new AddGoalCommand(version(assigned),
-                        GoalPerspective.GENERAL_FITNESS, "FITNESS", "Unauthorized edit", null,
-                        1, null, null, List.of())));
+                assigned.revision().revisionId(), new AddGoalCommand(version(assigned), canonicalGoal(participantId))));
+    }
+
+    @Test
+    void rejectsGoalFromAnotherParticipantAndKeepsGoalSnapshotFrozen() {
+        EditorView editor = specialistDraft();
+        UUID goal = canonicalGoal(participantId);
+        editor = planning.addGoal("planning-specialist", editor.revision().revisionId(),
+                new AddGoalCommand(version(editor), goal));
+        String frozenTitle = editor.revision().goals().getFirst().title();
+        jdbc.update("UPDATE participant_goals.participant_goal SET title = 'Changed later', version = 1 WHERE id = ?", goal);
+        assertThat(planning.editor("planning-specialist", editor.revision().revisionId()).revision()
+                .goals().getFirst().title()).isEqualTo(frozenTitle);
+        editor = planning.deleteGoal("planning-specialist", editor.revision().revisionId(),
+                new DeleteGoalCommand(version(editor), editor.revision().goals().getFirst().id()));
+        assertThat(editor.revision().goals()).isEmpty();
+        UUID foreign = canonicalGoal(otherParticipantId);
+        EditorView frozenEditor = editor;
+        assertStatus(HttpStatus.FORBIDDEN, () -> planning.addGoal("planning-specialist",
+                frozenEditor.revision().revisionId(), new AddGoalCommand(version(frozenEditor), foreign)));
     }
 
     @Test
     void activeRevisionIsImmutableAndCanBeClonedAsNewDraft() {
-        EditorView original = planning.createDraft("planning-participant", new CreateDraftCommand(
-                null, "Stable plan", "Revision test", PlanMode.SELF_DIRECTED, "Base phase", null, null));
+        EditorView original = specialistDraft();
         UUID planId = original.planId();
         UUID revisionId = original.revision().revisionId();
         jdbc.update("UPDATE training_planning.plan_revision SET status = 'ACTIVE' WHERE id = ?", revisionId);
         jdbc.update("UPDATE training_planning.training_plan SET status = 'ACTIVE' WHERE id = ?", planId);
 
-        assertStatus(HttpStatus.CONFLICT, () -> planning.addGoal("planning-participant", revisionId,
-                new AddGoalCommand(0, GoalPerspective.GENERAL_FITNESS, "FITNESS", "Forbidden mutation",
-                        null, 1, null, null, List.of())));
+        assertStatus(HttpStatus.CONFLICT, () -> planning.addGoal("planning-specialist", revisionId,
+                new AddGoalCommand(0, UUID.randomUUID())));
+        assertStatus(HttpStatus.CONFLICT, () -> planning.deleteGoal("planning-specialist", revisionId,
+                new DeleteGoalCommand(0, UUID.randomUUID())));
 
-        EditorView clone = planning.createRevision("planning-participant", planId,
-                new CreateRevisionCommand(revisionId));
+        EditorView clone = planning.createRevision("planning-specialist", planId,
+                new CreateRevisionCommand(revisionId, new ActingContext(ProfessionalRole.TRAINER)));
         assertThat(clone.revision().revisionNumber()).isEqualTo(2);
         assertThat(clone.revision().status()).isEqualTo("DRAFT");
-        assertThat(planning.history("planning-participant", planId))
+        assertThat(planning.history("planning-specialist", planId))
                 .extracting(TrainingPlanningV2Persistence.RevisionHistoryItem::status)
                 .containsExactly("ACTIVE", "DRAFT");
     }
@@ -218,17 +231,6 @@ class TrainingPlanningV2IntegrationTest {
                 new ActingContext(ProfessionalRole.TRAINER)));
     }
 
-    private EditorView addDose(EditorView editor, UUID sessionId, int position, DoseType type,
-                               Integer sets, Integer repetitions, Integer duration, BigDecimal distance,
-                               Integer contacts, IntensityType intensityType, String intensityValue,
-                               String zone) {
-        return planning.addPrescription("planning-specialist", editor.revision().revisionId(),
-                new AddPrescriptionCommand(version(editor), sessionId, exerciseVersionId, position,
-                        PrescriptionSide.BILATERAL, type, sets, repetitions, duration, distance, contacts,
-                        position == 1 ? BigDecimal.valueOf(20) : null, position == 1 ? "kg" : null,
-                        intensityType, intensityValue == null ? null : new BigDecimal(intensityValue), zone,
-                        position == 1 ? "3-1-1" : null, "FULL", 60, null, null));
-    }
 
     private static AddCycleCommand cycle(long version, LocalDate start, LocalDate end) {
         return new AddCycleCommand(version, 1, "Foundation cycle", start, end,
@@ -311,6 +313,37 @@ class TrainingPlanningV2IntegrationTest {
                 WHERE id = ?
                 """, versionId);
         return versionId;
+    }
+
+    private UUID canonicalGoal(UUID participant) {
+        UUID goal = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO participant_goals.participant_goal
+                    (id, participant_id, specialist_account_id, category, title, description, priority,
+                     target_date, status, created_at, updated_at, version)
+                VALUES (?, ?, ?, 'PERFORMANCE', 'Build squat capacity',
+                        'Progress controlled lower-body strength', 1, '2026-09-30', 'ACTIVE', now(), now(), 0)
+                """, goal, participant, specialistId);
+        jdbc.update("""
+                INSERT INTO participant_goals.goal_outcome
+                    (id, goal_id, metric_code, baseline, target_value, unit, position, created_at)
+                VALUES (?, ?, 'SQUAT_REPS', 5, 10, 'repetitions', 0, now())
+                """, UUID.randomUUID(), goal);
+        return goal;
+    }
+
+    private UUID publishedSetVersion() {
+        var set = exerciseSets.create("planning-specialist");
+        UUID version = set.versions().getFirst().id();
+        exerciseSets.updateMetadata("planning-specialist", set.id(), version,
+                new ExerciseSetDtos.MetadataRequest(ExerciseSetModel.SetProfile.MAIN_MODULE,
+                        "Squat capacity", null, null, List.of(), 0));
+        exerciseSets.addItem("planning-specialist", set.id(), version,
+                new ExerciseSetDtos.ItemRequest(exerciseVersionId, ExerciseSetModel.Phase.MAIN,
+                        new ExerciseSetDtos.StrengthDose(3, 8, null, null, 60, "3-1-1",
+                                BigDecimal.valueOf(20), "kg", BigDecimal.valueOf(7), null,
+                                ExerciseSetModel.Side.BILATERAL), "Controlled squat", null, 1));
+        return exerciseSets.publish("planning-specialist", set.id(), version, 2).id();
     }
 
     private void addFixtureReviews(UUID versionId) {

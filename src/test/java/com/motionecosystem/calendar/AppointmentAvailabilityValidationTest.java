@@ -8,10 +8,10 @@ import static org.mockito.Mockito.when;
 
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.availability.RecurringAvailabilityService;
+import com.motionecosystem.calendar.api.CalendarSpecialistContextPort;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
-import com.motionecosystem.specialist.api.SpecialistWorkspacePort;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -29,16 +29,16 @@ class AppointmentAvailabilityValidationTest {
         AppointmentRepository repository = mock(AppointmentRepository.class);
         CurrentAccountService accounts = mock(CurrentAccountService.class);
         RecurringAvailabilityService availability = mock(RecurringAvailabilityService.class);
-        SpecialistWorkspacePort specialistWorkspace = mock(SpecialistWorkspacePort.class);
+        CalendarSpecialistContextPort specialistContext = mock(CalendarSpecialistContextPort.class);
         when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(specialistId, "specialist", ProfileType.SPECIALIST));
-        when(specialistWorkspace.findProfile(specialistId)).thenReturn(Optional.of(new SpecialistWorkspacePort.Profile(
-                specialistId, SpecialistWorkspacePort.WorkspaceRole.TRAINER, "UTC")));
+        when(specialistContext.findSpecialist(specialistId)).thenReturn(Optional.of(
+                new CalendarSpecialistContextPort.SpecialistContext("UTC")));
         Instant starts = Instant.parse("2030-06-10T12:00:00Z");
         Instant ends = Instant.parse("2030-06-10T13:00:00Z");
         when(availability.windows(specialistId, starts.atZone(ZoneOffset.UTC).toLocalDate())).thenReturn(List.of(
                 new RecurringAvailabilityService.Window(Instant.parse("2030-06-10T08:00:00Z"), Instant.parse("2030-06-10T10:00:00Z"))));
         AppointmentService service = new AppointmentService(repository, mock(AppointmentEventRepository.class), mock(AppointmentIdempotencyRepository.class), accounts,
-                specialistWorkspace, availability, mock(AuditRecorder.class),
+                specialistContext, availability, mock(AuditRecorder.class),
                 Clock.fixed(Instant.parse("2030-06-01T00:00:00Z"), ZoneOffset.UTC));
         AppointmentService.CreateCommand create = new AppointmentService.CreateCommand(participantId, starts, ends,
                 Appointment.Type.CONSULTATION, Appointment.LocationMode.REMOTE, null, null);

@@ -5,8 +5,7 @@ import static org.mockito.Mockito.when;
 
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
-import com.motionecosystem.specialist.SpecialistRelationshipService;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -39,7 +38,7 @@ class ParticipantDocumentationTimelineTest {
         return new ParticipantDocumentationService(org.mockito.Mockito.mock(ParticipantInterviewRepository.class),
                 org.mockito.Mockito.mock(InterviewResponseRepository.class), org.mockito.Mockito.mock(ParticipantNoteRepository.class), events,
                 org.mockito.Mockito.mock(RecordIdempotencyRepository.class), org.mockito.Mockito.mock(CurrentAccountService.class),
-                org.mockito.Mockito.mock(SpecialistRelationshipService.class), org.mockito.Mockito.mock(SpecialistAuthorizationPort.class),
+                org.mockito.Mockito.mock(SpecialistAuthorizationPort.class),
                 org.mockito.Mockito.mock(AuditRecorder.class), Clock.fixed(Instant.parse("2030-06-10T12:00:00Z"), ZoneOffset.UTC));
     }
 

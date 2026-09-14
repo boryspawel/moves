@@ -1,7 +1,7 @@
 package com.motionecosystem.trainingplanning;
 
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ProfessionalRole;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
 import com.motionecosystem.trainingplanning.PlanCollaborationService.CollaboratorCommand;
 import com.motionecosystem.trainingplanning.PlanCollaborationService.CollaboratorView;
 import com.motionecosystem.trainingplanning.PlanCollaborationService.ReviewDecisionCommand;

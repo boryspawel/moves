@@ -34,7 +34,7 @@ Plan zachowuje jednego ownera i jawnie zakresowanych collaborators. Zablokowana 
 - Wewnętrzne relacje nowych tabel mają FK, CHECK constraints i indeksy; referencje między kontekstami pozostają UUID walidowanymi przez porty.
 - Testy architektury kontrolują granice modułów i brak cykli. Audyt nie wykazał nowych cross-schema native queries, publicznych setterów, `FetchType.EAGER`, tymczasowych adapterów ani TODO/FIXME.
 - Planned i executed load są osobnymi profilami wielowymiarowymi, z wersją kalkulatora/reguł; nie istnieje globalny score.
-- OpenAPI jest generowane z uruchomionej aplikacji, a klient `typescript-fetch` przez OpenAPI Generator 7.24.0; aktualny snapshot obejmuje flow kartoteki, workspace i timeline. Pliki wygenerowane nie są edytowane ręcznie. Odświeżenie wymaga Docker/Testcontainers, więc środowisko bez socketu Dockera nie może zastąpić go ręczną edycją ani smoke testem Compose.
+- OpenAPI jest generowane z uruchomionej aplikacji, a klient `typescript-fetch` przez OpenAPI Generator 7.24.0; aktualny snapshot obejmuje flow kartoteki, workspace i timeline. Pliki wygenerowane nie są edytowane ręcznie. Lokalna walidacja integracyjna korzysta z Docker Compose (`docker compose up --build`, `scripts/compose-smoke.sh`); testy JVM oparte na Testcontainers wymagają działającego Docker Engine.
 - Backend CI używa Temurin Java 25 i wykonuje pełne `mvn --batch-mode verify`.
 
 Ścieżki akceptacyjne są pokryte przez testy integracyjne modułów planowania, workflow, safety i execution:

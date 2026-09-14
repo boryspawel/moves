@@ -59,6 +59,24 @@ export interface GoalSnapshot {
   priority?: number;
   /**
    *
+   * @type {Date}
+   * @memberof GoalSnapshot
+   */
+  snapshottedAt?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof GoalSnapshot
+   */
+  sourceParticipantGoalId?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof GoalSnapshot
+   */
+  sourceParticipantGoalVersion?: number;
+  /**
+   *
    * @type {string}
    * @memberof GoalSnapshot
    */
@@ -101,6 +119,13 @@ export function GoalSnapshotFromJSONTyped(json: any, ignoreDiscriminator: boolea
         : (json['outcomes'] as Array<any>).map(GoalOutcomeSnapshotFromJSON),
     perspective: json['perspective'] == null ? undefined : json['perspective'],
     priority: json['priority'] == null ? undefined : json['priority'],
+    snapshottedAt: json['snapshottedAt'] == null ? undefined : new Date(json['snapshottedAt']),
+    sourceParticipantGoalId:
+      json['sourceParticipantGoalId'] == null ? undefined : json['sourceParticipantGoalId'],
+    sourceParticipantGoalVersion:
+      json['sourceParticipantGoalVersion'] == null
+        ? undefined
+        : json['sourceParticipantGoalVersion'],
     status: json['status'] == null ? undefined : json['status'],
     targetDate: json['targetDate'] == null ? undefined : new Date(json['targetDate']),
     title: json['title'] == null ? undefined : json['title'],
@@ -128,6 +153,12 @@ export function GoalSnapshotToJSONTyped(
         : (value['outcomes'] as Array<any>).map(GoalOutcomeSnapshotToJSON),
     perspective: value['perspective'],
     priority: value['priority'],
+    snapshottedAt:
+      value['snapshottedAt'] == null
+        ? value['snapshottedAt']
+        : value['snapshottedAt'].toISOString(),
+    sourceParticipantGoalId: value['sourceParticipantGoalId'],
+    sourceParticipantGoalVersion: value['sourceParticipantGoalVersion'],
     status: value['status'],
     targetDate:
       value['targetDate'] == null

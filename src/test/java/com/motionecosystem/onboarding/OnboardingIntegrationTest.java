@@ -96,6 +96,8 @@ class OnboardingIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.stage").value("READY"))
                 .andExpect(jsonPath("$.availability.length()").value(2));
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM availability.recurring_slot", Integer.class))
+                .isEqualTo(2);
 
         put("participant-one", "/availability", availability("Europe/Warsaw", "09:00", "11:00", null))
                 .andExpect(status().isOk())

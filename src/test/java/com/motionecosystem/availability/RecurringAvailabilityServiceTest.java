@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 
 class RecurringAvailabilityServiceTest {
     @Test
-    void accepts_overlapping_weekly_windows_when_boundaries_are_valid() {
+    void accepts_overlapping_weekly_windows_in_the_same_time_zone() {
         RecurringSlotRepository repository = mock(RecurringSlotRepository.class);
         UUID accountId = UUID.randomUUID();
         when(repository.findByAccountIdOrderByDayOfWeekAscStartTimeAsc(accountId)).thenReturn(List.of());
@@ -25,6 +25,21 @@ class RecurringAvailabilityServiceTest {
         List<RecurringAvailabilityService.Slot> result = service.replace(accountId, List.of(
                 new RecurringAvailabilityService.Slot(DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(11, 0), "Europe/Warsaw"),
                 new RecurringAvailabilityService.Slot(DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(12, 0), "Europe/Warsaw")));
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void accepts_adjacent_windows_in_the_same_time_zone() {
+        RecurringSlotRepository repository = mock(RecurringSlotRepository.class);
+        UUID accountId = UUID.randomUUID();
+        when(repository.findByAccountIdOrderByDayOfWeekAscStartTimeAsc(accountId)).thenReturn(List.of());
+        RecurringAvailabilityService service = new RecurringAvailabilityService(repository,
+                mock(AdherenceMetricsService.class), Clock.system(ZoneOffset.UTC));
+
+        List<RecurringAvailabilityService.Slot> result = service.replace(accountId, List.of(
+                new RecurringAvailabilityService.Slot(DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(11, 0), "Europe/Warsaw"),
+                new RecurringAvailabilityService.Slot(DayOfWeek.MONDAY, LocalTime.of(11, 0), LocalTime.of(12, 0), "Europe/Warsaw")));
 
         assertThat(result).isEmpty();
     }

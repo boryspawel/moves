@@ -46,7 +46,12 @@ public final class ExerciseSetDtos {
     public record VersionSummary(UUID id, int versionNumber, VersionStatus status, String title, SetProfile profile, VariantKind variantKind, UUID variantOfVersionId) { }
     public record VersionView(UUID id, UUID exerciseSetId, int versionNumber, VersionStatus status, SetProfile profile, String title, String description, String targetLevel, List<String> tags, VariantKind variantKind, UUID variantOfVersionId, Instant createdAt, Instant publishedAt, Instant retiredAt, long lockVersion, List<ItemView> items, AnalysisView analysis) { }
     public record ItemView(UUID id, UUID exerciseVersionId, Phase phase, int position, ExerciseSnapshot snapshot, Dose dose, String participantInstruction, String specialistInstruction) { }
-    public record ExerciseSnapshot(String canonicalName, int versionNumber, int profileSchemaVersion, List<String> movementPatterns, List<String> requiredEquipment) { }
+    public record ExerciseSnapshot(String canonicalName, int versionNumber, int profileSchemaVersion, List<String> movementPatterns, List<String> requiredEquipment) {
+        public ExerciseSnapshot {
+            movementPatterns = movementPatterns == null ? List.of() : List.copyOf(movementPatterns);
+            requiredEquipment = requiredEquipment == null ? List.of() : List.copyOf(requiredEquipment);
+        }
+    }
     public record AnalysisView(AnalysisStatus status, String policyVersion, long analyzedLockVersion, Instant analyzedAt,
                                boolean draft, boolean published, AnalysisMetrics metrics, List<AnalysisFinding> findings) { }
     public record AnalysisMetrics(Integer itemCount, Integer estimatedSeconds, TimeConfidence timeConfidence,

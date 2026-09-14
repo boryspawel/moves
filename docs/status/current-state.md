@@ -16,7 +16,8 @@ udostępniony, bezpieczne usuwanie porzuconych draftów oraz idempotency/retry d
 ## Participant Goals — completed scope and next steps
 
 **GOALS-01 through GOALS-05 are complete.** The canonical, participant-owned outcome-goal
-aggregate is separate from plan-revision goals and is available in the specialist workspace.
+aggregate is available in the specialist workspace and is materialized into revision-owned snapshots
+rather than duplicated as a plan-goal aggregate.
 It includes active/achieved/cancelled lifecycle, immutable outcome snapshots, explicit specialist
 achievement/cancellation, append-only observations and progress, append-only mutation events,
 specialist timeline entries and event deep links. The specialist workspace supports creating,
@@ -26,17 +27,20 @@ flow; each resulting goal keeps an immutable outcome snapshot rather than a live
 Details and boundaries are in [participant goals](../architecture/participant-goals.md) and
 [ADR-018](../adr/ADR-018-participant-goal-ownership.md).
 
-Deliberate current limits: goals are not integrated with training-plan revisions; achievement is
+P1 integrates goals with revision snapshots: commands accept `participantGoalId`, verify participant
+ownership and specialist category, then persist source ID/version, metadata and outcomes. Source changes
+never rewrite an activated revision. Legacy planning-goal rows without a proven canonical source remain
+read-only history.
+
+Deliberate current limits: achievement is
 not automatic; there is no participant self-service UI, measurement correction/edit/delete,
 unit conversion, charts, alerts, device import, analytics or ML.
 
 ### Participant Goals — next-steps roadmap
 
-- **Training-plan integration:** link goals to a revision, snapshot those links in that revision,
-  and copy associations when creating a new revision. Validate participant, acting perspective
-  and authorization consistently; define the transition strategy for legacy
-  `training_planning.training_goal`. Do not automatically back-propagate associations to
-  historic revisions.
+- **Plan authoring UI:** the P1 backend already links a canonical participant goal to a
+  revision and snapshots it. A dedicated specialist authoring UI, source pickers and
+  history presentation remain later work; `/plan` is intentionally read-only meanwhile.
 - **Observation evolution:** add an append-only correcting event, defined unit conversions,
   session and research-result integrations, and derived charts/aggregates.
 - **Participant access:** enable `GENERAL_FITNESS` self-service with own-goal reading and only
@@ -55,7 +59,7 @@ SET-01 jest ukończonym etapem analityczno-projektowym. Kanoniczny model opisuje
 [model zestawów ćwiczeń](../architecture/exercise-set-model.md), a decyzję granic
 utrwala [ADR-013](../adr/ADR-013-independent-versioned-exercise-sets.md).
 
-**SET-02 jest częściowo ukończony formalnie, ale backendowy pion jest gotowy do SET-03.** Implementacja JPA/Hibernate w
+**SET-02 jest wdrożonym fundamentem backendowym dla SET-03.** Implementacja JPA/Hibernate w
 `com.motionecosystem.exercisesets` oraz migracja `V038__create_exercise_sets.sql` dają
 niezależny pion backendowy: owner-scoped set, pierwszy draft, wersjonowane pozycje,
 typed dose, publikację, następny draft, materializowany draft wariantu i wycofanie.
@@ -68,12 +72,12 @@ komendzie. Pozycje referencjonują opublikowaną
 `ExerciseVersion` przez publiczny port katalogu i zapisują minimalny snapshot odczytowy.
 
 Snapshot OpenAPI, generowany klient TypeScript oraz `ApiFacade.exerciseSets` obejmują
-nowe API. `Dose` jest generowane jako `oneOf` z dyskryminatorem `type`.
-Backendowa weryfikacja z 2026-09-11 jest zielona: `mvn --batch-mode verify` zakończył
-219 testów bez failures/errors/skips, 13/13 reguł ArchUnit oraz 6 standardowych i 2
-upgrade'owe scenariusze Flyway. Obejmuje to usunięcie zastanych cykli/legacy fixture
-problemów. Następny etap może rozpocząć się jako SET-03: wyszukiwanie i wybór
-konkretnej wersji ćwiczenia.
+nowe API. `Dose` jest generowane jako `oneOf` z dyskryminatorem `type`; `api:verify`,
+testy MockMvc/PostgreSQL/Testcontainers i frontendowe testy oraz build potwierdziły
+zgodność pionu. P1 domknęło integrację zestawów z rewizjami planu i pełną walidację:
+`mvn verify` (242 testy), ArchUnit (14/14), Flyway/Hibernate, 160 testów frontendu,
+build produkcyjny, `api:verify` i Compose smoke są zielone. Następny etap może
+rozszerzać SET-03 o dalsze przypadki wyboru konkretnej wersji ćwiczenia.
 
 **SET-03 dostarcza pion wyszukiwanie → filtrowanie → facety → podgląd → wybór
 `ExerciseVersion`.** `V039__add_exercise_catalog_search_indexes.sql` wprowadza
@@ -93,12 +97,15 @@ pozostaje odpowiedzialnością SET-04. OpenAPI snapshot, generowany klient oraz
 edytowane ręcznie. Testy jednostkowe sprawdzają folding tekstu, a Testcontainers/MockMvc
 pokrywa aliasy, filtry, facety, cursor i preview.
 
-Obecny formularz „Nowy plan” (`/plan`) nadal jest legacy: wiąże uczestnika, pojedyncze
-ćwiczenie, datę/sesję, płaską dawkę i wariant sesji. Nie został zmigrowany ani połączony
-automatycznie z nowym agregatem; `ExercisePrescription`, `SessionVariant` i historyczne
-wykonania pozostają bez zmian. Audyt potwierdził niepełną jakość/ekspozycję danych
-anatomicznych oraz ograniczoną powierzchnię wyszukiwania katalogu; facety, analiza,
-assignment i integracja z planowaniem są zakresem kolejnych etapów.
+P1 makes an exact published `ExerciseSetVersion` the session authoring source. Planning materializes
+ordered typed doses, item/catalog snapshots, instructions and available load/anatomy analysis into a
+revision; historic prescriptions remain readable after retirement. Manual V2 prescription authoring is
+removed and draft revalidation requires the source version to remain published. `SessionVariant` now
+selects materialized prescriptions only; its historic dose overrides remain read-only.
+
+`/plan` is retained as a read-only specialist bookmark. It deliberately has no manual goal, exercise,
+dose or variant editor; a dedicated source-picker authoring UI follows in a later stage. Existing plan
+and execution history remains readable through its established projections.
 
 **SET-04 dostarcza specjalistyczny builder pod `/exercise-sets`.** Lista prowadzi do
 odczytu opublikowanej wersji albo edycji szkicu; `/exercise-sets/new` zakłada pierwszy
@@ -240,9 +247,10 @@ biomechaniczną ani kliniczną. SET-07B może rozpocząć prototyp techniczny.
 
 CI wykonuje `mvn verify`, deterministyczną instalację zależności frontendu,
 testy jednostkowe bez watch mode, produkcyjny build Angulara oraz weryfikację
-snapshotu i generatora OpenAPI. Smoke test Docker Compose wymaga dostępnego
-silnika Docker i nie jest zastępstwem dla tych weryfikacji w środowisku bez
-socketu Dockera.
+snapshotu i generatora OpenAPI. Lokalną walidację integracyjną uruchamia się
+przez `docker compose up --build` oraz `scripts/compose-smoke.sh`. Testy JVM
+oparte na Testcontainers wymagają działającego Docker Engine; Compose smoke
+test uzupełnia, ale nie zastępuje pełnej weryfikacji CI.
 
 Weryfikacja OpenAPI odświeża specyfikację i klient przez `npm run api:refresh`,
 a następnie wymaga braku różnic. Wygenerowane pliki są aktualizowane wyłącznie

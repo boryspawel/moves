@@ -10,8 +10,8 @@ import com.motionecosystem.exercisecatalog.api.ExerciseCatalogQueryPort.SideRule
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
 import com.motionecosystem.participant.api.ParticipantClientPort;
-import com.motionecosystem.specialist.SpecialistRelationshipService;
 import com.motionecosystem.trainingexecution.SessionExecutionPersistence.AlertData;
 import com.motionecosystem.trainingexecution.SessionExecutionPersistence.CorrectionData;
 import com.motionecosystem.trainingexecution.SessionExecutionPersistence.ExecutedObservationData;
@@ -43,7 +43,7 @@ public class ExecutionProjectionService {
     private final ExerciseCatalogQueryPort catalog;
     private final CurrentAccountService accounts;
     private final ParticipantClientPort participants;
-    private final SpecialistRelationshipService relationships;
+    private final SpecialistAuthorizationPort authorization;
     private final TransactionalOutbox outbox;
     private final AuditRecorder audit;
     private final Clock clock;
@@ -173,7 +173,7 @@ public class ExecutionProjectionService {
         if (participantContext) {
             if (!participantIdFor(actor).equals(owner.participantAccountId())) throw forbidden("execution belongs to another participant");
         } else if (actor.hasProfile(ProfileType.SPECIALIST)) {
-            relationships.requireActive(actor.id(), owner.participantAccountId());
+            authorization.requireActiveRelationship(actor.id(), owner.participantAccountId());
         } else throw forbidden("profile cannot manage execution alerts");
         if (command == null || !Set.of("ACKNOWLEDGE", "RESOLVE", "REOPEN", "ASSIGN").contains(command.action())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "supported alert action is required");

@@ -17,7 +17,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -32,11 +31,10 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.sql.Timestamp;
 import java.time.Clock;
-import java.util.ArrayDeque;
+import java.time.Instant;
 import java.util.HexFormat;
-import java.util.Queue;
+import java.util.List;
 import java.util.UUID;
 
 @Configuration(proxyBeanMethods = false)
@@ -44,7 +42,10 @@ import java.util.UUID;
 @RequiredArgsConstructor
 class ExerciseImportBatchConfiguration {
     private static final int CHUNK_SIZE = 50;
-    private final JdbcTemplate jdbc;
+    private final ExerciseImportBatchRepository batches;
+    private final ExerciseImportArtifactRepository importArtifacts;
+    private final ExerciseImportRecordRepository records;
+    private final ExerciseImportIssueRepository issues;
     private final ObjectMapper json;
     private final ImportArtifactStorage artifacts;
     private final NormalizeImportRecord normalizer;
@@ -80,8 +81,10 @@ class ExerciseImportBatchConfiguration {
     Step receive(JobRepository repository, PlatformTransactionManager transactions) {
         return new StepBuilder("RECEIVE", repository).tasklet((contribution, context) -> {
             UUID batchId = batchId(context.getStepContext().getJobParameters().get("batchId"));
-            jdbc.update("UPDATE exercise_import.import_batch SET status='PROCESSING',started_at=COALESCE(started_at,?),version=version+1 WHERE id=?",
-                    Timestamp.from(clock.instant()), batchId);
+            ExerciseImportBatchEntity batch = batch(batchId);
+            batch.status = "PROCESSING";
+            if (batch.startedAt == null) batch.startedAt = clock.instant();
+            batches.save(batch);
             return org.springframework.batch.infrastructure.repeat.RepeatStatus.FINISHED;
         }, transactions).build();
     }
@@ -91,8 +94,9 @@ class ExerciseImportBatchConfiguration {
                @Value("${exercise-import.limits.record-bytes}") long recordLimit) {
         return new StepBuilder("PARSE", repository).tasklet((contribution, context) -> {
             UUID batchId = batchId(context.getStepContext().getJobParameters().get("batchId"));
-            String storageKey = jdbc.queryForObject(
-                    "SELECT storage_key FROM exercise_import.import_artifact WHERE batch_id=?", String.class, batchId);
+            String storageKey = importArtifacts.findByBatchId(batchId)
+                    .orElseThrow(() -> new IllegalStateException("import artifact not found"))
+                    .storageKey;
             var decoder = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
                     .onUnmappableCharacter(CodingErrorAction.REPORT);
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(artifacts.open(storageKey), decoder))) {
@@ -149,15 +153,12 @@ class ExerciseImportBatchConfiguration {
             // issue; successfully created drafts are never rolled back with an unrelated record.
             TransactionTemplate perRecord = new TransactionTemplate(transactions);
             perRecord.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-            for (UUID recordId : jdbc.queryForList("""
-                    SELECT id FROM exercise_import.import_record
-                    WHERE batch_id=? AND status='READY_FOR_DRAFT' AND draft_version_id IS NULL
-                    ORDER BY row_number,id
-                    """, UUID.class, batchId)) {
+            for (ExerciseImportRecordEntity record : records
+                    .findByBatchIdAndStatusAndDraftVersionIdIsNullOrderByRowNumberAscIdAsc(batchId, "READY_FOR_DRAFT")) {
                 try {
-                    perRecord.executeWithoutResult(status -> drafts.createDraft(recordId, "exercise-import-batch"));
+                    perRecord.executeWithoutResult(status -> drafts.createDraft(record.id, "exercise-import-batch"));
                 } catch (RuntimeException failure) {
-                    draftIssue(batchId, recordId);
+                    draftIssue(batchId, record.id);
                 }
             }
             refresh(batchId);
@@ -167,15 +168,15 @@ class ExerciseImportBatchConfiguration {
 
     @Bean("normalizeImportReader") @StepScope
     ItemReader<UUID> normalizeReader(@Value("#{jobParameters['batchId']}") String id) {
-        return new StatusItemReader(jdbc, UUID.fromString(id), "PARSED");
+        return new StatusItemReader(records, UUID.fromString(id), "PARSED");
     }
     @Bean("validateImportReader") @StepScope
     ItemReader<UUID> validateReader(@Value("#{jobParameters['batchId']}") String id) {
-        return new StatusItemReader(jdbc, UUID.fromString(id), "NORMALIZED");
+        return new StatusItemReader(records, UUID.fromString(id), "NORMALIZED");
     }
     @Bean("matchImportReader") @StepScope
     ItemReader<UUID> matchReader(@Value("#{jobParameters['batchId']}") String id) {
-        return new StatusItemReader(jdbc, UUID.fromString(id), "NORMALIZED");
+        return new StatusItemReader(records, UUID.fromString(id), "NORMALIZED");
     }
 
     private Step chunkStep(String name, ItemReader<UUID> reader, RecordOperation operation,
@@ -191,8 +192,10 @@ class ExerciseImportBatchConfiguration {
             @Override public void afterJob(JobExecution execution) {
                 UUID batchId = UUID.fromString(execution.getJobParameters().getString("batchId"));
                 if (execution.getStatus() == BatchStatus.FAILED) {
-                    jdbc.update("UPDATE exercise_import.import_batch SET status='FAILED',completed_at=?,version=version+1 WHERE id=?",
-                            Timestamp.from(clock.instant()), batchId);
+                    ExerciseImportBatchEntity batch = batch(batchId);
+                    batch.status = "FAILED";
+                    batch.completedAt = clock.instant();
+                    batches.save(batch);
                     batchIssue(batchId, "BATCH_JOB_FAILED", "BLOCKER", "Pipeline Spring Batch zakończył się błędem; job można wznowić.");
                 } else refresh(batchId);
             }
@@ -200,68 +203,75 @@ class ExerciseImportBatchConfiguration {
     }
 
     private void refresh(UUID batchId) {
-        jdbc.update("""
-                UPDATE exercise_import.import_batch batch SET
-                    total_count=(SELECT COUNT(*) FROM exercise_import.import_record r WHERE r.batch_id=?),
-                    valid_count=(SELECT COUNT(*) FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status NOT IN ('INVALID','BLOCKED_BY_MAPPING','BLOCKED_BY_LICENSE','REJECTED')),
-                    invalid_count=(SELECT COUNT(*) FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status='INVALID'),
-                    blocked_count=(SELECT COUNT(*) FROM exercise_import.import_record r WHERE r.batch_id=? AND (r.status IN ('BLOCKED_BY_MAPPING','BLOCKED_BY_LICENSE','MATCH_CANDIDATES') OR EXISTS (SELECT 1 FROM exercise_import.import_issue i WHERE i.record_id=r.id AND i.code='DRAFT_CREATION_FAILED' AND i.resolved_at IS NULL))),
-                    drafted_count=(SELECT COUNT(*) FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status='DRAFTED'),
-                    unchanged_count=(SELECT COUNT(*) FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status='UNCHANGED'),
-                    status=CASE WHEN batch.status='FAILED' THEN 'FAILED'
-                        WHEN NOT EXISTS (SELECT 1 FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status IN ('RECEIVED','PARSED','NORMALIZED'))
-                         AND (EXISTS (SELECT 1 FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status IN ('INVALID','BLOCKED_BY_MAPPING','BLOCKED_BY_LICENSE','MATCH_CANDIDATES')) OR EXISTS (SELECT 1 FROM exercise_import.import_issue i WHERE i.batch_id=? AND i.severity IN ('ERROR','BLOCKER') AND i.resolved_at IS NULL)) THEN 'COMPLETED_WITH_ISSUES'
-                        WHEN NOT EXISTS (SELECT 1 FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status IN ('RECEIVED','PARSED','NORMALIZED')) THEN 'COMPLETED'
-                        ELSE 'PROCESSING' END,
-                    completed_at=CASE WHEN EXISTS (SELECT 1 FROM exercise_import.import_record r WHERE r.batch_id=? ) AND NOT EXISTS (SELECT 1 FROM exercise_import.import_record r WHERE r.batch_id=? AND r.status IN ('RECEIVED','PARSED','NORMALIZED')) THEN COALESCE(batch.completed_at,?) ELSE NULL END,
-                    version=batch.version+1 WHERE batch.id=?
-                """, batchId, batchId, batchId, batchId, batchId, batchId, batchId, batchId, batchId, batchId, batchId, batchId, Timestamp.from(clock.instant()), batchId);
+        ExerciseImportBatchEntity batch = batch(batchId);
+        List<ExerciseImportRecordEntity> batchRecords = records.findByBatchId(batchId);
+        List<ExerciseImportIssueEntity> batchIssues = issues.findByBatchIdOrderByRowNumberAscSeverityAscCodeAscIdAsc(batchId);
+        batch.totalCount = batchRecords.size();
+        batch.validCount = count(batchRecords, record -> !List.of("INVALID", "BLOCKED_BY_MAPPING", "BLOCKED_BY_LICENSE", "REJECTED").contains(record.status));
+        batch.invalidCount = count(batchRecords, record -> record.status.equals("INVALID"));
+        batch.blockedCount = count(batchRecords, record -> List.of("BLOCKED_BY_MAPPING", "BLOCKED_BY_LICENSE", "MATCH_CANDIDATES").contains(record.status)
+                || batchIssues.stream().anyMatch(issue -> record.id.equals(issue.recordId) && issue.code.equals("DRAFT_CREATION_FAILED") && issue.resolvedAt == null));
+        batch.draftedCount = count(batchRecords, record -> record.status.equals("DRAFTED"));
+        batch.unchangedCount = count(batchRecords, record -> record.status.equals("UNCHANGED"));
+        boolean unfinished = batchRecords.stream().anyMatch(record -> List.of("RECEIVED", "PARSED", "NORMALIZED").contains(record.status));
+        boolean hasIssues = batchRecords.stream().anyMatch(record -> List.of("INVALID", "BLOCKED_BY_MAPPING", "BLOCKED_BY_LICENSE", "MATCH_CANDIDATES").contains(record.status))
+                || batchIssues.stream().anyMatch(issue -> issue.resolvedAt == null && List.of("ERROR", "BLOCKER").contains(issue.severity));
+        if (!batch.status.equals("FAILED")) batch.status = unfinished ? "PROCESSING" : hasIssues ? "COMPLETED_WITH_ISSUES" : "COMPLETED";
+        batch.completedAt = !batchRecords.isEmpty() && !unfinished ? (batch.completedAt == null ? clock.instant() : batch.completedAt) : null;
+        batches.save(batch);
     }
 
     private void insertRecord(UUID batchId, long row, String payload, String hash) {
-        InstantPair now = new InstantPair(Timestamp.from(clock.instant()));
-        jdbc.update("""
-                INSERT INTO exercise_import.import_record(id,batch_id,row_number,status,raw_payload,raw_sha256,created_at,updated_at,version)
-                VALUES (?, ?,?,'PARSED',CAST(? AS jsonb),?,?,?,0) ON CONFLICT(batch_id,row_number) DO NOTHING
-                """, UUID.randomUUID(), batchId, row, payload, hash, now.value, now.value);
+        if (recordExists(batchId, row)) return;
+        Instant now = clock.instant();
+        ExerciseImportRecordEntity record = new ExerciseImportRecordEntity();
+        record.id = UUID.randomUUID(); record.batchId = batchId; record.rowNumber = row; record.status = "PARSED";
+        record.rawPayload = payload; record.rawSha256 = hash; record.createdAt = now; record.updatedAt = now;
+        records.save(record);
     }
 
     private void insertInvalid(UUID batchId, long row, String payload, String hash,
                                String code, String pointer, String message) {
-        UUID id = UUID.randomUUID(); var now = Timestamp.from(clock.instant());
-        int inserted = jdbc.update("""
-                INSERT INTO exercise_import.import_record(id,batch_id,row_number,status,raw_payload,raw_sha256,created_at,updated_at,version)
-                VALUES (?, ?,?,'INVALID',CAST(? AS jsonb),?,?,?,0) ON CONFLICT(batch_id,row_number) DO NOTHING
-                """, id, batchId, row, payload, hash, now, now);
-        if (inserted > 0) jdbc.update("""
-                INSERT INTO exercise_import.import_issue(id,batch_id,record_id,row_number,code,stage,severity,json_pointer,message,created_at)
-                VALUES (?,?,?,?,?,'PARSE','ERROR',?,?,?) ON CONFLICT DO NOTHING
-                """, UUID.randomUUID(), batchId, id, row, code, pointer, message, now);
+        if (recordExists(batchId, row)) return;
+        Instant now = clock.instant(); UUID id = UUID.randomUUID();
+        ExerciseImportRecordEntity record = new ExerciseImportRecordEntity();
+        record.id = id; record.batchId = batchId; record.rowNumber = row; record.status = "INVALID";
+        record.rawPayload = payload; record.rawSha256 = hash; record.createdAt = now; record.updatedAt = now;
+        records.save(record);
+        ExerciseImportIssueEntity issue = new ExerciseImportIssueEntity();
+        issue.id = UUID.randomUUID(); issue.batchId = batchId; issue.recordId = id; issue.rowNumber = row;
+        issue.code = code; issue.stage = "PARSE"; issue.severity = "ERROR"; issue.jsonPointer = pointer; issue.message = message; issue.createdAt = now;
+        issues.save(issue);
     }
 
     private boolean recordExists(UUID batchId, long row) {
-        return Boolean.TRUE.equals(jdbc.queryForObject(
-                "SELECT EXISTS(SELECT 1 FROM exercise_import.import_record WHERE batch_id=? AND row_number=?)",
-                Boolean.class, batchId, row));
+        return records.existsByBatchIdAndRowNumber(batchId, row);
     }
 
     private void batchIssue(UUID batchId, String code, String severity, String message) {
-        jdbc.update("""
-                INSERT INTO exercise_import.import_issue(id,batch_id,code,stage,severity,json_pointer,message,created_at)
-                VALUES (?,?,?,'PARSE',?,'/',?,?) ON CONFLICT DO NOTHING
-                """, UUID.randomUUID(), batchId, code, severity, message, Timestamp.from(clock.instant()));
+        if (issues.existsByBatchIdAndRecordIdIsNullAndCodeAndJsonPointer(batchId, code, "/")) return;
+        ExerciseImportIssueEntity issue = new ExerciseImportIssueEntity();
+        issue.id = UUID.randomUUID(); issue.batchId = batchId; issue.code = code; issue.stage = "PARSE";
+        issue.severity = severity; issue.jsonPointer = "/"; issue.message = message; issue.createdAt = clock.instant();
+        issues.save(issue);
     }
 
     private void draftIssue(UUID batchId, UUID recordId) {
-        jdbc.update("""
-                INSERT INTO exercise_import.import_issue(id,batch_id,record_id,row_number,code,stage,severity,json_pointer,message,created_at)
-                SELECT ?,?,?,row_number,'DRAFT_CREATION_FAILED','CREATE_DRAFT','ERROR','/',
-                       'Nie można było utworzyć szkicu. Rekord pozostaje gotowy do bezpiecznego ponowienia.',?
-                FROM exercise_import.import_record record WHERE id=?
-                  AND NOT EXISTS (SELECT 1 FROM exercise_import.import_issue issue
-                                  WHERE issue.record_id=record.id AND issue.code='DRAFT_CREATION_FAILED'
-                                    AND issue.resolved_at IS NULL)
-                """, UUID.randomUUID(), batchId, recordId, Timestamp.from(clock.instant()), recordId);
+        if (issues.existsByRecordIdAndCodeAndResolvedAtIsNull(recordId, "DRAFT_CREATION_FAILED")) return;
+        ExerciseImportRecordEntity record = records.findById(recordId).orElseThrow();
+        ExerciseImportIssueEntity issue = new ExerciseImportIssueEntity();
+        issue.id = UUID.randomUUID(); issue.batchId = batchId; issue.recordId = recordId; issue.rowNumber = record.rowNumber;
+        issue.code = "DRAFT_CREATION_FAILED"; issue.stage = "CREATE_DRAFT"; issue.severity = "ERROR"; issue.jsonPointer = "/";
+        issue.message = "Nie można było utworzyć szkicu. Rekord pozostaje gotowy do bezpiecznego ponowienia."; issue.createdAt = clock.instant();
+        issues.save(issue);
+    }
+
+    private ExerciseImportBatchEntity batch(UUID batchId) {
+        return batches.findById(batchId).orElseThrow(() -> new IllegalStateException("import batch not found"));
+    }
+
+    private static int count(List<ExerciseImportRecordEntity> records, java.util.function.Predicate<ExerciseImportRecordEntity> predicate) {
+        return (int) records.stream().filter(predicate).count();
     }
 
     private static UUID batchId(Object value) { return UUID.fromString(String.valueOf(value)); }
@@ -272,14 +282,11 @@ class ExerciseImportBatchConfiguration {
         } catch (NoSuchAlgorithmException impossible) { throw new IllegalStateException(impossible); }
     }
     @FunctionalInterface private interface RecordOperation { void apply(UUID id); }
-    private record InstantPair(Timestamp value) { }
     private static final class StatusItemReader implements ItemReader<UUID> {
-        private final Queue<UUID> ids;
-        private StatusItemReader(JdbcTemplate jdbc, UUID batchId, String status) {
-            ids = new ArrayDeque<>(jdbc.queryForList(
-                    "SELECT id FROM exercise_import.import_record WHERE batch_id=? AND status=? ORDER BY row_number,id",
-                    UUID.class, batchId, status));
+        private final java.util.Iterator<ExerciseImportRecordEntity> records;
+        private StatusItemReader(ExerciseImportRecordRepository repository, UUID batchId, String status) {
+            records = repository.findByBatchIdAndStatusOrderByRowNumberAscIdAsc(batchId, status).iterator();
         }
-        @Override public UUID read() { return ids.poll(); }
+        @Override public UUID read() { return records.hasNext() ? records.next().id : null; }
     }
 }

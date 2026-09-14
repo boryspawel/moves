@@ -44,7 +44,7 @@ class SpecialistAvailableSlotsService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "specialist profile is required"));
         Instant dayStart = date.atStartOfDay(zone).toInstant();
         Instant dayEnd = date.plusDays(1).atStartOfDay(zone).toInstant();
-        List<SpecialistAppointmentQueryPort.TimeRange> blocking = appointments.blockingInRange(account.id(), dayStart, dayEnd);
+        List<SpecialistAppointmentQueryPort.BlockingTimeRange> blocking = appointments.blockingInRange(account.id(), dayStart, dayEnd);
         List<SlotView> slots = new ArrayList<>();
         for (RecurringAvailabilityService.Window window : availability.windows(account.id(), date)) {
             for (Instant start : gridStarts(date, zone, window)) {
@@ -71,7 +71,7 @@ class SpecialistAvailableSlotsService {
     private boolean isFutureForToday(Instant start, LocalDate date, ZoneId zone) {
         return !date.equals(LocalDate.now(clock.withZone(zone))) || start.isAfter(clock.instant());
     }
-    private static boolean overlaps(List<SpecialistAppointmentQueryPort.TimeRange> ranges, Instant start, Instant end) {
+    private static boolean overlaps(List<SpecialistAppointmentQueryPort.BlockingTimeRange> ranges, Instant start, Instant end) {
         return ranges.stream().anyMatch(range -> range.startsAt().isBefore(end) && range.endsAt().isAfter(start));
     }
     private static ZoneId zone(String value) { try { return ZoneId.of(value); } catch (RuntimeException invalid) { throw new ResponseStatusException(HttpStatus.CONFLICT, "specialist time zone is invalid"); } }

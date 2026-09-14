@@ -34,7 +34,7 @@ class SpecialistAvailableSlotsServiceTest {
         when(availability.windows(specialistId, date)).thenReturn(List.of(new RecurringAvailabilityService.Window(
                 Instant.parse("2030-06-10T08:00:00Z"), Instant.parse("2030-06-10T10:00:00Z"))));
         when(appointments.blockingInRange(specialistId, Instant.parse("2030-06-10T00:00:00Z"), Instant.parse("2030-06-11T00:00:00Z")))
-                .thenReturn(List.of(new SpecialistAppointmentQueryPort.TimeRange(Instant.parse("2030-06-10T09:00:00Z"), Instant.parse("2030-06-10T09:30:00Z"))));
+                .thenReturn(List.of(new SpecialistAppointmentQueryPort.BlockingTimeRange(Instant.parse("2030-06-10T09:00:00Z"), Instant.parse("2030-06-10T09:30:00Z"))));
 
         var result = service.list("specialist", date, 60);
 

@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import com.motionecosystem.application.MotionEcosystemApplication;
 import com.motionecosystem.loadanalysis.api.PlannedLoadCalculationPort.Aggregate;
+import com.motionecosystem.loadanalysis.api.PlannedLoadCalculationPort.CompletenessIssue;
 import com.motionecosystem.loadanalysis.api.PlannedLoadCalculationPort.LoadProfile;
 import com.motionecosystem.loadanalysis.api.PlannedLoadCalculationPort.Observation;
 import com.motionecosystem.support.PostgresTestConfiguration;
@@ -43,6 +44,8 @@ class LoadAnalysisPersistenceIntegrationTest {
         assertThat(restored.snapshotId()).isEqualTo(first.snapshotId());
         assertThat(restored.observations()).usingRecursiveComparison().isEqualTo(first.observations());
         assertThat(restored.aggregates()).usingRecursiveComparison().isEqualTo(first.aggregates());
+        assertThat(restored.completenessIssues()).usingRecursiveComparison()
+                .isEqualTo(first.completenessIssues());
 
         LoadProfile second = profile(revisionId, "algorithm-v2", UUID.randomUUID());
         persistence.save(second);
@@ -92,6 +95,8 @@ class LoadAnalysisPersistenceIntegrationTest {
         Aggregate aggregate = new Aggregate("SESSION", session.toString(), structure, "LEFT", "DYN_EXU",
                 "DIRECT_ALLOCATION", "EXU", new BigDecimal("1.250000"), new BigDecimal("2.500000"));
         return new LoadProfile(snapshot, revision, "checksum", algorithm, "config-v1", "v2",
-                Instant.parse("2026-07-21T10:00:00Z"), List.of(observation), List.of(aggregate));
+                Instant.parse("2026-07-21T10:00:00Z"), List.of(observation), List.of(aggregate),
+                List.of(new CompletenessIssue(prescription, exercise, contribution, session,
+                        "DYN_EXU", "STRENGTH", "EXACT_REPETITIONS_REQUIRED")));
     }
 }

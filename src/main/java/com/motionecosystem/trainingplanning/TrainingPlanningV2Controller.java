@@ -8,13 +8,13 @@ import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.AddCycleCo
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.AddGoalCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.AddLoadBudgetCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.AddMicrocycleCommand;
-import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.AddPrescriptionCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.AddSessionCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.CreateDraftCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.DefineSessionVariantCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.CreateRevisionCommand;
+import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.DeleteGoalCommand;
+import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.DeleteSessionCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.EditorView;
-import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.ReorderCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.StructuralValidationView;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.ValidateCommand;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,9 +24,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -53,6 +53,13 @@ class TrainingPlanningV2Controller {
         return planning.addGoal(jwt.getSubject(), revisionId, command);
     }
 
+    @DeleteMapping("/revisions/{revisionId}/goals")
+    @PreAuthorize("hasAnyRole('PARTICIPANT', 'SPECIALIST')")
+    EditorView deleteGoal(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID revisionId,
+                          @RequestBody DeleteGoalCommand command) {
+        return planning.deleteGoal(jwt.getSubject(), revisionId, command);
+    }
+
     @PostMapping("/revisions/{revisionId}/cycles")
     @PreAuthorize("hasAnyRole('PARTICIPANT', 'SPECIALIST')")
     EditorView addCycle(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID revisionId,
@@ -74,18 +81,11 @@ class TrainingPlanningV2Controller {
         return planning.addSession(jwt.getSubject(), revisionId, command);
     }
 
-    @PostMapping("/revisions/{revisionId}/prescriptions")
+    @DeleteMapping("/revisions/{revisionId}/sessions")
     @PreAuthorize("hasAnyRole('PARTICIPANT', 'SPECIALIST')")
-    EditorView addPrescription(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID revisionId,
-                               @RequestBody AddPrescriptionCommand command) {
-        return planning.addPrescription(jwt.getSubject(), revisionId, command);
-    }
-
-    @PutMapping("/revisions/{revisionId}/prescriptions/order")
-    @PreAuthorize("hasAnyRole('PARTICIPANT', 'SPECIALIST')")
-    EditorView reorder(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID revisionId,
-                       @RequestBody ReorderCommand command) {
-        return planning.reorder(jwt.getSubject(), revisionId, command);
+    EditorView deleteSession(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID revisionId,
+                             @RequestBody DeleteSessionCommand command) {
+        return planning.deleteSession(jwt.getSubject(), revisionId, command);
     }
 
     @PostMapping("/revisions/{revisionId}/session-variants")

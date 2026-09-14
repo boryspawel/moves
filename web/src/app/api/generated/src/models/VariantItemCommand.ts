@@ -30,30 +30,6 @@ export interface VariantItemCommand {
    * @type {number}
    * @memberof VariantItemCommand
    */
-  overrideContacts?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof VariantItemCommand
-   */
-  overrideDurationSeconds?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof VariantItemCommand
-   */
-  overrideRepetitions?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof VariantItemCommand
-   */
-  overrideSets?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof VariantItemCommand
-   */
   position?: number;
 }
 
@@ -77,12 +53,6 @@ export function VariantItemCommandFromJSONTyped(
   }
   return {
     basePrescriptionId: json['basePrescriptionId'] == null ? undefined : json['basePrescriptionId'],
-    overrideContacts: json['overrideContacts'] == null ? undefined : json['overrideContacts'],
-    overrideDurationSeconds:
-      json['overrideDurationSeconds'] == null ? undefined : json['overrideDurationSeconds'],
-    overrideRepetitions:
-      json['overrideRepetitions'] == null ? undefined : json['overrideRepetitions'],
-    overrideSets: json['overrideSets'] == null ? undefined : json['overrideSets'],
     position: json['position'] == null ? undefined : json['position'],
   };
 }
@@ -101,10 +71,6 @@ export function VariantItemCommandToJSONTyped(
 
   return {
     basePrescriptionId: value['basePrescriptionId'],
-    overrideContacts: value['overrideContacts'],
-    overrideDurationSeconds: value['overrideDurationSeconds'],
-    overrideRepetitions: value['overrideRepetitions'],
-    overrideSets: value['overrideSets'],
     position: value['position'],
   };
 }

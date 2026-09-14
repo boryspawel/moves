@@ -227,19 +227,19 @@ class TrainingFoundationUpgradeMigrationTest {
         return accountId;
     }
 
-    private static void insertLegacySpecialistProfile(JdbcTemplate jdbc, UUID accountId) {
-        jdbc.update("""
-                INSERT INTO specialist.specialist_profile
-                    (id, account_id, display_name, specialist_kind, created_at, updated_at, version)
-                VALUES (?, ?, 'Legacy trainer', 'TRAINER', now(), now(), 0)
-                """, UUID.randomUUID(), accountId);
-    }
-
     private static void insertLegacyParticipantProfile(JdbcTemplate jdbc, UUID accountId) {
         jdbc.update("""
                 INSERT INTO participant.participant_profile
                     (id, account_id, display_name, created_at, updated_at, version)
                 VALUES (?, ?, 'Legacy participant', now(), now(), 0)
+                """, UUID.randomUUID(), accountId);
+    }
+
+    private static void insertLegacySpecialistProfile(JdbcTemplate jdbc, UUID accountId) {
+        jdbc.update("""
+                INSERT INTO specialist.specialist_profile
+                    (id, account_id, display_name, specialist_kind, created_at, updated_at, version)
+                VALUES (?, ?, 'Legacy trainer', 'TRAINER', now(), now(), 0)
                 """, UUID.randomUUID(), accountId);
     }
 

@@ -13,10 +13,9 @@ import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
-import com.motionecosystem.specialist.SpecialistRelationshipService;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ProfessionalRole;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -58,7 +57,7 @@ class ParticipantGoalServiceTest {
         ArgumentCaptor<GoalOutcome> outcomes = ArgumentCaptor.forClass(GoalOutcome.class);
         verify(fixture.outcomes, org.mockito.Mockito.times(2)).save(outcomes.capture());
         assertThat(outcomes.getAllValues()).extracting(outcome -> outcome.position).containsExactly(0, 1);
-        verify(fixture.relationships).requireActive(fixture.specialistId, fixture.participantId);
+        verify(fixture.authorization).requireCapabilities(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -128,7 +127,7 @@ class ParticipantGoalServiceTest {
                 .thenReturn(Optional.empty());
 
         assertStatus(HttpStatus.NOT_FOUND, () -> fixture.service.detail("specialist", fixture.participantId, foreignGoal, trainer()));
-        verify(fixture.relationships).requireActive(fixture.specialistId, fixture.participantId);
+        verify(fixture.authorization).requireCapabilities(any(), any(), any(), any(), any());
         verify(fixture.goals).findByIdAndSpecialistAccountIdAndParticipantId(foreignGoal, fixture.specialistId, fixture.participantId);
     }
 
@@ -353,11 +352,11 @@ class ParticipantGoalServiceTest {
         ParticipantGoalRepository goals = mock(ParticipantGoalRepository.class);
         GoalOutcomeRepository outcomes = mock(GoalOutcomeRepository.class);
         GoalIdempotencyRepository idempotency = mock(GoalIdempotencyRepository.class);
-        SpecialistRelationshipService relationships = mock(SpecialistRelationshipService.class);
         AuditRecorder audit = mock(AuditRecorder.class);
-        return new Fixture(specialistId, UUID.randomUUID(), goals, outcomes, idempotency, relationships, audit,
-                new ParticipantGoalService(goals, outcomes, idempotency, accounts, relationships,
-                        mock(SpecialistAuthorizationPort.class), audit, Clock.fixed(NOW, ZoneOffset.UTC)));
+        SpecialistAuthorizationPort authorization = mock(SpecialistAuthorizationPort.class);
+        return new Fixture(specialistId, UUID.randomUUID(), goals, outcomes, idempotency, authorization, audit,
+                new ParticipantGoalService(goals, outcomes, idempotency, accounts,
+                        authorization, audit, Clock.fixed(NOW, ZoneOffset.UTC)));
     }
     private static Fixture observationFixture() {
         UUID specialistId = UUID.randomUUID();
@@ -369,20 +368,20 @@ class ParticipantGoalServiceTest {
         GoalIdempotencyRepository idempotency = mock(GoalIdempotencyRepository.class);
         GoalObservationRepository observations = mock(GoalObservationRepository.class);
         GoalObservationIdempotencyRepository observationIdempotency = mock(GoalObservationIdempotencyRepository.class);
-        SpecialistRelationshipService relationships = mock(SpecialistRelationshipService.class);
         AuditRecorder audit = mock(AuditRecorder.class);
-        return new Fixture(specialistId, participantId, goals, outcomes, idempotency, observations, observationIdempotency, relationships, audit,
-                new ParticipantGoalService(goals, outcomes, idempotency, observations, observationIdempotency, accounts, relationships,
-                        mock(SpecialistAuthorizationPort.class), audit, Clock.fixed(NOW, ZoneOffset.UTC)));
+        SpecialistAuthorizationPort authorization = mock(SpecialistAuthorizationPort.class);
+        return new Fixture(specialistId, participantId, goals, outcomes, idempotency, observations, observationIdempotency, authorization, audit,
+                new ParticipantGoalService(goals, outcomes, idempotency, observations, observationIdempotency, accounts,
+                        authorization, audit, Clock.fixed(NOW, ZoneOffset.UTC)));
     }
     private record Fixture(UUID specialistId, UUID participantId, ParticipantGoalRepository goals, GoalOutcomeRepository outcomes,
                            GoalIdempotencyRepository idempotency, GoalObservationRepository observations,
-                           GoalObservationIdempotencyRepository observationIdempotency, SpecialistRelationshipService relationships,
+                           GoalObservationIdempotencyRepository observationIdempotency, SpecialistAuthorizationPort authorization,
                            AuditRecorder audit, ParticipantGoalService service) {
         Fixture(UUID specialistId, UUID participantId, ParticipantGoalRepository goals, GoalOutcomeRepository outcomes,
-                GoalIdempotencyRepository idempotency, SpecialistRelationshipService relationships, AuditRecorder audit,
+                GoalIdempotencyRepository idempotency, SpecialistAuthorizationPort authorization, AuditRecorder audit,
                 ParticipantGoalService service) {
-            this(specialistId, participantId, goals, outcomes, idempotency, null, null, relationships, audit, service);
+            this(specialistId, participantId, goals, outcomes, idempotency, null, null, authorization, audit, service);
         }
     }
 }

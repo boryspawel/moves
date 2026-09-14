@@ -6,8 +6,7 @@ import static org.mockito.Mockito.*;
 
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.*;
-import com.motionecosystem.specialist.SpecialistRelationshipService;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
 import java.time.*;
 import java.util.*;
 import org.springframework.data.domain.Pageable;
@@ -29,7 +28,7 @@ class ParticipantGoalEventServiceTest {
         when(goals.saveAndFlush(any())).thenAnswer(call -> call.getArgument(0));
         when(outcomes.findByGoalIdOrderByPositionAsc(any())).thenReturn(List.of());
         ParticipantGoalService service = new ParticipantGoalService(goals, outcomes, idempotency, null, null, events, accounts,
-                mock(SpecialistRelationshipService.class), mock(SpecialistAuthorizationPort.class), mock(AuditRecorder.class), Clock.fixed(NOW, ZoneOffset.UTC));
+                mock(SpecialistAuthorizationPort.class), mock(AuditRecorder.class), Clock.fixed(NOW, ZoneOffset.UTC));
         var command = new ParticipantGoalService.CreateParticipantGoalCommand(ParticipantGoal.Category.PERFORMANCE, "5 km", null, 50, null, List.of());
 
         ParticipantGoalService.ParticipantGoalView created = service.create("specialist", participant,

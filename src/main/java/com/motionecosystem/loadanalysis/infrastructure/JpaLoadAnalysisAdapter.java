@@ -6,6 +6,8 @@ import java.util.UUID;
 
 import com.motionecosystem.loadanalysis.LoadAnalysisPersistence;
 import com.motionecosystem.loadanalysis.api.PlannedLoadCalculationPort.LoadProfile;
+import com.motionecosystem.loadanalysis.api.PlannedLoadCalculationPort.CompletenessIssue;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Repository;
 @RequiredArgsConstructor
 public class JpaLoadAnalysisAdapter implements LoadAnalysisPersistence {
     private final EntityManager entityManager;
+    private final ObjectMapper json;
 
     @Override
     public Optional<LoadProfile> find(UUID revisionId, String checksum, String algorithm,
@@ -35,7 +38,9 @@ public class JpaLoadAnalysisAdapter implements LoadAnalysisPersistence {
         if (entityManager.find(CalculationVersionEntity.class, versionId) == null)
             entityManager.persist(new CalculationVersionEntity(profile.algorithmVersion(),
                     profile.configurationVersion(), profile.calculatedAt()));
-        entityManager.persist(new LoadSnapshotEntity(profile));
+        LoadSnapshotEntity snapshot = new LoadSnapshotEntity(profile);
+        snapshot.completenessIssues = json(profile.completenessIssues());
+        entityManager.persist(snapshot);
         profile.observations().forEach(item -> entityManager.persist(
                 new LoadObservationEntity(profile.snapshotId(), item)));
         profile.aggregates().forEach(item -> entityManager.persist(
@@ -56,6 +61,17 @@ public class JpaLoadAnalysisAdapter implements LoadAnalysisPersistence {
                 """, LoadAggregateEntity.class).setParameter("id", snapshot.id).getResultList()
                 .stream().map(LoadAggregateEntity::view).toList();
         return new LoadProfile(snapshot.id,snapshot.revisionId,snapshot.checksum,snapshot.algorithm,
-                snapshot.configuration,snapshot.catalogVersion,snapshot.calculatedAt,observations,aggregates);
+                snapshot.configuration,snapshot.catalogVersion,snapshot.calculatedAt,observations,aggregates,
+                issues(snapshot.completenessIssues));
+    }
+
+    private String json(Object value) {
+        try { return json.writeValueAsString(value); }
+        catch (Exception error) { throw new IllegalStateException("cannot persist load completeness issues", error); }
+    }
+
+    private List<CompletenessIssue> issues(String value) {
+        try { return json.readValue(value, json.getTypeFactory().constructCollectionType(List.class, CompletenessIssue.class)); }
+        catch (Exception error) { throw new IllegalStateException("corrupt load completeness issues", error); }
     }
 }

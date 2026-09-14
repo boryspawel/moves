@@ -7,7 +7,7 @@ import com.motionecosystem.safety.SafetyV2Service.RestrictionCommand;
 import com.motionecosystem.safety.SafetyV2Service.RestrictionView;
 import com.motionecosystem.safety.SafetyV2Service.EffectiveRestrictionView;
 import com.motionecosystem.safety.SafetyV2Service.ClinicalRestrictionView;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -131,7 +131,7 @@ class SafetyV2Controller {
 
         ActingContext value() {
             return new ActingContext(
-                    com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ProfessionalRole
+                    com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole
                             .valueOf(name()));
         }
     }
