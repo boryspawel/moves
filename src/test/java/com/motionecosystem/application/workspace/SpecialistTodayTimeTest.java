@@ -1,4 +1,4 @@
-package com.motionecosystem.specialist;
+package com.motionecosystem.application.workspace;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

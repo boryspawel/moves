@@ -6,5 +6,5 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 interface ParticipantRestrictionRepository extends JpaRepository<ParticipantRestriction, UUID> {
-    List<ParticipantRestriction> findByAccountIdOrderByContraindicationTag(UUID accountId);
+    List<ParticipantRestriction> findByParticipantIdOrderByContraindicationTag(UUID participantId);
 }

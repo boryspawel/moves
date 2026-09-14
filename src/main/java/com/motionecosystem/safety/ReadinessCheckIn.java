@@ -15,7 +15,7 @@ class ReadinessCheckIn {
     @Id
     UUID id;
     @Column(name = "participant_id", nullable = false)
-    UUID accountId;
+    UUID participantId;
     @Column(name = "pain_level", nullable = false)
     int painLevel;
     @Column(name = "readiness_level", nullable = false)
@@ -28,9 +28,9 @@ class ReadinessCheckIn {
     protected ReadinessCheckIn() {
     }
 
-    ReadinessCheckIn(UUID accountId, int painLevel, int readinessLevel, String painArea, Instant now) {
+    ReadinessCheckIn(UUID participantId, int painLevel, int readinessLevel, String painArea, Instant now) {
         id = UUID.randomUUID();
-        this.accountId = accountId;
+        this.participantId = participantId;
         this.painLevel = painLevel;
         this.readinessLevel = readinessLevel;
         this.painArea = painArea;

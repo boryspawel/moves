@@ -8,6 +8,7 @@ import java.util.UUID;
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
+import com.motionecosystem.participant.api.ParticipantClientPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ public class ParticipantSafetyService {
             "User-reported input for specialist review; this is not a diagnosis.";
 
     private final CurrentAccountService accounts;
+    private final ParticipantClientPort participants;
     private final ParticipantRestrictionRepository restrictions;
     private final ReadinessCheckInRepository checkIns;
     private final AuditRecorder audit;
@@ -37,26 +39,33 @@ public class ParticipantSafetyService {
         if (area != null && area.length() > 120) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "pain area is too long");
         }
+        UUID participantId = participantId(account.id());
         ReadinessCheckIn saved = checkIns.save(
-                new ReadinessCheckIn(account.id(), painLevel, readinessLevel, area, clock.instant()));
+                new ReadinessCheckIn(participantId, painLevel, readinessLevel, area, clock.instant()));
         audit.record(subject, "READINESS_CHECK_IN_RECORDED", "ReadinessCheckIn", saved.id);
-        return view(account.id());
+        return view(participantId);
     }
 
     @Transactional
     public SafetyView current(String subject) {
-        return view(accounts.requireActive(subject).id());
+        return view(participantId(accounts.requireActive(subject).id()));
     }
 
-    private SafetyView view(UUID accountId) {
-        List<String> tags = restrictions.findByAccountIdOrderByContraindicationTag(accountId).stream()
+    private SafetyView view(UUID participantId) {
+        List<String> tags = restrictions.findByParticipantIdOrderByContraindicationTag(participantId).stream()
                 .map(item -> item.contraindicationTag)
                 .toList();
-        CheckInView latest = checkIns.findFirstByAccountIdOrderByRecordedAtDesc(accountId)
+        CheckInView latest = checkIns.findFirstByParticipantIdOrderByRecordedAtDesc(participantId)
                 .map(item -> new CheckInView(
                         item.id, item.painLevel, item.readinessLevel, item.painArea, item.recordedAt))
                 .orElse(null);
         return new SafetyView(tags, latest, NON_DIAGNOSTIC_NOTICE);
+    }
+
+    private UUID participantId(UUID accountId) {
+        return participants.findParticipantIdByPrincipalAccountId(accountId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "an active participant access link is required"));
     }
 
     public record CheckInView(UUID id, int painLevel, int readinessLevel, String painArea, Instant recordedAt) {

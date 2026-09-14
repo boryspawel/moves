@@ -1,10 +1,9 @@
-package com.motionecosystem.specialist;
+package com.motionecosystem.application.workspace;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -17,7 +16,7 @@ import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.participant.api.ParticipantClientPort;
 import com.motionecosystem.participant.api.ParticipantContextQueryPort;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort;
+import com.motionecosystem.specialist.api.SpecialistWorkspacePort;
 import com.motionecosystem.trainingexecution.api.ParticipantExecutionHistoryQueryPort;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort;
 import java.time.Clock;
@@ -36,25 +35,22 @@ class SpecialistParticipantReadServiceTest {
         UUID specialistId = UUID.randomUUID();
         UUID participantId = UUID.randomUUID();
         CurrentAccountService accounts = mock(CurrentAccountService.class);
-        SpecialistProfileService profiles = mock(SpecialistProfileService.class);
-        SpecialistAuthorizationPort authorization = mock(SpecialistAuthorizationPort.class);
+        SpecialistWorkspacePort specialistWorkspace = mock(SpecialistWorkspacePort.class);
         ParticipantClientPort participants = mock(ParticipantClientPort.class);
         ParticipantContextQueryPort contexts = mock(ParticipantContextQueryPort.class);
         SpecialistAppointmentQueryPort appointments = mock(SpecialistAppointmentQueryPort.class);
         SpecialistAppointmentEventQueryPort appointmentEvents = mock(SpecialistAppointmentEventQueryPort.class);
         PlanRevisionQueryPort revisions = mock(PlanRevisionQueryPort.class);
         ParticipantExecutionHistoryQueryPort executionHistory = mock(ParticipantExecutionHistoryQueryPort.class);
-        ParticipantSpecialistRelationshipRepository relationships = mock(ParticipantSpecialistRelationshipRepository.class);
-        SpecialistWorklistService worklist = mock(SpecialistWorklistService.class);
         AuditRecorder audit = mock(AuditRecorder.class);
-        ParticipantSpecialistRelationship relationship = mock(ParticipantSpecialistRelationship.class);
         Clock clock = Clock.fixed(Instant.parse("2030-01-01T00:00:00Z"), ZoneOffset.UTC);
-        var decision = new SpecialistAuthorizationPort.AuthorizationDecision(specialistId, participantId,
-                SpecialistAuthorizationPort.ProfessionalRole.TRAINER, SpecialistAuthorizationPort.Purpose.PERFORMANCE_PLANNING, Set.of());
+        var decision = new SpecialistWorkspacePort.AuthorizationDecision(SpecialistWorkspacePort.WorkspaceRole.TRAINER,
+                SpecialistWorkspacePort.WorkspacePurpose.PERFORMANCE_PLANNING, Set.of());
 
         when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(specialistId, "specialist", ProfileType.SPECIALIST));
-        when(profiles.find(specialistId)).thenReturn(Optional.of(new SpecialistProfileService.ProfileView(specialistId, "Specialist", SpecialistKind.TRAINER, "UTC")));
-        when(authorization.requireCapabilities(any(), any(), any(), anySet(), any())).thenReturn(decision);
+        when(specialistWorkspace.findProfile(specialistId)).thenReturn(Optional.of(new SpecialistWorkspacePort.Profile(specialistId,
+                SpecialistWorkspacePort.WorkspaceRole.TRAINER, "UTC")));
+        when(specialistWorkspace.requireParticipantCapabilities(any(), any(), any(), any(), any())).thenReturn(decision);
         when(participants.find(participantId)).thenReturn(Optional.of(new ParticipantClientPort.ClientRecord(participantId, "Account-free participant",
                 ParticipantClientPort.RelationshipContext.CLIENT, ParticipantClientPort.RecordStatus.ACTIVE, 0)));
         when(contexts.findContext(participantId)).thenReturn(Optional.empty());
@@ -74,12 +70,12 @@ class SpecialistParticipantReadServiceTest {
                 appointment(now.plusSeconds(14_400), now.plusSeconds(18_000), "SCHEDULED")));
         when(revisions.findActiveRevision(participantId)).thenReturn(Optional.empty());
         when(executionHistory.starts(any(), any(), any(), anyInt())).thenReturn(List.of());
-        when(worklist.forParticipant(any(), any(), any(), any())).thenReturn(List.of());
-        when(relationships.findBySpecialistAccountIdAndParticipantId(specialistId, participantId)).thenReturn(Optional.of(relationship));
-        when(relationship.status()).thenReturn(ParticipantSpecialistRelationship.Status.ACTIVE);
+        when(specialistWorkspace.listParticipantWorklist(any(), any(), any(), any())).thenReturn(List.of());
+        when(specialistWorkspace.findRelationship(specialistId, participantId)).thenReturn(Optional.of(
+                new SpecialistWorkspacePort.Relationship("ACTIVE", Instant.parse("2030-01-01T00:00:00Z"))));
 
-        var workspace = new SpecialistParticipantReadService(accounts, profiles, authorization, participants, contexts, appointments, appointmentEvents,
-                revisions, executionHistory, relationships, worklist, audit, clock).workspace("specialist", participantId);
+        var workspace = new SpecialistParticipantReadService(accounts, specialistWorkspace, participants, contexts, appointments, appointmentEvents,
+                revisions, executionHistory, null, null, audit, clock).workspace("specialist", participantId);
 
         assertThat(workspace.participant())
                 .extracting(
@@ -94,16 +90,16 @@ class SpecialistParticipantReadServiceTest {
 
         when(appointments.findForParticipant(any(), any(), any(), any(), anyInt())).thenReturn(List.of(
                 appointment(now.plusSeconds(14_400), now.plusSeconds(18_000), "SCHEDULED"), futureConfirmed));
-        assertThat(new SpecialistParticipantReadService(accounts, profiles, authorization, participants, contexts, appointments, appointmentEvents,
-                revisions, executionHistory, relationships, worklist, audit, clock).workspace("specialist", participantId).nextAppointment())
+        assertThat(new SpecialistParticipantReadService(accounts, specialistWorkspace, participants, contexts, appointments, appointmentEvents,
+                revisions, executionHistory, null, null, audit, clock).workspace("specialist", participantId).nextAppointment())
                 .extracting(SpecialistParticipantReadService.AppointmentView::appointmentId,
                         SpecialistParticipantReadService.AppointmentView::status)
                 .containsExactly(futureConfirmed.appointmentId(), "CONFIRMED");
 
         when(appointments.findForParticipant(any(), any(), any(), any(), anyInt())).thenReturn(List.of(
                 appointment(now.plusSeconds(7_200), now.plusSeconds(10_800), "SCHEDULED"), currentScheduled));
-        assertThat(new SpecialistParticipantReadService(accounts, profiles, authorization, participants, contexts, appointments, appointmentEvents,
-                revisions, executionHistory, relationships, worklist, audit, clock).workspace("specialist", participantId).nextAppointment())
+        assertThat(new SpecialistParticipantReadService(accounts, specialistWorkspace, participants, contexts, appointments, appointmentEvents,
+                revisions, executionHistory, null, null, audit, clock).workspace("specialist", participantId).nextAppointment())
                 .extracting(SpecialistParticipantReadService.AppointmentView::appointmentId,
                         SpecialistParticipantReadService.AppointmentView::status)
                 .containsExactly(currentScheduled.appointmentId(), "SCHEDULED");
@@ -115,22 +111,21 @@ class SpecialistParticipantReadServiceTest {
         UUID participantId = UUID.randomUUID();
         UUID eventId = UUID.randomUUID();
         CurrentAccountService accounts = mock(CurrentAccountService.class);
-        SpecialistProfileService profiles = mock(SpecialistProfileService.class);
-        SpecialistAuthorizationPort authorization = mock(SpecialistAuthorizationPort.class);
+        SpecialistWorkspacePort specialistWorkspace = mock(SpecialistWorkspacePort.class);
         SpecialistAppointmentEventQueryPort appointmentEvents = mock(SpecialistAppointmentEventQueryPort.class);
         AuditRecorder audit = mock(AuditRecorder.class);
-        var decision = new SpecialistAuthorizationPort.AuthorizationDecision(specialistId, participantId,
-                SpecialistAuthorizationPort.ProfessionalRole.TRAINER, SpecialistAuthorizationPort.Purpose.PERFORMANCE_PLANNING, Set.of());
+        var decision = new SpecialistWorkspacePort.AuthorizationDecision(SpecialistWorkspacePort.WorkspaceRole.TRAINER,
+                SpecialistWorkspacePort.WorkspacePurpose.PERFORMANCE_PLANNING, Set.of());
         when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(specialistId, "specialist", ProfileType.SPECIALIST));
-        when(profiles.find(specialistId)).thenReturn(Optional.of(new SpecialistProfileService.ProfileView(specialistId, "Specialist", SpecialistKind.TRAINER, "UTC")));
-        when(authorization.requireCapabilities(any(), any(), any(), anySet(), any())).thenReturn(decision);
+        when(specialistWorkspace.findProfile(specialistId)).thenReturn(Optional.of(new SpecialistWorkspacePort.Profile(specialistId,
+                SpecialistWorkspacePort.WorkspaceRole.TRAINER, "UTC")));
+        when(specialistWorkspace.requireParticipantCapabilities(any(), any(), any(), any(), any())).thenReturn(decision);
         when(appointmentEvents.findBySpecialistAndParticipant(specialistId, participantId, eventId)).thenReturn(Optional.of(
                 new SpecialistAppointmentEventQueryPort.AppointmentEventSummary(eventId, UUID.randomUUID(), "BASELINE", null, "COMPLETED",
                         Instant.parse("2030-01-01T10:00:00Z"), Instant.parse("2030-01-01T10:01:00Z"), "CONSULTATION", "Baseline")));
-        SpecialistParticipantReadService service = new SpecialistParticipantReadService(accounts, profiles, authorization,
+        SpecialistParticipantReadService service = new SpecialistParticipantReadService(accounts, specialistWorkspace,
                 mock(ParticipantClientPort.class), mock(ParticipantContextQueryPort.class), mock(SpecialistAppointmentQueryPort.class), appointmentEvents,
-                mock(PlanRevisionQueryPort.class), mock(ParticipantExecutionHistoryQueryPort.class), mock(ParticipantSpecialistRelationshipRepository.class),
-                mock(SpecialistWorklistService.class), audit, Clock.systemUTC());
+                mock(PlanRevisionQueryPort.class), mock(ParticipantExecutionHistoryQueryPort.class), null, null, audit, Clock.systemUTC());
 
         var event = service.timelineEvent("specialist", participantId, "appointment-event:" + eventId);
 

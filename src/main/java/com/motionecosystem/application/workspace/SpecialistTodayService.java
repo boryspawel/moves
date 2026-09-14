@@ -1,15 +1,15 @@
-package com.motionecosystem.specialist;
+package com.motionecosystem.application.workspace;
 
 import com.motionecosystem.availability.RecurringAvailabilityService;
 import com.motionecosystem.audit.AuditRecorder;
-import com.motionecosystem.calendar.AppointmentService;
+import com.motionecosystem.calendar.api.SpecialistAppointmentQueryPort;
 import com.motionecosystem.calendar.api.SpecialistOverdueAppointmentQueryPort;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.participant.api.ParticipantClientPort;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ProfessionalRole;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.Purpose;
+import com.motionecosystem.specialist.api.SpecialistWorkspacePort;
+import com.motionecosystem.specialist.api.SpecialistWorkspacePort.WorkspacePurpose;
+import com.motionecosystem.specialist.api.SpecialistWorkspacePort.WorkspaceRole;
 import java.time.*;
 import java.util.*;
 import lombok.RequiredArgsConstructor;
@@ -24,13 +24,11 @@ import org.springframework.web.server.ResponseStatusException;
 class SpecialistTodayService {
     private static final int ATTENTION_LIMIT = 10;
     private final CurrentAccountService accounts;
-    private final SpecialistRelationshipService relationships;
-    private final SpecialistProfileService profiles;
+    private final SpecialistWorkspacePort specialistWorkspace;
     private final ParticipantClientPort participants;
     private final RecurringAvailabilityService availability;
-    private final AppointmentService appointments;
+    private final SpecialistAppointmentQueryPort appointments;
     private final SpecialistOverdueAppointmentQueryPort overdueAppointments;
-    private final SpecialistWorklistService worklist;
     private final AuditRecorder audit;
     private final Clock clock;
 
@@ -39,21 +37,21 @@ class SpecialistTodayService {
         var account = accounts.requireActive(subject);
         if (!account.hasProfile(ProfileType.SPECIALIST)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "specialist profile is required");
         List<RecurringAvailabilityService.Slot> slots = availability.list(account.id());
-        SpecialistProfileService.ProfileView profile = profiles.find(account.id())
+        SpecialistWorkspacePort.Profile profile = specialistWorkspace.findProfile(account.id())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "specialist profile is required"));
         ZoneId zone = profileTimeZone(profile.timeZoneId());
         LocalDate localDate = requestedDate == null ? LocalDate.now(clock.withZone(zone)) : requestedDate;
         Instant start = SpecialistTodayTime.startOfDay(localDate, zone);
         Instant end = SpecialistTodayTime.endOfDay(localDate, zone);
         Instant now = clock.instant();
-        Set<UUID> activeParticipants = relationships.activeParticipantIds(account.id());
+        Set<UUID> activeParticipants = specialistWorkspace.activeParticipantIds(account.id());
         Map<UUID, String> labels = participantLabels(activeParticipants);
-        List<AppointmentService.AppointmentView> raw = appointments.inRange(account.id(), start, end, activeParticipants, now);
-        Optional<AppointmentService.AppointmentView> current = raw.stream().filter(item -> item.isCurrent() && active(item)).findFirst();
-        Optional<UUID> nextId = raw.stream().filter(item -> item.status() != com.motionecosystem.calendar.Appointment.Status.CANCELLED
-                        && item.status() != com.motionecosystem.calendar.Appointment.Status.COMPLETED && item.startsAt().isAfter(now))
-                .min(Comparator.comparing(AppointmentService.AppointmentView::startsAt))
-                .map(AppointmentService.AppointmentView::appointmentId);
+        List<SpecialistAppointmentQueryPort.ScheduledAppointment> raw = appointments.inRange(account.id(), start, end, activeParticipants, now);
+        Optional<SpecialistAppointmentQueryPort.ScheduledAppointment> current = raw.stream().filter(item -> item.current() && active(item)).findFirst();
+        Optional<UUID> nextId = raw.stream().filter(item -> !"CANCELLED".equals(item.status())
+                        && !"COMPLETED".equals(item.status()) && item.startsAt().isAfter(now))
+                .min(Comparator.comparing(SpecialistAppointmentQueryPort.ScheduledAppointment::startsAt))
+                .map(SpecialistAppointmentQueryPort.ScheduledAppointment::appointmentId);
         List<AppointmentView> appointmentViews = raw.stream().map(item -> appointmentView(item, labels.get(item.participantId()), nextId.filter(item.appointmentId()::equals).isPresent())).toList();
         List<AvailabilityWindowView> windows = windows(slots, localDate);
         List<AttentionItemView> attention = attention(subject, account.id(), profile, labels);
@@ -66,20 +64,20 @@ class SpecialistTodayService {
                 appointmentViews, windows, attention, operationalTasks,
                 new Counts(appointmentViews.size(), attention.size(), operationalTasks.size(), current.isPresent() ? 1 : 0));
     }
-    private static boolean active(AppointmentService.AppointmentView item) { return item.status() != com.motionecosystem.calendar.Appointment.Status.CANCELLED && item.status() != com.motionecosystem.calendar.Appointment.Status.COMPLETED && item.status() != com.motionecosystem.calendar.Appointment.Status.NO_SHOW; }
+    private static boolean active(SpecialistAppointmentQueryPort.ScheduledAppointment item) { return !Set.of("CANCELLED", "COMPLETED", "NO_SHOW").contains(item.status()); }
     private Map<UUID, String> participantLabels(Set<UUID> participantIds) {
         return participantIds.stream().map(participantId -> participants.find(participantId)
                         .map(record -> Map.entry(participantId, record.displayName())))
                 .flatMap(Optional::stream)
                 .collect(java.util.stream.Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
     }
-    private List<AttentionItemView> attention(String subject, UUID specialist, SpecialistProfileService.ProfileView profile, Map<UUID, String> labels) {
+    private List<AttentionItemView> attention(String subject, UUID specialist, SpecialistWorkspacePort.Profile profile, Map<UUID, String> labels) {
         if (profile == null) return List.of();
-        ProfessionalRole role = ProfessionalRole.valueOf(profile.specialistKind().name());
-        Purpose purpose = role == ProfessionalRole.TRAINER ? Purpose.PERFORMANCE_PLANNING : Purpose.FUNCTIONAL_RECOVERY;
-        return worklist.list(subject, new ActingContext(role), purpose).stream()
-                .sorted(Comparator.comparingInt((SpecialistWorklistService.WorklistItemView item) -> priority(item.priority())).reversed()
-                        .thenComparing(SpecialistWorklistService.WorklistItemView::createdAt))
+        WorkspaceRole role = profile.role();
+        WorkspacePurpose purpose = role == WorkspaceRole.TRAINER ? WorkspacePurpose.PERFORMANCE_PLANNING : WorkspacePurpose.FUNCTIONAL_RECOVERY;
+        return specialistWorkspace.listWorklist(subject, role, purpose).stream()
+                .sorted(Comparator.comparingInt((SpecialistWorkspacePort.WorklistItem item) -> priority(item.priority())).reversed()
+                        .thenComparing(SpecialistWorkspacePort.WorklistItem::createdAt))
                 .limit(ATTENTION_LIMIT)
                 .map(item -> new AttentionItemView(item.id(), item.category(), item.priority(), labels.get(item.participantId()),
                         item.category().replace('_', ' '), item.minimalData(), item.createdAt(), item.snoozedUntil(), item.status(),
@@ -93,7 +91,7 @@ class SpecialistTodayService {
                 .toList();
     }
     private static int priority(String priority) { return "HIGH".equals(priority) ? 3 : "MEDIUM".equals(priority) ? 2 : 1; }
-    private static List<String> actions(SpecialistWorklistService.WorklistItemView item) { return "PARTICIPANT_ISSUE".equals(item.category()) ? List.of("OPEN_WORKLIST_ITEM", "REPLY") : List.of("OPEN_WORKLIST_ITEM", "ACKNOWLEDGE", "RESOLVE"); }
+    private static List<String> actions(SpecialistWorkspacePort.WorklistItem item) { return "PARTICIPANT_ISSUE".equals(item.category()) ? List.of("OPEN_WORKLIST_ITEM", "REPLY") : List.of("OPEN_WORKLIST_ITEM", "ACKNOWLEDGE", "RESOLVE"); }
     private static ZoneId profileTimeZone(String timeZoneId) {
         if (timeZoneId == null || timeZoneId.isBlank()) throw new ResponseStatusException(HttpStatus.CONFLICT, "specialist time zone is not configured");
         try { return ZoneId.of(timeZoneId); }
@@ -101,7 +99,7 @@ class SpecialistTodayService {
     }
     private static List<AvailabilityWindowView> windows(List<RecurringAvailabilityService.Slot> slots, LocalDate date) { return slots.stream().filter(slot -> slot.dayOfWeek() == date.getDayOfWeek()).map(slot -> new AvailabilityWindowView(
             date.atTime(slot.startTime()).atZone(ZoneId.of(slot.timeZone())).toInstant(), date.atTime(slot.endTime()).atZone(ZoneId.of(slot.timeZone())).toInstant(), "STANDARD_AVAILABILITY")).toList(); }
-    private static AppointmentView appointmentView(AppointmentService.AppointmentView item, String label, boolean next) { return new AppointmentView(item.appointmentId(), item.participantId(), label == null ? "Uczestnik" : label, item.startsAt(), item.endsAt(), item.type().name(), item.status().name(), item.locationMode().name(), item.location(), item.shortPurpose(), item.isCurrent(), next, item.availableActions(), item.version()); }
+    private static AppointmentView appointmentView(SpecialistAppointmentQueryPort.ScheduledAppointment item, String label, boolean next) { return new AppointmentView(item.appointmentId(), item.participantId(), label == null ? "Uczestnik" : label, item.startsAt(), item.endsAt(), item.type(), item.status(), item.locationMode(), item.location(), item.shortPurpose(), item.current(), next, item.availableActions(), item.version()); }
     private static VisibleRange range(ZoneId zone, LocalDate date, List<AvailabilityWindowView> windows, List<AppointmentView> appointments) {
         List<Instant> points = new ArrayList<>(); windows.forEach(item -> { points.add(item.startsAt()); points.add(item.endsAt()); }); appointments.forEach(item -> { points.add(item.startsAt()); points.add(item.endsAt()); });
         if (points.isEmpty()) return new VisibleRange(date.atTime(8, 0).atZone(zone).toInstant(), date.atTime(18, 0).atZone(zone).toInstant(), 30);

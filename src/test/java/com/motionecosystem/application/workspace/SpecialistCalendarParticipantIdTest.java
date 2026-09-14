@@ -1,4 +1,4 @@
-package com.motionecosystem.specialist;
+package com.motionecosystem.application.workspace;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -9,8 +9,6 @@ import static org.mockito.Mockito.when;
 
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.availability.RecurringAvailabilityService;
-import com.motionecosystem.calendar.Appointment;
-import com.motionecosystem.calendar.AppointmentService;
 import com.motionecosystem.calendar.api.SpecialistAppointmentQueryPort;
 import com.motionecosystem.calendar.api.SpecialistAppointmentEventQueryPort;
 import com.motionecosystem.calendar.api.SpecialistOverdueAppointmentQueryPort;
@@ -18,7 +16,7 @@ import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.participant.api.ParticipantClientPort;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort;
+import com.motionecosystem.specialist.api.SpecialistWorkspacePort;
 import com.motionecosystem.trainingexecution.api.ParticipantExecutionHistoryQueryPort;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort;
 import java.time.Clock;
@@ -40,22 +38,21 @@ class SpecialistCalendarParticipantIdTest {
         UUID specialistId = UUID.randomUUID();
         UUID participantId = UUID.randomUUID();
         CurrentAccountService accounts = mock(CurrentAccountService.class);
-        SpecialistProfileService profiles = mock(SpecialistProfileService.class);
-        SpecialistRelationshipService relationships = mock(SpecialistRelationshipService.class);
+        SpecialistWorkspacePort specialistWorkspace = mock(SpecialistWorkspacePort.class);
         ParticipantClientPort participants = mock(ParticipantClientPort.class);
-        AppointmentService appointments = mock(AppointmentService.class);
+        SpecialistAppointmentQueryPort appointments = mock(SpecialistAppointmentQueryPort.class);
         SpecialistOverdueAppointmentQueryPort overdueAppointments = mock(SpecialistOverdueAppointmentQueryPort.class);
         AuditRecorder audit = mock(AuditRecorder.class);
         when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(specialistId, "specialist", ProfileType.SPECIALIST));
-        when(profiles.find(specialistId)).thenReturn(Optional.of(new SpecialistProfileService.ProfileView(
-                specialistId, "Specialist", SpecialistKind.TRAINER, "UTC")));
-        when(relationships.activeParticipantIds(specialistId)).thenReturn(Set.of(participantId));
+        when(specialistWorkspace.findProfile(specialistId)).thenReturn(Optional.of(new SpecialistWorkspacePort.Profile(
+                specialistId, SpecialistWorkspacePort.WorkspaceRole.TRAINER, "UTC")));
+        when(specialistWorkspace.activeParticipantIds(specialistId)).thenReturn(Set.of(participantId));
         when(participants.find(participantId)).thenReturn(Optional.of(new ParticipantClientPort.ClientRecord(
                 participantId, "Account-free client", ParticipantClientPort.RelationshipContext.CLIENT,
                 ParticipantClientPort.RecordStatus.ACTIVE, 0)));
-        AppointmentService.AppointmentView appointment = new AppointmentService.AppointmentView(UUID.randomUUID(), participantId,
-                NOW.plusSeconds(3600), NOW.plusSeconds(7200), Appointment.Type.CONSULTATION, Appointment.Status.SCHEDULED,
-                Appointment.LocationMode.REMOTE, null, "Check-in", false, false, List.of("OPEN_APPOINTMENT"), 0);
+        SpecialistAppointmentQueryPort.ScheduledAppointment appointment = new SpecialistAppointmentQueryPort.ScheduledAppointment(UUID.randomUUID(), participantId,
+                NOW.plusSeconds(3600), NOW.plusSeconds(7200), "CONSULTATION", "SCHEDULED",
+                "REMOTE", null, "Check-in", false, List.of("OPEN_APPOINTMENT"), 0);
         when(appointments.inRange(eq(specialistId), any(), any(), eq(Set.of(participantId)), eq(NOW))).thenReturn(List.of(appointment));
         UUID eventId = UUID.randomUUID();
         when(overdueAppointments.overdueOutcomeAppointments(specialistId, Set.of(participantId), NOW)).thenReturn(List.of(
@@ -63,8 +60,8 @@ class SpecialistCalendarParticipantIdTest {
                         "CONSULTATION", "CONFIRMED", eventId)));
         RecurringAvailabilityService availability = mock(RecurringAvailabilityService.class);
         when(availability.list(specialistId)).thenReturn(List.of());
-        SpecialistTodayService service = new SpecialistTodayService(accounts, relationships, profiles, participants,
-                availability, appointments, overdueAppointments, mock(SpecialistWorklistService.class), audit,
+        SpecialistTodayService service = new SpecialistTodayService(accounts, specialistWorkspace, participants,
+                availability, appointments, overdueAppointments, audit,
                 Clock.fixed(NOW, ZoneOffset.UTC));
 
         SpecialistTodayService.TodayView view = service.today("specialist", LocalDate.of(2030, 6, 10));
@@ -86,25 +83,22 @@ class SpecialistCalendarParticipantIdTest {
         UUID specialistId = UUID.randomUUID();
         UUID participantId = UUID.randomUUID();
         CurrentAccountService accounts = mock(CurrentAccountService.class);
-        SpecialistProfileService profiles = mock(SpecialistProfileService.class);
-        SpecialistAuthorizationPort authorization = mock(SpecialistAuthorizationPort.class);
+        SpecialistWorkspacePort specialistWorkspace = mock(SpecialistWorkspacePort.class);
         SpecialistAppointmentQueryPort appointments = mock(SpecialistAppointmentQueryPort.class);
         SpecialistAppointmentEventQueryPort appointmentEvents = mock(SpecialistAppointmentEventQueryPort.class);
         when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(specialistId, "specialist", ProfileType.SPECIALIST));
-        when(profiles.find(specialistId)).thenReturn(Optional.of(new SpecialistProfileService.ProfileView(
-                specialistId, "Specialist", SpecialistKind.TRAINER, "UTC")));
-        when(authorization.requireCapabilities(eq(specialistId), eq(participantId), any(), any(), any())).thenReturn(
-                new SpecialistAuthorizationPort.AuthorizationDecision(specialistId, participantId,
-                        SpecialistAuthorizationPort.ProfessionalRole.TRAINER,
-                        SpecialistAuthorizationPort.Purpose.PERFORMANCE_PLANNING,
-                        Set.of(SpecialistAuthorizationPort.Capability.PLAN_PERFORMANCE)));
+        when(specialistWorkspace.findProfile(specialistId)).thenReturn(Optional.of(new SpecialistWorkspacePort.Profile(
+                specialistId, SpecialistWorkspacePort.WorkspaceRole.TRAINER, "UTC")));
+        when(specialistWorkspace.requireParticipantCapabilities(eq(specialistId), eq(participantId), any(), any(), any())).thenReturn(
+                new SpecialistWorkspacePort.AuthorizationDecision(SpecialistWorkspacePort.WorkspaceRole.TRAINER,
+                        SpecialistWorkspacePort.WorkspacePurpose.PERFORMANCE_PLANNING, Set.of("PLAN_PERFORMANCE")));
         when(appointmentEvents.timeline(eq(specialistId), eq(participantId), any(), any(), eq(null), eq(11))).thenReturn(List.of(
                 new SpecialistAppointmentEventQueryPort.AppointmentEventSummary(UUID.randomUUID(), UUID.randomUUID(), "CREATED", null,
                         "SCHEDULED", NOW, NOW, "CONSULTATION", "Check-in")));
-        SpecialistParticipantReadService service = new SpecialistParticipantReadService(accounts, profiles, authorization,
+        SpecialistParticipantReadService service = new SpecialistParticipantReadService(accounts, specialistWorkspace,
                 mock(ParticipantClientPort.class), mock(com.motionecosystem.participant.api.ParticipantContextQueryPort.class),
                 appointments, appointmentEvents, mock(PlanRevisionQueryPort.class), mock(ParticipantExecutionHistoryQueryPort.class),
-                mock(ParticipantSpecialistRelationshipRepository.class), mock(SpecialistWorklistService.class), mock(AuditRecorder.class),
+                null, null, mock(AuditRecorder.class),
                 Clock.fixed(NOW, ZoneOffset.UTC));
 
         var view = service.timeline("specialist", participantId, new SpecialistParticipantReadService.TimelineQuery(

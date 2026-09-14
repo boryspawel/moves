@@ -96,9 +96,10 @@ class TrainingFoundationUpgradeMigrationTest {
                     .migrate();
             JdbcTemplate jdbc = new JdbcTemplate(new DriverManagerDataSource(
                     postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword()));
-            UUID sessionId = insertLegacyOfflineAppointment(jdbc);
-            UUID exerciseVersionId = insertLegacyExerciseVersion(jdbc);
             UUID participantAccountId = insertLegacyAccount(jdbc, "legacy-participant", "PARTICIPANT");
+            insertLegacyParticipantProfile(jdbc, participantAccountId);
+            UUID sessionId = insertLegacyOfflineAppointment(jdbc, participantAccountId);
+            UUID exerciseVersionId = insertLegacyExerciseVersion(jdbc);
             UUID specialistAccountId = insertLegacyAccount(jdbc, "legacy-specialist", "SPECIALIST");
             insertLegacySpecialistProfile(jdbc, specialistAccountId);
             insertLegacyParticipantRestriction(jdbc, participantAccountId);
@@ -159,8 +160,7 @@ class TrainingFoundationUpgradeMigrationTest {
         }
     }
 
-    private static UUID insertLegacyOfflineAppointment(JdbcTemplate jdbc) {
-        UUID participantId = UUID.randomUUID();
+    private static UUID insertLegacyOfflineAppointment(JdbcTemplate jdbc, UUID participantAccountId) {
         UUID authorId = UUID.randomUUID();
         UUID goalId = UUID.randomUUID();
         UUID planId = UUID.randomUUID();
@@ -171,13 +171,13 @@ class TrainingFoundationUpgradeMigrationTest {
                 INSERT INTO training_planning.training_goal
                     (id, participant_account_id, name, created_by_account_id, created_at)
                 VALUES (?, ?, 'Legacy goal', ?, now())
-                """, goalId, participantId, authorId);
+                """, goalId, participantAccountId, authorId);
         jdbc.update("""
                 INSERT INTO training_planning.training_plan
                     (id, goal_id, participant_account_id, created_by_account_id, name,
                      plan_mode, status, created_at)
                 VALUES (?, ?, ?, ?, 'Legacy plan', 'SPECIALIST_ASSIGNED', 'ACTIVE', now())
-                """, planId, goalId, participantId, authorId);
+                """, planId, goalId, participantAccountId, authorId);
         jdbc.update("""
                 INSERT INTO training_planning.training_cycle (id, plan_id, sequence_number, name)
                 VALUES (?, ?, 1, 'Legacy cycle')
@@ -190,7 +190,7 @@ class TrainingFoundationUpgradeMigrationTest {
                 INSERT INTO training_planning.planned_session
                     (id, microcycle_id, participant_account_id, title, session_kind, status, assigned_at)
                 VALUES (?, ?, ?, 'Legacy appointment', 'OFFLINE_APPOINTMENT', 'ASSIGNED', now())
-                """, sessionId, microcycleId, participantId);
+                """, sessionId, microcycleId, participantAccountId);
         return sessionId;
     }
 
@@ -232,6 +232,14 @@ class TrainingFoundationUpgradeMigrationTest {
                 INSERT INTO specialist.specialist_profile
                     (id, account_id, display_name, specialist_kind, created_at, updated_at, version)
                 VALUES (?, ?, 'Legacy trainer', 'TRAINER', now(), now(), 0)
+                """, UUID.randomUUID(), accountId);
+    }
+
+    private static void insertLegacyParticipantProfile(JdbcTemplate jdbc, UUID accountId) {
+        jdbc.update("""
+                INSERT INTO participant.participant_profile
+                    (id, account_id, display_name, created_at, updated_at, version)
+                VALUES (?, ?, 'Legacy participant', now(), now(), 0)
                 """, UUID.randomUUID(), accountId);
     }
 

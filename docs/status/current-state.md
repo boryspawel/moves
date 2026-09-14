@@ -68,13 +68,11 @@ komendzie. Pozycje referencjonują opublikowaną
 `ExerciseVersion` przez publiczny port katalogu i zapisują minimalny snapshot odczytowy.
 
 Snapshot OpenAPI, generowany klient TypeScript oraz `ApiFacade.exerciseSets` obejmują
-nowe API. `Dose` jest generowane jako `oneOf` z dyskryminatorem `type`; `api:verify`,
-testy MockMvc/PostgreSQL/Testcontainers i frontendowe testy oraz build potwierdziły
-zgodność pionu. Globalny `ModuleBoundaryTest` oraz pełne `mvn verify` kończą się
-niezerowo z powodu zastanego cyklu modułów i legacy fixtures po V036, niezwiązanych z
-`exercisesets`; nie jest to regresja ani zależność nowego modułu. Z tego powodu formalne
-kryterium pełnej walidacji SET-02 pozostaje otwarte, choć w zakresie kodu SET-02 nie ma
-znanego defektu. Następny etap może rozpocząć się jako SET-03: wyszukiwanie i wybór
+nowe API. `Dose` jest generowane jako `oneOf` z dyskryminatorem `type`.
+Backendowa weryfikacja z 2026-09-11 jest zielona: `mvn --batch-mode verify` zakończył
+219 testów bez failures/errors/skips, 13/13 reguł ArchUnit oraz 6 standardowych i 2
+upgrade'owe scenariusze Flyway. Obejmuje to usunięcie zastanych cykli/legacy fixture
+problemów. Następny etap może rozpocząć się jako SET-03: wyszukiwanie i wybór
 konkretnej wersji ćwiczenia.
 
 **SET-03 dostarcza pion wyszukiwanie → filtrowanie → facety → podgląd → wybór
@@ -198,6 +196,11 @@ biomechaniczną ani kliniczną. SET-07B może rozpocząć prototyp techniczny.
 
 ## Workspace specjalisty i lokalne operacje
 
+- Kompozycja workspace jest w `application.workspace`; dane specjalisty są dostępne
+  wyłącznie przez specialist-owned porty, a calendar/planning/execution/goals/
+  documentation pozostają portami swoich właścicieli. Safety używa kanonicznego
+  `participantId`; naprawione fixture migracyjne i legacy seed'y zachowują osobno
+  kartotekę uczestnika oraz link aktywnego konta.
 - Workspace i timeline specjalisty są odczytami po `participantId` przez publiczne
   porty właścicieli danych; składają profil, aktywny plan, terminy, wykonania i
   minimalne sygnały wymagające uwagi, bez przejmowania ich własności przez frontend.

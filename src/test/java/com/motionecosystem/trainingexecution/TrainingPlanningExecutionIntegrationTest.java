@@ -204,9 +204,9 @@ class TrainingPlanningExecutionIntegrationTest {
                 "SELECT id FROM training_planning.exercise_prescription", UUID.class);
         jdbc.update("""
                 INSERT INTO safety.participant_restriction
-                    (id, account_id, contraindication_tag, recorded_at)
-                VALUES (?, ?, 'ACUTE_KNEE_PAIN', now())
-                """, UUID.randomUUID(), participantId);
+                    (id, account_id, participant_id, contraindication_tag, recorded_at)
+                VALUES (?, ?, ?, 'ACUTE_KNEE_PAIN', now())
+                """, UUID.randomUUID(), participantId, participantId);
 
         mvc.perform(post("/api/v1/planned-sessions/{id}/executions", sessionId)
                         .with(role("participant", "PARTICIPANT"))
@@ -441,7 +441,7 @@ class TrainingPlanningExecutionIntegrationTest {
                         .exists())
                 .andExpect(jsonPath("$.paths['/api/v1/planned-sessions/{sessionId}/executions']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/session-executions/{executionId}/corrections']").exists())
-                .andExpect(jsonPath("$.paths['/api/v1/specialist/participants/{participantAccountId}/executions']")
+                .andExpect(jsonPath("$.paths['/api/v1/specialist/participants/{participantId}/executions']")
                         .exists());
     }
 

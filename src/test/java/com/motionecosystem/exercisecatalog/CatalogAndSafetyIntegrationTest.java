@@ -15,13 +15,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.time.Instant;
+import java.lang.reflect.Field;
 
 import com.motionecosystem.application.MotionEcosystemApplication;
 import com.motionecosystem.exercisecatalog.api.ExerciseCatalogQueryPort;
 import com.motionecosystem.identityaccess.api.EditorialCapability;
+import com.motionecosystem.identityaccess.api.CurrentAccountService;
+import com.motionecosystem.identityaccess.api.ProfileType;
+import com.motionecosystem.participant.ParticipantRecord;
 import com.motionecosystem.safety.domain.SafetyRules;
 import com.motionecosystem.support.PostgresTestConfiguration;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManager;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.AfterEach;
@@ -37,6 +43,7 @@ import org.springframework.security.web.FilterChainProxy;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @SpringBootTest(classes = MotionEcosystemApplication.class)
 @Import(PostgresTestConfiguration.class)
@@ -48,6 +55,9 @@ class CatalogAndSafetyIntegrationTest {
     @Autowired EntityManagerFactory entityManagerFactory;
     @Autowired ExerciseCatalogQueryPort catalogPort;
     @Autowired ExerciseVersionRepository versions;
+    @Autowired CurrentAccountService accounts;
+    @Autowired EntityManager entityManager;
+    @Autowired TransactionTemplate transactions;
 
     MockMvc mvc;
 
@@ -283,6 +293,8 @@ class CatalogAndSafetyIntegrationTest {
 
     @Test
     void safetyInputsRemainNonDiagnosticAndLegacyReplaceAllIsRemoved() throws Exception {
+        canonicalParticipant("first");
+        canonicalParticipant("second");
         mvc.perform(get("/api/v1/safety/me")).andExpect(status().isUnauthorized());
         mvc.perform(put("/api/v1/safety/me/restrictions").with(participant("first"))
                         .contentType("application/json")
@@ -462,6 +474,38 @@ class CatalogAndSafetyIntegrationTest {
     private static JwtRequestPostProcessor participant(String subject) {
         return jwt().jwt(builder -> builder.subject(subject).audience(List.of("motion-api")))
                 .authorities(new SimpleGrantedAuthority("ROLE_PARTICIPANT"));
+    }
+
+    private void canonicalParticipant(String subject) {
+        UUID accountId = accounts.requireActive(subject).id();
+        accounts.selectProfileType(subject, ProfileType.PARTICIPANT);
+        UUID participantId = UUID.randomUUID();
+        transactions.executeWithoutResult(status -> {
+            ParticipantRecord record = new ParticipantRecord("Safety participant", ParticipantRecord.RelationshipContext.CLIENT,
+                    null, null, null, accountId, Instant.now());
+            set(record, "id", participantId);
+            entityManager.persist(record);
+            entityManager.flush();
+            entityManager.createNativeQuery("""
+                    INSERT INTO participant.participant_access_link
+                        (id, participant_id, principal_account_id, access_status, linked_at, activated_at, version)
+                    VALUES (?, ?, ?, 'ACTIVE', now(), now(), 0)
+                    """)
+                    .setParameter(1, UUID.randomUUID())
+                    .setParameter(2, participantId)
+                    .setParameter(3, accountId)
+                    .executeUpdate();
+        });
+    }
+
+    private static void set(Object target, String name, Object value) {
+        try {
+            Field field = target.getClass().getDeclaredField(name);
+            field.setAccessible(true);
+            field.set(target, value);
+        } catch (ReflectiveOperationException error) {
+            throw new IllegalStateException(error);
+        }
     }
 
     private static JwtRequestPostProcessor contentAdmin() {

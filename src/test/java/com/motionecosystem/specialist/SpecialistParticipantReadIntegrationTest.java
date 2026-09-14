@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.motionecosystem.application.MotionEcosystemApplication;
+import com.motionecosystem.application.workspace.SpecialistParticipantReadService;
 import com.motionecosystem.availability.RecurringAvailabilityService;
 import com.motionecosystem.calendar.Appointment;
 import com.motionecosystem.calendar.AppointmentService;

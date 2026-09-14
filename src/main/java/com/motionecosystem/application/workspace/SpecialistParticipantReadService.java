@@ -1,4 +1,4 @@
-package com.motionecosystem.specialist;
+package com.motionecosystem.application.workspace;
 
 import com.motionecosystem.calendar.api.SpecialistAppointmentQueryPort;
 import com.motionecosystem.calendar.api.SpecialistAppointmentEventQueryPort;
@@ -7,13 +7,12 @@ import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.participant.api.ParticipantContextQueryPort;
 import com.motionecosystem.participant.api.ParticipantClientPort;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort;
 import com.motionecosystem.participantgoals.api.ParticipantGoalEventQueryPort;
 import com.motionecosystem.participantdocumentation.api.ParticipantDocumentationEventQueryPort;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ActingContext;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.Capability;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.ProfessionalRole;
-import com.motionecosystem.specialist.api.SpecialistAuthorizationPort.Purpose;
+import com.motionecosystem.specialist.api.SpecialistWorkspacePort;
+import com.motionecosystem.specialist.api.SpecialistWorkspacePort.WorkspaceCapability;
+import com.motionecosystem.specialist.api.SpecialistWorkspacePort.WorkspacePurpose;
+import com.motionecosystem.specialist.api.SpecialistWorkspacePort.WorkspaceRole;
 import com.motionecosystem.trainingexecution.api.ParticipantExecutionHistoryQueryPort;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort;
 import java.math.BigDecimal;
@@ -42,8 +41,7 @@ public class SpecialistParticipantReadService {
     private static final int DEFAULT_LIMIT = 50;
     private static final int MAX_LIMIT = 100;
     private final CurrentAccountService accounts;
-    private final SpecialistProfileService profiles;
-    private final SpecialistAuthorizationPort authorization;
+    private final SpecialistWorkspacePort specialistWorkspace;
     private final ParticipantClientPort participantClients;
     private final ParticipantContextQueryPort participantContexts;
     private final SpecialistAppointmentQueryPort appointments;
@@ -52,31 +50,19 @@ public class SpecialistParticipantReadService {
     private final ParticipantExecutionHistoryQueryPort executionHistory;
     private final ParticipantGoalEventQueryPort goalEvents;
     private final ParticipantDocumentationEventQueryPort recordEvents;
-    private final ParticipantSpecialistRelationshipRepository relationships;
-    private final SpecialistWorklistService worklist;
     private final AuditRecorder audit;
     private final Clock clock;
 
     @Autowired
-    public SpecialistParticipantReadService(CurrentAccountService accounts, SpecialistProfileService profiles, SpecialistAuthorizationPort authorization,
+    public SpecialistParticipantReadService(CurrentAccountService accounts, SpecialistWorkspacePort specialistWorkspace,
             ParticipantClientPort participantClients, ParticipantContextQueryPort participantContexts, SpecialistAppointmentQueryPort appointments,
             SpecialistAppointmentEventQueryPort appointmentEvents, PlanRevisionQueryPort revisions,
             ParticipantExecutionHistoryQueryPort executionHistory, ParticipantGoalEventQueryPort goalEvents, ParticipantDocumentationEventQueryPort recordEvents,
-            ParticipantSpecialistRelationshipRepository relationships, SpecialistWorklistService worklist, AuditRecorder audit, Clock clock) {
-        this.accounts = accounts; this.profiles = profiles; this.authorization = authorization; this.participantClients = participantClients;
+            AuditRecorder audit, Clock clock) {
+        this.accounts = accounts; this.specialistWorkspace = specialistWorkspace; this.participantClients = participantClients;
         this.participantContexts = participantContexts; this.appointments = appointments; this.appointmentEvents = appointmentEvents;
-        this.revisions = revisions; this.executionHistory = executionHistory; this.goalEvents = goalEvents; this.recordEvents = recordEvents; this.relationships = relationships;
-        this.worklist = worklist; this.audit = audit; this.clock = clock;
-    }
-
-    /** Compatibility constructor for focused callers that predate participant-goal timeline events. */
-    SpecialistParticipantReadService(CurrentAccountService accounts, SpecialistProfileService profiles, SpecialistAuthorizationPort authorization,
-            ParticipantClientPort participantClients, ParticipantContextQueryPort participantContexts, SpecialistAppointmentQueryPort appointments,
-            SpecialistAppointmentEventQueryPort appointmentEvents, PlanRevisionQueryPort revisions,
-            ParticipantExecutionHistoryQueryPort executionHistory, ParticipantSpecialistRelationshipRepository relationships,
-            SpecialistWorklistService worklist, AuditRecorder audit, Clock clock) {
-        this(accounts, profiles, authorization, participantClients, participantContexts, appointments, appointmentEvents, revisions,
-                executionHistory, null, null, relationships, worklist, audit, clock);
+        this.revisions = revisions; this.executionHistory = executionHistory; this.goalEvents = goalEvents; this.recordEvents = recordEvents;
+        this.audit = audit; this.clock = clock;
     }
 
     public SpecialistParticipantWorkspaceView workspace(String subject, UUID participantId) {
@@ -166,19 +152,19 @@ public class SpecialistParticipantReadService {
         if (participantId == null) throw bad("participantId is required");
         var account = accounts.requireActive(subject);
         if (!account.hasProfile(ProfileType.SPECIALIST)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "specialist profile is required");
-        SpecialistProfileService.ProfileView profile = profiles.find(account.id())
+        SpecialistWorkspacePort.Profile profile = specialistWorkspace.findProfile(account.id())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "specialist profile is required"));
-        ProfessionalRole role = ProfessionalRole.valueOf(profile.specialistKind().name());
-        Capability capability = role == ProfessionalRole.TRAINER ? Capability.PLAN_PERFORMANCE : Capability.PLAN_FUNCTIONAL_RECOVERY;
-        Purpose purpose = role == ProfessionalRole.TRAINER ? Purpose.PERFORMANCE_PLANNING : Purpose.FUNCTIONAL_RECOVERY;
-        return new Access(account.id(), authorization.requireCapabilities(account.id(), participantId,
-                new ActingContext(role), Set.of(capability), purpose));
+        WorkspaceRole role = profile.role();
+        WorkspaceCapability capability = role == WorkspaceRole.TRAINER ? WorkspaceCapability.PLAN_PERFORMANCE : WorkspaceCapability.PLAN_FUNCTIONAL_RECOVERY;
+        WorkspacePurpose purpose = role == WorkspaceRole.TRAINER ? WorkspacePurpose.PERFORMANCE_PLANNING : WorkspacePurpose.FUNCTIONAL_RECOVERY;
+        return new Access(account.id(), specialistWorkspace.requireParticipantCapabilities(account.id(), participantId,
+                role, Set.of(capability), purpose));
     }
 
     private boolean canViewExecutionHistory(Access access, UUID participantId) {
         try {
-            authorization.requireCapabilities(access.specialistId(), participantId,
-                    new ActingContext(access.decision().actingRole()), Set.of(Capability.VIEW_ADHERENCE_WORKLIST),
+            specialistWorkspace.requireParticipantCapabilities(access.specialistId(), participantId,
+                    access.decision().role(), Set.of(WorkspaceCapability.VIEW_ADHERENCE_WORKLIST),
                     access.decision().purpose());
             return true;
         } catch (ResponseStatusException denied) {
@@ -196,15 +182,15 @@ public class SpecialistParticipantReadService {
     }
 
     private RelationshipView relationship(UUID specialistId, UUID participantId) {
-        ParticipantSpecialistRelationship relationship = relationships
-                .findBySpecialistAccountIdAndParticipantId(specialistId, participantId)
+        SpecialistWorkspacePort.Relationship relationship = specialistWorkspace
+                .findRelationship(specialistId, participantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "active participant-specialist relationship is required"));
-        return new RelationshipView(relationship.status().name(), relationship.activatedAt());
+        return new RelationshipView(relationship.status(), relationship.activatedAt());
     }
 
     private List<AttentionItemView> attention(String subject, UUID participantId, Access access) {
         try {
-            return worklist.forParticipant(subject, participantId, new ActingContext(access.decision().actingRole()),
+            return specialistWorkspace.listParticipantWorklist(subject, participantId, access.decision().role(),
                             access.decision().purpose()).stream()
                     .limit(10)
                     .map(item -> new AttentionItemView(item.id(), item.category(), item.priority(), item.status(), item.minimalData(),
@@ -433,18 +419,18 @@ public class SpecialistParticipantReadService {
         return attention.stream().map(item -> new ActiveProblemView(item.attentionId(), item.type(), item.priority(), item.status(),
                 item.shortDescription(), item.createdAt(), item.createdAt(), "WORKLIST", item.availableActions())).toList();
     }
-    private static List<String> quickActions(SpecialistAuthorizationPort.AuthorizationDecision decision,
+    private static List<String> quickActions(SpecialistWorkspacePort.AuthorizationDecision decision,
                                              List<SpecialistAppointmentQueryPort.AppointmentSummary> appointments,
                                              Optional<PlanRevisionQueryPort.PlanRevisionSnapshot> revision,
                                              List<AttentionItemView> attention) {
         List<String> actions = new ArrayList<>(List.of("OPEN_TIMELINE", "SCHEDULE_APPOINTMENT"));
         if (!appointments.isEmpty()) actions.add("OPEN_NEXT_APPOINTMENT");
         if (revision.isPresent()) actions.add("OPEN_ACTIVE_PLAN");
-        if (!attention.isEmpty() && decision.grantedCapabilities().contains(Capability.VIEW_ADHERENCE_WORKLIST)) actions.add("OPEN_ATTENTION_ITEMS");
+        if (!attention.isEmpty() && decision.grantedCapabilities().contains(WorkspaceCapability.VIEW_ADHERENCE_WORKLIST.name())) actions.add("OPEN_ATTENTION_ITEMS");
         return List.copyOf(actions);
     }
-    private static List<String> capabilities(SpecialistAuthorizationPort.AuthorizationDecision decision) {
-        return decision.grantedCapabilities().stream().map(Enum::name).sorted().toList();
+    private static List<String> capabilities(SpecialistWorkspacePort.AuthorizationDecision decision) {
+        return decision.grantedCapabilities().stream().sorted().toList();
     }
     private static boolean afterCursor(ParticipantTimelineEvent event, Cursor cursor) {
         if (cursor == null) return true;
@@ -526,7 +512,7 @@ public class SpecialistParticipantReadService {
     public record ExecutionDeviation(String type, String plannedValue, String performedValue) { }
     public record Measurement(String metricCode, BigDecimal value, String unit) { }
     public record Problem(UUID problemId, String type, String status, String summary) { }
-    private record Access(UUID specialistId, SpecialistAuthorizationPort.AuthorizationDecision decision) { }
+    private record Access(UUID specialistId, SpecialistWorkspacePort.AuthorizationDecision decision) { }
     private record Cursor(Instant effectiveFrom, Instant recordedAt, String eventId) { }
     private record SessionOccurrence(PlanRevisionQueryPort.SessionSnapshot session, Instant effectiveAt) { }
 }

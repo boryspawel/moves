@@ -2,6 +2,7 @@ package com.motionecosystem.analytics.adherencemetrics;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -23,7 +24,7 @@ class AdherenceMetricsServiceTest {
         var assignments = mock(AdherenceExperimentAssignmentRepository.class);
         var events = mock(AdherenceMetricEventRepository.class);
         UUID participant = UUID.fromString("8a4f91d9-48c6-4dde-bebf-1e86c1c9b1b2");
-        when(assignments.findByParticipantAccountIdAndExperimentKeyAndExperimentVersion(any(), any(), any()))
+        when(assignments.findByParticipantAccountIdAndExperimentKeyAndExperimentVersion(any(), any(), anyInt()))
                 .thenReturn(Optional.empty());
         var service = new AdherenceMetricsService(assignments, events, clock);
 
@@ -36,7 +37,7 @@ class AdherenceMetricsServiceTest {
         });
 
         var secondAssignments = mock(AdherenceExperimentAssignmentRepository.class);
-        when(secondAssignments.findByParticipantAccountIdAndExperimentKeyAndExperimentVersion(any(), any(), any()))
+        when(secondAssignments.findByParticipantAccountIdAndExperimentKeyAndExperimentVersion(any(), any(), anyInt()))
                 .thenReturn(Optional.empty());
         new AdherenceMetricsService(secondAssignments, events, clock).ensureAssignments(participant);
         ArgumentCaptor<AdherenceExperimentAssignment> second = ArgumentCaptor.forClass(AdherenceExperimentAssignment.class);
@@ -50,7 +51,7 @@ class AdherenceMetricsServiceTest {
         var assignments = mock(AdherenceExperimentAssignmentRepository.class);
         var events = mock(AdherenceMetricEventRepository.class);
         UUID participant = UUID.fromString("996ad860-2a9a-504f-8861-aeafd0b2ae29");
-        when(assignments.findByParticipantAccountIdAndExperimentKeyAndExperimentVersion(any(), any(), any()))
+        when(assignments.findByParticipantAccountIdAndExperimentKeyAndExperimentVersion(any(), any(), anyInt()))
                 .thenReturn(Optional.empty());
 
         new AdherenceMetricsService(assignments, events, clock).ensureAssignments(participant);

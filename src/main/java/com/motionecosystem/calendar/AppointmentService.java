@@ -6,8 +6,7 @@ import com.motionecosystem.availability.RecurringAvailabilityService;
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
-import com.motionecosystem.specialist.SpecialistRelationshipService;
-import com.motionecosystem.specialist.SpecialistProfileService;
+import com.motionecosystem.specialist.api.SpecialistWorkspacePort;
 import java.time.*;
 import java.util.*;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -27,9 +26,8 @@ public class AppointmentService implements SpecialistAppointmentQueryPort, Speci
     private final AppointmentEventRepository events;
     private final AppointmentIdempotencyRepository idempotency;
     private final CurrentAccountService accounts;
-    private final SpecialistRelationshipService relationships;
+    private final SpecialistWorkspacePort specialistWorkspace;
     private final RecurringAvailabilityService availability;
-    private final SpecialistProfileService profiles;
     private final AuditRecorder audit;
     private final Clock clock;
     private final AppointmentLifecyclePolicy lifecycle = new AppointmentLifecyclePolicy();
@@ -38,7 +36,7 @@ public class AppointmentService implements SpecialistAppointmentQueryPort, Speci
     public AppointmentView create(String subject, String key, CreateCommand command) {
         UUID specialist = specialist(subject); String idempotencyKey = key(key);
         return replay(specialist, "CREATE", idempotencyKey).orElseGet(() -> {
-            Values values = values(command); relationships.requireActive(specialist, values.participantId());
+            Values values = values(command); specialistWorkspace.requireActiveRelationship(specialist, values.participantId());
             requireWithinAvailability(specialist, values.startsAt(), values.endsAt());
             conflictIfOverlapping(specialist, values.startsAt(), values.endsAt(), UUID.randomUUID());
             Appointment saved = appointments.saveAndFlush(new Appointment(specialist, values.participantId(), values.startsAt(), values.endsAt(),
@@ -57,7 +55,7 @@ public class AppointmentService implements SpecialistAppointmentQueryPort, Speci
             Appointment appointment = owned(specialist, id); version(appointment, command == null ? null : command.version());
             requireAllowed(AppointmentLifecyclePolicy.Action.UPDATE, appointment, clock.instant());
             Values values = values(command); if (!appointment.participantId.equals(values.participantId())) bad("participantId cannot be changed");
-            relationships.requireActive(specialist, appointment.participantId);
+            specialistWorkspace.requireActiveRelationship(specialist, appointment.participantId);
             requireWithinAvailability(specialist, values.startsAt(), values.endsAt());
             conflictIfOverlapping(specialist, values.startsAt(), values.endsAt(), appointment.id);
             Instant previousStartsAt = appointment.startsAt, previousEndsAt = appointment.endsAt;
@@ -79,17 +77,17 @@ public class AppointmentService implements SpecialistAppointmentQueryPort, Speci
     public AppointmentView complete(String subject, UUID id, String key, AppointmentVersionCommand command) { return changeStatus(subject, id, key, command, "COMPLETE", AppointmentLifecyclePolicy.Action.COMPLETE); }
 
     @Transactional(readOnly = true)
-    public List<AppointmentView> inRange(UUID specialist, Instant start, Instant end, Set<UUID> activeParticipants, Instant now) {
+    public List<SpecialistAppointmentQueryPort.ScheduledAppointment> inRange(UUID specialist, Instant start, Instant end, Set<UUID> activeParticipants, Instant now) {
         return appointments.findIntersecting(specialist, start, end).stream()
                 .filter(appointment -> activeParticipants.contains(appointment.participantId))
-                .map(appointment -> view(appointment, now)).toList();
+                .map(appointment -> scheduled(view(appointment, now))).toList();
     }
 
     @Transactional(readOnly = true)
     public AppointmentView detail(String subject, UUID id) {
         UUID specialist = specialist(subject);
         Appointment appointment = owned(specialist, id);
-        relationships.requireActive(specialist, appointment.participantId);
+        specialistWorkspace.requireActiveRelationship(specialist, appointment.participantId);
         return view(appointment);
     }
 
@@ -106,10 +104,10 @@ public class AppointmentService implements SpecialistAppointmentQueryPort, Speci
     }
 
     @Transactional(readOnly = true)
-    public List<TimeRange> blockingInRange(UUID specialist, Instant start, Instant end) {
+    @Override public List<SpecialistAppointmentQueryPort.TimeRange> blockingInRange(UUID specialist, Instant start, Instant end) {
         return appointments.findIntersecting(specialist, start, end).stream()
                 .filter(appointment -> appointment.status != Appointment.Status.CANCELLED)
-                .map(appointment -> new TimeRange(appointment.startsAt, appointment.endsAt))
+                .map(appointment -> new SpecialistAppointmentQueryPort.TimeRange(appointment.startsAt, appointment.endsAt))
                 .toList();
     }
 
@@ -133,7 +131,7 @@ public class AppointmentService implements SpecialistAppointmentQueryPort, Speci
         UUID specialist = specialist(subject); String idempotencyKey = key(key); String scopedOperation = operation + ":" + id;
         return replay(specialist, scopedOperation, idempotencyKey).orElseGet(() -> {
             Appointment appointment = owned(specialist, id); version(appointment, command == null ? null : command.version());
-            relationships.requireActive(specialist, appointment.participantId);
+            specialistWorkspace.requireActiveRelationship(specialist, appointment.participantId);
             Instant now = clock.instant(); requireAllowed(action, appointment, now);
             Appointment.Status fromStatus = appointment.status;
             switch (action) {
@@ -175,8 +173,8 @@ public class AppointmentService implements SpecialistAppointmentQueryPort, Speci
         if (appointments.hasActiveOverlap(specialist, start, end, excluded)) conflict("appointment overlaps an existing appointment");
     }
     private void requireWithinAvailability(UUID specialist, Instant start, Instant end) {
-        ZoneId zone = profiles.find(specialist)
-                .map(SpecialistProfileService.ProfileView::timeZoneId)
+        ZoneId zone = specialistWorkspace.findProfile(specialist)
+                .map(SpecialistWorkspacePort.Profile::timeZoneId)
                 .map(AppointmentService::zone)
                 .orElseThrow(() -> conflict("specialist profile is required"));
         LocalDate date = start.atZone(zone).toLocalDate();
@@ -214,12 +212,14 @@ public class AppointmentService implements SpecialistAppointmentQueryPort, Speci
         return new SpecialistAppointmentQueryPort.AppointmentSummary(appointment.id, appointment.startsAt, appointment.endsAt,
                 appointment.type.name(), appointment.status.name(), appointment.shortPurpose, appointment.createdAt, appointment.updatedAt);
     }
+    private static SpecialistAppointmentQueryPort.ScheduledAppointment scheduled(AppointmentView value) {
+        return new SpecialistAppointmentQueryPort.ScheduledAppointment(value.appointmentId(), value.participantId(), value.startsAt(), value.endsAt(), value.type().name(), value.status().name(), value.locationMode().name(), value.location(), value.shortPurpose(), value.isCurrent(), value.availableActions(), value.version());
+    }
     private AppointmentView view(Appointment appointment, Instant now) { return new AppointmentView(appointment.id, appointment.participantId, appointment.startsAt, appointment.endsAt, appointment.type, appointment.status, appointment.locationMode, appointment.location, appointment.shortPurpose, now != null && !appointment.startsAt.isAfter(now) && appointment.endsAt.isAfter(now), false, lifecycle.availableActions(appointment, now), appointment.version); }
     private record Values(UUID participantId, Instant startsAt, Instant endsAt, Appointment.Type type, Appointment.LocationMode locationMode, String location, String shortPurpose) { }
     public record CreateCommand(UUID participantId, Instant startsAt, Instant endsAt, Appointment.Type type, Appointment.LocationMode locationMode, String location, String shortPurpose) { }
     public record UpdateCommand(UUID participantId, Instant startsAt, Instant endsAt, Appointment.Type type, Appointment.LocationMode locationMode, String location, String shortPurpose, Long version) { }
     @Schema(name = "AppointmentVersionCommand")
     public record AppointmentVersionCommand(Long version) { }
-    public record TimeRange(Instant startsAt, Instant endsAt) { }
     public record AppointmentView(UUID appointmentId, UUID participantId, Instant startsAt, Instant endsAt, Appointment.Type type, Appointment.Status status, Appointment.LocationMode locationMode, String location, String shortPurpose, boolean isCurrent, boolean isNext, List<String> availableActions, long version) { }
 }

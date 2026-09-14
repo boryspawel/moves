@@ -1,4 +1,4 @@
-package com.motionecosystem.specialist;
+package com.motionecosystem.application.workspace;
 
 import java.time.Instant;
 import java.time.LocalDate;

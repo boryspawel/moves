@@ -160,7 +160,7 @@ class ModuleBoundaryTest {
         classes().should(onlyDependOnJpaRepositoriesInTheirOwnModule())
                 .check(productionClasses);
 
-        noClasses().that().haveFullyQualifiedName("com.motionecosystem.specialist.SpecialistClientService")
+        noClasses().that().haveFullyQualifiedName("com.motionecosystem.application.workspace.SpecialistClientService")
                 .should().dependOnClassesThat().resideInAPackage("com.motionecosystem.participant")
                 .check(productionClasses);
     }

@@ -1,4 +1,4 @@
-package com.motionecosystem.specialist;
+package com.motionecosystem.application.workspace;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.Operation;

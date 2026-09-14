@@ -15,7 +15,7 @@ class ParticipantRestriction {
     @Id
     UUID id;
     @Column(name = "participant_id", nullable = false)
-    UUID accountId;
+    UUID participantId;
     @Column(name = "contraindication_tag", nullable = false)
     String contraindicationTag;
     @Column(name = "recorded_at", nullable = false)
@@ -24,9 +24,9 @@ class ParticipantRestriction {
     protected ParticipantRestriction() {
     }
 
-    ParticipantRestriction(UUID accountId, String tag, Instant now) {
+    ParticipantRestriction(UUID participantId, String tag, Instant now) {
         id = UUID.randomUUID();
-        this.accountId = accountId;
+        this.participantId = participantId;
         contraindicationTag = tag;
         recordedAt = now;
     }
