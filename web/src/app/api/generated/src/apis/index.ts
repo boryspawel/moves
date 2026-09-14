@@ -29,6 +29,7 @@ export * from './SessionExecutionControllerApi';
 export * from './SpecialistAvailableSlotsControllerApi';
 export * from './SpecialistClientControllerApi';
 export * from './SpecialistParticipantReadControllerApi';
+export * from './SpecialistPlanFacadeControllerApi';
 export * from './SpecialistRelationshipControllerApi';
 export * from './SpecialistTodayControllerApi';
 export * from './SpecialistWorklistControllerApi';

@@ -13,13 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
-import type { PrescriptionCommand } from './PrescriptionCommand';
+import type { ActingContext } from './ActingContext';
 import {
-  PrescriptionCommandFromJSON,
-  PrescriptionCommandFromJSONTyped,
-  PrescriptionCommandToJSON,
-  PrescriptionCommandToJSONTyped,
-} from './PrescriptionCommand';
+  ActingContextFromJSON,
+  ActingContextFromJSONTyped,
+  ActingContextToJSON,
+  ActingContextToJSONTyped,
+} from './ActingContext';
 
 /**
  *
@@ -29,63 +29,53 @@ import {
 export interface CreatePlanCommand {
   /**
    *
-   * @type {string}
+   * @type {ActingContext}
    * @memberof CreatePlanCommand
    */
-  cycleName?: string;
+  actingContext?: ActingContext;
   /**
    *
    * @type {string}
    * @memberof CreatePlanCommand
    */
-  goalName?: string;
+  name?: string;
   /**
    *
    * @type {string}
    * @memberof CreatePlanCommand
    */
-  microcycleName?: string;
+  participantGoalId?: string;
   /**
    *
    * @type {string}
    * @memberof CreatePlanCommand
    */
-  participantAccountId?: string;
+  participantId?: string;
   /**
    *
    * @type {string}
    * @memberof CreatePlanCommand
    */
-  planName?: string;
-  /**
-   *
-   * @type {Array<PrescriptionCommand>}
-   * @memberof CreatePlanCommand
-   */
-  prescriptions?: Array<PrescriptionCommand>;
-  /**
-   *
-   * @type {CreatePlanCommandSessionKindEnum}
-   * @memberof CreatePlanCommand
-   */
-  sessionKind?: CreatePlanCommandSessionKindEnum;
+  phaseIntent?: string;
   /**
    *
    * @type {string}
    * @memberof CreatePlanCommand
    */
-  sessionTitle?: string;
+  purpose?: string;
+  /**
+   *
+   * @type {Date}
+   * @memberof CreatePlanCommand
+   */
+  validFrom?: Date;
+  /**
+   *
+   * @type {Date}
+   * @memberof CreatePlanCommand
+   */
+  validTo?: Date;
 }
-
-/**
- * @export
- */
-export const CreatePlanCommandSessionKindEnum = {
-  SelfGuided: 'SELF_GUIDED',
-  OfflineAppointment: 'OFFLINE_APPOINTMENT',
-} as const;
-export type CreatePlanCommandSessionKindEnum =
-  (typeof CreatePlanCommandSessionKindEnum)[keyof typeof CreatePlanCommandSessionKindEnum];
 
 /**
  * Check if a given object implements the CreatePlanCommand interface.
@@ -106,18 +96,15 @@ export function CreatePlanCommandFromJSONTyped(
     return json;
   }
   return {
-    cycleName: json['cycleName'] == null ? undefined : json['cycleName'],
-    goalName: json['goalName'] == null ? undefined : json['goalName'],
-    microcycleName: json['microcycleName'] == null ? undefined : json['microcycleName'],
-    participantAccountId:
-      json['participantAccountId'] == null ? undefined : json['participantAccountId'],
-    planName: json['planName'] == null ? undefined : json['planName'],
-    prescriptions:
-      json['prescriptions'] == null
-        ? undefined
-        : (json['prescriptions'] as Array<any>).map(PrescriptionCommandFromJSON),
-    sessionKind: json['sessionKind'] == null ? undefined : json['sessionKind'],
-    sessionTitle: json['sessionTitle'] == null ? undefined : json['sessionTitle'],
+    actingContext:
+      json['actingContext'] == null ? undefined : ActingContextFromJSON(json['actingContext']),
+    name: json['name'] == null ? undefined : json['name'],
+    participantGoalId: json['participantGoalId'] == null ? undefined : json['participantGoalId'],
+    participantId: json['participantId'] == null ? undefined : json['participantId'],
+    phaseIntent: json['phaseIntent'] == null ? undefined : json['phaseIntent'],
+    purpose: json['purpose'] == null ? undefined : json['purpose'],
+    validFrom: json['validFrom'] == null ? undefined : new Date(json['validFrom']),
+    validTo: json['validTo'] == null ? undefined : new Date(json['validTo']),
   };
 }
 
@@ -134,16 +121,17 @@ export function CreatePlanCommandToJSONTyped(
   }
 
   return {
-    cycleName: value['cycleName'],
-    goalName: value['goalName'],
-    microcycleName: value['microcycleName'],
-    participantAccountId: value['participantAccountId'],
-    planName: value['planName'],
-    prescriptions:
-      value['prescriptions'] == null
-        ? undefined
-        : (value['prescriptions'] as Array<any>).map(PrescriptionCommandToJSON),
-    sessionKind: value['sessionKind'],
-    sessionTitle: value['sessionTitle'],
+    actingContext: ActingContextToJSON(value['actingContext']),
+    name: value['name'],
+    participantGoalId: value['participantGoalId'],
+    participantId: value['participantId'],
+    phaseIntent: value['phaseIntent'],
+    purpose: value['purpose'],
+    validFrom:
+      value['validFrom'] == null
+        ? value['validFrom']
+        : value['validFrom'].toISOString().substring(0, 10),
+    validTo:
+      value['validTo'] == null ? value['validTo'] : value['validTo'].toISOString().substring(0, 10),
   };
 }

@@ -199,6 +199,70 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
         return editorView(access.planId(), revisionId);
     }
 
+    /** Updates draft scheduling in place; changing the source deliberately rematerializes it and clears variants. */
+    @Transactional
+    public EditorView updateSession(String subject, UUID revisionId, UpdateSessionCommand command) {
+        var access = requireEditable(subject, revisionId, command == null ? null : command.expectedVersion());
+        if (command.sessionId() == null) throw badRequest("sessionId is required");
+        positive(command.expectedDurationMinutes(), "expected duration");
+        if (command.availableFrom() != null && command.availableTo() != null
+                && command.availableTo().isBefore(command.availableFrom())) {
+            throw badRequest("session availability end precedes start");
+        }
+        var snapshot = requireSnapshot(revisionId);
+        var parent = snapshot.cycles().stream().flatMap(cycle -> cycle.microcycles().stream())
+                .filter(microcycle -> microcycle.sessions().stream().anyMatch(session -> session.id().equals(command.sessionId())))
+                .findFirst().orElseThrow(() -> badRequest("session does not belong to revision"));
+        var existing = parent.sessions().stream().filter(session -> session.id().equals(command.sessionId())).findFirst().orElseThrow();
+        if (command.scheduledDate() != null) {
+            requireContained(command.scheduledDate(), command.scheduledDate(), parent.startDate(), parent.endDate(), "session");
+        }
+        UUID sourceVersionId = command.exerciseSetVersionId() == null
+                ? existing.sourceExerciseSetVersionId() : command.exerciseSetVersionId();
+        if (sourceVersionId == null) throw badRequest("exerciseSetVersionId is required to replace a legacy session source");
+        boolean sourceChanged = !sourceVersionId.equals(existing.sourceExerciseSetVersionId());
+        ExerciseSetVersionQueryPort.ExerciseSetVersionSnapshot source = null;
+        if (sourceChanged) {
+            source = exerciseSetVersions.findById(sourceVersionId)
+                    .orElseThrow(() -> badRequest("exercise set version not found"));
+            if (!"PUBLISHED".equals(source.status())) throw badRequest("exercise set version must be published");
+            if (!access.actor().id().equals(source.ownerAccountId())) throw forbidden("exercise set belongs to another specialist");
+        }
+        var updated = new TrainingPlanningModel.Session(existing.id(), parent.id(), access.participantId(),
+                text(command.title(), 160, "session title"), command.scheduledDate(), command.availableFrom(),
+                command.availableTo(), command.expectedDurationMinutes(), clock.instant(),
+                sourceChanged ? source.exerciseSetId() : existing.sourceExerciseSetId(), sourceVersionId,
+                sourceChanged ? sourceSnapshot(source) : existing.sourceSnapshot());
+        List<TrainingPlanningModel.Prescription> replacement = sourceChanged
+                ? source.items().stream().map(item -> materialize(existing.id(), sourceVersionId, item)).toList()
+                : null;
+        mutate(() -> persistence.updateSession(revisionId, command.expectedVersion(), updated, replacement, clock.instant()));
+        return editorView(access.planId(), revisionId);
+    }
+
+    @Transactional
+    public EditorView updatePeriod(String subject, UUID revisionId, UpdatePeriodCommand command) {
+        var access = requireEditable(subject, revisionId, command == null ? null : command.expectedVersion());
+        validateDateRange(command.validFrom(), command.validTo(), "revision");
+        var snapshot = requireSnapshot(revisionId);
+        boolean defaultStage = snapshot.cycles().size() == 1 && snapshot.cycles().getFirst().microcycles().size() == 1;
+        for (var cycle : snapshot.cycles()) {
+            if (!defaultStage) {
+                requireContained(cycle.startDate(), cycle.endDate(), command.validFrom(), command.validTo(), "existing cycle");
+            }
+            for (var micro : cycle.microcycles()) for (var session : micro.sessions()) {
+                if (session.scheduledDate() != null) requireContained(session.scheduledDate(), session.scheduledDate(),
+                        command.validFrom(), command.validTo(), "existing session");
+                if (session.availableFrom() != null && session.availableFrom().atZone(java.time.ZoneOffset.UTC).toLocalDate().isBefore(command.validFrom())
+                        || session.availableTo() != null && session.availableTo().atZone(java.time.ZoneOffset.UTC).toLocalDate().isAfter(command.validTo())) {
+                    throw badRequest("period excludes an existing session availability window");
+                }
+            }
+        }
+        mutate(() -> persistence.updatePeriod(revisionId, command.expectedVersion(), command.validFrom(), command.validTo(), defaultStage, clock.instant()));
+        return editorView(access.planId(), revisionId);
+    }
+
     @Transactional
     public EditorView reorder(String subject, UUID revisionId, ReorderCommand command) {
         var access = requireEditable(subject, revisionId, command == null ? null : command.expectedVersion());
@@ -339,6 +403,24 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
     public List<TrainingPlanningV2Persistence.RevisionHistoryItem> history(String subject, UUID planId) {
         requirePlanView(subject, planId);
         return persistence.revisionHistory(planId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PlanListItem> participantPlans(String subject, UUID participantId, ActingContext actingContext) {
+        CurrentAccount actor = accounts.requireActive(subject);
+        if (!actor.hasProfile(ProfileType.SPECIALIST) || participantId == null) {
+            throw forbidden("specialist participant planning access is required");
+        }
+        requireSpecialistPlanning(actor.id(), participantId, actingContext);
+        return persistence.plansForParticipant(participantId).stream().flatMap(plan -> {
+            try {
+                authorizeResource(actor, plan.planId(), participantId, plan.ownerAccountId(), plan.ownerCapability());
+                return java.util.stream.Stream.of(new PlanListItem(plan.planId(), plan.name(), plan.purpose(),
+                        plan.status(), plan.currentRevisionId()));
+            } catch (ResponseStatusException ignored) {
+                return java.util.stream.Stream.empty();
+            }
+        }).toList();
     }
 
     private List<String> structuralViolations(PlanRevisionSnapshot snapshot) {
@@ -711,6 +793,10 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
     public record AddSessionCommand(long expectedVersion, UUID microcycleId, String title,
                                     LocalDate scheduledDate, Instant availableFrom, Instant availableTo,
                                     Integer expectedDurationMinutes, UUID exerciseSetVersionId) { }
+    public record UpdateSessionCommand(long expectedVersion, UUID sessionId, String title,
+                                       LocalDate scheduledDate, Instant availableFrom, Instant availableTo,
+                                       Integer expectedDurationMinutes, UUID exerciseSetVersionId) { }
+    public record UpdatePeriodCommand(long expectedVersion, LocalDate validFrom, LocalDate validTo) { }
     public record ReorderCommand(long expectedVersion, UUID sessionId, List<UUID> prescriptionIds) {
     }
     public record DefineSessionVariantCommand(long expectedVersion, UUID sessionId, SessionVariantType type,
@@ -729,6 +815,7 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
                              UUID ownerAccountId, String mode, String planStatus, UUID currentRevisionId,
                              PlanRevisionSnapshot revision) {
     }
+    public record PlanListItem(UUID planId, String name, String purpose, String status, UUID currentRevisionId) { }
     public record StructuralValidationView(UUID revisionId, long draftVersion, String inputChecksum,
                                            ValidationResult result, List<String> violations) {
         public StructuralValidationView { violations = List.copyOf(violations); }

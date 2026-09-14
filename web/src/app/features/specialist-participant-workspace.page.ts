@@ -11,7 +11,7 @@ import {
   signal,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -1067,6 +1067,7 @@ export class ParticipantGoalsComponent {
     PatientTimelineListViewComponent,
     PatientTimelineEventPanelComponent,
     ScheduleAppointmentDialogComponent,
+    RouterLink,
   ],
   styleUrl: './specialist-participant-workspace.page.scss',
   encapsulation: ViewEncapsulation.None,
@@ -1100,6 +1101,15 @@ export class ParticipantGoalsComponent {
         [role]="actingContext()"
         (changed)="reload()"
       />
+      <section class="workspace-planning-link" aria-label="Plan treningowy">
+        <a [routerLink]="['/specialist/clients', participantId(), 'plans']">Plany</a>
+        <a [routerLink]="['/specialist/clients', participantId(), 'plans', 'new']">Utwórz plan treningowy</a>
+        @if (data.activePlan; as activePlan) {
+          @if (activePlan.planId && activePlan.activeRevisionId) {
+            <a [routerLink]="['/specialist/clients', participantId(), 'plans', activePlan.planId, 'revisions', activePlan.activeRevisionId]">Otwórz aktywny plan</a>
+          }
+        }
+      </section>
       <app-participant-documentation
         [participantId]="participantId()"
         [role]="actingContext()"

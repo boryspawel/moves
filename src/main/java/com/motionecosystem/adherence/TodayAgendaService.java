@@ -46,7 +46,7 @@ public class TodayAgendaService {
         }
         UUID participantId = participantClients.findParticipantIdByPrincipalAccountId(account.id())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "participant record not found"));
-        Optional<ParticipantContextQueryPort.ParticipantContext> participant = participants.findContext(participantId);
+        Optional<ParticipantContextQueryPort.ParticipantRecordContext> participant = participants.findContextByParticipantId(participantId);
         if (participant.isEmpty()) {
             return new TodayAgendaView(null, null, null, List.of(), "TIME_ZONE_REQUIRED", null);
         }

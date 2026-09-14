@@ -256,6 +256,19 @@ class PlannedSessionJpaEntity {
     PlannedSession.SessionKind kind() { return kind; }
     PlannedSession.SessionStatus status() { return status; }
     Instant assignedAt() { return assignedAt; }
+
+    void updateFrom(TrainingPlanningModel.Session source, boolean replaceSource) {
+        title = source.title();
+        scheduledDate = source.scheduledDate();
+        availableFrom = source.availableFrom();
+        availableTo = source.availableTo();
+        expectedDurationMinutes = source.expectedDurationMinutes();
+        if (replaceSource) {
+            sourceExerciseSetId = source.sourceExerciseSetId();
+            sourceExerciseSetVersionId = source.sourceExerciseSetVersionId();
+            sourceSnapshot = source.sourceSnapshot();
+        }
+    }
 }
 
 @Entity(name = "ExercisePrescriptionJpaEntity")

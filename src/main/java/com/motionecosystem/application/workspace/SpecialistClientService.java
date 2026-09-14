@@ -108,13 +108,13 @@ public class SpecialistClientService {
                 || testDefaultConsentOverrides.find(value.id(), access.id, ConsentDecisionPort.Purpose.FUNCTIONAL_RECOVERY, consentScopes()).isPresent()
                 ? "TEST_DEFAULT_ACTIVE" : "NOT_AVAILABLE";
         UUID accountId = link.map(ParticipantClientPort.AccessLink::principalAccountId).orElse(null);
-        ClientAppointmentView nextAppointment = accountId == null ? null : appointments.findForParticipant(
-                access.id, accountId, clock.instant(), clock.instant().plusSeconds(366L * 24 * 60 * 60), 1).stream()
+        ClientAppointmentView nextAppointment = appointments.findForParticipant(
+                access.id, value.id(), clock.instant(), clock.instant().plusSeconds(366L * 24 * 60 * 60), 1).stream()
                 .filter(item -> "SCHEDULED".equals(item.status()) || "CONFIRMED".equals(item.status()))
                 .min(java.util.Comparator.comparing(SpecialistAppointmentQueryPort.AppointmentSummary::startsAt))
                 .map(item -> new ClientAppointmentView(item.appointmentId(), item.startsAt(), item.type(), item.status()))
                 .orElse(null);
-        ClientActivePlanView activePlan = accountId == null ? null : plans.findActiveRevision(accountId)
+        ClientActivePlanView activePlan = plans.findActiveRevision(value.id())
                 .map(item -> new ClientActivePlanView(item.planId(), item.revisionId(), item.status(), item.validFrom(), item.validTo()))
                 .orElse(null);
         List<ClientAttentionView> attentionItems = accountId == null ? List.of() : specialistWorkspace

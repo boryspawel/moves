@@ -11,8 +11,12 @@ import java.util.List;
 import java.util.UUID;
 
 import com.motionecosystem.application.MotionEcosystemApplication;
+import com.motionecosystem.application.workspace.SpecialistParticipantReadService;
+import com.motionecosystem.application.workspace.SpecialistClientService;
+import com.motionecosystem.adherence.TodayAgendaService;
 import com.motionecosystem.consent.ConsentGrantService;
 import com.motionecosystem.consent.api.ConsentDecisionPort;
+import com.motionecosystem.consent.api.TestDefaultConsentOverridePort;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
 import com.motionecosystem.support.PostgresTestConfiguration;
@@ -31,6 +35,9 @@ import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.DeleteGoal
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.EditorView;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.VariantItemCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.ValidateCommand;
+import com.motionecosystem.planworkflow.PlanRevisionWorkflowService;
+import com.motionecosystem.planworkflow.PlanRevisionWorkflowService.ActivateWorkflowCommand;
+import com.motionecosystem.planworkflow.PlanRevisionWorkflowService.ValidateWorkflowCommand;
 import com.motionecosystem.exercisesets.application.ExerciseSetApplicationService;
 import com.motionecosystem.exercisesets.api.ExerciseSetDtos;
 import com.motionecosystem.exercisesets.domain.ExerciseSetModel;
@@ -42,9 +49,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.server.ResponseStatusException;
 
-@SpringBootTest(classes = MotionEcosystemApplication.class)
+@SpringBootTest(classes = MotionEcosystemApplication.class, properties = "moves.test-default-consent.enabled=true")
+@ActiveProfiles("test")
 @Import(PostgresTestConfiguration.class)
 class TrainingPlanningV2IntegrationTest {
 
@@ -52,6 +61,12 @@ class TrainingPlanningV2IntegrationTest {
     @Autowired ConsentGrantService consents;
     @Autowired JdbcTemplate jdbc;
     @Autowired ExerciseSetApplicationService exerciseSets;
+    @Autowired SpecialistPlanFacadeService specialistPlans;
+    @Autowired PlanRevisionWorkflowService workflow;
+    @Autowired TodayAgendaService today;
+    @Autowired SpecialistParticipantReadService timeline;
+    @Autowired SpecialistClientService clients;
+    @Autowired TestDefaultConsentOverridePort testConsentOverrides;
 
     UUID participantId;
     UUID otherParticipantId;
@@ -69,6 +84,7 @@ class TrainingPlanningV2IntegrationTest {
         participantRecord(participantId);
         participantRecord(otherParticipantId);
         relationship(specialistId, participantId);
+        specialistProfile(specialistId);
         scope(specialistId, "TRAINER");
         UUID template = consents.publishTemplate(
                 "PLANNING_TEST", 1, "urn:test:planning", "EXPLICIT_CONSENT").id();
@@ -224,6 +240,104 @@ class TrainingPlanningV2IntegrationTest {
                 .containsExactly("ACTIVE", "DRAFT");
     }
 
+    @Test
+    void specialistFacadeActivatesExactSetSnapshotAndFeedsParticipantAndSpecialistReadModels() {
+        UUID participantAccountId = account("facade-participant-account", "PARTICIPANT");
+        UUID canonicalParticipantId = UUID.randomUUID();
+        participantRecord(canonicalParticipantId, participantAccountId, "UTC");
+        relationship(specialistId, canonicalParticipantId);
+        UUID template = consents.publishTemplate("FACADE_PLANNING", 1, "urn:test:facade", "EXPLICIT_CONSENT").id();
+        consents.grant("facade-participant-account", new ConsentGrantService.GrantCommand(specialistId,
+                ConsentDecisionPort.Purpose.PERFORMANCE_PLANNING, template,
+                java.util.Set.of(ConsentDecisionPort.DataScope.PLAN, ConsentDecisionPort.DataScope.EXECUTION), null, null));
+        UUID goal = canonicalGoal(canonicalParticipantId);
+        LocalDate scheduled = LocalDate.now();
+        EditorView editor = specialistPlans.create("planning-specialist", canonicalParticipantId,
+                new SpecialistPlanFacadeService.CreatePlanCommand(canonicalParticipantId, "Facade plan", null, null,
+                        scheduled, scheduled.plusDays(7), goal, new ActingContext(ProfessionalRole.TRAINER)));
+        UUID revisionId = editor.revision().revisionId();
+        editor = specialistPlans.addSession("planning-specialist", canonicalParticipantId, editor.planId(), revisionId,
+                new SpecialistPlanFacadeService.SessionCommand(version(editor), "Exact published set", scheduled,
+                        null, null, 45, exerciseSetVersionId));
+        editor = planning.editor("planning-specialist", revisionId);
+        var session = editor.revision().cycles().getFirst().microcycles().getFirst().sessions().getFirst();
+        UUID prescriptionId = session.prescriptions().getFirst().id();
+        String sourceSnapshot = session.sourceSnapshot();
+        editor = specialistPlans.updateSession("planning-specialist", canonicalParticipantId, editor.planId(), revisionId,
+                new SpecialistPlanFacadeService.SessionUpdateCommand(version(editor), session.id(), "Rescheduled exact set",
+                        scheduled, null, null, 45, null));
+        var scheduleOnly = editor.revision().cycles().getFirst().microcycles().getFirst().sessions().getFirst();
+        assertThat(scheduleOnly.sourceSnapshot()).isEqualTo(sourceSnapshot);
+        assertThat(scheduleOnly.prescriptions().getFirst().id()).isEqualTo(prescriptionId);
+        editor = specialistPlans.updatePeriod("planning-specialist", canonicalParticipantId, editor.planId(), revisionId,
+                new SpecialistPlanFacadeService.PeriodCommand(version(editor), scheduled, scheduled.plusDays(8)));
+        assertThat(editor.revision().validTo()).isEqualTo(scheduled.plusDays(8));
+        UUID planId = editor.planId();
+        assertStatus(HttpStatus.NOT_FOUND, () -> specialistPlans.editor("planning-specialist", participantId,
+                planId, revisionId));
+        assertStatus(HttpStatus.FORBIDDEN, () -> specialistPlans.list("foreign-planning-specialist", canonicalParticipantId,
+                new ActingContext(ProfessionalRole.TRAINER)));
+        var structural = planning.validateStructurally("planning-specialist", revisionId, new ValidateCommand(version(editor)));
+        assertThat(structural.result()).isEqualTo(TrainingPlanningModel.ValidationResult.PASS);
+        var validated = workflow.validate("planning-specialist", revisionId,
+                new ValidateWorkflowCommand(version(editor), new ActingContext(ProfessionalRole.TRAINER)));
+        assertThat(validated.status()).isEqualTo("READY");
+        workflow.activate("planning-specialist", revisionId, "facade-activation", new ActivateWorkflowCommand(new ActingContext(ProfessionalRole.TRAINER)));
+        assertThat(clients.get("planning-specialist", canonicalParticipantId).activePlan())
+                .extracting(SpecialistClientService.ClientActivePlanView::revisionId)
+                .isEqualTo(revisionId);
+        assertThat(today.today("facade-participant-account").sessions()).extracting(TodayAgendaService.AgendaSessionView::sessionId)
+                .contains(scheduleOnly.id());
+        var view = timeline.timeline("planning-specialist", canonicalParticipantId,
+                new SpecialistParticipantReadService.TimelineQuery(scheduled.atStartOfDay(java.time.ZoneOffset.UTC).toInstant(),
+                        scheduled.plusDays(3).atStartOfDay(java.time.ZoneOffset.UTC).toInstant(),
+                        java.util.Set.of(SpecialistParticipantReadService.TimelineType.SESSION),
+                        SpecialistParticipantReadService.Granularity.DETAIL, null, 10));
+        assertThat(view.items()).extracting(SpecialistParticipantReadService.ParticipantTimelineEvent::eventId)
+                .contains("planned-session:" + scheduleOnly.id());
+        long activeVersion = version(editor);
+        assertStatus(HttpStatus.CONFLICT, () -> specialistPlans.updateSession("planning-specialist", canonicalParticipantId,
+                planId, revisionId, new SpecialistPlanFacadeService.SessionUpdateCommand(activeVersion, scheduleOnly.id(),
+                        "Immutable", scheduled, null, null, 45, null)));
+    }
+
+    @Test
+    void accountFreeManagedParticipantActivatesWithoutLegacyMetricsAndAppearsOnSpecialistTimeline() {
+        UUID managedParticipantId = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO participant.participant_record
+                    (id, display_name, record_status, relationship_context, time_zone_id, created_by_specialist_id, created_at, updated_at, version)
+                VALUES (?, 'Account free managed client', 'ACTIVE', 'CLIENT', 'UTC', ?, now(), now(), 0)
+                """, managedParticipantId, specialistId);
+        relationship(specialistId, managedParticipantId);
+        testConsentOverrides.create(new TestDefaultConsentOverridePort.CreateCommand(managedParticipantId, specialistId,
+                ConsentDecisionPort.Purpose.PERFORMANCE_PLANNING, java.util.Set.of(ConsentDecisionPort.DataScope.PLAN),
+                specialistId, Instant.now()));
+        UUID goal = canonicalGoal(managedParticipantId);
+        LocalDate scheduled = LocalDate.now();
+        EditorView editor = specialistPlans.create("planning-specialist", managedParticipantId,
+                new SpecialistPlanFacadeService.CreatePlanCommand(managedParticipantId, "Managed plan", null, null,
+                        scheduled, scheduled.plusDays(1), goal, new ActingContext(ProfessionalRole.TRAINER)));
+        UUID revisionId = editor.revision().revisionId();
+        editor = specialistPlans.addSession("planning-specialist", managedParticipantId, editor.planId(), revisionId,
+                new SpecialistPlanFacadeService.SessionCommand(version(editor), "Managed session", scheduled,
+                        null, null, 30, exerciseSetVersionId));
+        assertThat(planning.validateStructurally("planning-specialist", revisionId, new ValidateCommand(version(editor))).result())
+                .isEqualTo(TrainingPlanningModel.ValidationResult.PASS);
+        workflow.validate("planning-specialist", revisionId,
+                new ValidateWorkflowCommand(version(editor), new ActingContext(ProfessionalRole.TRAINER)));
+        workflow.activate("planning-specialist", revisionId, "account-free-activation",
+                new ActivateWorkflowCommand(new ActingContext(ProfessionalRole.TRAINER)));
+        assertThat(planning.editor("planning-specialist", revisionId).revision().status()).isEqualTo("ACTIVE");
+        var view = timeline.timeline("planning-specialist", managedParticipantId,
+                new SpecialistParticipantReadService.TimelineQuery(scheduled.atStartOfDay(java.time.ZoneOffset.UTC).toInstant(),
+                        scheduled.plusDays(1).atStartOfDay(java.time.ZoneOffset.UTC).toInstant(),
+                        java.util.Set.of(SpecialistParticipantReadService.TimelineType.SESSION),
+                        SpecialistParticipantReadService.Granularity.DETAIL, null, 10));
+        assertThat(view.items()).extracting(SpecialistParticipantReadService.ParticipantTimelineEvent::eventType)
+                .contains("SESSION_PLANNED");
+    }
+
     private EditorView specialistDraft() {
         return planning.createDraft("planning-specialist", new CreateDraftCommand(participantId,
                 "Foundation plan", "Prepare gradual training", PlanMode.SPECIALIST,
@@ -265,17 +379,29 @@ class TrainingPlanningV2IntegrationTest {
     }
 
     private void participantRecord(UUID accountId) {
+        participantRecord(accountId, accountId, null);
+    }
+
+    private void participantRecord(UUID participantId, UUID accountId, String timeZone) {
         jdbc.update("""
                 INSERT INTO participant.participant_record
                     (id, display_name, record_status, relationship_context, created_by_specialist_id,
-                     created_at, updated_at, version)
-                VALUES (?, 'Planning participant', 'ACTIVE', 'CLIENT', ?, now(), now(), 0)
-                """, accountId, specialistId);
+                     time_zone_id, created_at, updated_at, version)
+                VALUES (?, 'Planning participant', 'ACTIVE', 'CLIENT', ?, ?, now(), now(), 0)
+                """, participantId, specialistId, timeZone);
         jdbc.update("""
                 INSERT INTO participant.participant_access_link
                     (id, participant_id, principal_account_id, access_status, linked_at, activated_at, version)
                 VALUES (?, ?, ?, 'ACTIVE', now(), now(), 0)
-                """, UUID.randomUUID(), accountId, accountId);
+                """, UUID.randomUUID(), participantId, accountId);
+    }
+
+    private void specialistProfile(UUID specialist) {
+        jdbc.update("""
+                INSERT INTO specialist.specialist_profile
+                    (id, account_id, display_name, specialist_kind, time_zone_id, created_at, updated_at, version)
+                VALUES (?, ?, 'Planning trainer', 'TRAINER', 'UTC', now(), now(), 0)
+                """, UUID.randomUUID(), specialist);
     }
 
     private void scope(UUID specialist, String type) {

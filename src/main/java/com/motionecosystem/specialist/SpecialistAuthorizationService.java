@@ -7,6 +7,7 @@ import java.util.UUID;
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.consent.api.ConsentDecisionPort;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
+import com.motionecosystem.participant.api.ParticipantClientPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -17,16 +18,18 @@ class SpecialistAuthorizationService implements SpecialistAuthorizationPort {
     private final LocalTestProfessionalScopeOverride localTestScopeOverride;
     private final ParticipantSpecialistRelationshipRepository relationships;
     private final ConsentDecisionPort consent;
+    private final ParticipantClientPort participants;
     private final AuditRecorder audit;
 
     SpecialistAuthorizationService(ProfessionalScopeRepository scopes,
             LocalTestProfessionalScopeOverride localTestScopeOverride,
             ParticipantSpecialistRelationshipRepository relationships, ConsentDecisionPort consent,
-            AuditRecorder audit) {
+            ParticipantClientPort participants, AuditRecorder audit) {
         this.scopes = scopes;
         this.localTestScopeOverride = localTestScopeOverride;
         this.relationships = relationships;
         this.consent = consent;
+        this.participants = participants;
         this.audit = audit;
     }
 
@@ -97,9 +100,14 @@ class SpecialistAuthorizationService implements SpecialistAuthorizationPort {
             dataScopes.add(ConsentDecisionPort.DataScope.EXECUTION);
         }
         if (!dataScopes.isEmpty()) {
+            // Consent is still account-keyed; resolve the explicit access link at this legacy boundary.
+            UUID consentParticipant = participants.findAccessLink(participant)
+                    .filter(link -> "ACTIVE".equals(link.accessStatus()))
+                    .map(ParticipantClientPort.AccessLink::principalAccountId)
+                    .orElse(participant);
             consent.requireAccess(
                     actor,
-                    participant,
+                    consentParticipant,
                     dataScopes,
                     ConsentDecisionPort.Purpose.valueOf(purpose.name()));
         }

@@ -37,6 +37,16 @@ public interface TrainingPlanningV2Persistence {
 
     void deleteSession(UUID revisionId, long expectedVersion, UUID sessionId, Instant updatedAt);
 
+    /**
+     * Updates draft scheduling fields in place. When replacement prescriptions are supplied the
+     * source set changed, so dependent variants are removed with the old prescriptions.
+     */
+    void updateSession(UUID revisionId, long expectedVersion, Session session,
+                       List<Prescription> replacementPrescriptions, Instant updatedAt);
+
+    void updatePeriod(UUID revisionId, long expectedVersion, java.time.LocalDate validFrom,
+                      java.time.LocalDate validTo, boolean updateDefaultStage, Instant updatedAt);
+
     void addPrescription(UUID revisionId, long expectedVersion,
                          Prescription prescription, Instant updatedAt);
 
@@ -59,6 +69,8 @@ public interface TrainingPlanningV2Persistence {
     Optional<RevisionAccess> findRevisionAccess(UUID revisionId);
 
     List<RevisionHistoryItem> revisionHistory(UUID planId);
+
+    List<PlanAccess> plansForParticipant(UUID participantId);
 
     record PlanAccess(UUID planId, UUID participantId, String name, String purpose,
                       UUID ownerAccountId, String mode, String status, UUID currentRevisionId,

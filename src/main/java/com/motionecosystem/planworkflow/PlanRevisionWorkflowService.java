@@ -5,6 +5,7 @@ import com.motionecosystem.analytics.adherencemetrics.AdherenceMetricsService;
 import com.motionecosystem.exercisecatalog.api.ExerciseCatalogQueryPort;
 import com.motionecosystem.exercisesets.api.ExerciseSetVersionQueryPort;
 import com.motionecosystem.participantgoals.api.ParticipantGoalQueryPort;
+import com.motionecosystem.participant.api.ParticipantClientPort;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
@@ -57,6 +58,7 @@ public class PlanRevisionWorkflowService {
     private final ExerciseSetVersionQueryPort exerciseSetVersions;
     private final PlanRevisionWorkflowPersistence persistence;
     private final AdherenceMetricsService metrics;
+    private final ParticipantClientPort participants;
     private final AuditRecorder audit;
     private final Clock clock;
 
@@ -192,9 +194,15 @@ public class PlanRevisionWorkflowService {
                 revisionId, checksum, key, actor.id(), clock.instant()));
         if (!outcome.repeated()) {
             audit.record(subject, "PLAN_REVISION_ACTIVATED", "PlanRevision", revisionId);
-            metrics.ensureAssignments(state.participantId());
-            metrics.record(state.participantId(), "PLAN_ACTIVATED", revisionId, revisionId, null, null,
-                    "PLAN_ACTIVATION_V1", null);
+            // Legacy adherence metrics are account-keyed. They are advisory, so account-free
+            // managed participant records do not prevent authoritative plan activation.
+            participants.findAccessLink(state.participantId())
+                    .filter(link -> "ACTIVE".equals(link.accessStatus()))
+                    .ifPresent(link -> {
+                        metrics.ensureAssignments(link.principalAccountId());
+                        metrics.record(link.principalAccountId(), "PLAN_ACTIVATED", revisionId, revisionId, null, null,
+                                "PLAN_ACTIVATION_V1", null);
+                    });
         }
         return outcome;
     }
@@ -206,7 +214,9 @@ public class PlanRevisionWorkflowService {
         AssessmentSnapshot assessment = state.assessmentId() == null
                 ? null
                 : safety.findAssessment(state.assessmentId(), clock.instant()).orElse(null);
-        return new WorkflowView(state, assessment);
+        Set<UUID> acknowledged = assessment == null ? Set.of()
+                : persistence.acknowledgedFactors(revisionId, assessment.id());
+        return new WorkflowView(state, assessment, acknowledged);
     }
 
     private CurrentAccount authorize(
@@ -366,7 +376,10 @@ public class PlanRevisionWorkflowService {
             UUID revisionId, UUID assessmentId, Set<UUID> factorIds) {
     }
 
-    public record WorkflowView(WorkflowState state, AssessmentSnapshot assessment) {
+    /** Current-assessment acknowledgements are persisted server-side and survive a browser refresh. */
+    public record WorkflowView(WorkflowState state, AssessmentSnapshot assessment,
+                               Set<UUID> acknowledgedWarningFactorIds) {
+        public WorkflowView { acknowledgedWarningFactorIds = Set.copyOf(acknowledgedWarningFactorIds); }
     }
 
     public static final class SafetyBlockException extends ResponseStatusException {

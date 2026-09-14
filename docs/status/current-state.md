@@ -38,9 +38,9 @@ unit conversion, charts, alerts, device import, analytics or ML.
 
 ### Participant Goals — next-steps roadmap
 
-- **Plan authoring UI:** the P1 backend already links a canonical participant goal to a
-  revision and snapshots it. A dedicated specialist authoring UI, source pickers and
-  history presentation remain later work; `/plan` is intentionally read-only meanwhile.
+- **Plan authoring UI:** P2 provides participant-scoped specialist authoring under
+  `/specialist/clients/:participantId/plans`. It selects an existing eligible goal or
+  opens the existing goal workflow; it does not create a parallel goal editor.
 - **Observation evolution:** add an append-only correcting event, defined unit conversions,
   session and research-result integrations, and derived charts/aggregates.
 - **Participant access:** enable `GENERAL_FITNESS` self-service with own-goal reading and only
@@ -103,9 +103,30 @@ revision; historic prescriptions remain readable after retirement. Manual V2 pre
 removed and draft revalidation requires the source version to remain published. `SessionVariant` now
 selects materialized prescriptions only; its historic dose overrides remain read-only.
 
-`/plan` is retained as a read-only specialist bookmark. It deliberately has no manual goal, exercise,
-dose or variant editor; a dedicated source-picker authoring UI follows in a later stage. Existing plan
-and execution history remains readable through its established projections.
+`/plan` is retained as a read-only specialist bookmark. P2 authoring is instead available from the
+participant workspace through participant-scoped, deep-linkable routes. It deliberately has no manual
+goal, exercise, dose or variant editor; existing plan and execution history remains readable through
+its established projections.
+
+## P2 — specialist training-plan vertical slice
+
+From the timeline-first participant workspace a specialist can create and reopen a plan, choose an
+eligible `ParticipantGoal`, set its practical period, schedule draft sessions and select one exact
+PUBLISHED `ExerciseSetVersion`. The UI previews the complete typed dose before attachment; it never
+authors prescriptions or resolves a mutable latest set. Existing sessions render their materialized
+revision snapshot, including after the source has changed or retired.
+
+`SpecialistPlanFacadeController` exposes the task-level participant-scoped contract. It derives the
+required cycle and microcycle server-side, while the Angular route remains refresh-safe:
+`/specialist/clients/:participantId/plans/new`, plan, and revision URLs. Structural validation and the
+existing safety/load workflow remain server-side; warnings use persisted factor IDs and a rationale,
+and only the server can activate. A non-draft revision is immutable in the UI and leads to a new
+revision rather than an edit.
+
+Activation continues to feed the existing participant agenda and specialist timeline/workspace
+projections. These paths query canonical `participantId`; an optional account link only supplies the
+legacy access status. Account-free managed clients therefore support specialist planning and timeline
+visibility, but do not imply participant login, claim or invitation support (P3+).
 
 **SET-04 dostarcza specjalistyczny builder pod `/exercise-sets`.** Lista prowadzi do
 odczytu opublikowanej wersji albo edycji szkicu; `/exercise-sets/new` zakłada pierwszy

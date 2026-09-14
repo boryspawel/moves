@@ -91,13 +91,33 @@ stored locally for plan and execution reads. Clone copies local snapshots and so
 refresh. Draft validation and activation recheck current eligibility; active revisions are immutable
 historical facts even when a goal changes or a set version retires.
 
-New P1 authoring is specialist-only under existing authorization and supports `SPECIALIST` and
-`COLLABORATIVE` plan modes. `SELF_DIRECTED` records remain historical/read-only; sharing is P2.
+New P1/P2 authoring is specialist-only under existing authorization and supports `SPECIALIST` and
+`COLLABORATIVE` plan modes. `SELF_DIRECTED` records remain historical/read-only; sharing remains P3+.
 Variants select materialized prescription items and cannot override dose. A draft-local legacy goal or
 session may be deleted and replaced by a sourced attachment; finalized revisions cannot be changed.
 When an applicable catalog load channel needs an unavailable exact canonical dose, load analysis emits
 a persisted completeness issue and safety persists a non-overridable `HARD_BLOCK`; unrelated channels
 do not become a synthetic zero-load result.
+
+## Specialist plan authoring (P2)
+
+The specialist-facing planning surface is a participant-scoped façade, not a client-side projection of
+the `PlanRevision → cycle → microcycle` persistence hierarchy. `SpecialistPlanFacadeService` derives
+the required hierarchy when a plan or scheduled session is created and accepts only canonical source
+identifiers plus period and scheduling values. The Angular routes are deep-linkable below
+`/specialist/clients/:participantId/plans`; each load rereads the revision and workflow state from the
+backend, and every successful mutation reloads that canonical state.
+
+The page offers source selection and read-only previews only: a real eligible `ParticipantGoal`, and
+one exact PUBLISHED `ExerciseSetVersion` with its typed dose. The server creates goal snapshots and
+materialized session prescriptions; the UI displays saved prescription snapshots for historical
+revisions. Validation, persisted warning-factor acknowledgement and activation use the existing plan
+workflow API. A non-DRAFT revision is immutable and can only become the basis of a new revision.
+
+Activation is consumed by the existing agenda, timeline and specialist workspace projections through
+their public participant-scoped ports. Account links remain a legacy bridge for consent/metrics and
+access status only; managed account-free participants may be planned and appear in specialist
+projections, but P2 does not implement participant claim, invitation or self-directed authoring.
 
 - OAuth2 Resource Server waliduje issuer i audience; role Keycloak są mapowane do `ROLE_*`.
 - Health i kontrakt OpenAPI mogą być publiczne; domenowe API domyślnie wymaga tokenu.

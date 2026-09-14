@@ -109,6 +109,49 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
     }
 
     @Override
+    public void updateSession(UUID revisionId, long expectedVersion, TrainingPlanningModel.Session session,
+                              List<TrainingPlanningModel.Prescription> replacementPrescriptions, Instant updatedAt) {
+        touch(revisionId, expectedVersion, updatedAt);
+        PlannedSessionJpaEntity entity = entityManager.find(PlannedSessionJpaEntity.class, session.id());
+        if (entity == null || !sessionBelongsToRevision(session.id(), revisionId)) {
+            throw new IllegalArgumentException("session does not belong to revision");
+        }
+        entity.updateFrom(session, replacementPrescriptions != null);
+        if (replacementPrescriptions != null) {
+            List<UUID> variantIds = entityManager.createQuery("SELECT variant.id FROM PlannedSessionVariantJpaEntity variant WHERE variant.plannedSessionId = :sessionId", UUID.class)
+                    .setParameter("sessionId", session.id()).getResultList();
+            if (!variantIds.isEmpty()) entityManager.createQuery("DELETE FROM PlannedSessionVariantItemJpaEntity item WHERE item.sessionVariantId IN :variantIds")
+                    .setParameter("variantIds", variantIds).executeUpdate();
+            entityManager.createQuery("DELETE FROM PlannedSessionVariantJpaEntity variant WHERE variant.plannedSessionId = :sessionId")
+                    .setParameter("sessionId", session.id()).executeUpdate();
+            entityManager.createQuery("DELETE FROM ExercisePrescriptionJpaEntity prescription WHERE prescription.plannedSessionId = :sessionId")
+                    .setParameter("sessionId", session.id()).executeUpdate();
+            replacementPrescriptions.forEach(item -> entityManager.persist(new ExercisePrescriptionJpaEntity(item)));
+        }
+        entityManager.flush();
+    }
+
+    @Override
+    public void updatePeriod(UUID revisionId, long expectedVersion, java.time.LocalDate validFrom,
+                             java.time.LocalDate validTo, boolean updateDefaultStage, Instant updatedAt) {
+        touch(revisionId, expectedVersion, updatedAt);
+        PlanRevisionJpaEntity revision = entityManager.find(PlanRevisionJpaEntity.class, revisionId);
+        revision.validFrom = validFrom;
+        revision.validTo = validTo;
+        if (updateDefaultStage) {
+            TrainingCycleJpaEntity cycle = entityManager.createQuery("SELECT cycle FROM TrainingCycleJpaEntity cycle WHERE cycle.revisionId = :revisionId", TrainingCycleJpaEntity.class)
+                    .setParameter("revisionId", revisionId).getSingleResult();
+            cycle.startDate = validFrom;
+            cycle.endDate = validTo;
+            MicrocycleJpaEntity microcycle = entityManager.createQuery("SELECT microcycle FROM MicrocycleJpaEntity microcycle WHERE microcycle.cycleId = :cycleId", MicrocycleJpaEntity.class)
+                    .setParameter("cycleId", cycle.id).getSingleResult();
+            microcycle.startDate = validFrom;
+            microcycle.endDate = validTo;
+        }
+        entityManager.flush();
+    }
+
+    @Override
     public void addPrescription(UUID revisionId, long expectedVersion,
                                 TrainingPlanningModel.Prescription prescription, Instant updatedAt) {
         touch(revisionId, expectedVersion, updatedAt);
@@ -247,6 +290,19 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
                 .map(item -> new RevisionHistoryItem(item.id, item.revisionNumber, item.basedOnRevisionId,
                         item.status, item.migrationOrigin, item.assessmentStatus, item.version, item.createdAt))
                 .toList();
+    }
+
+    @Override
+    public List<PlanAccess> plansForParticipant(UUID participantId) {
+        return entityManager.createQuery("SELECT plan FROM TrainingPlanJpaEntity plan WHERE plan.participantId = :participantId ORDER BY plan.createdAt DESC", TrainingPlanJpaEntity.class)
+                .setParameter("participantId", participantId).getResultList().stream()
+                .map(plan -> {
+                    PlanRevisionJpaEntity revision = plan.currentRevisionId == null ? null
+                            : entityManager.find(PlanRevisionJpaEntity.class, plan.currentRevisionId);
+                    return new PlanAccess(plan.id, plan.participantId, plan.name, plan.purpose, plan.ownerAccountId,
+                            plan.mode, plan.status, plan.currentRevisionId,
+                            revision == null ? "LEGACY_AUTHOR" : revision.authorCapability);
+                }).toList();
     }
 
     @Override

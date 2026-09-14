@@ -36,6 +36,12 @@ import {
 export interface WorkflowView {
   /**
    *
+   * @type {Set<string>}
+   * @memberof WorkflowView
+   */
+  acknowledgedWarningFactorIds?: Set<string>;
+  /**
+   *
    * @type {AssessmentSnapshot}
    * @memberof WorkflowView
    */
@@ -64,6 +70,10 @@ export function WorkflowViewFromJSONTyped(json: any, ignoreDiscriminator: boolea
     return json;
   }
   return {
+    acknowledgedWarningFactorIds:
+      json['acknowledgedWarningFactorIds'] == null
+        ? undefined
+        : new Set(json['acknowledgedWarningFactorIds']),
     assessment:
       json['assessment'] == null ? undefined : AssessmentSnapshotFromJSON(json['assessment']),
     state: json['state'] == null ? undefined : WorkflowStateFromJSON(json['state']),
@@ -83,6 +93,10 @@ export function WorkflowViewToJSONTyped(
   }
 
   return {
+    acknowledgedWarningFactorIds:
+      value['acknowledgedWarningFactorIds'] == null
+        ? undefined
+        : Array.from(value['acknowledgedWarningFactorIds'] as Set<any>),
     assessment: AssessmentSnapshotToJSON(value['assessment']),
     state: WorkflowStateToJSON(value['state']),
   };

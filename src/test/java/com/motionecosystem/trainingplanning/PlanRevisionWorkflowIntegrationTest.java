@@ -188,6 +188,8 @@ class PlanRevisionWorkflowIntegrationTest {
                 .collect(java.util.stream.Collectors.toSet());
         workflow.acknowledge("workflow-trainer", revisionId,
                 new AcknowledgeWarningCommand(warnings, "I reviewed the plan warning.", new ActingContext(ProfessionalRole.TRAINER)));
+        assertThat(workflow.workflow("workflow-trainer", revisionId,
+                new ActingContext(ProfessionalRole.TRAINER)).acknowledgedWarningFactorIds()).containsExactlyInAnyOrderElementsOf(warnings);
         workflow.activate("workflow-trainer", revisionId, "after-ack",
                 new ActivateWorkflowCommand(new ActingContext(ProfessionalRole.TRAINER)));
 
