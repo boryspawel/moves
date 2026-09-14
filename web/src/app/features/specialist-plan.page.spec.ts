@@ -27,7 +27,11 @@ function facade() {
     onboarding: { state: vi.fn().mockResolvedValue({ profile: { specialistKind: 'TRAINER' } }) },
     participantGoals: { listParticipantGoals: vi.fn().mockResolvedValue([{ id: 'goal-1', title: 'Pewny chód', status: 'ACTIVE' }]) },
     exerciseSets: { list: vi.fn().mockResolvedValue([{ title: 'Mobilność', versions: [{ id: 'set-v1', exerciseSetId: 'set-1', versionNumber: 1, status: 'PUBLISHED', itemCount: 1 }] }]), version: vi.fn().mockResolvedValue({ title: 'Mobilność', versionNumber: 1, items: [{ id: 'item-1', exerciseVersionId: 'exercise-v1', snapshot: { canonicalName: 'Wykrok' }, dose: { repetitions: 8, side: 'LEFT', loadUnit: 'KG', tempo: '3-1-1', restSeconds: 60, intensity: 'LOW' } }] }) },
-    specialistPlans, planWorkflow, planningV2: { validateStructurally: vi.fn().mockResolvedValue({ result: 'PASS', violations: [] }) }
+    specialistPlans, planWorkflow, planningV2: { validateStructurally: vi.fn().mockResolvedValue({ result: 'PASS', violations: [] }), editor: vi.fn().mockResolvedValue({ planId: 'plan-1', name: 'Plan własny', revision: { revisionId: 'revision-1', revisionVersion: 4, status: 'DRAFT', goals: [], cycles: [] } }), createRevision: vi.fn() },
+    ownGoals: { listOwnParticipantGoals: vi.fn().mockResolvedValue([{ id: 'goal-own', title: 'Samodzielny cel', status: 'ACTIVE', category: 'FUNCTIONAL' }]) },
+    participantExerciseSets: { list3: vi.fn().mockResolvedValue([{ versionId: 'set-own', exerciseSetId: 'set-1', title: 'Domowy zestaw', versionNumber: 2 }]), version1: vi.fn().mockResolvedValue({ id: 'set-own', title: 'Domowy zestaw', items: [] }) },
+    participantPlans: { listOwnParticipantPlans: vi.fn().mockResolvedValue([{ planId: 'plan-1', currentRevisionId: 'revision-1', name: 'Plan własny', status: 'DRAFT' }]), createOwnParticipantPlan: vi.fn().mockResolvedValue({ planId: 'plan-1', revision: { revisionId: 'revision-1' } }) },
+    practicalPlans: { addSession: vi.fn().mockResolvedValue({ planId: 'plan-1', revision: { revisionId: 'revision-1', revisionVersion: 5, status: 'DRAFT', cycles: [] } }), updateSession: vi.fn(), updatePeriod: vi.fn(), deleteSession1: vi.fn() }
   };
 }
 
@@ -103,5 +107,22 @@ describe('SpecialistPlanPage', () => {
     const { page } = await create();
     const instant = new Date('2026-10-05T12:30:00+02:00');
     expect(new Date(page.dateTime(instant)).getTime()).toBe(instant.getTime());
+  });
+
+  it('uses own-plan APIs without specialist context from create through activation', async () => {
+    const { api, fixture, page } = await create({ planId: 'plan-1', revisionId: 'revision-1' }, { plannerActor: 'PARTICIPANT' });
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Utwórz go w istniejącym przepływie');
+    page.createForm.patchValue({ name: 'Plan własny', goalId: 'goal-own', validFrom: '2026-10-01', validTo: '2026-10-31' });
+    await page.create();
+    expect(api.participantPlans.createOwnParticipantPlan).toHaveBeenCalledWith({ ownCreatePlanCommand: expect.objectContaining({ participantGoalId: 'goal-own' }) });
+    page.sessionForm.patchValue({ title: 'Sesja', scheduledDate: '2026-10-04', setVersionId: 'set-own' });
+    await page.saveSession();
+    expect(api.practicalPlans.addSession).toHaveBeenCalledWith(expect.objectContaining({ sessionCommand: expect.objectContaining({ exerciseSetVersionId: 'set-own' }) }));
+    await page.validateWorkflow();
+    expect(api.planWorkflow.validate.mock.calls.at(-1)[0].validateWorkflowCommand).not.toHaveProperty('actingContext');
+    page.workflow.set({ state: { status: 'NEEDS_REVIEW' }, assessment: { factors: [] }, acknowledgedWarningFactorIds: new Set() });
+    await page.activate();
+    expect(api.planWorkflow.activate.mock.calls.at(-1)[0].activateWorkflowCommand).not.toHaveProperty('actingContext');
   });
 });

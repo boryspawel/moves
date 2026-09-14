@@ -363,11 +363,11 @@ class PlanRevisionWorkflowIntegrationTest {
                         version(physioPlan), new ActingContext(ProfessionalRole.PHYSIOTHERAPIST))).status())
                 .isEqualTo("READY");
 
-        assertThatThrownBy(() -> planning.createDraft("workflow-participant", new CreateDraftCommand(
+        EditorView selfDirected = planning.createDraft("workflow-participant", new CreateDraftCommand(
                 null, "Invalid workflow", "Rollback case", PlanMode.SELF_DIRECTED,
-                "No structure", LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31))))
-                .isInstanceOfSatisfying(ResponseStatusException.class,
-                        error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.GONE));
+                "No structure", LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31)));
+        assertThat(selfDirected.participantId()).isEqualTo(participant);
+        assertThat(selfDirected.mode()).isEqualTo("SELF_DIRECTED");
     }
 
     @Test

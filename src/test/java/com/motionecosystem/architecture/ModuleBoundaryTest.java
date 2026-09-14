@@ -204,15 +204,18 @@ class ModuleBoundaryTest {
     }
 
     @Test
-    void exerciseSetsRemainIndependentFromParticipantPlanningAndCatalogInternals() {
+    void exerciseSetsConsumeOnlyParticipantPublicApiAndRemainIndependentFromOtherInternals() {
         noClasses().that().resideInAPackage("com.motionecosystem.exercisesets..")
                 .should().dependOnClassesThat().resideInAnyPackage(
-                        "com.motionecosystem.participant..",
                         "com.motionecosystem.calendar..",
                         "com.motionecosystem.trainingexecution..",
                         "com.motionecosystem.trainingplanning..",
                         "com.motionecosystem.exercisecatalog.infrastructure..",
                         "com.motionecosystem.exercisecatalog.domain..")
+                .check(productionClasses);
+
+        classes().that().resideInAPackage("com.motionecosystem.exercisesets..")
+                .should(onlyDependOnPublicApiOf("com.motionecosystem.participant"))
                 .check(productionClasses);
 
         noClasses().that().resideInAPackage("com.motionecosystem.exercisesets..")

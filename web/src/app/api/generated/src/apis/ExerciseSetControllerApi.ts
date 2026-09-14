@@ -28,6 +28,16 @@ import {
   CreateVariantRequestFromJSON,
   CreateVariantRequestToJSON,
 } from '../models/CreateVariantRequest';
+import {
+  type GrantRecipientView,
+  GrantRecipientViewFromJSON,
+  GrantRecipientViewToJSON,
+} from '../models/GrantRecipientView';
+import {
+  type GrantRequest,
+  GrantRequestFromJSON,
+  GrantRequestToJSON,
+} from '../models/GrantRequest';
 import { type ItemRequest, ItemRequestFromJSON, ItemRequestToJSON } from '../models/ItemRequest';
 import {
   type MetadataRequest,
@@ -76,6 +86,17 @@ export interface Get2Request {
   setId: string;
 }
 
+export interface GrantOperationRequest {
+  setId: string;
+  versionId: string;
+  grantRequest: GrantRequest;
+}
+
+export interface GrantsRequest {
+  setId: string;
+  versionId: string;
+}
+
 export interface LatestRequest {
   setId: string;
 }
@@ -113,6 +134,12 @@ export interface RemoveRequest {
 export interface RetireRequest {
   setId: string;
   versionId: string;
+}
+
+export interface Revoke1Request {
+  setId: string;
+  versionId: string;
+  participantId: string;
 }
 
 export interface UpdateRequest {
@@ -472,6 +499,135 @@ export class ExerciseSetControllerApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<SetView> {
     const response = await this.get2Raw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for grant without sending the request
+   */
+  async grantRequestOpts(requestParameters: GrantOperationRequest): Promise<runtime.RequestOpts> {
+    if (requestParameters['setId'] == null) {
+      throw new runtime.RequiredError(
+        'setId',
+        'Required parameter "setId" was null or undefined when calling grant().',
+      );
+    }
+
+    if (requestParameters['versionId'] == null) {
+      throw new runtime.RequiredError(
+        'versionId',
+        'Required parameter "versionId" was null or undefined when calling grant().',
+      );
+    }
+
+    if (requestParameters['grantRequest'] == null) {
+      throw new runtime.RequiredError(
+        'grantRequest',
+        'Required parameter "grantRequest" was null or undefined when calling grant().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v1/specialist/exercise-sets/{setId}/versions/{versionId}/grants`;
+    urlPath = urlPath.replace('{setId}', encodeURIComponent(String(requestParameters['setId'])));
+    urlPath = urlPath.replace(
+      '{versionId}',
+      encodeURIComponent(String(requestParameters['versionId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+      body: GrantRequestToJSON(requestParameters['grantRequest']),
+    };
+  }
+
+  /**
+   */
+  async grantRaw(
+    requestParameters: GrantOperationRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<void>> {
+    const requestOptions = await this.grantRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.VoidApiResponse(response);
+  }
+
+  /**
+   */
+  async grant(
+    requestParameters: GrantOperationRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<void> {
+    await this.grantRaw(requestParameters, initOverrides);
+  }
+
+  /**
+   * Creates request options for grants without sending the request
+   */
+  async grantsRequestOpts(requestParameters: GrantsRequest): Promise<runtime.RequestOpts> {
+    if (requestParameters['setId'] == null) {
+      throw new runtime.RequiredError(
+        'setId',
+        'Required parameter "setId" was null or undefined when calling grants().',
+      );
+    }
+
+    if (requestParameters['versionId'] == null) {
+      throw new runtime.RequiredError(
+        'versionId',
+        'Required parameter "versionId" was null or undefined when calling grants().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v1/specialist/exercise-sets/{setId}/versions/{versionId}/grants`;
+    urlPath = urlPath.replace('{setId}', encodeURIComponent(String(requestParameters['setId'])));
+    urlPath = urlPath.replace(
+      '{versionId}',
+      encodeURIComponent(String(requestParameters['versionId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   */
+  async grantsRaw(
+    requestParameters: GrantsRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<GrantRecipientView>>> {
+    const requestOptions = await this.grantsRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(GrantRecipientViewFromJSON),
+    );
+  }
+
+  /**
+   */
+  async grants(
+    requestParameters: GrantsRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<GrantRecipientView>> {
+    const response = await this.grantsRaw(requestParameters, initOverrides);
     return await response.value();
   }
 
@@ -964,6 +1120,75 @@ export class ExerciseSetControllerApi extends runtime.BaseAPI {
   ): Promise<VersionView> {
     const response = await this.retireRaw(requestParameters, initOverrides);
     return await response.value();
+  }
+
+  /**
+   * Creates request options for revoke1 without sending the request
+   */
+  async revoke1RequestOpts(requestParameters: Revoke1Request): Promise<runtime.RequestOpts> {
+    if (requestParameters['setId'] == null) {
+      throw new runtime.RequiredError(
+        'setId',
+        'Required parameter "setId" was null or undefined when calling revoke1().',
+      );
+    }
+
+    if (requestParameters['versionId'] == null) {
+      throw new runtime.RequiredError(
+        'versionId',
+        'Required parameter "versionId" was null or undefined when calling revoke1().',
+      );
+    }
+
+    if (requestParameters['participantId'] == null) {
+      throw new runtime.RequiredError(
+        'participantId',
+        'Required parameter "participantId" was null or undefined when calling revoke1().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v1/specialist/exercise-sets/{setId}/versions/{versionId}/grants/{participantId}`;
+    urlPath = urlPath.replace('{setId}', encodeURIComponent(String(requestParameters['setId'])));
+    urlPath = urlPath.replace(
+      '{versionId}',
+      encodeURIComponent(String(requestParameters['versionId'])),
+    );
+    urlPath = urlPath.replace(
+      '{participantId}',
+      encodeURIComponent(String(requestParameters['participantId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'DELETE',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   */
+  async revoke1Raw(
+    requestParameters: Revoke1Request,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<void>> {
+    const requestOptions = await this.revoke1RequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.VoidApiResponse(response);
+  }
+
+  /**
+   */
+  async revoke1(
+    requestParameters: Revoke1Request,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<void> {
+    await this.revoke1Raw(requestParameters, initOverrides);
   }
 
   /**

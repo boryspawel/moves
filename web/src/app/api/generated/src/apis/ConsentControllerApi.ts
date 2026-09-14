@@ -30,7 +30,7 @@ import {
   TemplateViewToJSON,
 } from '../models/TemplateView';
 
-export interface GrantRequest {
+export interface Grant1Request {
   grantCommand: GrantCommand;
 }
 
@@ -47,13 +47,13 @@ export interface TemplateRequest {
  */
 export class ConsentControllerApi extends runtime.BaseAPI {
   /**
-   * Creates request options for grant without sending the request
+   * Creates request options for grant1 without sending the request
    */
-  async grantRequestOpts(requestParameters: GrantRequest): Promise<runtime.RequestOpts> {
+  async grant1RequestOpts(requestParameters: Grant1Request): Promise<runtime.RequestOpts> {
     if (requestParameters['grantCommand'] == null) {
       throw new runtime.RequiredError(
         'grantCommand',
-        'Required parameter "grantCommand" was null or undefined when calling grant().',
+        'Required parameter "grantCommand" was null or undefined when calling grant1().',
       );
     }
 
@@ -76,11 +76,11 @@ export class ConsentControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async grantRaw(
-    requestParameters: GrantRequest,
+  async grant1Raw(
+    requestParameters: Grant1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<GrantView>> {
-    const requestOptions = await this.grantRequestOpts(requestParameters);
+    const requestOptions = await this.grant1RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) => GrantViewFromJSON(jsonValue));
@@ -88,11 +88,11 @@ export class ConsentControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async grant(
-    requestParameters: GrantRequest,
+  async grant1(
+    requestParameters: Grant1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<GrantView> {
-    const response = await this.grantRaw(requestParameters, initOverrides);
+    const response = await this.grant1Raw(requestParameters, initOverrides);
     return await response.value();
   }
 

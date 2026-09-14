@@ -61,6 +61,7 @@ class SpecialistAuthorizationService implements SpecialistAuthorizationPort {
         Set<Capability> granted = kind == SpecialistKind.TRAINER
                 ? EnumSet.of(
                         Capability.PLAN_PERFORMANCE,
+                        Capability.SHARE_EXERCISE_SETS,
                         Capability.SET_PERFORMANCE_BUDGET,
                         Capability.VIEW_EFFECTIVE_RESTRICTION,
                         Capability.ACKNOWLEDGE_PERFORMANCE_WARNING,
@@ -69,6 +70,7 @@ class SpecialistAuthorizationService implements SpecialistAuthorizationPort {
                         Capability.MANAGE_PARTICIPANT_RECORDS)
                 : EnumSet.of(
                         Capability.PLAN_FUNCTIONAL_RECOVERY,
+                        Capability.SHARE_EXERCISE_SETS,
                         Capability.SET_CLINICAL_RESTRICTION,
                         Capability.VIEW_EFFECTIVE_RESTRICTION,
                         Capability.VIEW_CLINICAL_RATIONALE,

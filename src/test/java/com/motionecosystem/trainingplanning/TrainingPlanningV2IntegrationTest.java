@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import com.motionecosystem.application.MotionEcosystemApplication;
@@ -36,8 +37,14 @@ import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.EditorView
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.VariantItemCommand;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.ValidateCommand;
 import com.motionecosystem.planworkflow.PlanRevisionWorkflowService;
+import com.motionecosystem.planworkflow.PlanRevisionWorkflowService.AcknowledgeWarningCommand;
 import com.motionecosystem.planworkflow.PlanRevisionWorkflowService.ActivateWorkflowCommand;
 import com.motionecosystem.planworkflow.PlanRevisionWorkflowService.ValidateWorkflowCommand;
+import com.motionecosystem.safety.SafetyV2Service;
+import com.motionecosystem.safety.SafetyV2Service.RestrictionCommand;
+import com.motionecosystem.safety.SafetyV2Service.TargetCommand;
+import com.motionecosystem.safety.api.SafetyAssessmentPort.Result;
+import com.motionecosystem.safety.domain.SafetyRules.SemanticType;
 import com.motionecosystem.exercisesets.application.ExerciseSetApplicationService;
 import com.motionecosystem.exercisesets.api.ExerciseSetDtos;
 import com.motionecosystem.exercisesets.domain.ExerciseSetModel;
@@ -49,8 +56,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.server.ResponseStatusException;
+import jakarta.persistence.EntityManager;
 
 @SpringBootTest(classes = MotionEcosystemApplication.class, properties = "moves.test-default-consent.enabled=true")
 @ActiveProfiles("test")
@@ -63,10 +72,13 @@ class TrainingPlanningV2IntegrationTest {
     @Autowired ExerciseSetApplicationService exerciseSets;
     @Autowired SpecialistPlanFacadeService specialistPlans;
     @Autowired PlanRevisionWorkflowService workflow;
+    @Autowired SafetyV2Service safety;
     @Autowired TodayAgendaService today;
     @Autowired SpecialistParticipantReadService timeline;
     @Autowired SpecialistClientService clients;
     @Autowired TestDefaultConsentOverridePort testConsentOverrides;
+    @Autowired EntityManager entityManager;
+    @Autowired TransactionTemplate transactions;
 
     UUID participantId;
     UUID otherParticipantId;
@@ -74,6 +86,7 @@ class TrainingPlanningV2IntegrationTest {
     UUID foreignSpecialistId;
     UUID exerciseVersionId;
     UUID exerciseSetVersionId;
+    UUID fixtureSafetyStructureId;
 
     @BeforeEach
     void setUp() {
@@ -183,11 +196,13 @@ class TrainingPlanningV2IntegrationTest {
 
     @Test
     void enforcesSelfDirectedSpecialistAndResourceOwnership() {
-        assertStatus(HttpStatus.GONE, () -> planning.createDraft("planning-participant", new CreateDraftCommand(
+        EditorView selfDirected = planning.createDraft("planning-participant", new CreateDraftCommand(
                 null, "My plan", "Independent training", null, "Build consistency",
-                LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31))));
-
-        assertStatus(HttpStatus.GONE, () -> planning.createDraft("planning-participant",
+                LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31)));
+        assertThat(selfDirected.participantId()).isEqualTo(participantId);
+        assertThat(selfDirected.ownerAccountId()).isEqualTo(participantId);
+        assertThat(selfDirected.mode()).isEqualTo("SELF_DIRECTED");
+        assertStatus(HttpStatus.FORBIDDEN, () -> planning.createDraft("planning-participant",
                 new CreateDraftCommand(otherParticipantId, "Wrong", "Wrong owner", PlanMode.SELF_DIRECTED,
                         "No access", null, null)));
         EditorView assigned = specialistDraft();
@@ -197,6 +212,128 @@ class TrainingPlanningV2IntegrationTest {
                 "foreign-planning-specialist", assigned.revision().revisionId()));
         assertStatus(HttpStatus.FORBIDDEN, () -> planning.addGoal("planning-participant",
                 assigned.revision().revisionId(), new AddGoalCommand(version(assigned), canonicalGoal(participantId))));
+        assertStatus(HttpStatus.FORBIDDEN, () -> planning.editor("other-planning-participant",
+                selfDirected.revision().revisionId()));
+    }
+
+    @Test
+    void selfDirectedPlanUsesGrantedVersionAndKeepsActivatedSnapshotAfterRevocation() {
+        UUID ownAccountId = UUID.randomUUID();
+        UUID ownParticipantId = UUID.randomUUID();
+        UUID goalId = UUID.randomUUID();
+        seedOwnParticipant(ownAccountId, ownParticipantId, goalId, "granted-self-participant");
+        UUID setId = transactions.execute(status -> (UUID) entityManager.createNativeQuery(
+                        "SELECT exercise_set_id FROM exercise_set.exercise_set_version WHERE id = :versionId")
+                .setParameter("versionId", exerciseSetVersionId).getSingleResult());
+        exerciseSets.grant("planning-specialist", setId, exerciseSetVersionId,
+                new ExerciseSetDtos.GrantRequest(ownParticipantId, ProfessionalRole.TRAINER));
+
+        LocalDate scheduled = LocalDate.now();
+        EditorView activeEditor = specialistPlans.createOwn("granted-self-participant",
+                new SpecialistPlanFacadeService.OwnCreatePlanCommand("Own granted plan", null, null,
+                        scheduled, scheduled.plusDays(2), goalId));
+        UUID activeRevisionId = activeEditor.revision().revisionId();
+        activeEditor = specialistPlans.addSession("granted-self-participant", activeEditor.planId(), activeRevisionId,
+                new SpecialistPlanFacadeService.SessionCommand(version(activeEditor), "Granted session", scheduled,
+                        null, null, 30, exerciseSetVersionId));
+        workflow.validate("granted-self-participant", activeRevisionId,
+                new ValidateWorkflowCommand(version(activeEditor), null));
+        workflow.activate("granted-self-participant", activeRevisionId, "self-grant-activation",
+                new ActivateWorkflowCommand(null));
+
+        EditorView draftEditor = specialistPlans.createOwn("granted-self-participant",
+                new SpecialistPlanFacadeService.OwnCreatePlanCommand("Own revocation draft", null, null,
+                        scheduled, scheduled.plusDays(2), goalId));
+        UUID draftRevisionId = draftEditor.revision().revisionId();
+        draftEditor = specialistPlans.addSession("granted-self-participant", draftEditor.planId(), draftRevisionId,
+                new SpecialistPlanFacadeService.SessionCommand(version(draftEditor), "Soon revoked", scheduled,
+                        null, null, 30, exerciseSetVersionId));
+        workflow.validate("granted-self-participant", draftRevisionId,
+                new ValidateWorkflowCommand(version(draftEditor), null));
+        exerciseSets.revoke("planning-specialist", setId, exerciseSetVersionId, ownParticipantId);
+
+        var historicalSession = planning.editor("granted-self-participant", activeRevisionId).revision().cycles().getFirst()
+                .microcycles().getFirst().sessions().getFirst();
+        assertThat(historicalSession.sourceExerciseSetVersionId()).isEqualTo(exerciseSetVersionId);
+        assertThat(historicalSession.sourceSnapshot()).contains(exerciseSetVersionId.toString());
+        assertThat(historicalSession.prescriptions()).singleElement()
+                .extracting(item -> item.sourceExerciseSetVersionId()).isEqualTo(exerciseSetVersionId);
+        long revokedDraftVersion = version(draftEditor);
+        assertStatus(HttpStatus.CONFLICT, () -> workflow.activate("granted-self-participant", draftRevisionId,
+                "revoked-cached-validation", new ActivateWorkflowCommand(null)));
+        assertStatus(HttpStatus.CONFLICT, () -> workflow.validate("granted-self-participant", draftRevisionId,
+                new ValidateWorkflowCommand(revokedDraftVersion, null)));
+    }
+
+    @Test
+    void selfDirectedOwnerCanAcknowledgeOnlyCurrentWarningsAndCannotReleaseHardBlock() {
+        UUID ownAccountId = UUID.randomUUID();
+        UUID ownParticipantId = UUID.randomUUID();
+        UUID goalId = UUID.randomUUID();
+        String subject = "self-safety-participant";
+        seedOwnParticipant(ownAccountId, ownParticipantId, goalId, subject);
+        UUID setId = transactions.execute(status -> (UUID) entityManager.createNativeQuery(
+                        "SELECT exercise_set_id FROM exercise_set.exercise_set_version WHERE id = :versionId")
+                .setParameter("versionId", exerciseSetVersionId).getSingleResult());
+        exerciseSets.grant("planning-specialist", setId, exerciseSetVersionId,
+                new ExerciseSetDtos.GrantRequest(ownParticipantId, ProfessionalRole.TRAINER));
+
+        LocalDate scheduled = LocalDate.now();
+        EditorView warningPlan = specialistPlans.createOwn(subject,
+                new SpecialistPlanFacadeService.OwnCreatePlanCommand("Self warning", null, null,
+                        scheduled, scheduled.plusDays(2), goalId));
+        UUID warningRevisionId = warningPlan.revision().revisionId();
+        warningPlan = specialistPlans.addSession(subject, warningPlan.planId(), warningRevisionId,
+                new SpecialistPlanFacadeService.SessionCommand(version(warningPlan), "Warning session", scheduled,
+                        null, null, 30, exerciseSetVersionId));
+        var participantWarning = safety.declareParticipantRestriction(subject,
+                participantRestriction(SemanticType.CAUTION, fixtureSafetyStructureId));
+        assertThat(safety.participantHistory(subject)).extracting(item -> item.id())
+                .contains(participantWarning.id());
+        var warningValidation = workflow.validate(subject, warningRevisionId,
+                new ValidateWorkflowCommand(version(warningPlan), null));
+        Set<UUID> warningFactors = warningValidation.assessment().factors().stream()
+                .filter(factor -> factor.result() == Result.WARNING)
+                .map(factor -> factor.id())
+                .collect(java.util.stream.Collectors.toSet());
+        assertThat(warningFactors).isNotEmpty();
+        workflow.acknowledge(subject, warningRevisionId,
+                new AcknowledgeWarningCommand(warningFactors, "I understand the warning.", null));
+        assertThat(workflow.workflow(subject, warningRevisionId, null).acknowledgedWarningFactorIds())
+                .containsExactlyInAnyOrderElementsOf(warningFactors);
+        workflow.activate(subject, warningRevisionId, "self-warning-activation", new ActivateWorkflowCommand(null));
+
+        UUID physiotherapistId = account("self-safety-physiotherapist", "SPECIALIST");
+        scope(physiotherapistId, "PHYSIOTHERAPIST");
+        relationship(physiotherapistId, ownParticipantId);
+        UUID clinicalTemplate = consents.publishTemplate(
+                "SELF_SAFETY_CLINICAL", 1, "urn:test:self-safety:clinical", "EXPLICIT_CONSENT").id();
+        consents.grant(subject, new ConsentGrantService.GrantCommand(
+                physiotherapistId, ConsentDecisionPort.Purpose.CLINICAL_REVIEW, clinicalTemplate,
+                Set.of(ConsentDecisionPort.DataScope.CLINICAL_RATIONALE), null, null));
+        safety.createPhysiotherapistRestriction(physiotherapistId, ownParticipantId,
+                new ActingContext(ProfessionalRole.PHYSIOTHERAPIST), clinicalRestriction(fixtureSafetyStructureId));
+        EditorView blockedPlan = specialistPlans.createOwn(subject,
+                new SpecialistPlanFacadeService.OwnCreatePlanCommand("Self hard block", null, null,
+                        scheduled, scheduled.plusDays(2), goalId));
+        UUID blockedRevisionId = blockedPlan.revision().revisionId();
+        blockedPlan = specialistPlans.addSession(subject, blockedPlan.planId(), blockedRevisionId,
+                new SpecialistPlanFacadeService.SessionCommand(version(blockedPlan), "Blocked session", scheduled,
+                        null, null, 30, exerciseSetVersionId));
+        var blockedValidation = workflow.validate(subject, blockedRevisionId,
+                new ValidateWorkflowCommand(version(blockedPlan), null));
+        UUID hardBlockFactor = blockedValidation.assessment().factors().stream()
+                .filter(factor -> factor.result() == Result.HARD_BLOCK)
+                .map(factor -> factor.id())
+                .findFirst().orElseThrow();
+        assertStatus(HttpStatus.BAD_REQUEST, () -> workflow.acknowledge(subject, blockedRevisionId,
+                new AcknowledgeWarningCommand(Set.of(hardBlockFactor), "Cannot acknowledge hard block.", null)));
+        assertStatus(HttpStatus.CONFLICT, () -> workflow.activate(subject, blockedRevisionId,
+                "self-hard-block-activation", new ActivateWorkflowCommand(null)));
+        assertStatus(HttpStatus.FORBIDDEN, () -> safety.overrideFactor(ownAccountId, ownParticipantId,
+                new ActingContext(ProfessionalRole.PHYSIOTHERAPIST),
+                blockedValidation.assessment().id(), hardBlockFactor,
+                new SafetyV2Service.OverrideCommand("SELF", "THIS_FACTOR", null, Instant.now().plusSeconds(3600))));
     }
 
     @Test
@@ -434,6 +571,36 @@ class TrainingPlanningV2IntegrationTest {
                 INSERT INTO exercise_catalog.exercise_version_movement_pattern
                     (exercise_version_id, movement_pattern) VALUES (?, 'SQUAT')
                 """, versionId);
+        fixtureSafetyStructureId = UUID.randomUUID();
+        UUID evidenceId = UUID.randomUUID();
+        UUID contributionId = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO anatomy_reference.anatomical_structure
+                    (id, code, type, display_name, side_policy, status, taxonomy_version,
+                     created_by_subject, created_at, published_at, version)
+                VALUES (?, ?, 'MUSCLE_GROUP', 'Planning safety structure', 'LEFT_RIGHT', 'PUBLISHED', 1,
+                        'planning-test', now(), now(), 0)
+                """, fixtureSafetyStructureId,
+                "PLANNING_" + fixtureSafetyStructureId.toString().substring(0, 8).toUpperCase());
+        jdbc.update("""
+                INSERT INTO exercise_catalog.evidence_source
+                    (id, exercise_version_id, citation, source_uri, evidence_grade, created_at, created_by_subject)
+                VALUES (?, ?, 'Planning safety evidence', 'https://example.test/planning-safety',
+                        'EDITORIAL_REVIEW', now(), 'planning-test')
+                """, evidenceId, versionId);
+        jdbc.update("""
+                INSERT INTO exercise_catalog.exercise_contribution
+                    (id, exercise_version_id, anatomical_structure_id, contribution_role, load_channel,
+                     contribution_band, coefficient_low, coefficient_high, confidence_class, evidence_grade,
+                     calculation_role, variant_condition, side_rule, created_at, created_by_subject)
+                VALUES (?, ?, ?, 'PRIMARY', 'DYN_EXU', 'HIGH', 0.500000, 0.700000,
+                        'MODERATE', 'EDITORIAL_REVIEW', 'ALLOCATION', 'STANDARD', 'AS_PRESCRIBED',
+                        now(), 'planning-test')
+                """, contributionId, versionId, fixtureSafetyStructureId);
+        jdbc.update("""
+                INSERT INTO exercise_catalog.exercise_contribution_evidence
+                    (id, contribution_id, evidence_source_id) VALUES (?, ?, ?)
+                """, UUID.randomUUID(), contributionId, evidenceId);
         addFixtureReviews(versionId);
         jdbc.update("""
                 UPDATE exercise_catalog.exercise_version
@@ -459,6 +626,62 @@ class TrainingPlanningV2IntegrationTest {
                 """, UUID.randomUUID(), goal);
         return goal;
     }
+
+    private void seedOwnParticipant(UUID accountId, UUID participantId, UUID goalId, String subject) {
+        transactions.executeWithoutResult(status -> {
+            nativeUpdate("""
+                    INSERT INTO identity_access.principal_account (id, external_subject, status, profile_type, created_at, version)
+                    VALUES (:accountId, :subject, 'ACTIVE', 'PARTICIPANT', now(), 0)
+                    """, "accountId", accountId, "subject", subject);
+            nativeUpdate("""
+                    INSERT INTO participant.participant_record
+                        (id, display_name, record_status, relationship_context, time_zone_id, created_by_specialist_id, created_at, updated_at, version)
+                    VALUES (:participantId, 'Distinct own participant', 'ACTIVE', 'CLIENT', 'UTC', :specialistId, now(), now(), 0)
+                    """, "participantId", participantId, "specialistId", specialistId);
+            nativeUpdate("""
+                    INSERT INTO participant.participant_access_link
+                        (id, participant_id, principal_account_id, access_status, linked_at, activated_at, version)
+                    VALUES (:id, :participantId, :accountId, 'ACTIVE', now(), now(), 0)
+                    """, "id", UUID.randomUUID(), "participantId", participantId, "accountId", accountId);
+            nativeUpdate("""
+                    INSERT INTO specialist.participant_specialist_relationship
+                        (id, specialist_account_id, participant_id, status, activated_at)
+                    VALUES (:id, :specialistId, :participantId, 'ACTIVE', now())
+                    """, "id", UUID.randomUUID(), "specialistId", specialistId, "participantId", participantId);
+            nativeUpdate("""
+                    INSERT INTO participant_goals.participant_goal
+                        (id, participant_id, specialist_account_id, category, title, description, priority, target_date, status, created_at, updated_at, version)
+                    VALUES (:goalId, :participantId, :specialistId, 'PERFORMANCE', 'Own performance goal', 'Own goal', 1, '2026-12-31', 'ACTIVE', now(), now(), 0)
+                    """, "goalId", goalId, "participantId", participantId, "specialistId", specialistId);
+            nativeUpdate("""
+                    INSERT INTO participant_goals.goal_outcome
+                        (id, goal_id, metric_code, baseline, target_value, unit, position, created_at)
+                    VALUES (:id, :goalId, 'OWN_REPS', 1, 2, 'repetitions', 0, now())
+                    """, "id", UUID.randomUUID(), "goalId", goalId);
+        });
+    }
+
+    private void nativeUpdate(String sql, Object... bindings) {
+        var query = entityManager.createNativeQuery(sql);
+        for (int index = 0; index < bindings.length; index += 2) query.setParameter((String) bindings[index], bindings[index + 1]);
+        query.executeUpdate();
+    }
+
+    private RestrictionCommand participantRestriction(SemanticType type, UUID structureId) {
+        return new RestrictionCommand(type, null, null, "Participant-visible planning constraint.", null,
+                target(structureId));
+    }
+
+    private RestrictionCommand clinicalRestriction(UUID structureId) {
+        return new RestrictionCommand(SemanticType.CONTRAINDICATION, null, null,
+                "Participant-visible planning constraint.", "urn:test:self-safety:clinical", target(structureId));
+    }
+
+    private TargetCommand target(UUID structureId) {
+        return new TargetCommand(structureId, null, "DYN_EXU", null, null, null, null,
+                null, null, null, null);
+    }
+
 
     private UUID publishedSetVersion() {
         var set = exerciseSets.create("planning-specialist");

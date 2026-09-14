@@ -7,6 +7,22 @@ import { ApiFacade } from '../../core/api.facade';
 import { ExerciseSetEditorPage } from './exercise-set-editor.page';
 
 describe('ExerciseSetEditorPage ordering', () => {
+  it('grants and revokes access for selected existing clients on the exact published version', async () => {
+    const grant = vi.fn().mockResolvedValue(undefined); const revoke1 = vi.fn().mockResolvedValue(undefined);
+    const grants = vi.fn().mockResolvedValue([{ participantId: 'participant-1', displayName: 'Ada' }]);
+    await TestBed.configureTestingModule({
+      imports: [ExerciseSetEditorPage],
+      providers: [provideRouter([]), { provide: ApiFacade, useValue: {
+        exerciseSets: { version: vi.fn().mockResolvedValue({ id: 'version-7', exerciseSetId: 'set-3', status: 'PUBLISHED', items: [] }), grants, grant, revoke1 },
+        specialistClients: { list1: vi.fn().mockResolvedValue([{ participantId: 'participant-1', displayName: 'Ada' }, { participantId: 'participant-2', displayName: 'Beata' }]) },
+        onboarding: { state: vi.fn().mockResolvedValue({ profile: { specialistKind: 'TRAINER' } }) },
+      } }, { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ exerciseSetId: 'set-3', versionId: 'version-7' }) } } }],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(ExerciseSetEditorPage); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    const page = fixture.componentInstance; page.version.set({ id: 'version-7', exerciseSetId: 'set-3', status: 'PUBLISHED', items: [] }); page.actingRole.set('TRAINER'); page.selectedRecipient.set('participant-2'); await page.grant(); await page.revoke('participant-1');
+    expect(grant).toHaveBeenCalledWith({ setId: 'set-3', versionId: 'version-7', grantRequest: { participantId: 'participant-2', actingRole: 'TRAINER' } });
+    expect(revoke1).toHaveBeenCalledWith({ setId: 'set-3', versionId: 'version-7', participantId: 'participant-1' });
+  });
   it('keeps map and movement patterns in one compact anatomy module without a second channel selector', async () => {
     const anatomy = vi
       .fn()

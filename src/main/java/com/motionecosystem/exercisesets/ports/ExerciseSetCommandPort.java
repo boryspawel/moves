@@ -16,4 +16,9 @@ public interface ExerciseSetCommandPort {
     VersionView moveItem(String subject, UUID setId, UUID versionId, MoveRequest request); VersionView removeItem(String subject, UUID setId, UUID versionId, UUID itemId, long expectedVersion);
     VersionView publish(String subject, UUID setId, UUID versionId, long expectedVersion); VersionView nextDraft(String subject, UUID setId, UUID sourceVersionId);
     VersionView variantDraft(String subject, UUID setId, UUID sourceVersionId, CreateVariantRequest request); VersionView retire(String subject, UUID setId, UUID versionId);
+    void grant(String subject, UUID setId, UUID versionId, GrantRequest request);
+    void revoke(String subject, UUID setId, UUID versionId, UUID participantId);
+    List<GrantRecipientView> grantRecipients(String subject, UUID setId, UUID versionId);
+    List<ParticipantLibraryEntry> participantLibrary(String subject);
+    ParticipantVersionView participantVersion(String subject, UUID versionId);
 }

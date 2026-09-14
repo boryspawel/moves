@@ -4,6 +4,7 @@ import com.motionecosystem.anatomyreference.api.AnatomyReferenceQueryPort;
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
+import com.motionecosystem.participant.api.ParticipantClientPort;
 import com.motionecosystem.loadanalysis.api.PlannedLoadCalculationPort.LoadProfile;
 import com.motionecosystem.safety.api.SafetyAssessmentPort;
 import com.motionecosystem.safety.domain.SafetyRules;
@@ -43,6 +44,7 @@ public class SafetyV2Service implements SafetyAssessmentPort {
     private final SafetyFactorRepository factors;
     private final SafetyOverrideRepository overrides;
     private final CurrentAccountService accounts;
+    private final ParticipantClientPort participants;
     private final AnatomyReferenceQueryPort anatomy;
     private final SpecialistAuthorizationPort authorization;
     private final AuditRecorder audit;
@@ -55,8 +57,9 @@ public class SafetyV2Service implements SafetyAssessmentPort {
         if (!participant.hasProfile(ProfileType.PARTICIPANT)) {
             throw forbidden("participant profile is required");
         }
+        UUID participantId = participantId(participant.id());
         RestrictionEntity item = create(
-                participant.id(),
+                participantId,
                 SourceType.PARTICIPANT_DECLARED,
                 command,
                 participant.id(),
@@ -70,10 +73,11 @@ public class SafetyV2Service implements SafetyAssessmentPort {
     public RestrictionView reviseParticipantRestriction(
             String subject, UUID restrictionId, RestrictionCommand command) {
         var participant = accounts.requireActive(subject);
+        UUID participantId = participantId(participant.id());
         RestrictionEntity previous = requireRestriction(restrictionId);
-        requireParticipantOwner(participant.id(), previous);
+        requireParticipantOwner(participantId, previous);
         RestrictionEntity revision = create(
-                participant.id(),
+                participantId,
                 SourceType.PARTICIPANT_DECLARED,
                 command,
                 participant.id(),
@@ -90,8 +94,9 @@ public class SafetyV2Service implements SafetyAssessmentPort {
     @Transactional
     public RestrictionView withdrawParticipantRestriction(String subject, UUID restrictionId) {
         var participant = accounts.requireActive(subject);
+        UUID participantId = participantId(participant.id());
         RestrictionEntity item = requireRestriction(restrictionId);
-        requireParticipantOwner(participant.id(), item);
+        requireParticipantOwner(participantId, item);
         item.withdraw();
         audit.record(subject, "PARTICIPANT_RESTRICTION_WITHDRAWN", "Restriction", item.id);
         return view(item);
@@ -177,7 +182,7 @@ public class SafetyV2Service implements SafetyAssessmentPort {
         if (!account.hasProfile(ProfileType.PARTICIPANT)) {
             throw forbidden("participant profile is required");
         }
-        return history(account.id());
+        return history(participantId(account.id()));
     }
 
     @Override
@@ -535,6 +540,11 @@ public class SafetyV2Service implements SafetyAssessmentPort {
                 || item.status != RestrictionEntity.Status.ACTIVE) {
             throw forbidden("participants can change only their own active declarations");
         }
+    }
+
+    private UUID participantId(UUID accountId) {
+        return participants.findParticipantIdByPrincipalAccountId(accountId)
+                .orElseThrow(() -> forbidden("an active participant access link is required"));
     }
 
     private static String normalized(String value) {

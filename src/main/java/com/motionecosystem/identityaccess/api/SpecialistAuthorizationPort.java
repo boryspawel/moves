@@ -21,6 +21,7 @@ public interface SpecialistAuthorizationPort {
     enum Capability {
         PLAN_PERFORMANCE,
         PLAN_FUNCTIONAL_RECOVERY,
+        SHARE_EXERCISE_SETS,
         SET_PERFORMANCE_BUDGET,
         SET_CLINICAL_RESTRICTION,
         VIEW_EFFECTIVE_RESTRICTION,

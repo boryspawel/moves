@@ -60,6 +60,24 @@ export interface AgendaSessionView {
    * @type {string}
    * @memberof AgendaSessionView
    */
+  planId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AgendaSessionView
+   */
+  planRevisionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AgendaSessionView
+   */
+  planTitle?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AgendaSessionView
+   */
   safetyState?: string;
   /**
    *
@@ -113,6 +131,9 @@ export function AgendaSessionViewFromJSONTyped(
     expectedDurationMinutes:
       json['expectedDurationMinutes'] == null ? undefined : json['expectedDurationMinutes'],
     nextAction: json['nextAction'] == null ? undefined : json['nextAction'],
+    planId: json['planId'] == null ? undefined : json['planId'],
+    planRevisionId: json['planRevisionId'] == null ? undefined : json['planRevisionId'],
+    planTitle: json['planTitle'] == null ? undefined : json['planTitle'],
     safetyState: json['safetyState'] == null ? undefined : json['safetyState'],
     scheduledDate: json['scheduledDate'] == null ? undefined : new Date(json['scheduledDate']),
     sessionId: json['sessionId'] == null ? undefined : json['sessionId'],
@@ -144,6 +165,9 @@ export function AgendaSessionViewToJSONTyped(
     executionState: value['executionState'],
     expectedDurationMinutes: value['expectedDurationMinutes'],
     nextAction: value['nextAction'],
+    planId: value['planId'],
+    planRevisionId: value['planRevisionId'],
+    planTitle: value['planTitle'],
     safetyState: value['safetyState'],
     scheduledDate:
       value['scheduledDate'] == null

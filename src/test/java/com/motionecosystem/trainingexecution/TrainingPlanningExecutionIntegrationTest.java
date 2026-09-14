@@ -17,6 +17,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import com.motionecosystem.application.MotionEcosystemApplication;
+import com.motionecosystem.adherence.TodayAgendaService;
 import com.motionecosystem.audit.api.TransactionalOutbox.OutboxMessage;
 import com.motionecosystem.support.PostgresTestConfiguration;
 import jakarta.persistence.EntityManager;
@@ -47,6 +48,8 @@ class TrainingPlanningExecutionIntegrationTest {
     JdbcTemplate jdbc;
     @Autowired
     ExecutionProjectionService projections;
+    @Autowired
+    TodayAgendaService today;
     @Autowired
     SessionExecutionAttemptRepository attempts;
     @Autowired
@@ -266,6 +269,25 @@ class TrainingPlanningExecutionIntegrationTest {
                 .createNativeQuery("SELECT value_high FROM training_execution.executed_load_observation WHERE session_execution_id=:executionId AND channel='DYN_EXU'")
                 .setParameter("executionId", executionId).getSingleResult());
         assertThat(projectedActual).isEqualByComparingTo("27.000000");
+    }
+
+    @Test
+    void startsRequestedSecondActivePlanRevisionForLinkedParticipantAccount() throws Exception {
+        P4Fixture first = p4Fixture();
+        P4Fixture second = activateSecondP4Plan(first);
+
+        var agenda = today.today(p4Subject);
+        assertThat(agenda.activePlans()).extracting(TodayAgendaService.ActivePlanView::revisionId)
+                .contains(first.revisionId(), second.revisionId());
+        assertThat(agenda.sessions()).extracting(TodayAgendaService.AgendaSessionView::sessionId)
+                .contains(first.sessionId(), second.sessionId());
+        assertThat(agenda.sessions()).filteredOn(item -> item.sessionId().equals(second.sessionId()))
+                .extracting(TodayAgendaService.AgendaSessionView::planRevisionId).containsExactly(second.revisionId());
+
+        startP4(second, "p4-second-active-plan")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.plannedSessionId").value(second.sessionId().toString()))
+                .andExpect(jsonPath("$.planRevisionId").value(second.revisionId().toString()));
     }
 
     @Test
@@ -729,8 +751,8 @@ class TrainingPlanningExecutionIntegrationTest {
                     VALUES (:accountId, :subject, 'ACTIVE', 'PARTICIPANT', now(), 0)
                     """, "accountId", accountId, "subject", p4Subject = "p4-participant-" + accountId);
             nativeUpdate("""
-                    INSERT INTO participant.participant_record (id, display_name, record_status, relationship_context, created_by_specialist_id, created_at, updated_at, version)
-                    VALUES (:participantId, 'P4 participant', 'ACTIVE', 'CLIENT', :specialistId, now(), now(), 0)
+                    INSERT INTO participant.participant_record (id, display_name, record_status, relationship_context, time_zone_id, created_by_specialist_id, created_at, updated_at, version)
+                    VALUES (:participantId, 'P4 participant', 'ACTIVE', 'CLIENT', 'UTC', :specialistId, now(), now(), 0)
                     """, "participantId", canonicalParticipantId, "specialistId", specialistId);
             nativeUpdate("""
                     INSERT INTO participant.participant_access_link (id, participant_id, principal_account_id, access_status, linked_at, activated_at, version)
@@ -797,8 +819,8 @@ class TrainingPlanningExecutionIntegrationTest {
                     VALUES (:microcycleId, :cycleId, 1, 'P4 microcycle', 'P4 fixture')
                     """, "microcycleId", microcycleId, "cycleId", cycleId);
             nativeUpdate("""
-                    INSERT INTO training_planning.planned_session (id, microcycle_id, participant_id, title, session_kind, status, assigned_at, creation_source)
-                    VALUES (:sessionId, :microcycleId, :participantId, 'P4 session', 'SELF_GUIDED', 'ASSIGNED', now(), 'LEGACY_V1')
+                    INSERT INTO training_planning.planned_session (id, microcycle_id, participant_id, title, scheduled_date, session_kind, status, assigned_at, creation_source)
+                    VALUES (:sessionId, :microcycleId, :participantId, 'P4 session', CURRENT_DATE, 'SELF_GUIDED', 'ASSIGNED', now(), 'LEGACY_V1')
                     """, "sessionId", sessionId, "microcycleId", microcycleId, "participantId", canonicalParticipantId);
             nativeUpdate("""
                     INSERT INTO training_planning.exercise_prescription (id, planned_session_id, exercise_version_id, position, target_sets, target_repetitions, target_load_kg, notes)
@@ -820,6 +842,44 @@ class TrainingPlanningExecutionIntegrationTest {
     private UUID startP4Attempt(P4Fixture fixture, String key) throws Exception {
         String response = startP4(fixture, key).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         return UUID.fromString(objectMapper.readTree(response).path("attemptId").asText());
+    }
+
+    private P4Fixture activateSecondP4Plan(P4Fixture first) {
+        UUID planId = UUID.randomUUID(); UUID revisionId = UUID.randomUUID(); UUID cycleId = UUID.randomUUID();
+        UUID microcycleId = UUID.randomUUID(); UUID sessionId = UUID.randomUUID(); UUID goalId = UUID.randomUUID();
+        transactionTemplate.executeWithoutResult(status -> {
+            nativeUpdate("""
+                    INSERT INTO training_planning.training_goal (id, participant_id, name, created_by_account_id, created_at, perspective, category, title, priority, status)
+                    VALUES (:goalId, :participantId, 'P4 second goal', :specialistId, now(), 'GENERAL_FITNESS', 'LEGACY', 'P4 second goal', 50, 'ACTIVE')
+                    """, "goalId", goalId, "participantId", first.participantId(), "specialistId", specialistId);
+            nativeUpdate("""
+                    INSERT INTO training_planning.training_plan (id, goal_id, participant_id, created_by_account_id, name, plan_mode, status, created_at, purpose, owner_account_id, version)
+                    VALUES (:planId, :goalId, :participantId, :accountId, 'P4 second plan', 'SELF_DIRECTED', 'ACTIVE', now(), 'P4 fixture', :accountId, 0)
+                    """, "planId", planId, "goalId", goalId, "participantId", first.participantId(), "accountId", first.accountId());
+            nativeUpdate("""
+                    INSERT INTO training_planning.plan_revision (id, plan_id, revision_number, status, phase_intent, author_account_id, author_capability, migration_origin, assessment_status, draft_updated_at, created_at, version)
+                    VALUES (:revisionId, :planId, 1, 'ACTIVE', 'P4 fixture', :accountId, 'SELF_AUTHOR', 'LEGACY_V1', 'NOT_ASSESSED', now(), now(), 0)
+                    """, "revisionId", revisionId, "planId", planId, "accountId", first.accountId());
+            nativeUpdate("UPDATE training_planning.training_plan SET current_revision_id=:revisionId WHERE id=:planId", "revisionId", revisionId, "planId", planId);
+            nativeUpdate("UPDATE training_planning.training_goal SET revision_id=:revisionId WHERE id=:goalId", "revisionId", revisionId, "goalId", goalId);
+            nativeUpdate("""
+                    INSERT INTO training_planning.training_cycle (id, plan_id, revision_id, sequence_number, name, phase_intent)
+                    VALUES (:cycleId, :planId, :revisionId, 1, 'P4 second cycle', 'P4 fixture')
+                    """, "cycleId", cycleId, "planId", planId, "revisionId", revisionId);
+            nativeUpdate("""
+                    INSERT INTO training_planning.microcycle (id, cycle_id, sequence_number, name, phase_intent)
+                    VALUES (:microcycleId, :cycleId, 1, 'P4 second microcycle', 'P4 fixture')
+                    """, "microcycleId", microcycleId, "cycleId", cycleId);
+            nativeUpdate("""
+                    INSERT INTO training_planning.planned_session (id, microcycle_id, participant_id, title, scheduled_date, session_kind, status, assigned_at, creation_source)
+                    VALUES (:sessionId, :microcycleId, :participantId, 'P4 second session', CURRENT_DATE, 'SELF_GUIDED', 'ASSIGNED', now(), 'LEGACY_V1')
+                    """, "sessionId", sessionId, "microcycleId", microcycleId, "participantId", first.participantId());
+            nativeUpdate("""
+                    INSERT INTO safety.plan_safety_assessment (id, participant_account_id, participant_id, revision_id, load_snapshot_id, load_input_checksum, load_calculation_version, ruleset_code, ruleset_version, result, restriction_snapshot, ruleset_snapshot, load_snapshot, assessed_at)
+                    VALUES (:id, :accountId, :participantId, :revisionId, :loadSnapshotId, 'p4', 'P4', 'SAFETY_V2', 1, 'PASS', '', 'P4', 'P4', now())
+                    """, "id", UUID.randomUUID(), "accountId", first.accountId(), "participantId", first.participantId(), "revisionId", revisionId, "loadSnapshotId", UUID.randomUUID());
+        });
+        return new P4Fixture(first.accountId(), first.participantId(), revisionId, sessionId, null);
     }
 
     private org.springframework.test.web.servlet.ResultActions startP4(P4Fixture fixture, String key) throws Exception {

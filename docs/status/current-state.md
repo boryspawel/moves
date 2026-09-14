@@ -105,6 +105,24 @@ revision; historic prescriptions remain readable after retirement. Manual V2 pre
 removed and draft revalidation requires the source version to remain published. `SessionVariant` now
 selects materialized prescriptions only; its historic dose overrides remain read-only.
 
+## P5 — participant-owned plan use and published-version grants
+
+An exercise-set owner can grant one exact published version to a canonical `participantId`, including
+an account-free record. The participant library and planning source port expose only a redacted snapshot;
+the grant does not share drafts, ownership, clinical data or a general ACL. Owner-only authoring and the
+existing verified-role plus active-relationship `SHARE_EXERCISE_SETS` capability remain authoritative.
+Revocation or retirement blocks future authoring, validation and activation, including a draft validated
+before revocation, while activated revisions and execution history retain their materialized snapshots.
+
+Participants use the same V2 materializer, workflow and canonical goals to create only their own
+`SELF_DIRECTED` plans. They may acknowledge current `WARNING` factors without a professional context;
+`HARD_BLOCK` factors cannot be acknowledged, activated or clinically overridden by that participant.
+`/my-plans` is reachable from the participant navigation beside `/my-exercise-sets`. Multiple active
+plans remain agenda-visible; the legacy singular active-plan read remains a primary summary only.
+Participant-declared Safety V2 restrictions resolve the active account through the existing access link
+to the canonical participant ID before persistence and ownership checks; no participant record is
+created or inferred by safety.
+
 `/plan` is retained as a read-only specialist bookmark. P2 authoring is instead available from the
 participant workspace through participant-scoped, deep-linkable routes. It deliberately has no manual
 goal, exercise, dose or variant editor; existing plan and execution history remains readable through

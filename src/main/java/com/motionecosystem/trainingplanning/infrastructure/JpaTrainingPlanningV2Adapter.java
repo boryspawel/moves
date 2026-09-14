@@ -352,6 +352,11 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
 
     @Override
     public Optional<PlanRevisionSnapshot> findActiveRevision(UUID participantId) {
+        return findActiveRevisions(participantId).stream().findFirst();
+    }
+
+    @Override
+    public List<PlanRevisionSnapshot> findActiveRevisions(UUID participantId) {
         List<UUID> revisionIds = entityManager.createQuery("""
                 SELECT plan.currentRevisionId FROM TrainingPlanJpaEntity plan
                 WHERE plan.participantId = :participantId
@@ -359,9 +364,8 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
                 ORDER BY plan.id
                 """, UUID.class)
                 .setParameter("participantId", participantId)
-                .setMaxResults(1)
                 .getResultList();
-        return revisionIds.stream().findFirst().flatMap(this::findRevision);
+        return revisionIds.stream().map(this::findRevision).flatMap(Optional::stream).toList();
     }
 
     @Override

@@ -64,7 +64,7 @@ public class SessionExecutionAttemptService implements SessionExecutionProgressQ
         var planned = sessions.findSession(plannedSessionId).filter(session -> participant.equals(session.participantAccountId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "planned session not found"));
         if (planned.state() != PlannedSessionExecutionPort.SessionState.ASSIGNED) throw new ResponseStatusException(HttpStatus.CONFLICT, "planned session is not available for execution");
-        var revision = revisions.findActiveRevision(participant).filter(item -> item.revisionId().equals(planRevisionId))
+        var revision = revisions.findActiveRevisions(participant).stream().filter(item -> item.revisionId().equals(planRevisionId)).findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "plan revision is not active for participant"));
         var snapshot = revision.cycles().stream().flatMap(c -> c.microcycles().stream()).flatMap(m -> m.sessions().stream())
                 .filter(s -> s.id().equals(plannedSessionId)).findFirst()

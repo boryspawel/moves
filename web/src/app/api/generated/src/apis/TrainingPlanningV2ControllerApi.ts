@@ -105,7 +105,7 @@ export interface AddMicrocycleRequest {
   addMicrocycleCommand: AddMicrocycleCommand;
 }
 
-export interface AddSessionRequest {
+export interface AddSession1Request {
   revisionId: string;
   addSessionCommand: AddSessionCommand;
 }
@@ -404,20 +404,22 @@ export class TrainingPlanningV2ControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for addSession without sending the request
+   * Creates request options for addSession1 without sending the request
    */
-  async addSessionRequestOpts(requestParameters: AddSessionRequest): Promise<runtime.RequestOpts> {
+  async addSession1RequestOpts(
+    requestParameters: AddSession1Request,
+  ): Promise<runtime.RequestOpts> {
     if (requestParameters['revisionId'] == null) {
       throw new runtime.RequiredError(
         'revisionId',
-        'Required parameter "revisionId" was null or undefined when calling addSession().',
+        'Required parameter "revisionId" was null or undefined when calling addSession1().',
       );
     }
 
     if (requestParameters['addSessionCommand'] == null) {
       throw new runtime.RequiredError(
         'addSessionCommand',
-        'Required parameter "addSessionCommand" was null or undefined when calling addSession().',
+        'Required parameter "addSessionCommand" was null or undefined when calling addSession1().',
       );
     }
 
@@ -444,11 +446,11 @@ export class TrainingPlanningV2ControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async addSessionRaw(
-    requestParameters: AddSessionRequest,
+  async addSession1Raw(
+    requestParameters: AddSession1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<EditorView>> {
-    const requestOptions = await this.addSessionRequestOpts(requestParameters);
+    const requestOptions = await this.addSession1RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) => EditorViewFromJSON(jsonValue));
@@ -456,11 +458,11 @@ export class TrainingPlanningV2ControllerApi extends runtime.BaseAPI {
 
   /**
    */
-  async addSession(
-    requestParameters: AddSessionRequest,
+  async addSession1(
+    requestParameters: AddSession1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<EditorView> {
-    const response = await this.addSessionRaw(requestParameters, initOverrides);
+    const response = await this.addSession1Raw(requestParameters, initOverrides);
     return await response.value();
   }
 

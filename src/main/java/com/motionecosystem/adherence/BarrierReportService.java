@@ -95,8 +95,12 @@ public class BarrierReportService {
             if (!attempt.plannedSessionId().equals(command.plannedSessionId())) bad("attempt belongs to another session");
             revisionId = attempt.planRevisionId(); activeAttempt = attempt.active();
         } else {
-            revisionId = revisions.findActiveRevision(participant).map(PlanRevisionQueryPort.PlanRevisionSnapshot::revisionId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "no active plan revision"));
+            revisionId = revisions.findActiveRevisions(participant).stream()
+                    .filter(revision -> revision.cycles().stream().flatMap(cycle -> cycle.microcycles().stream())
+                            .flatMap(microcycle -> microcycle.sessions().stream())
+                            .anyMatch(session -> session.id().equals(command.plannedSessionId())))
+                    .map(PlanRevisionQueryPort.PlanRevisionSnapshot::revisionId)
+                    .findFirst().orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "planned session is not in an active plan revision"));
         }
         var revision = revisions.findRevision(revisionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "plan revision is unavailable"));

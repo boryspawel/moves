@@ -15,6 +15,12 @@ import com.motionecosystem.exercisesets.domain.ExerciseSetModel.*;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.Capability;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.Purpose;
+import com.motionecosystem.participant.api.ParticipantClientPort;
+import com.motionecosystem.audit.AuditRecorder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -23,8 +29,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service @RequiredArgsConstructor
 public class ExerciseSetService implements ExerciseSetVersionQueryPort {
-    private final ExerciseSetRepository sets; private final ExerciseSetVersionRepository versions; private final ExerciseSetAnalysisRunRepository analysisRuns; private final ExerciseSetAnatomyAnalysisRunRepository anatomyAnalysisRuns;
-    private final ExerciseCatalogQueryPort catalog; private final AnatomyReferenceQueryPort anatomyReference; private final CurrentAccountService accounts; private final Clock clock; private final ObjectMapper json;
+    private final ExerciseSetRepository sets; private final ExerciseSetVersionRepository versions; private final ExerciseSetVersionGrantRepository grants; private final ExerciseSetAnalysisRunRepository analysisRuns; private final ExerciseSetAnatomyAnalysisRunRepository anatomyAnalysisRuns;
+    private final ExerciseCatalogQueryPort catalog; private final AnatomyReferenceQueryPort anatomyReference; private final CurrentAccountService accounts; private final SpecialistAuthorizationPort authorization; private final ParticipantClientPort participants; private final AuditRecorder audit; private final Clock clock; private final ObjectMapper json;
 
     @Transactional public SetView create(String subject) {
         CurrentAccount actor = specialist(subject); Instant now=clock.instant();
@@ -54,6 +60,51 @@ public class ExerciseSetService implements ExerciseSetVersionQueryPort {
                                         item.profileSchemaVersion, strings(item.movementPatterns),
                                         strings(item.requiredEquipment)), queryDose(item.dose),
                                 item.participantInstruction, item.specialistInstruction)).toList())));
+    }
+
+    @Override @Transactional(readOnly=true)
+    public Optional<ExerciseSetVersionSnapshot> findAvailableToParticipant(UUID versionId, UUID participantId) {
+        if (versionId == null || participantId == null || !grants.existsByVersionIdAndParticipantIdAndRevokedAtIsNull(versionId, participantId)) return Optional.empty();
+        return findById(versionId).filter(snapshot -> VersionStatus.PUBLISHED.name().equals(snapshot.status()))
+                .map(this::participantSafeSnapshot);
+    }
+
+    @Transactional public void grant(String subject, UUID setId, UUID versionId, GrantRequest request) {
+        CurrentAccount actor = specialist(subject); owned(subject, setId);
+        var version = requireVersion(versionId, setId);
+        if (version.status != VersionStatus.PUBLISHED) throw bad("VERSION_NOT_PUBLISHED", "versionId", "only a published version can be granted");
+        authorization.requireCapabilities(actor.id(), request.participantId(), new ActingContext(request.actingRole()), Set.of(Capability.SHARE_EXERCISE_SETS), purpose(request.actingRole()));
+        var now = clock.instant();
+        var grant = grants.findByVersionIdAndParticipantId(versionId, request.participantId()).orElseGet(() -> {
+            var created = new ExerciseSetEntities.ExerciseSetVersionGrantEntity(); created.id = UUID.randomUUID(); created.versionId = versionId; created.participantId = request.participantId(); return created;
+        });
+        grant.grantedByAccountId = actor.id(); grant.grantedAt = now; grant.revokedByAccountId = null; grant.revokedAt = null;
+        grants.save(grant);
+        audit.record(subject, "EXERCISE_SET_VERSION_GRANTED", "ExerciseSetVersion", versionId);
+    }
+
+    @Transactional public void revoke(String subject, UUID setId, UUID versionId, UUID participantId) {
+        CurrentAccount actor = specialist(subject); owned(subject, setId); requireVersion(versionId, setId);
+        grants.findByVersionIdAndParticipantId(versionId, participantId).ifPresent(grant -> {
+            if (grant.revokedAt == null) { grant.revokedAt = clock.instant(); grant.revokedByAccountId = actor.id(); audit.record(subject, "EXERCISE_SET_VERSION_REVOKED", "ExerciseSetVersion", versionId); }
+        });
+    }
+
+    @Transactional(readOnly=true) public List<GrantRecipientView> grantRecipients(String subject, UUID setId, UUID versionId) {
+        owned(subject, setId); requireVersion(versionId, setId);
+        return grants.findByVersionIdOrderByGrantedAtDesc(versionId).stream().filter(grant -> grant.revokedAt == null)
+                .map(grant -> new GrantRecipientView(grant.participantId, participants.find(grant.participantId).map(ParticipantClientPort.ClientRecord::displayName).orElse(null), grant.grantedAt)).toList();
+    }
+
+    @Transactional(readOnly=true) public List<ParticipantLibraryEntry> participantLibrary(String subject) {
+        UUID participantId = participantId(subject);
+        return versions.findPublishedAvailableToParticipantId(participantId).stream().map(version -> new ParticipantLibraryEntry(version.exerciseSetId, version.id, version.versionNumber, version.title, version.profile, version.variantKind, version.publishedAt)).toList();
+    }
+
+    @Transactional(readOnly=true) public ParticipantVersionView participantVersion(String subject, UUID versionId) {
+        UUID participantId = participantId(subject);
+        var version = versions.findWithItemsById(versionId).filter(value -> value.status == VersionStatus.PUBLISHED && grants.existsByVersionIdAndParticipantIdAndRevokedAtIsNull(versionId, participantId)).orElseThrow(() -> notFound("VERSION_NOT_AVAILABLE", "exercise set version not available"));
+        return participantView(version);
     }
 
     @Transactional public VersionView updateMetadata(String subject, UUID setId, UUID versionId, MetadataRequest request) {
@@ -102,6 +153,8 @@ public class ExerciseSetService implements ExerciseSetVersionQueryPort {
     private static String side(Side side) { return side == null ? null : side.name(); }
     private VersionView flushedView(ExerciseSetEntities.ExerciseSetVersionEntity version) { version.updatedAt=clock.instant(); versions.flush(); return view(version); }
     private VersionView view(ExerciseSetEntities.ExerciseSetVersionEntity v){return new VersionView(v.id,v.exerciseSetId,v.versionNumber,v.status,v.profile,v.title,v.description,v.targetLevel,strings(v.tags),v.variantKind,v.variantOfVersionId,v.createdAt,v.publishedAt,v.retiredAt,v.version,v.items.stream().map(i->new ItemView(i.id,i.exerciseVersionId,i.phase,i.position,new ExerciseSetDtos.ExerciseSnapshot(i.canonicalName,i.exerciseVersionNumber,i.profileSchemaVersion,strings(i.movementPatterns),strings(i.requiredEquipment)),toDose(i.dose),i.participantInstruction,i.specialistInstruction)).toList(), storedRun(v.id).map(this::storedAnalysis).orElse(null));}
+    private ParticipantVersionView participantView(ExerciseSetEntities.ExerciseSetVersionEntity v){return new ParticipantVersionView(v.id,v.exerciseSetId,v.versionNumber,v.title,v.profile,v.description,v.targetLevel,strings(v.tags),v.variantKind,v.publishedAt,v.items.stream().map(i->new ParticipantItemView(i.id,i.exerciseVersionId,i.phase,i.position,new ExerciseSetDtos.ExerciseSnapshot(i.canonicalName,i.exerciseVersionNumber,i.profileSchemaVersion,strings(i.movementPatterns),strings(i.requiredEquipment)),toDose(i.dose),i.participantInstruction)).toList());}
+    private ExerciseSetVersionSnapshot participantSafeSnapshot(ExerciseSetVersionSnapshot snapshot) { return new ExerciseSetVersionSnapshot(snapshot.exerciseSetId(), snapshot.exerciseSetVersionId(), snapshot.versionNumber(), snapshot.status(), snapshot.ownerAccountId(), snapshot.title(), snapshot.profile(), snapshot.description(), snapshot.targetLevel(), snapshot.tags(), snapshot.createdAt(), snapshot.publishedAt(), snapshot.analysisJson(), snapshot.anatomyAnalysisJson(), snapshot.items().stream().map(item -> new ExerciseSetVersionQueryPort.ItemSnapshot(item.itemId(), item.exerciseVersionId(), item.position(), item.phase(), item.exercise(), item.dose(), item.participantInstruction(), null)).toList()); }
     private AnalysisView analyze(ExerciseSetEntities.ExerciseSetVersionEntity version, boolean draft) { var result=new ExerciseSetAnalyzer().analyze(version,draft); return new AnalysisView(result.status(),result.policyVersion(),result.analyzedLockVersion(),clock.instant(),result.draft(),result.published(),result.metrics(),result.findings()); }
     private AnatomyAnalysisView analyzeAnatomy(ExerciseSetEntities.ExerciseSetVersionEntity version, boolean draft) {
         var snapshots=new HashMap<UUID, ExerciseSetAnalyzer.ItemAnatomySnapshot>();
@@ -139,6 +192,8 @@ public class ExerciseSetService implements ExerciseSetVersionQueryPort {
     private int nextNumber(UUID setId){return Math.toIntExact(versions.countByExerciseSetId(setId)+1);}
     private void renumber(ExerciseSetEntities.ExerciseSetVersionEntity v){for(int i=0;i<v.items.size();i++)v.items.get(i).position=i+1;}
     private CurrentAccount specialist(String subject){var a=accounts.requireActive(subject);if(a.profileType()!=ProfileType.SPECIALIST)throw forbidden("SPECIALIST_REQUIRED","specialist profile is required");return a;}
+    private UUID participantId(String subject){var account=accounts.requireActive(subject);if(account.profileType()!=ProfileType.PARTICIPANT)throw forbidden("PARTICIPANT_REQUIRED","participant profile is required");return participants.findParticipantIdByPrincipalAccountId(account.id()).orElseThrow(()->forbidden("PARTICIPANT_IDENTITY_REQUIRED","participant identity is required"));}
+    private static Purpose purpose(SpecialistAuthorizationPort.ProfessionalRole role){return role == SpecialistAuthorizationPort.ProfessionalRole.PHYSIOTHERAPIST ? Purpose.FUNCTIONAL_RECOVERY : Purpose.PERFORMANCE_PLANNING;}
     private String json(Object value){try{return json.writeValueAsString(value);}catch(JacksonException e){throw new IllegalStateException(e);}}
     private List<String> strings(String value){try{return json.readValue(value,json.getTypeFactory().constructCollectionType(List.class,String.class));}catch(Exception e){throw new IllegalStateException("corrupt exercise set snapshot",e);}}
     private List<UUID> uuidList(String value){try{return json.readValue(value,json.getTypeFactory().constructCollectionType(List.class,UUID.class));}catch(Exception e){throw new IllegalStateException("corrupt analysis evidence",e);}}

@@ -43,6 +43,9 @@ import com.motionecosystem.exercisesets.domain.ExerciseSetModel.VersionStatus;
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
+import com.motionecosystem.participant.api.ParticipantClientPort;
+import com.motionecosystem.audit.AuditRecorder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -57,9 +60,13 @@ class ExerciseSetServiceTest {
     private ExerciseSetVersionRepository versions;
     private ExerciseSetAnalysisRunRepository analysisRuns;
     private ExerciseSetAnatomyAnalysisRunRepository anatomyAnalysisRuns;
+    private ExerciseSetVersionGrantRepository grants;
     private ExerciseCatalogQueryPort catalog;
     private AnatomyReferenceQueryPort anatomyReference;
     private ExerciseSetService service;
+    private CurrentAccountService accounts;
+    private SpecialistAuthorizationPort authorization;
+    private ParticipantClientPort participants;
     private ExerciseSetEntities.ExerciseSetEntity set;
     private ExerciseSetEntities.ExerciseSetVersionEntity draft;
 
@@ -69,11 +76,15 @@ class ExerciseSetServiceTest {
         versions = org.mockito.Mockito.mock(ExerciseSetVersionRepository.class);
         analysisRuns = org.mockito.Mockito.mock(ExerciseSetAnalysisRunRepository.class);
         anatomyAnalysisRuns = org.mockito.Mockito.mock(ExerciseSetAnatomyAnalysisRunRepository.class);
+        grants = org.mockito.Mockito.mock(ExerciseSetVersionGrantRepository.class);
         catalog = org.mockito.Mockito.mock(ExerciseCatalogQueryPort.class);
         anatomyReference = org.mockito.Mockito.mock(AnatomyReferenceQueryPort.class);
-        CurrentAccountService accounts = org.mockito.Mockito.mock(CurrentAccountService.class);
+        accounts = org.mockito.Mockito.mock(CurrentAccountService.class);
+        authorization = org.mockito.Mockito.mock(SpecialistAuthorizationPort.class);
+        participants = org.mockito.Mockito.mock(ParticipantClientPort.class);
         when(accounts.requireActive(SUBJECT)).thenReturn(new CurrentAccount(ownerId, SUBJECT, ProfileType.SPECIALIST));
-        service = new ExerciseSetService(sets, versions, analysisRuns, anatomyAnalysisRuns, catalog, anatomyReference, accounts,
+        service = new ExerciseSetService(sets, versions, grants, analysisRuns, anatomyAnalysisRuns, catalog, anatomyReference, accounts,
+                authorization, participants, org.mockito.Mockito.mock(AuditRecorder.class),
                 Clock.fixed(Instant.parse("2026-07-28T12:00:00Z"), ZoneOffset.UTC), new ObjectMapper());
         set = set();
         draft = version(draftId, VersionStatus.DRAFT, 1);
@@ -319,6 +330,65 @@ class ExerciseSetServiceTest {
     void refusesToReanalyzeHistoricalVersionWithoutStoredSnapshot() {
         draft.status = VersionStatus.RETIRED;
         assertProblem(() -> service.analysis(SUBJECT, setId, draftId), "ANALYSIS_NOT_AVAILABLE");
+    }
+
+    @Test
+    void grantsOnlyPublishedExactVersionAndDoesNotInheritToNewVersion() {
+        UUID participantId = UUID.randomUUID();
+        draft.status = VersionStatus.PUBLISHED;
+        var request = new com.motionecosystem.exercisesets.api.ExerciseSetDtos.GrantRequest(participantId, SpecialistAuthorizationPort.ProfessionalRole.TRAINER);
+
+        service.grant(SUBJECT, setId, draftId, request);
+
+        ArgumentCaptor<ExerciseSetEntities.ExerciseSetVersionGrantEntity> saved = ArgumentCaptor.forClass(ExerciseSetEntities.ExerciseSetVersionGrantEntity.class);
+        org.mockito.Mockito.verify(grants).save(saved.capture());
+        assertThat(saved.getValue().versionId).isEqualTo(draftId);
+        assertThat(saved.getValue().participantId).isEqualTo(participantId);
+        UUID newerVersion = UUID.randomUUID();
+        assertThat(service.findAvailableToParticipant(newerVersion, participantId)).isEmpty();
+    }
+
+    @Test
+    void participantAvailabilityUsesMappedParticipantIdentityAndRedactsSpecialistInstruction() {
+        UUID participantAccountId = UUID.randomUUID();
+        UUID participantId = UUID.randomUUID();
+        draft.status = VersionStatus.PUBLISHED;
+        var item = new ExerciseSetEntities.ExerciseSetItemEntity();
+        item.id = UUID.randomUUID(); item.exerciseVersionId = UUID.randomUUID(); item.phase = Phase.MAIN; item.position = 1;
+        item.canonicalName = "Squat"; item.exerciseVersionNumber = 1; item.profileSchemaVersion = 1; item.movementPatterns = "[]"; item.requiredEquipment = "[]";
+        item.participantInstruction = "keep knees aligned"; item.specialistInstruction = "private clinical cue"; item.dose = new ExerciseSetEntities.StrengthDoseEntity(); item.dose.sets = 3; item.dose.reps = 8;
+        draft.items.add(item);
+        when(accounts.requireActive("participant-subject")).thenReturn(new CurrentAccount(participantAccountId, "participant-subject", ProfileType.PARTICIPANT));
+        when(participants.findParticipantIdByPrincipalAccountId(participantAccountId)).thenReturn(Optional.of(participantId));
+        when(grants.existsByVersionIdAndParticipantIdAndRevokedAtIsNull(draftId, participantId)).thenReturn(true);
+
+        var preview = service.participantVersion("participant-subject", draftId);
+        var available = service.findAvailableToParticipant(draftId, participantId);
+
+        assertThat(preview.items()).singleElement().extracting(value -> value.participantInstruction()).isEqualTo("keep knees aligned");
+        assertThat(available).get().extracting(value -> value.items().getFirst().specialistInstruction()).isNull();
+    }
+
+    @Test
+    void revokedGrantIsNotAvailable() {
+        UUID participantId = UUID.randomUUID();
+        draft.status = VersionStatus.PUBLISHED;
+        when(grants.existsByVersionIdAndParticipantIdAndRevokedAtIsNull(draftId, participantId)).thenReturn(false);
+        assertThat(service.findAvailableToParticipant(draftId, participantId)).isEmpty();
+    }
+
+    @Test
+    void regrantReusesTheSameRowAndClearsRevocation() {
+        UUID participantId = UUID.randomUUID();
+        draft.status = VersionStatus.PUBLISHED;
+        var existing = new ExerciseSetEntities.ExerciseSetVersionGrantEntity(); existing.id = UUID.randomUUID(); existing.versionId = draftId; existing.participantId = participantId; existing.revokedAt = Instant.parse("2026-07-28T11:00:00Z");
+        when(grants.findByVersionIdAndParticipantId(draftId, participantId)).thenReturn(Optional.of(existing));
+
+        service.grant(SUBJECT, setId, draftId, new com.motionecosystem.exercisesets.api.ExerciseSetDtos.GrantRequest(participantId, SpecialistAuthorizationPort.ProfessionalRole.TRAINER));
+
+        assertThat(existing.id).isNotNull();
+        assertThat(existing.revokedAt).isNull();
+        assertThat(existing.grantedByAccountId).isEqualTo(ownerId);
     }
 
     private void readyPublishedDraft() {

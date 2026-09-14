@@ -42,4 +42,8 @@ describe('App', () => {
   it('exposes exercise sets navigation to specialists', () => {
     expect(shellTemplate).toMatch(/@if \(auth\.hasRole\('SPECIALIST'\)\) \{[\s\S]*routerLink="\/exercise-sets"[\s\S]*>Zestawy<\/a>/);
   });
+
+  it('exposes own plans navigation to participants beside their exercise sets', () => {
+    expect(shellTemplate).toMatch(/@if \(auth\.hasRole\('PARTICIPANT'\)\) \{[\s\S]*routerLink="\/my-exercise-sets"[\s\S]*routerLink="\/my-plans"[\s\S]*>Plany własne<\/a>/);
+  });
 });

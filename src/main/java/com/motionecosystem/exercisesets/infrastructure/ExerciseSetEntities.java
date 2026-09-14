@@ -21,7 +21,7 @@ static class ExerciseSetEntity {
     protected ExerciseSetEntity() { }
 }
 
-@Entity @Table(name="exercise_set_version", schema="exercise_set", uniqueConstraints=@UniqueConstraint(name="uq_exercise_set_version_number", columnNames={"exercise_set_id","version_number"}))
+@Entity(name="ExerciseSetVersion") @Table(name="exercise_set_version", schema="exercise_set", uniqueConstraints=@UniqueConstraint(name="uq_exercise_set_version_number", columnNames={"exercise_set_id","version_number"}))
 static class ExerciseSetVersionEntity {
     @Id UUID id; @Column(name="exercise_set_id", nullable=false) UUID exerciseSetId; @Column(name="version_number",nullable=false) int versionNumber;
     @Enumerated(EnumType.STRING) @Column(nullable=false) VersionStatus status;
@@ -33,6 +33,19 @@ static class ExerciseSetVersionEntity {
     @OneToOne(mappedBy="version", cascade=CascadeType.ALL, orphanRemoval=true, fetch=FetchType.LAZY) ExerciseSetAnalysisRunEntity analysisRun;
     @OneToOne(mappedBy="version", cascade=CascadeType.ALL, orphanRemoval=true, fetch=FetchType.LAZY) ExerciseSetAnatomyAnalysisRunEntity anatomyAnalysisRun;
     protected ExerciseSetVersionEntity() { }
+}
+
+@Entity(name="ExerciseSetVersionGrant") @Table(name="exercise_set_version_grant", schema="exercise_set", uniqueConstraints=@UniqueConstraint(name="uq_exercise_set_version_grant_recipient", columnNames={"exercise_set_version_id","participant_id"}))
+static class ExerciseSetVersionGrantEntity {
+    @Id UUID id;
+    @Column(name="exercise_set_version_id", nullable=false) UUID versionId;
+    @Column(name="participant_id", nullable=false) UUID participantId;
+    @Column(name="granted_by_account_id", nullable=false) UUID grantedByAccountId;
+    @Column(name="granted_at", nullable=false) Instant grantedAt;
+    @Column(name="revoked_by_account_id") UUID revokedByAccountId;
+    @Column(name="revoked_at") Instant revokedAt;
+    @Version long version;
+    protected ExerciseSetVersionGrantEntity() { }
 }
 
 @Entity @Table(name="exercise_set_analysis_run", schema="exercise_set")

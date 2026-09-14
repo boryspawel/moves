@@ -48,32 +48,34 @@ public class TodayAgendaService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "participant record not found"));
         Optional<ParticipantContextQueryPort.ParticipantRecordContext> participant = participants.findContextByParticipantId(participantId);
         if (participant.isEmpty()) {
-            return new TodayAgendaView(null, null, null, List.of(), "TIME_ZONE_REQUIRED", null);
+            return new TodayAgendaView(null, null, null, List.of(), List.of(), "TIME_ZONE_REQUIRED", null);
         }
         ZoneId timeZone = participant.get().timeZone();
         Instant now = clock.instant();
         LocalDate localDate = now.atZone(timeZone).toLocalDate();
-        Optional<PlanRevisionSnapshot> revision = revisions.findActiveRevision(participantId);
-        if (revision.isEmpty()) {
-            return new TodayAgendaView(timeZone.getId(), localDate, null, List.of(), "NO_ACTIVE_PLAN", recovery.current(subject));
+        List<PlanRevisionSnapshot> activeRevisions = revisions.findActiveRevisions(participantId);
+        if (activeRevisions.isEmpty()) {
+            return new TodayAgendaView(timeZone.getId(), localDate, null, List.of(), List.of(), "NO_ACTIVE_PLAN", recovery.current(subject));
         }
-        PlanRevisionSnapshot snapshot = revision.get();
-        List<SessionSnapshot> todaySessions = snapshot.cycles().stream()
-                .flatMap(cycle -> cycle.microcycles().stream())
-                .flatMap(microcycle -> microcycle.sessions().stream())
-                .filter(session -> belongsToLocalDay(session, localDate, timeZone)).toList();
-        List<UUID> sessionIds = todaySessions.stream().map(SessionSnapshot::id).toList();
+        PlanRevisionSnapshot primary = activeRevisions.getFirst();
+        List<RevisionSession> todaySessions = activeRevisions.stream()
+                .flatMap(revision -> revision.cycles().stream()
+                        .flatMap(cycle -> cycle.microcycles().stream())
+                        .flatMap(microcycle -> microcycle.sessions().stream())
+                        .map(session -> new RevisionSession(revision, session)))
+                .filter(item -> belongsToLocalDay(item.session(), localDate, timeZone)).toList();
+        List<UUID> sessionIds = todaySessions.stream().map(item -> item.session().id()).toList();
         var executionProgress = progress.findForSessions(participantId, sessionIds);
-        var safetyDecisions = safety.evaluateForSessions(participantId, snapshot.revisionId(), sessionIds, now);
         List<AgendaSessionView> sessions = todaySessions.stream()
-                .map(session -> toView(session, now, executionProgress.get(session.id()), safetyDecisions.get(session.id())))
+                .map(item -> toView(item.revision(), item.session(), now, executionProgress.get(item.session().id()),
+                        safety.evaluateForSessions(participantId, item.revision().revisionId(), List.of(item.session().id()), now).get(item.session().id())))
                 .sorted(Comparator.comparing(AgendaSessionView::sortAt)
                         .thenComparing(AgendaSessionView::title).thenComparing(AgendaSessionView::sessionId))
                 .toList();
         var recoveryView = recovery.current(subject);
-        if (recoveryView != null) sessions = sessions.stream().map(item -> new AgendaSessionView(item.sessionId(), item.title(), item.expectedDurationMinutes(), item.scheduledDate(), item.availableFrom(), item.availableTo(), item.executionState(), item.doseSummary(), item.safetyState(), "RECOVERY_REQUIRED", item.sortAt())).toList();
+        if (recoveryView != null) sessions = sessions.stream().map(item -> new AgendaSessionView(item.sessionId(), item.planRevisionId(), item.planId(), item.planTitle(), item.title(), item.expectedDurationMinutes(), item.scheduledDate(), item.availableFrom(), item.availableTo(), item.executionState(), item.doseSummary(), item.safetyState(), "RECOVERY_REQUIRED", item.sortAt())).toList();
         return new TodayAgendaView(timeZone.getId(), localDate,
-                new ActivePlanView(snapshot.planId(), snapshot.revisionId(), snapshot.revisionNumber()),
+                activePlan(primary), activeRevisions.stream().map(TodayAgendaService::activePlan).toList(),
                 sessions, sessions.isEmpty() ? "NO_SESSION_TODAY" : "READY", recoveryView);
     }
 
@@ -82,7 +84,7 @@ public class TodayAgendaService {
         return session.availableFrom() != null && session.availableFrom().atZone(zone).toLocalDate().equals(day);
     }
 
-    private static AgendaSessionView toView(SessionSnapshot session, Instant now,
+    private static AgendaSessionView toView(PlanRevisionSnapshot revision, SessionSnapshot session, Instant now,
             SessionExecutionProgressQueryPort.SessionExecutionProgress execution,
             SessionSafetyDecisionQueryPort.SessionSafetyDecision safetyDecision) {
         boolean inWindow = (session.availableFrom() == null || !now.isBefore(session.availableFrom()))
@@ -91,7 +93,7 @@ public class TodayAgendaService {
         String nextAction = isTerminal(status) ? "NONE" : safetyDecision.status() == SessionSafetyDecisionQueryPort.SafetyDecisionStatus.BLOCKED
                 ? "CONTACT_SPECIALIST" : (inWindow ? "START_SESSION" : "WAIT_FOR_WINDOW");
         Instant sortAt = session.availableFrom() == null ? Instant.MIN : session.availableFrom();
-        return new AgendaSessionView(session.id(), session.title(), session.expectedDurationMinutes(),
+        return new AgendaSessionView(session.id(), revision.revisionId(), revision.planId(), null, session.title(), session.expectedDurationMinutes(),
                 session.scheduledDate(), session.availableFrom(), session.availableTo(), status,
                 session.prescriptions().size() + " prescriptions", safetyDecision.status().name(), nextAction, sortAt);
     }
@@ -99,14 +101,21 @@ public class TodayAgendaService {
         return List.of("COMPLETED", "PARTIAL", "SKIPPED", "STOPPED").contains(status);
     }
 
+    private static ActivePlanView activePlan(PlanRevisionSnapshot revision) {
+        return new ActivePlanView(revision.planId(), revision.revisionId(), revision.revisionNumber());
+    }
+
+    private record RevisionSession(PlanRevisionSnapshot revision, SessionSnapshot session) { }
+
     public record TodayAgendaView(String timeZone, LocalDate localDate, ActivePlanView activePlan,
+                                  List<ActivePlanView> activePlans,
                                   List<AgendaSessionView> sessions, String state, RecoveryEpisodeService.RecoveryView recovery) {
-        public TodayAgendaView { sessions = List.copyOf(sessions); }
+        public TodayAgendaView { activePlans = List.copyOf(activePlans); sessions = List.copyOf(sessions); }
     }
 
     public record ActivePlanView(UUID planId, UUID revisionId, int revisionNumber) { }
 
-    public record AgendaSessionView(UUID sessionId, String title, int expectedDurationMinutes,
+    public record AgendaSessionView(UUID sessionId, UUID planRevisionId, UUID planId, String planTitle, String title, int expectedDurationMinutes,
                                     LocalDate scheduledDate, Instant availableFrom, Instant availableTo,
                                     String executionState, String doseSummary, String safetyState,
                                     String nextAction, Instant sortAt) { }

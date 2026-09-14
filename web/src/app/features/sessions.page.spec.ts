@@ -22,8 +22,9 @@ function input(fixture: { nativeElement: HTMLElement; detectChanges(): void }, n
 describe('SessionsPage safety and barriers', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
-    api.today.today.mockResolvedValue({ activePlan: { activeRevisionId: 'revision' }, sessions: [{ sessionId: 'session', title: 'Sesja' }] });
+    api.today.today.mockResolvedValue({ sessions: [{ sessionId: 'session', planRevisionId: 'revision', title: 'Sesja' }] });
     api.attempts.active.mockRejectedValue(new Error('no active attempt'));
+    api.attempts.start.mockResolvedValue({});
     api.safety.checkIn.mockResolvedValue({});
     await TestBed.configureTestingModule({
       imports: [SessionsPage],
@@ -70,7 +71,7 @@ describe('SessionsPage safety and barriers', () => {
 
   it('honours the route session selection before looking up its server attempt', async () => {
     TestBed.resetTestingModule();
-    api.today.today.mockResolvedValue({ activePlan: { activeRevisionId: 'revision' }, sessions: [{ sessionId: 'first' }, { sessionId: 'selected' }] });
+    api.today.today.mockResolvedValue({ sessions: [{ sessionId: 'first', planRevisionId: 'revision-first' }, { sessionId: 'selected', planRevisionId: 'revision-selected' }] });
     api.attempts.active.mockRejectedValue(new Error('none'));
     await TestBed.configureTestingModule({
       imports: [SessionsPage],
@@ -78,6 +79,15 @@ describe('SessionsPage safety and barriers', () => {
     }).compileComponents();
     const fixture = TestBed.createComponent(SessionsPage); fixture.detectChanges(); await settle(fixture);
     expect(api.attempts.active).toHaveBeenCalledWith({ plannedSessionId: 'selected' });
+  });
+
+  it('starts the selected session with its exact revision, not the legacy agenda revision', async () => {
+    api.today.today.mockResolvedValue({ activePlan: { activeRevisionId: 'legacy-revision' }, sessions: [{ sessionId: 'first', planRevisionId: 'revision-first' }, { sessionId: 'second', planRevisionId: 'revision-second' }] });
+    api.attempts.start.mockResolvedValue({ attemptId: 'attempt' }); api.attempts.get3.mockResolvedValue({ attemptId: 'attempt', state: 'STARTED', session: { prescriptions: [] } });
+    const fixture = TestBed.createComponent(SessionsPage); fixture.detectChanges(); await settle(fixture);
+    const page = fixture.componentInstance; page.choose((page.agenda()?.sessions || [])[1]!); page.stage.set('checkin');
+    await page.start();
+    expect(api.attempts.start).toHaveBeenCalledWith(expect.objectContaining({ startAttemptCommand: expect.objectContaining({ plannedSessionId: 'second', planRevisionId: 'revision-second' }) }));
   });
 
   it('sends ordered actual sets and records partial and skipped facts without skipped dose', async () => {
@@ -148,7 +158,7 @@ describe('SessionsPage safety and barriers', () => {
 
   it('shows a controlled not-found message for an invalid supplied session id', async () => {
     TestBed.resetTestingModule();
-    api.today.today.mockResolvedValue({ activePlan: { activeRevisionId: 'revision' }, sessions: [{ sessionId: 'other' }] });
+    api.today.today.mockResolvedValue({ sessions: [{ sessionId: 'other', planRevisionId: 'revision' }] });
     await TestBed.configureTestingModule({ imports: [SessionsPage], providers: [{ provide: ApiFacade, useValue: api }, { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => 'missing' } } } }, { provide: Router, useValue: { navigate: vi.fn() } }] }).compileComponents();
     const fixture = TestBed.createComponent(SessionsPage); fixture.detectChanges(); await settle(fixture);
     expect(fixture.componentInstance.today()).toBeNull(); expect(fixture.nativeElement.textContent).toContain('Nie znaleziono wybranej sesji.'); expect(api.attempts.active).not.toHaveBeenCalled();

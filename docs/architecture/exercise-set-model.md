@@ -57,6 +57,13 @@ klient TypeScript (w tym `ExerciseSetControllerApi` i modele dawek) oraz
 `api:refresh`/`api:verify`. Testy MockMvc/PostgreSQL/Testcontainers pokrywają pion
 create/read/update/publish oraz utrwalenie typowanych dawek.
 
+P5 adds an owner-only grant of one exact `PUBLISHED` version to a canonical
+`participantId`. Participant consumers receive only a redacted published snapshot through the
+provider port; a grant neither exposes drafts nor changes ownership. The established
+`SHARE_EXERCISE_SETS` verified-role and active-relationship capability remains the authorization
+boundary. Revocation and retirement block future planning use and activation but never rewrite
+materialized activated-revision or execution history.
+
 P1 wykorzystuje go jako źródło dokładnej wersji zestawu przy materializacji rewizji.
 P1 jest ukończone: `mvn verify` (242 testy), ArchUnit (14/14), Flyway/Hibernate,
 160 testów frontendu, build produkcyjny, `api:verify` i Compose smoke są zielone.

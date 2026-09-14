@@ -75,8 +75,18 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
         UUID participantId = command.participantId();
         PlanMode mode = command.mode();
         if (actor.profileType() == ProfileType.PARTICIPANT) {
-            throw new ResponseStatusException(HttpStatus.GONE,
-                    "new self-directed planning is historical-only; specialist authoring is required");
+            UUID ownParticipantId = participantIdFor(actor);
+            if (participantId != null && !ownParticipantId.equals(participantId)) {
+                throw forbidden("participant can create only their own training plan");
+            }
+            if (mode != null && mode != PlanMode.SELF_DIRECTED) {
+                throw forbidden("participant plans must be self-directed");
+            }
+            participantId = ownParticipantId;
+            mode = PlanMode.SELF_DIRECTED;
+            if (command.actingContext() != null) {
+                throw forbidden("participant self-directed planning does not accept an acting context");
+            }
         } else if (actor.profileType() == ProfileType.SPECIALIST) {
             if (participantId == null) {
                 throw badRequest("participantId is required");
@@ -184,10 +194,9 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
                     parent.startDate(), parent.endDate(), "session");
         }
         if (command.exerciseSetVersionId() == null) throw badRequest("exerciseSetVersionId is required");
-        var source = exerciseSetVersions.findById(command.exerciseSetVersionId())
+        var source = availableSource(access, command.exerciseSetVersionId())
                 .orElseThrow(() -> badRequest("exercise set version not found"));
         if (!"PUBLISHED".equals(source.status())) throw badRequest("exercise set version must be published");
-        if (!access.actor().id().equals(source.ownerAccountId())) throw forbidden("exercise set belongs to another specialist");
         UUID sessionId = UUID.randomUUID();
         var session = new TrainingPlanningModel.Session(sessionId, command.microcycleId(),
                 access.participantId(), text(command.title(), 160, "session title"), command.scheduledDate(),
@@ -222,11 +231,10 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
         if (sourceVersionId == null) throw badRequest("exerciseSetVersionId is required to replace a legacy session source");
         boolean sourceChanged = !sourceVersionId.equals(existing.sourceExerciseSetVersionId());
         ExerciseSetVersionQueryPort.ExerciseSetVersionSnapshot source = null;
-        if (sourceChanged) {
-            source = exerciseSetVersions.findById(sourceVersionId)
+        if (sourceChanged || "SELF_DIRECTED".equals(access.mode())) {
+            source = availableSource(access, sourceVersionId)
                     .orElseThrow(() -> badRequest("exercise set version not found"));
             if (!"PUBLISHED".equals(source.status())) throw badRequest("exercise set version must be published");
-            if (!access.actor().id().equals(source.ownerAccountId())) throw forbidden("exercise set belongs to another specialist");
         }
         var updated = new TrainingPlanningModel.Session(existing.id(), parent.id(), access.participantId(),
                 text(command.title(), 160, "session title"), command.scheduledDate(), command.availableFrom(),
@@ -382,7 +390,7 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
     private StructuralValidationView performStructuralValidation(
             String subject, UUID revisionId, Access access) {
         PlanRevisionSnapshot snapshot = requireSnapshot(revisionId);
-        List<String> violations = structuralViolations(snapshot);
+        List<String> violations = structuralViolations(snapshot, access);
         String checksum = checksum(snapshot);
         var validation = new TrainingPlanningModel.StructuralValidation(UUID.randomUUID(), revisionId,
                 snapshot.revisionVersion(), checksum, violations.isEmpty() ? ValidationResult.PASS : ValidationResult.FAIL,
@@ -433,7 +441,7 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
         }).toList();
     }
 
-    private List<String> structuralViolations(PlanRevisionSnapshot snapshot) {
+    private List<String> structuralViolations(PlanRevisionSnapshot snapshot, Access access) {
         java.util.ArrayList<String> violations = new java.util.ArrayList<>();
         if (snapshot.goals().isEmpty()) violations.add("GOAL_REQUIRED");
         for (var goal : snapshot.goals()) {
@@ -457,7 +465,7 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
                     if (session.sourceExerciseSetVersionId() == null) {
                         violations.add("LEGACY_EXERCISE_SET_SOURCE_REQUIRED:" + session.id());
                     } else {
-                        var source = exerciseSetVersions.findById(session.sourceExerciseSetVersionId()).orElse(null);
+                        var source = availableSource(access, session.sourceExerciseSetVersionId()).orElse(null);
                         if (source == null || !"PUBLISHED".equals(source.status())
                                 || !source.exerciseSetId().equals(session.sourceExerciseSetId())
                                 || !matchesMaterialization(session, source)) {
@@ -506,10 +514,7 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
     }
 
     private void requireOwnerForEdit(Access access) {
-        if ("SELF_DIRECTED".equals(access.mode())) {
-            throw new ResponseStatusException(HttpStatus.GONE,
-                    "self-directed plans are historical-only and cannot be authored or revised");
-        }
+        if ("SELF_DIRECTED".equals(access.mode()) && access.actor().profileType() == ProfileType.PARTICIPANT) return;
         if (!access.ownerAccountId().equals(access.actor().id())
                 && !access.collaborationScopes().contains("EDIT_DRAFT")) {
             throw forbidden("plan edit requires ownership or EDIT_DRAFT collaboration scope");
@@ -542,7 +547,10 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
     private ResourceAuthorization authorizeResource(CurrentAccount actor, UUID planId, UUID participantId,
                                                      UUID ownerId, String ownerCapability) {
         if (actor.profileType() == ProfileType.PARTICIPANT) {
-            if (!actor.id().equals(participantId)) throw forbidden("plan belongs to another participant");
+            if (!participantIdFor(actor).equals(participantId) || !actor.id().equals(ownerId)
+                    || !"PARTICIPANT_SELF_DIRECTED".equals(ownerCapability)) {
+                throw forbidden("participant can access only their owned self-directed plan");
+            }
             return new ResourceAuthorization(null, Set.of());
         }
         if (actor.profileType() == ProfileType.SPECIALIST) {
@@ -587,6 +595,27 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
     private UUID participantIdFor(CurrentAccount account) {
         return participants.findParticipantIdByPrincipalAccountId(account.id())
                 .orElseThrow(() -> forbidden("an active participant access link is required"));
+    }
+
+    private java.util.Optional<ExerciseSetVersionQueryPort.ExerciseSetVersionSnapshot> availableSource(
+            Access access, UUID versionId) {
+        if ("SELF_DIRECTED".equals(access.mode())) {
+            return exerciseSetVersions.findAvailableToParticipant(versionId, access.participantId());
+        }
+        return exerciseSetVersions.findById(versionId)
+                .filter(source -> access.actor().id().equals(source.ownerAccountId()));
+    }
+
+    @Transactional(readOnly = true)
+    public List<PlanListItem> ownParticipantPlans(String subject) {
+        CurrentAccount actor = accounts.requireActive(subject);
+        if (!actor.hasProfile(ProfileType.PARTICIPANT)) throw forbidden("participant profile is required");
+        UUID participantId = participantIdFor(actor);
+        return persistence.plansForParticipant(participantId).stream()
+                .filter(plan -> actor.id().equals(plan.ownerAccountId())
+                        && "SELF_DIRECTED".equals(plan.mode()))
+                .map(plan -> new PlanListItem(plan.planId(), plan.name(), plan.purpose(), plan.status(), plan.currentRevisionId()))
+                .toList();
     }
 
     static String checksum(PlanRevisionSnapshot snapshot) {

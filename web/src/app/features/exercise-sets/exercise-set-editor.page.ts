@@ -24,8 +24,11 @@ import type {
   MetadataRequestProfileEnum,
   VisualRegionExposure,
   VersionView,
+  GrantRecipientView,
+  ClientView,
 } from '../../api/generated/src';
 import { ApiFacade } from '../../core/api.facade';
+import { ResponseError } from '../../api/generated/src/runtime';
 import { ExercisePickerComponent, ExerciseSelection } from '../catalog/exercise-picker.component';
 import { DoseEditorComponent } from './dose-editor.component';
 import { BodyMapComponent } from '../anatomy/body-map.component';
@@ -101,6 +104,19 @@ const phases: ItemRequestPhaseEnum[] = ['PREPARATION', 'MAIN', 'ACCESSORY', 'COO
           Ktoś zmienił ten szkic.
           <button mat-button (click)="reloadAfterConflict()">Odśwież</button
           ><button mat-button (click)="cancelConflict()">Anuluj moje zmiany</button>
+        </section>
+      }
+      @if (canManageGrants()) {
+        <section class="sharing-panel" aria-labelledby="sharing-heading">
+          <h2 id="sharing-heading">Udostępnianie</h2>
+          @if (canGrant()) {
+            <label>Wyszukaj klienta<input [value]="clientSearch()" (input)="clientSearch.set($any($event.target).value)" placeholder="Nazwa klienta" /></label>
+            <label>Uczestnik<select [value]="selectedRecipient()" (change)="selectedRecipient.set($any($event.target).value)"><option value="">Wybierz uczestnika</option>@for (client of matchingClients(); track client.participantId) { <option [value]="client.participantId">{{ client.displayName }}</option> }</select></label>
+            <button mat-flat-button [disabled]="!selectedRecipient() || grantSaving()" (click)="grant()">Udostępnij wersję</button>
+          } @else { <p>Wycofana wersja nie może być dalej udostępniana.</p> }
+          @if (grantError()) { <p class="error" role="alert">{{ grantError() }}</p> }
+          <h3>Kto ma dostęp</h3>
+          @if (grantsLoading()) { <p role="status">Ładowanie dostępu…</p> } @else if (!grants().length) { <p>Nikt nie ma jeszcze dostępu.</p> } @else { <ul>@for (recipient of grants(); track recipient.participantId) { <li>{{ recipient.displayName || 'Uczestnik' }} @if (canRevoke() && recipient.participantId) { <button mat-button [disabled]="grantSaving()" (click)="revoke(recipient.participantId)">Cofnij dostęp</button> }</li> }</ul> }
         </section>
       }
       <div class="builder-layout">
@@ -202,7 +218,8 @@ const phases: ItemRequestPhaseEnum[] = ['PREPARATION', 'MAIN', 'ACCESSORY', 'COO
   </main>`,
 })
 export class ExerciseSetEditorPage {
-  private readonly api = inject(ApiFacade).exerciseSets;
+  private readonly apiFacade = inject(ApiFacade);
+  private readonly api = this.apiFacade.exerciseSets;
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -240,6 +257,14 @@ export class ExerciseSetEditorPage {
   readonly anatomyError = signal(false);
   readonly anatomyStale = signal(false);
   readonly anatomyGeometryCodes = signal<readonly string[]>([]);
+  readonly clients = signal<ClientView[]>([]);
+  readonly grants = signal<GrantRecipientView[]>([]);
+  readonly clientSearch = signal('');
+  readonly selectedRecipient = signal('');
+  readonly grantSaving = signal(false);
+  readonly grantsLoading = signal(false);
+  readonly grantError = signal('');
+  readonly actingRole = signal<'TRAINER' | 'PHYSIOTHERAPIST' | undefined>(undefined);
   readonly title = new FormControl('', { nonNullable: true });
   readonly profile = new FormControl<MetadataRequestProfileEnum | ''>('', { nonNullable: true });
   readonly description = new FormControl('', { nonNullable: true });
@@ -281,6 +306,7 @@ export class ExerciseSetEditorPage {
       const version = await this.api.version({ setId, versionId });
       this.acceptVersion(version, false);
       this.patchMetadata(version);
+      if (this.canManageGrants()) void this.loadSharing();
       this.announcement.set('Załadowano wersję zestawu.');
       if (version.status === 'PUBLISHED') {
         this.analysis.set(version.analysis);
@@ -295,6 +321,36 @@ export class ExerciseSetEditorPage {
       this.loading.set(false);
     }
   }
+  canManageGrants() { return this.version()?.status === 'PUBLISHED' || this.version()?.status === 'RETIRED'; }
+  canGrant() { return this.version()?.status === 'PUBLISHED'; }
+  canRevoke() { return this.canManageGrants(); }
+  matchingClients() { const query = this.clientSearch().trim().toLocaleLowerCase('pl-PL'); return this.clients().filter(client => !!client.participantId && (!query || client.displayName?.toLocaleLowerCase('pl-PL').includes(query))); }
+  private async loadSharing() {
+    const version = this.version();
+    if (!version?.exerciseSetId || !version.id || !this.canManageGrants()) return;
+    const specialistClients = this.apiFacade.specialistClients;
+    const onboarding = this.apiFacade.onboarding;
+    if (!specialistClients || !onboarding) return;
+    this.grantsLoading.set(true); this.grantError.set('');
+    try {
+      const [clients, recipients, state] = await Promise.all([specialistClients.list1(), this.api.grants({ setId: version.exerciseSetId, versionId: version.id }), onboarding.state()]);
+      this.clients.set(clients); this.grants.set(recipients);
+      const kind = state.profile?.specialistKind;
+      this.actingRole.set(kind === 'PHYSIOTHERAPIST' ? 'PHYSIOTHERAPIST' : kind === 'TRAINER' ? 'TRAINER' : undefined);
+    } catch (error) { this.grantError.set(this.grantMessage(error)); } finally { this.grantsLoading.set(false); }
+  }
+  async grant() {
+    const version = this.version(); const participantId = this.selectedRecipient(); const actingRole = this.actingRole();
+    if (!version?.exerciseSetId || !version.id || !participantId || !actingRole || !this.canGrant()) return;
+    this.grantSaving.set(true); this.grantError.set('');
+    try { await this.api.grant({ setId: version.exerciseSetId, versionId: version.id, grantRequest: { participantId, actingRole } }); this.selectedRecipient.set(''); await this.loadSharing(); this.announcement.set('Udostępniono opublikowaną wersję.'); } catch (error) { this.grantError.set(this.grantMessage(error)); } finally { this.grantSaving.set(false); }
+  }
+  async revoke(participantId: string) {
+    const version = this.version(); if (!version?.exerciseSetId || !version.id || !this.canRevoke()) return;
+    this.grantSaving.set(true); this.grantError.set('');
+    try { await this.api.revoke1({ setId: version.exerciseSetId, versionId: version.id, participantId }); await this.loadSharing(); this.announcement.set('Cofnięto dostęp do wersji.'); } catch (error) { this.grantError.set(this.grantMessage(error)); } finally { this.grantSaving.set(false); }
+  }
+  private grantMessage(error: unknown) { const status = error instanceof ResponseError ? error.response.status : undefined; return status === 403 ? 'Nie masz uprawnień do udostępniania tej wersji.' : status === 409 ? 'Stan wersji lub dostępu zmienił się. Odświeżono dane.' : 'Nie udało się zmienić dostępu. Spróbuj ponownie.'; }
   private acceptVersion(version: VersionView, reanalyze = true) {
     this.version.set(version);
     if (version.status === 'PUBLISHED') {

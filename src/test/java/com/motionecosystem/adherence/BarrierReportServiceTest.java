@@ -38,7 +38,7 @@ class BarrierReportServiceTest {
         AdherenceSpecialistSignalPort signals = mock(AdherenceSpecialistSignalPort.class);
         when(accounts.requireActive("participant")).thenReturn(new CurrentAccount(participant, "participant", ProfileType.PARTICIPANT));
         var snapshot = snapshot(participant, revision, session);
-        when(revisions.findActiveRevision(participant)).thenReturn(Optional.of(snapshot));
+        when(revisions.findActiveRevisions(participant)).thenReturn(List.of(snapshot));
         when(revisions.findRevision(revision)).thenReturn(Optional.of(snapshot));
         when(safety.evaluateForSessions(eq(participant), eq(revision), any(), any())).thenReturn(Map.of(session,
                 new SessionSafetyDecisionQueryPort.SessionSafetyDecision(session,

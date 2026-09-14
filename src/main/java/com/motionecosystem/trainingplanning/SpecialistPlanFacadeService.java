@@ -37,18 +37,32 @@ public class SpecialistPlanFacadeService {
     public EditorView create(String subject, UUID participantId, CreatePlanCommand command) {
         requireParticipant(participantId, command == null ? null : command.participantId());
         if (command.participantGoalId() == null) throw bad("participantGoalId is required");
-        EditorView editor = planning.createDraft(subject, new CreateDraftCommand(participantId, command.name(),
+        return prepare(subject, planning.createDraft(subject, new CreateDraftCommand(participantId, command.name(),
                 blankToDefault(command.purpose(), PURPOSE), PlanMode.SPECIALIST,
-                blankToDefault(command.phaseIntent(), PHASE), command.validFrom(), command.validTo(), command.actingContext()));
+                blankToDefault(command.phaseIntent(), PHASE), command.validFrom(), command.validTo(), command.actingContext())),
+                command.participantGoalId(), command.phaseIntent(), command.validFrom(), command.validTo());
+    }
+
+    @Transactional
+    public EditorView createOwn(String subject, OwnCreatePlanCommand command) {
+        if (command == null || command.participantGoalId() == null) throw bad("participantGoalId is required");
+        return prepare(subject, planning.createDraft(subject, new CreateDraftCommand(null, command.name(),
+                blankToDefault(command.purpose(), PURPOSE), PlanMode.SELF_DIRECTED,
+                blankToDefault(command.phaseIntent(), PHASE), command.validFrom(), command.validTo(), null)),
+                command.participantGoalId(), command.phaseIntent(), command.validFrom(), command.validTo());
+    }
+
+    private EditorView prepare(String subject, EditorView editor, UUID participantGoalId, String phaseIntent,
+                               LocalDate validFrom, LocalDate validTo) {
         editor = planning.addGoal(subject, editor.revision().revisionId(),
-                new AddGoalCommand(editor.revision().revisionVersion(), command.participantGoalId()));
+                new AddGoalCommand(editor.revision().revisionVersion(), participantGoalId));
         editor = planning.addCycle(subject, editor.revision().revisionId(), new AddCycleCommand(
-                editor.revision().revisionVersion(), 1, "Training period", command.validFrom(), command.validTo(),
-                blankToDefault(command.phaseIntent(), PHASE), PURPOSE));
+                editor.revision().revisionVersion(), 1, "Training period", validFrom, validTo,
+                blankToDefault(phaseIntent, PHASE), PURPOSE));
         UUID cycleId = editor.revision().cycles().getFirst().id();
         return planning.addMicrocycle(subject, editor.revision().revisionId(), new AddMicrocycleCommand(
-                editor.revision().revisionVersion(), cycleId, 1, "Training period", command.validFrom(), command.validTo(),
-                blankToDefault(command.phaseIntent(), PHASE), PURPOSE));
+                editor.revision().revisionVersion(), cycleId, 1, "Training period", validFrom, validTo,
+                blankToDefault(phaseIntent, PHASE), PURPOSE));
     }
 
     public List<PlanListItem> list(String subject, UUID participantId, ActingContext actingContext) {
@@ -77,7 +91,13 @@ public class SpecialistPlanFacadeService {
 
     @Transactional
     public EditorView addSession(String subject, UUID participantId, UUID planId, UUID revisionId, SessionCommand command) {
-        EditorView view = editor(subject, participantId, planId, revisionId);
+        editor(subject, participantId, planId, revisionId);
+        return addSession(subject, planId, revisionId, command);
+    }
+
+    @Transactional
+    public EditorView addSession(String subject, UUID planId, UUID revisionId, SessionCommand command) {
+        EditorView view = resource(subject, planId, revisionId);
         UUID microcycleId = selectMicrocycle(view, command.scheduledDate(), command.availableFrom());
         return planning.addSession(subject, revisionId, new AddSessionCommand(command.expectedVersion(), microcycleId,
                 command.title(), command.scheduledDate(), command.availableFrom(), command.availableTo(),
@@ -87,6 +107,12 @@ public class SpecialistPlanFacadeService {
     @Transactional
     public EditorView updateSession(String subject, UUID participantId, UUID planId, UUID revisionId, SessionUpdateCommand command) {
         editor(subject, participantId, planId, revisionId);
+        return updateSession(subject, planId, revisionId, command);
+    }
+
+    @Transactional
+    public EditorView updateSession(String subject, UUID planId, UUID revisionId, SessionUpdateCommand command) {
+        resource(subject, planId, revisionId);
         return planning.updateSession(subject, revisionId, new UpdateSessionCommand(command.expectedVersion(), command.sessionId(),
                 command.title(), command.scheduledDate(), command.availableFrom(), command.availableTo(),
                 command.expectedDurationMinutes(), command.exerciseSetVersionId()));
@@ -96,6 +122,12 @@ public class SpecialistPlanFacadeService {
     public EditorView deleteSession(String subject, UUID participantId, UUID planId, UUID revisionId,
                                     long expectedVersion, UUID sessionId) {
         editor(subject, participantId, planId, revisionId);
+        return deleteSession(subject, planId, revisionId, expectedVersion, sessionId);
+    }
+
+    @Transactional
+    public EditorView deleteSession(String subject, UUID planId, UUID revisionId, long expectedVersion, UUID sessionId) {
+        resource(subject, planId, revisionId);
         return planning.deleteSession(subject, revisionId, new DeleteSessionCommand(expectedVersion, sessionId));
     }
 
@@ -103,8 +135,20 @@ public class SpecialistPlanFacadeService {
     public EditorView updatePeriod(String subject, UUID participantId, UUID planId, UUID revisionId,
                                    PeriodCommand command) {
         editor(subject, participantId, planId, revisionId);
+        return updatePeriod(subject, planId, revisionId, command);
+    }
+
+    @Transactional
+    public EditorView updatePeriod(String subject, UUID planId, UUID revisionId, PeriodCommand command) {
+        resource(subject, planId, revisionId);
         return planning.updatePeriod(subject, revisionId,
                 new UpdatePeriodCommand(command.expectedVersion(), command.validFrom(), command.validTo()));
+    }
+
+    private EditorView resource(String subject, UUID planId, UUID revisionId) {
+        EditorView view = planning.editor(subject, revisionId);
+        if (!planId.equals(view.planId())) throw notFound();
+        return view;
     }
 
     private static UUID selectMicrocycle(EditorView view, LocalDate date, Instant availableFrom) {
@@ -130,6 +174,8 @@ public class SpecialistPlanFacadeService {
     public record CreatePlanCommand(UUID participantId, String name, String purpose, String phaseIntent,
                                     LocalDate validFrom, LocalDate validTo, UUID participantGoalId,
                                     ActingContext actingContext) { }
+    public record OwnCreatePlanCommand(String name, String purpose, String phaseIntent,
+                                       LocalDate validFrom, LocalDate validTo, UUID participantGoalId) { }
     public record SessionCommand(long expectedVersion, String title, LocalDate scheduledDate, Instant availableFrom,
                                  Instant availableTo, Integer expectedDurationMinutes, UUID exerciseSetVersionId) { }
     public record SessionUpdateCommand(long expectedVersion, UUID sessionId, String title, LocalDate scheduledDate,

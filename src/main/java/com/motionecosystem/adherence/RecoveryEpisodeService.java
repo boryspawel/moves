@@ -102,7 +102,7 @@ public class RecoveryEpisodeService implements SessionStartAuthorizationPort, Ex
         if (episode.version != aggregateVersion) throw stale(participant);
         RecoveryOffer offer = offers.findById(offerId).filter(item -> item.recoveryEpisodeId.equals(episode.id))
                 .orElseThrow(() -> stale(participant));
-        var active = revisions.findActiveRevision(participant).orElseThrow(() -> stale(participant));
+        var active = activeForEpisode(episode).orElseThrow(() -> stale(participant));
         if (!offer.planRevisionId.equals(active.revisionId()) || offer.staleAt != null) throw stale(participant);
         List<String> paths = offerOptions.findByRecoveryOfferIdOrderByOrdinal(offer.id).stream().map(item -> item.path).toList();
         if (path == null || !paths.contains(path)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "recovery path is not offered");
@@ -132,8 +132,12 @@ public class RecoveryEpisodeService implements SessionStartAuthorizationPort, Ex
                 || !("START_" + variant).equals(episode.selectedPath)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "select an offered recovery path before starting a session");
         }
-        var revision = revisions.findActiveRevision(participant)
+        var revision = activeForEpisode(episode)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "active plan is unavailable"));
+        if (revision.cycles().stream().flatMap(cycle -> cycle.microcycles().stream())
+                .flatMap(microcycle -> microcycle.sessions().stream()).noneMatch(session -> session.id().equals(sessionId))) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "recovery target does not belong to the active plan");
+        }
         var safetyDecision = safety.evaluateForSessions(participant, revision.revisionId(), List.of(sessionId), clock.instant()).get(sessionId);
         if (safetyDecision == null || safetyDecision.status() != SessionSafetyDecisionQueryPort.SafetyDecisionStatus.ALLOWED) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "recovery start requires a current allowed safety assessment");
@@ -165,7 +169,7 @@ public class RecoveryEpisodeService implements SessionStartAuthorizationPort, Ex
         var current = episodes.findFirstByParticipantAccountIdAndStatusInOrderByOpenedAtDesc(participant, ACTIVE);
         if (current.isEmpty()) return null;
         RecoveryEpisode episode = current.get();
-        var active = revisions.findActiveRevision(participant).orElse(null);
+        var active = activeForEpisode(episode).orElse(null);
         if (active == null) return new RecoveryView(episode.id, episode.status, "RECOVERY_PLAN_REQUIRED", episode.policyVersionCode,
                 episode.openedAt, episode.gapDays, null, null, List.of(), episode.selectedPath, null, episode.version);
         UUID target = targetSession(active);
@@ -181,7 +185,7 @@ public class RecoveryEpisodeService implements SessionStartAuthorizationPort, Ex
     }
 
     private void ensureOffer(RecoveryEpisode episode) {
-        var active = revisions.findActiveRevision(episode.participantAccountId).orElse(null);
+        var active = activeForEpisode(episode).orElse(null);
         if (active == null) return;
         UUID target = targetSession(active);
         var decision = safety.evaluateForSessions(episode.participantAccountId, active.revisionId(), List.of(target), clock.instant()).get(target);
@@ -214,6 +218,11 @@ public class RecoveryEpisodeService implements SessionStartAuthorizationPort, Ex
         return revision.cycles().stream().flatMap(c -> c.microcycles().stream()).flatMap(m -> m.sessions().stream())
                 .map(PlanRevisionQueryPort.SessionSnapshot::id).findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "active plan has no session"));
+    }
+    private java.util.Optional<PlanRevisionQueryPort.PlanRevisionSnapshot> activeForEpisode(RecoveryEpisode episode) {
+        return revisions.findRevision(episode.planRevisionIdAtOpening)
+                .flatMap(opening -> revisions.findActiveRevisions(episode.participantAccountId).stream()
+                        .filter(active -> active.planId().equals(opening.planId())).findFirst());
     }
     private UUID participant(String subject) {
         var account = accounts.requireActive(subject);

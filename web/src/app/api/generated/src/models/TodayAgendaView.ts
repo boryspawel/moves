@@ -49,6 +49,12 @@ export interface TodayAgendaView {
   activePlan?: ActivePlanView;
   /**
    *
+   * @type {Array<ActivePlanView>}
+   * @memberof TodayAgendaView
+   */
+  activePlans?: Array<ActivePlanView>;
+  /**
+   *
    * @type {Date}
    * @memberof TodayAgendaView
    */
@@ -99,6 +105,10 @@ export function TodayAgendaViewFromJSONTyped(
   }
   return {
     activePlan: json['activePlan'] == null ? undefined : ActivePlanViewFromJSON(json['activePlan']),
+    activePlans:
+      json['activePlans'] == null
+        ? undefined
+        : (json['activePlans'] as Array<any>).map(ActivePlanViewFromJSON),
     localDate: json['localDate'] == null ? undefined : new Date(json['localDate']),
     recovery: json['recovery'] == null ? undefined : RecoveryViewFromJSON(json['recovery']),
     sessions:
@@ -124,6 +134,10 @@ export function TodayAgendaViewToJSONTyped(
 
   return {
     activePlan: ActivePlanViewToJSON(value['activePlan']),
+    activePlans:
+      value['activePlans'] == null
+        ? undefined
+        : (value['activePlans'] as Array<any>).map(ActivePlanViewToJSON),
     localDate:
       value['localDate'] == null
         ? value['localDate']

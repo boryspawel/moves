@@ -22,6 +22,15 @@ public final class ExerciseSetDtos {
     public record MoveRequest(@NotNull UUID itemId, int targetPosition, long expectedVersion) { }
     public record PublishRequest(@NotNull @PositiveOrZero Long expectedVersion) { }
     public record CreateVariantRequest(@NotNull VariantKind variantKind) { }
+    public record GrantRequest(@NotNull UUID participantId, @NotNull com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole actingRole) { }
+    public record GrantRecipientView(UUID participantId, String displayName, Instant grantedAt) { }
+    public record ParticipantLibraryEntry(UUID exerciseSetId, UUID versionId, int versionNumber, String title, SetProfile profile, VariantKind variantKind, Instant publishedAt) { }
+    /** Participant projection deliberately excludes specialist instructions and editorial metadata. */
+    public record ParticipantVersionView(UUID id, UUID exerciseSetId, int versionNumber, String title, SetProfile profile,
+                                         String description, String targetLevel, List<String> tags, VariantKind variantKind,
+                                         Instant publishedAt, List<ParticipantItemView> items) { }
+    public record ParticipantItemView(UUID id, UUID exerciseVersionId, Phase phase, int position, ExerciseSnapshot snapshot,
+                                      Dose dose, String participantInstruction) { }
     @Schema(
             discriminatorProperty = "type",
             discriminatorMapping = {

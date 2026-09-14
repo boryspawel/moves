@@ -12,6 +12,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public interface ExerciseSetVersionQueryPort {
     Optional<ExerciseSetVersionSnapshot> findById(UUID exerciseSetVersionId);
 
+    /** Availability-gated exact snapshot for future participant-scoped consumers. */
+    Optional<ExerciseSetVersionSnapshot> findAvailableToParticipant(UUID exerciseSetVersionId, UUID participantId);
+
     record ExerciseSetVersionSnapshot(UUID exerciseSetId, UUID exerciseSetVersionId, int versionNumber,
                                       String status, UUID ownerAccountId, String title, String profile,
                                       String description, String targetLevel, List<String> tags,

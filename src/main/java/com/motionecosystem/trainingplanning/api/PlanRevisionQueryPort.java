@@ -15,6 +15,9 @@ public interface PlanRevisionQueryPort {
 
     Optional<PlanRevisionSnapshot> findActiveRevision(UUID participantId);
 
+    /** All current active plan revisions for a participant, in deterministic compatibility-primary order. */
+    List<PlanRevisionSnapshot> findActiveRevisions(UUID participantId);
+
     /** Bounded owner-side history lookup for consumers composing participant timelines. */
     List<PlanRevisionSnapshot> findRevisions(Collection<UUID> revisionIds);
 

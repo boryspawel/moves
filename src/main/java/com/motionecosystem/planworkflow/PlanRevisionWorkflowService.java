@@ -69,10 +69,9 @@ public class PlanRevisionWorkflowService {
             throw badRequest("expected draft version is required");
         }
         WorkflowState state = requireState(revisionId);
-        rejectLegacySelfDirectedAuthoring(state);
         CurrentAccount actor = authorize(subject, state, command.actingContext(), true);
         PlanRevisionSnapshot revision = requireRevision(revisionId);
-        requireCurrentSources(revision);
+        requireCurrentSources(revision, state);
         String checksum = contentChecksum(revision);
         var structural = planning.validateForWorkflow(subject, revisionId, command.expectedVersion());
         if (!structural.passed()) {
@@ -152,10 +151,9 @@ public class PlanRevisionWorkflowService {
             return mutate(() -> persistence.activate(
                     revisionId, state.validationChecksum(), key, actor.id(), clock.instant()));
         }
-        rejectLegacySelfDirectedAuthoring(state);
         CurrentAccount actor = authorize(subject, state, command.actingContext(), true);
         PlanRevisionSnapshot revision = requireRevision(revisionId);
-        requireCurrentSources(revision);
+        requireCurrentSources(revision, state);
         String checksum = contentChecksum(revision);
         if (!checksum.equals(state.validationChecksum())) {
             throw conflict("revision changed after validation");
@@ -222,8 +220,11 @@ public class PlanRevisionWorkflowService {
     private CurrentAccount authorize(
             String subject, WorkflowState state, ActingContext context, boolean planningCapability) {
         CurrentAccount actor = accounts.requireActive(subject);
-        if (actor.hasProfile(ProfileType.PARTICIPANT) && actor.id().equals(state.participantId())) {
-            if (!actor.id().equals(state.ownerId()) || !"SELF_DIRECTED".equals(state.mode())) {
+        if (actor.hasProfile(ProfileType.PARTICIPANT)) {
+            UUID participantId = participants.findParticipantIdByPrincipalAccountId(actor.id())
+                    .orElseThrow(() -> forbidden("an active participant access link is required"));
+            if (!participantId.equals(state.participantId()) || !actor.id().equals(state.ownerId())
+                    || !"SELF_DIRECTED".equals(state.mode())) {
                 throw forbidden("participant can manage only their owned self-directed plan");
             }
             return actor;
@@ -245,13 +246,6 @@ public class PlanRevisionWorkflowService {
             throw forbidden("only the plan owner can run its workflow");
         }
         return actor;
-    }
-
-    private static void rejectLegacySelfDirectedAuthoring(WorkflowState state) {
-        if ("SELF_DIRECTED".equals(state.mode())) {
-            throw new ResponseStatusException(HttpStatus.GONE,
-                    "self-directed plans are historical-only and cannot be validated or activated");
-        }
     }
 
     private AssessmentSnapshot requireAssessment(WorkflowState state) {
@@ -277,7 +271,7 @@ public class PlanRevisionWorkflowService {
     }
 
     /** Draft/ready revisions are revalidated against sources; active history is never reinterpreted. */
-    private void requireCurrentSources(PlanRevisionSnapshot revision) {
+    private void requireCurrentSources(PlanRevisionSnapshot revision, WorkflowState state) {
         for (var goal : revision.goals()) {
             if (goal.sourceParticipantGoalId() == null) {
                 throw conflict("legacy goal snapshot has no participant-goal source; replace it before activation");
@@ -292,7 +286,9 @@ public class PlanRevisionWorkflowService {
             if (session.sourceExerciseSetVersionId() == null) {
                 throw conflict("legacy session has no exercise-set-version source; replace it before activation");
             }
-            var current = exerciseSetVersions.findById(session.sourceExerciseSetVersionId()).orElse(null);
+            var current = "SELF_DIRECTED".equals(state.mode())
+                    ? exerciseSetVersions.findAvailableToParticipant(session.sourceExerciseSetVersionId(), state.participantId()).orElse(null)
+                    : exerciseSetVersions.findById(session.sourceExerciseSetVersionId()).orElse(null);
             if (current == null || !"PUBLISHED".equals(current.status())
                     || !current.exerciseSetId().equals(session.sourceExerciseSetId())
                     || session.sourceSnapshot() == null || !matchesMaterialization(session, current)) {
