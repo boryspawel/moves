@@ -48,6 +48,18 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+participant-invitation:
+  delivery:
+    # SMTP delivery is opt-in. Without a configured provider, issuing an invitation fails closed.
+    enabled: ${PARTICIPANT_INVITATION_DELIVERY_ENABLED:false}
+    sender: ${PARTICIPANT_INVITATION_DELIVERY_SENDER:}
+    frontend-base-url: ${PARTICIPANT_INVITATION_DELIVERY_FRONTEND_BASE_URL:}
+    smtp-host: ${PARTICIPANT_INVITATION_DELIVERY_SMTP_HOST:}
+    smtp-port: ${PARTICIPANT_INVITATION_DELIVERY_SMTP_PORT:0}
+    connect-timeout: ${PARTICIPANT_INVITATION_DELIVERY_CONNECT_TIMEOUT:5s}
+    read-timeout: ${PARTICIPANT_INVITATION_DELIVERY_READ_TIMEOUT:5s}
+    write-timeout: ${PARTICIPANT_INVITATION_DELIVERY_WRITE_TIMEOUT:5s}
+
 exercise-import:
   artifacts:
     directory: ${EXERCISE_IMPORT_ARTIFACT_DIR:./data/exercise-import}

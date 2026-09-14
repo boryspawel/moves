@@ -27,6 +27,8 @@ flow; each resulting goal keeps an immutable outcome snapshot rather than a live
 Details and boundaries are in [participant goals](../architecture/participant-goals.md) and
 [ADR-018](../adr/ADR-018-participant-goal-ownership.md).
 
+Participant invitation claim and self-service read access use an expiring hashed invitation and an HttpOnly claim-context cookie. The Angular claim route strips an invitation fragment before Keycloak initialization, stores no token, and exposes only deliberate claim confirmation plus readonly own goals, execution history and saved revision snapshots.
+
 P1 integrates goals with revision snapshots: commands accept `participantGoalId`, verify participant
 ownership and specialist category, then persist source ID/version, metadata and outcomes. Source changes
 never rewrite an activated revision. Legacy planning-goal rows without a proven canonical source remain

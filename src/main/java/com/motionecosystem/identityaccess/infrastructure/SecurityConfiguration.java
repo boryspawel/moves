@@ -15,6 +15,10 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import java.util.List;
 
 @Configuration(proxyBeanMethods = false)
 @EnableMethodSecurity
@@ -22,21 +26,46 @@ class SecurityConfiguration {
 
     @Bean
     SecurityFilterChain apiSecurity(HttpSecurity http,
-                                    JwtAuthenticationConverter authenticationConverter) throws Exception {
+                                    JwtAuthenticationConverter authenticationConverter,
+                                    CorsConfigurationSource corsConfigurationSource) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 "/actuator/health/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
-                                "/swagger-ui/**")
+                                "/swagger-ui/**",
+                                "/api/v1/participant-access/context")
                         .permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt ->
                         jwt.jwtAuthenticationConverter(authenticationConverter)))
                 .build();
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource(@Value("${participant-access.trusted-frontend-url:https://localhost:4200}") String trustedFrontendUrl) {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of(normalizedOrigin(trustedFrontendUrl)));
+        config.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/v1/participant-access/**", config);
+        return source;
+    }
+
+    private static String normalizedOrigin(String configured) {
+        java.net.URI uri = java.net.URI.create(configured);
+        if (uri.getScheme() == null || uri.getHost() == null || uri.getUserInfo() != null
+                || (uri.getPath() != null && !uri.getPath().isBlank() && !"/".equals(uri.getPath()))
+                || uri.getQuery() != null || uri.getFragment() != null) {
+            throw new IllegalStateException("participant-access.trusted-frontend-url must be an origin");
+        }
+        return uri.getScheme() + "://" + uri.getHost() + (uri.getPort() < 0 ? "" : ":" + uri.getPort());
     }
 
     @Bean

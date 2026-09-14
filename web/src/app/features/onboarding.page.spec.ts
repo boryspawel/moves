@@ -2,11 +2,12 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { ApiFacade } from '../core/api.facade';
+import { OnboardingStateService } from '../core/onboarding-state.service';
 import { OnboardingPage, timeRangeValidator } from './onboarding.page';
 import { FormControl, FormGroup } from '@angular/forms';
 
 const api = {
-  state: vi.fn(), selectProfileType: vi.fn(), legal: vi.fn(), participantProfile: vi.fn(), specialistProfile: vi.fn(), availability: vi.fn()
+  state: vi.fn(), selectProfileType: vi.fn(), legal: vi.fn(), participantProfile: vi.fn(), specialistProfile: vi.fn(), availability: vi.fn(), participantAccess: { readParticipantAccessClaimContext: vi.fn() }
 };
 const route = { snapshot: { queryParamMap: convertToParamMap({}) } };
 
@@ -21,7 +22,7 @@ describe('OnboardingPage', () => {
     vi.clearAllMocks();
     route.snapshot.queryParamMap = convertToParamMap({});
     api.state.mockResolvedValue({ stage: 'PROFILE_TYPE_REQUIRED', missingSteps: ['PROFILE_TYPE'] });
-    await TestBed.configureTestingModule({ imports: [OnboardingPage], providers: [provideRouter([]), { provide: ActivatedRoute, useValue: route }, { provide: ApiFacade, useValue: { onboarding: api } }] }).compileComponents();
+    await TestBed.configureTestingModule({ imports: [OnboardingPage], providers: [provideRouter([]), { provide: ActivatedRoute, useValue: route }, { provide: ApiFacade, useValue: { onboarding: api, participantAccess: api.participantAccess } }, { provide: OnboardingStateService, useValue: { get: (...args: unknown[]) => api.state(...args), set: vi.fn() } }] }).compileComponents();
   });
 
   it('shows only loading content until the initial state resolves', () => {
@@ -96,6 +97,14 @@ describe('OnboardingPage', () => {
     api.state.mockResolvedValue({ stage: 'READY', missingSteps: [] });
     const fixture = TestBed.createComponent(OnboardingPage); fixture.detectChanges(); await settle(fixture);
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Konto gotowe');
+  });
+
+  it('returns to the claim route from a recreated ready participant onboarding when the server cookie context is pending', async () => {
+    api.state.mockResolvedValue({ stage: 'READY', profileType: 'PARTICIPANT' }); api.participantAccess.readParticipantAccessClaimContext.mockResolvedValue({ status: 'PENDING' });
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    const fixture = TestBed.createComponent(OnboardingPage); fixture.detectChanges(); await settle(fixture);
+    await (fixture.componentInstance as any).continueFromCompletion(); await settle(fixture);
+    expect(api.participantAccess.readParticipantAccessClaimContext).toHaveBeenCalledWith({}, { credentials: 'include' }); expect(navigate).toHaveBeenCalledWith('/participant/claim');
   });
 
   it('edits prefilled availability for a ready account and returns to the validated selected date after saving', async () => {

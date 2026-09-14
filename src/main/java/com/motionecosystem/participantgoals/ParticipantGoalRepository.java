@@ -10,4 +10,5 @@ interface ParticipantGoalRepository extends JpaRepository<ParticipantGoal, UUID>
     List<ParticipantGoal> findForSpecialistParticipant(@Param("specialistId") UUID specialistId, @Param("participantId") UUID participantId);
     Optional<ParticipantGoal> findByIdAndSpecialistAccountIdAndParticipantId(UUID id, UUID specialistId, UUID participantId);
     List<ParticipantGoal> findByParticipantIdAndStatus(UUID participantId, ParticipantGoal.Status status);
+    List<ParticipantGoal> findByParticipantIdOrderByCreatedAtDesc(UUID participantId);
 }

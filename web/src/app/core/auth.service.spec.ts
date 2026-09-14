@@ -5,6 +5,7 @@ import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 import { rootLandingGuard } from './onboarding.guards';
 import { OnboardingStateService } from './onboarding-state.service';
+import { ParticipantClaimBootstrapService } from './participant-claim-bootstrap.service';
 
 const keycloakClient = vi.hoisted(() => ({
   init: vi.fn(),
@@ -62,5 +63,16 @@ describe('AuthService', () => {
     const result = await TestBed.runInInjectionContext(() => rootLandingGuard({} as never, {} as never));
 
     expect(TestBed.inject(Router).serializeUrl(result as ReturnType<Router['createUrlTree']>)).toBe('/specialist/today');
+  });
+
+  it('waits for invitation bootstrap before Keycloak initialization', async () => {
+    let release!: () => void;
+    const consumeInvitationFragment = vi.fn(() => new Promise<void>(resolve => { release = resolve; }));
+    await TestBed.configureTestingModule({ providers: [{ provide: ParticipantClaimBootstrapService, useValue: { consumeInvitationFragment } }] }).compileComponents();
+    const pending = TestBed.inject(AuthService).initialize();
+    expect(consumeInvitationFragment).toHaveBeenCalledOnce();
+    expect(keycloakClient.init).not.toHaveBeenCalled();
+    release(); await pending;
+    expect(keycloakClient.init).toHaveBeenCalledOnce();
   });
 });

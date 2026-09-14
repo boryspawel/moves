@@ -2,14 +2,33 @@
   "realm": "motion-local",
   "enabled": true,
   "registrationAllowed": true,
+  "verifyEmail": true,
+  "smtpServer": {
+    "host": "mailpit",
+    "port": "1025",
+    "from": "noreply@motion.local",
+    "fromDisplayName": "Motion Local",
+    "ssl": "false",
+    "starttls": "false",
+    "auth": "false"
+  },
   "roles": {
     "realm": [
+      {
+        "name": "default-roles-motion-local",
+        "description": "${role_default-roles}",
+        "composite": true,
+        "composites": { "realm": ["offline_access", "uma_authorization", "PARTICIPANT"] }
+      },
+      { "name": "offline_access", "description": "${role_offline-access}", "composite": false, "clientRole": false },
+      { "name": "uma_authorization", "description": "${role_uma_authorization}", "composite": false, "clientRole": false },
       { "name": "PARTICIPANT" },
       { "name": "SPECIALIST" },
       { "name": "CONTENT_ADMIN" },
       { "name": "SYSTEM_ADMIN" }
     ]
   },
+  "defaultRoles": ["default-roles-motion-local", "offline_access", "uma_authorization"],
   "clients": [
     {
       "clientId": "motion-web",
@@ -20,8 +39,8 @@
       "directAccessGrantsEnabled": false,
       "redirectUris": ["http://localhost:4200/*"],
       "webOrigins": ["http://localhost:4200"],
-      "adminUrl": "http://localhost:4200",
       "attributes": { "pkce.code.challenge.method": "S256" },
+      "defaultClientScopes": ["web-origins", "acr", "roles", "profile", "email", "motion-email-verified"],
       "protocolMappers": [
         {
           "name": "motion-api-audience",
@@ -33,6 +52,29 @@
             "id.token.claim": "false",
             "access.token.claim": "true"
           }
+        }
+      ]
+    }
+  ],
+  "clientScopes": [
+    {
+      "name": "motion-email-verified",
+      "protocol": "openid-connect",
+      "attributes": { "include.in.token.scope": "false", "display.on.consent.screen": "false" },
+      "protocolMappers": [
+        {
+          "name": "email",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": { "user.attribute": "email", "claim.name": "email", "jsonType.label": "String", "access.token.claim": "true", "id.token.claim": "true", "userinfo.token.claim": "true" }
+        },
+        {
+          "name": "email-verified",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": { "user.attribute": "emailVerified", "claim.name": "email_verified", "jsonType.label": "boolean", "access.token.claim": "true", "id.token.claim": "true", "userinfo.token.claim": "true" }
         }
       ]
     }

@@ -283,6 +283,8 @@ class TrainingPlanningV2IntegrationTest {
                 new ValidateWorkflowCommand(version(editor), new ActingContext(ProfessionalRole.TRAINER)));
         assertThat(validated.status()).isEqualTo("READY");
         workflow.activate("planning-specialist", revisionId, "facade-activation", new ActivateWorkflowCommand(new ActingContext(ProfessionalRole.TRAINER)));
+        assertThat(planning.participantRevision("facade-participant-account", revisionId).revisionId()).isEqualTo(revisionId);
+        assertStatus(HttpStatus.FORBIDDEN, () -> planning.participantRevision("other-planning-participant", revisionId));
         assertThat(clients.get("planning-specialist", canonicalParticipantId).activePlan())
                 .extracting(SpecialistClientService.ClientActivePlanView::revisionId)
                 .isEqualTo(revisionId);

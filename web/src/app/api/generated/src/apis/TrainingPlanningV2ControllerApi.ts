@@ -65,6 +65,11 @@ import {
 } from '../models/DeleteSessionCommand';
 import { type EditorView, EditorViewFromJSON, EditorViewToJSON } from '../models/EditorView';
 import {
+  type PlanRevisionSnapshot,
+  PlanRevisionSnapshotFromJSON,
+  PlanRevisionSnapshotToJSON,
+} from '../models/PlanRevisionSnapshot';
+import {
   type RevisionHistoryItem,
   RevisionHistoryItemFromJSON,
   RevisionHistoryItemToJSON,
@@ -130,6 +135,10 @@ export interface DeleteSessionRequest {
 }
 
 export interface EditorRequest {
+  revisionId: string;
+}
+
+export interface GetOwnTrainingPlanRevisionRequest {
   revisionId: string;
 }
 
@@ -804,6 +813,61 @@ export class TrainingPlanningV2ControllerApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<EditorView> {
     const response = await this.editorRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for getOwnTrainingPlanRevision without sending the request
+   */
+  async getOwnTrainingPlanRevisionRequestOpts(
+    requestParameters: GetOwnTrainingPlanRevisionRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['revisionId'] == null) {
+      throw new runtime.RequiredError(
+        'revisionId',
+        'Required parameter "revisionId" was null or undefined when calling getOwnTrainingPlanRevision().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v2/training-plans/participant/revisions/{revisionId}`;
+    urlPath = urlPath.replace(
+      '{revisionId}',
+      encodeURIComponent(String(requestParameters['revisionId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   */
+  async getOwnTrainingPlanRevisionRaw(
+    requestParameters: GetOwnTrainingPlanRevisionRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<PlanRevisionSnapshot>> {
+    const requestOptions = await this.getOwnTrainingPlanRevisionRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      PlanRevisionSnapshotFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async getOwnTrainingPlanRevision(
+    requestParameters: GetOwnTrainingPlanRevisionRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<PlanRevisionSnapshot> {
+    const response = await this.getOwnTrainingPlanRevisionRaw(requestParameters, initOverrides);
     return await response.value();
   }
 

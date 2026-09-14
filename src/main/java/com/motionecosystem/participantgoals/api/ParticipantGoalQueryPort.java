@@ -7,6 +7,7 @@ import java.util.*;
 /** Neutral read boundary for active participant goals; it deliberately exposes no persistence entities. */
 public interface ParticipantGoalQueryPort {
     List<ParticipantGoalSummary> findActiveByParticipantId(UUID participantId);
+    List<ParticipantGoalSummary> findByParticipantId(UUID participantId);
     Optional<ParticipantGoalSummary> findById(UUID goalId);
     /** Neutral observation query boundary; callers receive projections rather than persistence entities. */
     default ObservationHistory findObservationHistory(UUID goalId, UUID outcomeId, Instant measuredBefore, Instant recordedBefore, UUID idBefore, int limit) { return new ObservationHistory(List.of(), null); }

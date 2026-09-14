@@ -17,6 +17,7 @@ import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.DeleteSess
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.EditorView;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.StructuralValidationView;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Service.ValidateCommand;
+import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort.PlanRevisionSnapshot;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
@@ -121,6 +122,13 @@ class TrainingPlanningV2Controller {
     @PreAuthorize("hasAnyRole('PARTICIPANT', 'SPECIALIST')")
     EditorView editor(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID revisionId) {
         return planning.editor(jwt.getSubject(), revisionId);
+    }
+
+    @GetMapping("/participant/revisions/{revisionId}")
+    @PreAuthorize("hasRole('PARTICIPANT')")
+    @Operation(operationId = "getOwnTrainingPlanRevision")
+    PlanRevisionSnapshot participantRevision(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID revisionId) {
+        return planning.participantRevision(jwt.getSubject(), revisionId);
     }
 
     @GetMapping("/{planId}/revisions")

@@ -16,7 +16,7 @@ export async function loginWithOidc(page: Page, credentials: Credentials): Promi
   await page.goto('/login');
   await page.getByRole('button', { name: 'Przejdź do logowania' }).click();
   await page.getByLabel(/username|nazwa użytkownika/i).fill(credentials.username);
-  await page.getByLabel(/^password$|hasło/i).fill(credentials.password);
+  await page.getByLabel(/password|hasło/i).fill(credentials.password);
   await page.getByRole('button', { name: /sign in|zaloguj/i }).click();
   await expect(page).toHaveURL(/^(?!.*\/login)/);
 }

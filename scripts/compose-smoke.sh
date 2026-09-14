@@ -24,6 +24,8 @@ FRONTEND_HOST_PORT=14200
 BACKEND_HOST_PORT=18080
 KEYCLOAK_HOST_PORT=18180
 POSTGRES_HOST_PORT=15432
+MAILPIT_SMTP_HOST_PORT=11025
+MAILPIT_UI_HOST_PORT=18025
 EOF
 
 docker compose --project-name "$project" --env-file "$env_file" up --build --wait --wait-timeout 300
@@ -31,4 +33,5 @@ curl --fail --silent http://localhost:14200/ >/dev/null
 curl --fail --silent http://localhost:14200/plan >/dev/null
 curl --fail --silent http://localhost:18080/actuator/health >/dev/null
 curl --fail --silent http://localhost:18180/realms/motion-local/.well-known/openid-configuration >/dev/null
+curl --fail --silent http://127.0.0.1:18025/ >/dev/null
 curl --silent -o /dev/null -w '%{http_code}' http://localhost:18080/api/v1/identity/current | grep -qx '401'

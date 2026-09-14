@@ -121,7 +121,7 @@ export const timeRangeValidator: ValidatorFn = (control): ValidationErrors | nul
             (cancel)="cancelAvailabilityEdit()"
           />
         } @else if (presentationStage() === 'complete') {
-          <app-onboarding-completion />
+          <app-onboarding-completion (continued)="continueFromCompletion()" />
         } @else {
           <section class="onboarding-card error-card" role="alert">
             <h2 tabindex="-1">Nie możemy wyświetlić tego kroku</h2>
@@ -135,6 +135,7 @@ export const timeRangeValidator: ValidatorFn = (control): ValidationErrors | nul
 export class OnboardingPage {
   private readonly stateStore = inject(OnboardingStateService);
   private readonly api = inject(ApiFacade).onboarding;
+  private readonly participantAccess = inject(ApiFacade).participantAccess;
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly injector = inject(Injector);
   private readonly route = inject(ActivatedRoute);
@@ -271,6 +272,15 @@ export class OnboardingPage {
   }
   protected cancelAvailabilityEdit(): void {
     if (this.availabilityEdit) this.returnToToday();
+  }
+  protected async continueFromCompletion(): Promise<void> {
+    if (this.state()?.profileType === 'PARTICIPANT') {
+      try {
+        const context = await this.participantAccess.readParticipantAccessClaimContext({}, { credentials: 'include' });
+        if (context.status === 'PENDING') { await this.router.navigateByUrl('/participant/claim'); return; }
+      } catch { /* Missing or expired context continues to the ordinary destination. */ }
+    }
+    await this.router.navigateByUrl(this.state()?.profileType === 'SPECIALIST' ? '/specialist/today' : '/catalog');
   }
   private createSlot(): AvailabilitySlotForm {
     return this.createSlotFrom();

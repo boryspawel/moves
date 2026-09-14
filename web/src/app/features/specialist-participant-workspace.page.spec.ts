@@ -826,7 +826,7 @@ async function pageFixture(
     complete: ReturnType<typeof vi.fn>;
     getSpecialistAppointment: ReturnType<typeof vi.fn>;
   },
-  workspaceOverrides: { timelineEvent?: ReturnType<typeof vi.fn> } = {},
+  workspaceOverrides: { timelineEvent?: ReturnType<typeof vi.fn>; workspace?: ReturnType<typeof vi.fn> } = {},
   getParticipantGoal = vi.fn(),
 ) {
   const params = new BehaviorSubject(convertToParamMap({}));
@@ -834,7 +834,7 @@ async function pageFixture(
   let timelineCalls = 0;
   const api = {
     participantWorkspace: {
-      workspace: vi.fn().mockResolvedValue({}),
+      workspace: workspaceOverrides.workspace ?? vi.fn().mockResolvedValue({}),
       timeline: vi
         .fn()
         .mockImplementation(() =>
@@ -844,6 +844,7 @@ async function pageFixture(
     },
     specialistClients: { list1: vi.fn().mockResolvedValue([]) },
     onboarding: { state: vi.fn().mockResolvedValue({ profile: { specialistKind: 'TRAINER' } }) },
+    participantAccess: { readParticipantAccessInvitationStatus: vi.fn().mockResolvedValue({ status: 'NO_ACCOUNT' }) },
     appointments: { ...appointments, noShow: vi.fn(), create2: vi.fn() },
     participantGoals: { getParticipantGoal, listParticipantGoals: vi.fn().mockResolvedValue([]) },
     participantDocumentation: { listParticipantDocumentationInterviews: vi.fn().mockResolvedValue([]), listParticipantDocumentationNotes: vi.fn().mockResolvedValue([]) },
@@ -871,3 +872,12 @@ async function pageFixture(
   fixture.detectChanges();
   return { fixture, router, api, params };
 }
+
+describe('specialist workspace invitation access', () => {
+  it('loads invitation status after workspace access fails when specialist onboarding role succeeds', async () => {
+    const { fixture, api } = await pageFixture([], [], appointmentApi(), { workspace: vi.fn().mockRejectedValue(new Error('forbidden')) });
+    await Promise.resolve(); fixture.detectChanges();
+    expect(api.participantAccess.readParticipantAccessInvitationStatus).toHaveBeenCalledWith({ participantId: 'participant-1', role: 'TRAINER' });
+    expect(fixture.nativeElement.querySelector('app-participant-access-panel')).not.toBeNull();
+  });
+});

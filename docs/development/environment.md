@@ -10,8 +10,8 @@
 Keycloak, więc nie należy go udostępniać ani używać jego demonstracyjnych wartości
 poza środowiskiem lokalnym. Obsługiwane zmienne to `POSTGRES_DB`, `POSTGRES_USER`,
 `POSTGRES_PASSWORD`, `KEYCLOAK_ADMIN`, `KEYCLOAK_ADMIN_PASSWORD` oraz porty
-`FRONTEND_HOST_PORT`, `BACKEND_HOST_PORT`, `KEYCLOAK_HOST_PORT` i
-`POSTGRES_HOST_PORT`.
+`FRONTEND_HOST_PORT`, `BACKEND_HOST_PORT`, `KEYCLOAK_HOST_PORT`,
+`POSTGRES_HOST_PORT`, `MAILPIT_SMTP_HOST_PORT` i `MAILPIT_UI_HOST_PORT`.
 
 ## Start i zatrzymanie
 
@@ -32,6 +32,9 @@ Standardowe adresy (przy domyślnych portach) to:
   `/swagger-ui.html` i `/v3/api-docs`;
 - Keycloak: `http://localhost:8180`;
 - PostgreSQL: `localhost:5432`.
+- Mailpit (local-only inbox): `http://127.0.0.1:8025` (SMTP: `127.0.0.1:1025`).
+
+Participant invitation delivery is intentionally SMTP-before-transaction-commit: a database commit failure after a successful send can leave an emailed but unusable link. Raw invitation secrets are not retained for an outbox retry by design.
 
 Zatrzymanie bez utraty danych:
 
@@ -47,8 +50,9 @@ pozostają odpowiednio w nazwanych wolumenach `motion-postgres` i
 
 Keycloak importuje wersjonowany plik realm `motion-local-realm.json` podczas startu.
 Nie ma osobnego trwałego wolumenu bazy Keycloak: zachowuje to deterministyczność
-importu realm. Jeśli zmieniasz port Keycloak lub frontendu, przed startem dostosuj
-`redirectUris` i `webOrigins` w tym pliku importu.
+importu realm. Local realm permits the localhost loopback frontend on an ephemeral
+port, so the Compose smoke ports work without editing the import. This is strictly
+local-development configuration, not a production redirect policy.
 
 Backend uruchamia migracje Flyway przy starcie. Flyway jest właścicielem schematu, a
 Hibernate wyłącznie go waliduje. Nie usuwaj wolumenów, aby „naprawić” pojedynczą

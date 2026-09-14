@@ -6,7 +6,6 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatError, MatFormFieldModule, MatHint, MatLabel } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { RouterLink } from '@angular/router';
 import { AuthService } from '../core/auth.service';
 import {
   ProfileTypeRequestProfileTypeEnum,
@@ -457,15 +456,15 @@ export class OnboardingAvailabilityComponent {
 @Component({
   selector: 'app-onboarding-completion',
   standalone: true,
-  imports: [MatButtonModule, MatCardModule, RouterLink],
+  imports: [MatButtonModule, MatCardModule],
   template: `<mat-card class="onboarding-card completion"
     ><mat-card-header
       ><mat-card-title><h2 tabindex="-1">Konto gotowe</h2></mat-card-title></mat-card-header
     ><mat-card-content><p>Twój profil jest gotowy do użycia.</p></mat-card-content
     ><mat-card-actions
-      ><a mat-flat-button [routerLink]="auth.hasRole('SPECIALIST') ? '/specialist/today' : '/catalog'">{{ auth.hasRole('SPECIALIST') ? 'Przejdź do dzisiaj' : 'Przejdź do katalogu' }}</a></mat-card-actions
+      ><button mat-flat-button type="button" (click)="continued.emit()">{{ auth.hasRole('SPECIALIST') ? 'Przejdź do dzisiaj' : 'Przejdź dalej' }}</button></mat-card-actions
     ></mat-card
   >`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class OnboardingCompletionComponent { protected readonly auth = inject(AuthService); }
+export class OnboardingCompletionComponent { protected readonly auth = inject(AuthService); @Output() continued = new EventEmitter<void>(); }

@@ -5,6 +5,7 @@ import {RootLandingComponent} from './core/root-landing.component';
 
 export const routes: Routes = [
   { path: 'login', loadComponent: () => import('./features/login.page').then(m => m.LoginPage) },
+  { path: 'participant/claim', loadComponent: () => import('./features/participant-claim.page').then(m => m.ParticipantClaimPage) },
   { path: 'onboarding', canActivate: [authGuard], loadComponent: () => import('./features/onboarding.page').then(m => m.OnboardingPage) },
   { path: 'catalog', canActivate: [authGuard, completedOnboardingGuard], loadComponent: () => import('./features/catalog.page').then(m => m.CatalogPage) },
   { path: 'catalog/:versionId', canActivate: [authGuard, completedOnboardingGuard], loadComponent: () => import('./features/catalog-detail.page').then(m => m.CatalogDetailPage) },
@@ -39,6 +40,8 @@ export const routes: Routes = [
   { path: 'specialist/clients/:participantId/plans/:planId', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/specialist-plan.page').then(m => m.SpecialistPlanPage) },
   { path: 'specialist/clients/:participantId/plans/:planId/revisions/:revisionId', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/specialist-plan.page').then(m => m.SpecialistPlanPage) },
   { path: 'sessions', canActivate: [authGuard, completedOnboardingGuard, roleGuard('PARTICIPANT')], loadComponent: () => import('./features/sessions.page').then(m => m.SessionsPage) },
+  { path: 'my-data', canActivate: [authGuard, completedOnboardingGuard, roleGuard('PARTICIPANT')], loadComponent: () => import('./features/participant-own-data.page').then(m => m.ParticipantOwnDataPage) },
+  { path: 'my-data/revisions/:revisionId', canActivate: [authGuard, completedOnboardingGuard, roleGuard('PARTICIPANT')], loadComponent: () => import('./features/participant-revision.page').then(m => m.ParticipantRevisionPage) },
   { path: 'reminders', canActivate: [authGuard, completedOnboardingGuard, roleGuard('PARTICIPANT')], loadComponent: () => import('./features/reminder-preferences.page').then(m => m.ReminderPreferencesPage) },
   { path: 'specialist-alerts', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/specialist-alerts.page').then(m => m.SpecialistAlertsPage) },
   { path: 'gamification', canActivate: [authGuard, completedOnboardingGuard, roleGuard('PARTICIPANT')], loadComponent: () => import('./features/gamification.page').then(m => m.GamificationPage) },

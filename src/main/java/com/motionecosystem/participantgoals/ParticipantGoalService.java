@@ -4,6 +4,7 @@ import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.participantgoals.api.ParticipantGoalQueryPort;
+import com.motionecosystem.participant.api.ParticipantClientPort;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.*;
 import java.math.BigDecimal;
@@ -26,6 +27,7 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort {
     private final ParticipantGoalEventRepository events;
     private final CurrentAccountService accounts;
     private final SpecialistAuthorizationPort authorization;
+    private final ParticipantClientPort participants;
     private final AuditRecorder audit;
     private final Clock clock;
     private final ParticipantGoalLifecyclePolicy lifecycle = new ParticipantGoalLifecyclePolicy();
@@ -33,25 +35,32 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort {
     @Autowired
     public ParticipantGoalService(ParticipantGoalRepository goals, GoalOutcomeRepository outcomes, GoalIdempotencyRepository idempotency,
             GoalObservationRepository observations, GoalObservationIdempotencyRepository observationIdempotency, ParticipantGoalEventRepository events,
-            CurrentAccountService accounts, SpecialistAuthorizationPort authorization,
+            CurrentAccountService accounts, SpecialistAuthorizationPort authorization, ParticipantClientPort participants,
             AuditRecorder audit, Clock clock) {
         this.goals = goals; this.outcomes = outcomes; this.idempotency = idempotency; this.observations = observations;
         this.observationIdempotency = observationIdempotency; this.events = events; this.accounts = accounts;
-        this.authorization = authorization; this.audit = audit; this.clock = clock;
+        this.authorization = authorization; this.participants = participants; this.audit = audit; this.clock = clock;
     }
 
     /** Compatibility constructor for existing focused callers; observation operations require the full constructor. */
     ParticipantGoalService(ParticipantGoalRepository goals, GoalOutcomeRepository outcomes, GoalIdempotencyRepository idempotency,
             CurrentAccountService accounts, SpecialistAuthorizationPort authorization,
             AuditRecorder audit, Clock clock) {
-        this(goals, outcomes, idempotency, null, null, null, accounts, authorization, audit, clock);
+        this(goals, outcomes, idempotency, null, null, null, accounts, authorization, null, audit, clock);
     }
 
     ParticipantGoalService(ParticipantGoalRepository goals, GoalOutcomeRepository outcomes, GoalIdempotencyRepository idempotency,
             GoalObservationRepository observations, GoalObservationIdempotencyRepository observationIdempotency,
             CurrentAccountService accounts, SpecialistAuthorizationPort authorization,
             AuditRecorder audit, Clock clock) {
-        this(goals, outcomes, idempotency, observations, observationIdempotency, null, accounts, authorization, audit, clock);
+        this(goals, outcomes, idempotency, observations, observationIdempotency, null, accounts, authorization, null, audit, clock);
+    }
+
+    ParticipantGoalService(ParticipantGoalRepository goals, GoalOutcomeRepository outcomes, GoalIdempotencyRepository idempotency,
+            GoalObservationRepository observations, GoalObservationIdempotencyRepository observationIdempotency, ParticipantGoalEventRepository events,
+            CurrentAccountService accounts, SpecialistAuthorizationPort authorization,
+            AuditRecorder audit, Clock clock) {
+        this(goals, outcomes, idempotency, observations, observationIdempotency, events, accounts, authorization, null, audit, clock);
     }
 
     @Transactional
@@ -101,6 +110,17 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort {
     public ParticipantGoalView detail(String subject, UUID participantId, UUID goalId, ActingContext context) {
         UUID specialist = authorize(subject, participantId, context, null);
         ParticipantGoal goal = owned(specialist, participantId, goalId); requireRole(context, goal); return view(goal);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ParticipantGoalSummary> participantGoals(String subject) { return findByParticipantId(participantIdFor(subject)); }
+
+    @Transactional(readOnly = true)
+    public ParticipantGoalSummary participantGoal(String subject, UUID goalId) {
+        UUID participantId = participantIdFor(subject);
+        ParticipantGoalSummary goal = findById(goalId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "participant goal not found"));
+        if (!participantId.equals(goal.participantId())) throw forbidden("participant goal belongs to another participant");
+        return goal;
     }
 
     @Transactional
@@ -175,6 +195,11 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort {
         return goals.findByParticipantIdAndStatus(participantId, ParticipantGoal.Status.ACTIVE).stream().map(this::summary).toList();
     }
     @Override @Transactional(readOnly = true)
+    public List<ParticipantGoalSummary> findByParticipantId(UUID participantId) {
+        if (participantId == null) return List.of();
+        return goals.findByParticipantIdOrderByCreatedAtDesc(participantId).stream().map(this::summary).toList();
+    }
+    @Override @Transactional(readOnly = true)
     public Optional<ParticipantGoalSummary> findById(UUID goalId) { return goals.findById(goalId).map(this::summary); }
     @Override @Transactional(readOnly = true)
     public ObservationHistory findObservationHistory(UUID goalId, UUID outcomeId, Instant measuredBefore, Instant recordedBefore, UUID idBefore, int limit) {
@@ -209,6 +234,13 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort {
                 Set.of(role == ProfessionalRole.TRAINER ? Capability.PLAN_PERFORMANCE : Capability.PLAN_FUNCTIONAL_RECOVERY),
                 role == ProfessionalRole.TRAINER ? Purpose.PERFORMANCE_PLANNING : Purpose.FUNCTIONAL_RECOVERY);
         return account.id();
+    }
+    private UUID participantIdFor(String subject) {
+        var account = accounts.requireActive(subject);
+        if (!account.hasProfile(ProfileType.PARTICIPANT)) throw forbidden("participant profile is required");
+        if (participants == null) throw forbidden("an active participant access link is required");
+        return participants.findParticipantIdByPrincipalAccountId(account.id())
+                .orElseThrow(() -> forbidden("an active participant access link is required"));
     }
     private static boolean matches(ProfessionalRole role, ParticipantGoal.Category category) { return (category == ParticipantGoal.Category.PERFORMANCE && role == ProfessionalRole.TRAINER) || (category == ParticipantGoal.Category.FUNCTIONAL && role == ProfessionalRole.PHYSIOTHERAPIST); }
     private static void requireRole(ActingContext context, ParticipantGoal goal) { if (!matches(context.role(), goal.category)) throw forbidden("goal category does not match specialist acting context"); }

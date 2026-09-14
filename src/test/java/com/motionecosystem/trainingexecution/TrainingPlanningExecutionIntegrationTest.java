@@ -45,6 +45,8 @@ class TrainingPlanningExecutionIntegrationTest {
     JdbcTemplate jdbc;
     @Autowired
     ExecutionProjectionService projections;
+    @Autowired
+    SessionExecutionAttemptRepository attempts;
 
     MockMvc mvc;
     UUID participantId;
@@ -178,6 +180,28 @@ class TrainingPlanningExecutionIntegrationTest {
                 "SELECT pain_level FROM training_execution.pain_difficulty_report", Integer.class)).isEqualTo(3);
         assertThat(jdbc.queryForObject(
                 "SELECT COUNT(*) FROM training_execution.execution_correction", Long.class)).isEqualTo(1);
+    }
+
+    @Test
+    void participantReadsOnlyOwnBoundedExecutionAttemptHistory() throws Exception {
+        createPlan();
+        UUID sessionId = sessionId();
+        UUID revisionId = jdbc.queryForObject("SELECT id FROM training_planning.plan_revision", UUID.class);
+        attempts.saveAndFlush(new SessionExecutionAttempt(participantId, sessionId, revisionId, "STANDARD", "history-attempt", Instant.now()));
+
+        mvc.perform(get("/api/v1/participant/execution-history")
+                        .param("from", Instant.now().minusSeconds(3600).toString())
+                        .param("to", Instant.now().plusSeconds(3600).toString())
+                        .param("limit", "1")
+                        .with(role("participant", "PARTICIPANT")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].plannedSessionId").value(sessionId.toString()))
+                .andExpect(jsonPath("$[0].planRevisionId").value(revisionId.toString()));
+        mvc.perform(get("/api/v1/participant/execution-history")
+                        .param("from", Instant.now().minusSeconds(3600).toString())
+                        .param("to", Instant.now().plusSeconds(3600).toString())
+                        .with(role("other-participant", "PARTICIPANT")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$").isEmpty());
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.motionecosystem.participantgoals;
 
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
+import com.motionecosystem.participantgoals.api.ParticipantGoalQueryPort;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -83,4 +84,16 @@ class ParticipantGoalController {
     record ParticipantGoalObservationRequest(@NotNull UUID outcomeId, @NotNull BigDecimal value, @NotNull Instant measuredAt, @Size(max = 2000) String note, @Size(max = 160) String evidenceSource) {
         ParticipantGoalService.ObservationCommand toCommand() { return new ParticipantGoalService.ObservationCommand(outcomeId, value, measuredAt, null, note, evidenceSource); }
     }
+}
+
+@RestController
+@RequestMapping("/api/v1/participant/goals")
+@SecurityRequirement(name = "oidc")
+@RequiredArgsConstructor
+class ParticipantSelfGoalController {
+    private final ParticipantGoalService goals;
+    @GetMapping @PreAuthorize("hasRole('PARTICIPANT')") @Operation(operationId = "listOwnParticipantGoals")
+    List<ParticipantGoalQueryPort.ParticipantGoalSummary> list(@AuthenticationPrincipal Jwt jwt) { return goals.participantGoals(jwt.getSubject()); }
+    @GetMapping("/{goalId}") @PreAuthorize("hasRole('PARTICIPANT')") @Operation(operationId = "getOwnParticipantGoal")
+    ParticipantGoalQueryPort.ParticipantGoalSummary detail(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID goalId) { return goals.participantGoal(jwt.getSubject(), goalId); }
 }

@@ -400,6 +400,16 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
     }
 
     @Transactional(readOnly = true)
+    public PlanRevisionSnapshot participantRevision(String subject, UUID revisionId) {
+        CurrentAccount account = accounts.requireActive(subject);
+        if (!account.hasProfile(ProfileType.PARTICIPANT)) throw forbidden("participant profile is required");
+        UUID participantId = participantIdFor(account);
+        PlanRevisionSnapshot revision = revisions.findRevision(revisionId).orElseThrow(() -> notFound("plan revision not found"));
+        if (!participantId.equals(revision.participantId())) throw forbidden("plan revision belongs to another participant");
+        return revision;
+    }
+
+    @Transactional(readOnly = true)
     public List<TrainingPlanningV2Persistence.RevisionHistoryItem> history(String subject, UUID planId) {
         requirePlanView(subject, planId);
         return persistence.revisionHistory(planId);

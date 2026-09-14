@@ -24,6 +24,7 @@ import type { ParticipantGoalView } from '../api/generated/src/models/Participan
 import type { PresetView } from '../api/generated/src/models/PresetView';
 import type { CreateFromPresetRequestPresetIdEnum, CreateFromPresetRequestTargetComparatorEnum } from '../api/generated/src/models/CreateFromPresetRequest';
 import { ParticipantDocumentationComponent, type RecordPanelType } from './participant-documentation.component';
+import { ParticipantAccessPanelComponent } from './participant-access-panel.component';
 import {
   groupEvents,
   rangeDates,
@@ -1062,6 +1063,7 @@ export class ParticipantGoalsComponent {
     ParticipantSummaryStripComponent,
     ParticipantGoalsComponent,
     ParticipantDocumentationComponent,
+    ParticipantAccessPanelComponent,
     PatientTimelineFiltersComponent,
     PatientTimelineComponent,
     PatientTimelineListViewComponent,
@@ -1078,6 +1080,7 @@ export class ParticipantGoalsComponent {
     [attr.aria-busy]="state() === 'loading'"
   >
     <p class="sr-only" aria-live="polite">{{ announcement() }}</p>
+    @if (participantId() && actingContext()) { <app-participant-access-panel [participantId]="participantId()" [role]="actingContext()!" /> }
     @if (state() === 'loading') {
       <section class="state-card" role="status">
         <h1>Wczytywanie kartoteki…</h1>
@@ -1246,6 +1249,7 @@ export class SpecialistParticipantWorkspacePage {
       const participantId = this.route.snapshot.paramMap.get('participantId');
       if (!participantId) return;
       this.participantId.set(participantId);
+      void this.loadActingContext();
       const context = `${participantId}:${this.range()}:${this.types().join(',')}:${this.view()}`;
       if (this.timelineContext === context && this.state() === 'loaded')
         void this.resolveSelection(participantId, id, this.events());
@@ -1257,6 +1261,11 @@ export class SpecialistParticipantWorkspacePage {
   }
   protected hasAttention(data: SpecialistParticipantWorkspaceView) {
     return !!(data.attentionItems?.length || data.activeProblems?.length);
+  }
+  private async loadActingContext(): Promise<void> {
+    const onboarding = await this.api.onboarding.state().catch(() => undefined);
+    const kind = onboarding?.profile?.specialistKind;
+    this.actingContext.set(kind === 'TRAINER' || kind === 'PHYSIOTHERAPIST' ? kind : undefined);
   }
   protected async reload(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('participantId');

@@ -30,6 +30,7 @@ public class ParticipantRecord {
         displayName = name; if (context != null) relationshipContext = context; email = emailValue; phone = phoneValue; timeZoneId = zone == null ? null : zone.getId(); updatedAt = now;
     }
     public void archive(Instant now) { recordStatus = Status.ARCHIVED; updatedAt = now; }
+    public void updateTimeZone(ZoneId zone, Instant now) { timeZoneId = zone == null ? null : zone.getId(); updatedAt = now; }
     public UUID id() { return id; } public String displayName() { return displayName; } public Status recordStatus() { return recordStatus; }
     public RelationshipContext relationshipContext() { return relationshipContext; } public String timeZoneId() { return timeZoneId; } public String email() { return email; } public String phone() { return phone; } public long version() { return version; }
 }

@@ -1,0 +1,3 @@
+package com.motionecosystem.participant;
+import jakarta.persistence.*; import java.time.Instant; import java.util.UUID;
+@Entity @Table(name="participant_claim_context",schema="participant") class ParticipantClaimContext { @Id UUID id; @Column(name="invitation_id") UUID invitationId; @Column(name="secret_hash") String secretHash; @Column(name="expires_at") Instant expiresAt; @Column(name="created_at") Instant createdAt; protected ParticipantClaimContext(){} ParticipantClaimContext(UUID invite,String hash,Instant now,Instant expiry){id=UUID.randomUUID();invitationId=invite;secretHash=hash;createdAt=now;expiresAt=expiry;} }

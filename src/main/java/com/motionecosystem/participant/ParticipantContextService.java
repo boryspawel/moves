@@ -15,6 +15,7 @@ public class ParticipantContextService implements ParticipantContextQueryPort {
 
     private final ParticipantProfileRepository profiles;
     private final ParticipantRecordRepository records;
+    private final ParticipantAccessLinkRepository links;
     private final Clock clock;
 
     @Transactional
@@ -24,6 +25,11 @@ public class ParticipantContextService implements ParticipantContextQueryPort {
                 .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
                         org.springframework.http.HttpStatus.NOT_FOUND, "participant profile not found"));
         profile.update(profile.displayName, timeZone, clock.instant());
+        links.findByPrincipalAccountId(participantAccountId)
+                .filter(link -> link.accessStatus() == ParticipantAccessLink.Status.ACTIVE)
+                .flatMap(link -> records.findById(link.participantId()))
+                .filter(record -> record.recordStatus() == ParticipantRecord.Status.ACTIVE)
+                .ifPresent(record -> record.updateTimeZone(timeZone, clock.instant()));
     }
 
     @Override

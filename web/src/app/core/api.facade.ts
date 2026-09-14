@@ -28,6 +28,7 @@ import {
   ParticipantGoalControllerApi,
   ParticipantDocumentationControllerApi,
   SpecialistPlanFacadeControllerApi
+  ,ParticipantAccessInvitationControllerApi, ParticipantSelfGoalControllerApi, ParticipantExecutionHistoryControllerApi
 } from '../api/generated/src';
 import { Middleware } from '../api/generated/src/runtime';
 import { AuthService } from './auth.service';
@@ -76,6 +77,9 @@ export class ApiFacade {
   readonly participantDocumentation: ParticipantDocumentationControllerApi;
   /** Participant-scoped specialist planning façade; hierarchy stays server-side. */
   readonly specialistPlans: SpecialistPlanFacadeControllerApi;
+  readonly participantAccess: ParticipantAccessInvitationControllerApi;
+  readonly ownGoals: ParticipantSelfGoalControllerApi;
+  readonly ownExecutionHistory: ParticipantExecutionHistoryControllerApi;
 
   constructor() {
     const auth = inject(AuthService);
@@ -110,5 +114,8 @@ export class ApiFacade {
     this.participantGoals = new ParticipantGoalControllerApi(configuration);
     this.participantDocumentation = new ParticipantDocumentationControllerApi(configuration);
     this.specialistPlans = new SpecialistPlanFacadeControllerApi(configuration);
+    this.participantAccess = new ParticipantAccessInvitationControllerApi(configuration);
+    this.ownGoals = new ParticipantSelfGoalControllerApi(configuration);
+    this.ownExecutionHistory = new ParticipantExecutionHistoryControllerApi(configuration);
   }
 }

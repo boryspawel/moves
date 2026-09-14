@@ -21,70 +21,22 @@ import { mapValues } from '../runtime';
 export interface IssueView {
   /**
    *
-   * @type {string}
-   * @memberof IssueView
-   */
-  code?: string;
-  /**
-   *
    * @type {Date}
    * @memberof IssueView
    */
-  createdAt?: Date;
+  expiresAt?: Date;
   /**
    *
    * @type {string}
    * @memberof IssueView
    */
-  id?: string;
+  invitationId?: string;
   /**
    *
    * @type {string}
    * @memberof IssueView
    */
-  jsonPointer?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof IssueView
-   */
-  message?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof IssueView
-   */
-  recordId?: string;
-  /**
-   *
-   * @type {Date}
-   * @memberof IssueView
-   */
-  resolvedAt?: Date;
-  /**
-   *
-   * @type {number}
-   * @memberof IssueView
-   */
-  rowNumber?: number;
-  /**
-   *
-   * @type {string}
-   * @memberof IssueView
-   */
-  severity?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof IssueView
-   */
-  sourceRecordKey?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof IssueView
-   */
-  stage?: string;
+  status?: string;
 }
 
 /**
@@ -103,17 +55,9 @@ export function IssueViewFromJSONTyped(json: any, ignoreDiscriminator: boolean):
     return json;
   }
   return {
-    code: json['code'] == null ? undefined : json['code'],
-    createdAt: json['createdAt'] == null ? undefined : new Date(json['createdAt']),
-    id: json['id'] == null ? undefined : json['id'],
-    jsonPointer: json['jsonPointer'] == null ? undefined : json['jsonPointer'],
-    message: json['message'] == null ? undefined : json['message'],
-    recordId: json['recordId'] == null ? undefined : json['recordId'],
-    resolvedAt: json['resolvedAt'] == null ? undefined : new Date(json['resolvedAt']),
-    rowNumber: json['rowNumber'] == null ? undefined : json['rowNumber'],
-    severity: json['severity'] == null ? undefined : json['severity'],
-    sourceRecordKey: json['sourceRecordKey'] == null ? undefined : json['sourceRecordKey'],
-    stage: json['stage'] == null ? undefined : json['stage'],
+    expiresAt: json['expiresAt'] == null ? undefined : new Date(json['expiresAt']),
+    invitationId: json['invitationId'] == null ? undefined : json['invitationId'],
+    status: json['status'] == null ? undefined : json['status'],
   };
 }
 
@@ -130,17 +74,8 @@ export function IssueViewToJSONTyped(
   }
 
   return {
-    code: value['code'],
-    createdAt: value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
-    id: value['id'],
-    jsonPointer: value['jsonPointer'],
-    message: value['message'],
-    recordId: value['recordId'],
-    resolvedAt:
-      value['resolvedAt'] == null ? value['resolvedAt'] : value['resolvedAt'].toISOString(),
-    rowNumber: value['rowNumber'],
-    severity: value['severity'],
-    sourceRecordKey: value['sourceRecordKey'],
-    stage: value['stage'],
+    expiresAt: value['expiresAt'] == null ? value['expiresAt'] : value['expiresAt'].toISOString(),
+    invitationId: value['invitationId'],
+    status: value['status'],
   };
 }

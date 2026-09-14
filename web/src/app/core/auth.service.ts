@@ -1,6 +1,7 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import Keycloak, { KeycloakTokenParsed } from 'keycloak-js';
 import { environment } from '../../environments/environment';
+import { ParticipantClaimBootstrapService } from './participant-claim-bootstrap.service';
 
 interface RealmToken extends KeycloakTokenParsed {
   realm_access?: { roles: string[] };
@@ -16,6 +17,7 @@ interface TokenProfile {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private readonly claimBootstrap = inject(ParticipantClaimBootstrapService);
   private readonly client = new Keycloak(environment.keycloak);
   private readonly authenticatedState = signal(false);
   private readonly profileState = signal<TokenProfile | null>(null);
@@ -27,6 +29,7 @@ export class AuthService {
 
   async initialize(): Promise<void> {
     try {
+      await this.claimBootstrap.consumeInvitationFragment();
       const authenticated = await this.client.init({
         onLoad: 'check-sso',
         pkceMethod: 'S256',
@@ -47,12 +50,12 @@ export class AuthService {
     return { firstName: token?.given_name, username: token?.preferred_username };
   }
 
-  login(): Promise<void> {
-    return this.client.login({ redirectUri: window.location.origin });
+  login(returnUri = window.location.origin): Promise<void> {
+    return this.client.login({ redirectUri: returnUri });
   }
 
-  register(): Promise<void> {
-    return this.client.register({ redirectUri: window.location.origin });
+  register(returnUri = window.location.origin): Promise<void> {
+    return this.client.register({ redirectUri: returnUri });
   }
 
   logout(): Promise<void> {

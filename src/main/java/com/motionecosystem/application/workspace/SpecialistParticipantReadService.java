@@ -176,7 +176,7 @@ public class SpecialistParticipantReadService {
     private ParticipantHeader participant(UUID participantId) {
         ParticipantClientPort.ClientRecord summary = participantClients.find(participantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "participant record not found"));
-        String timeZone = participantContexts.findContext(participantId).map(value -> value.timeZone().getId()).orElse(null);
+        String timeZone = participantContexts.findContextByParticipantId(participantId).map(value -> value.timeZone() == null ? null : value.timeZone().getId()).orElse(null);
         return new ParticipantHeader(summary.id(), summary.displayName(), null, null, timeZone,
                 List.of("OPEN_WORKSPACE", "OPEN_TIMELINE"));
     }
@@ -205,7 +205,7 @@ public class SpecialistParticipantReadService {
     private TimelineQuery normalize(TimelineQuery query, UUID participantId) {
         TimelineQuery requested = query == null ? new TimelineQuery(null, null, null, null, null, null) : query;
         Granularity granularity = requested.granularity() == null ? Granularity.DETAIL : requested.granularity();
-        ZoneId zone = participantContexts.findContext(participantId).map(ParticipantContextQueryPort.ParticipantContext::timeZone)
+        ZoneId zone = participantContexts.findContextByParticipantId(participantId).map(ParticipantContextQueryPort.ParticipantRecordContext::timeZone)
                 .orElse(ZoneId.of("UTC"));
         Instant defaultTo = clock.instant();
         Instant defaultFrom = switch (granularity) {
