@@ -13,6 +13,8 @@ interface SessionExecutionAttemptRepository extends JpaRepository<SessionExecuti
             UUID participantAccountId, UUID plannedSessionId);
     Optional<SessionExecutionAttempt> findByParticipantAccountIdAndStartIdempotencyKey(
             UUID participantAccountId, String startIdempotencyKey);
+    Optional<SessionExecutionAttempt> findFirstByParticipantAccountIdAndPlannedSessionIdAndStatusInOrderByUpdatedAtDesc(
+            UUID participantAccountId, UUID plannedSessionId, Collection<String> statuses);
     List<SessionExecutionAttempt> findByParticipantAccountIdAndStartedAtGreaterThanEqualAndStartedAtLessThanOrderByStartedAtDesc(UUID participantAccountId, java.time.Instant fromInclusive, java.time.Instant toExclusive, org.springframework.data.domain.Pageable pageable);
     List<SessionExecutionAttempt> findByParticipantAccountIdAndPlannedSessionIdInOrderByUpdatedAtDesc(
             UUID participantAccountId, Collection<UUID> plannedSessionIds);

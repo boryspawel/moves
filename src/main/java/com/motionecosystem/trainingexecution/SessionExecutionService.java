@@ -24,6 +24,8 @@ import com.motionecosystem.trainingexecution.SessionExecutionPersistence.ResultD
 import com.motionecosystem.trainingplanning.api.PlannedSessionExecutionPort;
 import com.motionecosystem.trainingplanning.api.PlannedSessionExecutionPort.SessionState;
 import com.motionecosystem.trainingexecution.api.ExecutionAdherencePort;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -42,13 +44,28 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
     private final AuditRecorder audit;
     private final TransactionalOutbox outbox;
     private final ExecutionProjectionService projections;
-    private final SessionExecutionAttemptService attempts;
     private final ExecutionAdherencePort adherence;
     private final Clock clock;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public ExecutionView declare(String subject, UUID plannedSessionId, String idempotencyKey,
                                  DeclareExecutionCommand command) {
+        return declareInternal(subject, plannedSessionId, idempotencyKey, command, "COMPLETED", null, null, true, null);
+    }
+
+    @Transactional
+    ExecutionView declareAttempt(String subject, UUID plannedSessionId, String idempotencyKey,
+                                 DeclareExecutionCommand command, String outcome, String stopReason,
+                                 UUID attemptId, List<PrescriptionReference> storedPrescriptions) {
+        return declareInternal(subject, plannedSessionId, idempotencyKey, command, outcome, stopReason,
+                attemptId, false, storedPrescriptions);
+    }
+
+    private ExecutionView declareInternal(String subject, UUID plannedSessionId, String idempotencyKey,
+                                          DeclareExecutionCommand command, String outcome, String stopReason,
+                                          UUID attemptId, boolean legacyDeclaration,
+                                          List<PrescriptionReference> storedPrescriptions) {
         CurrentAccount participant = accounts.requireActive(subject);
         requireProfile(participant, ProfileType.PARTICIPANT, "participant profile is required");
         UUID participantId = participantIdFor(participant);
@@ -64,7 +81,7 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
             return result;
         }
 
-        if (command == null || !command.declaredCompletion()) {
+        if (command == null || legacyDeclaration && !command.declaredCompletion()) {
             throw badRequest("declaredCompletion must be explicitly true");
         }
         var plannedSession = plannedSessions.lockOwnedSession(plannedSessionId, participantId)
@@ -87,22 +104,26 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
         if (plannedSession.state() != SessionState.ASSIGNED) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "assigned session not found");
         }
-        List<PrescriptionReference> prescribed = plannedSession.prescriptions().stream()
-                .map(item -> new PrescriptionReference(item.id(), item.exerciseVersionId()))
-                .toList();
-        validateResults(prescribed, command.results());
+        List<PrescriptionReference> prescribed = storedPrescriptions == null
+                ? plannedSession.prescriptions().stream().map(item -> new PrescriptionReference(item.id(), item.exerciseVersionId())).toList()
+                : storedPrescriptions;
+        if (!"STOPPED".equals(outcome) || command.results() != null && !command.results().isEmpty()) {
+            validateResults(prescribed, command.results());
+        }
         validatePainDifficulty(command.painLevel(), command.difficultyLevel(), command.techniqueConfidenceLevel());
         if (command.sessionRpe() != null && (command.sessionRpe() < 1 || command.sessionRpe() > 10)) {
             throw badRequest("session RPE is outside range");
         }
+        if (legacyDeclaration) outcome = derivedLegacyOutcome(command.results(), prescribed);
 
         Instant now = clock.instant();
         UUID executionId = UUID.randomUUID();
         UUID eventId = outbox.append("SessionExecution", executionId, "SessionExecutionDeclared",
                 "{\"executionId\":\"" + executionId + "\",\"participantId\":\""
                         + participantId + "\",\"plannedSessionId\":\"" + plannedSessionId + "\"}", now);
+        boolean completed = "COMPLETED".equals(outcome);
         SessionExecution execution = new SessionExecution(executionId, plannedSessionId, participantId,
-                true, key, now);
+                completed, key, now);
         PainDifficultyReport report = new PainDifficultyReport(UUID.randomUUID(), execution.id(),
                 command.painLevel(), command.difficultyLevel(), command.techniqueConfidenceLevel(), optionalText(command.note(), 500), now);
         List<AlertData> alerts = new java.util.ArrayList<>();
@@ -118,7 +139,7 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
         }
         persistence.save(new ExecutionData(execution.id(), execution.plannedSessionId(),
                         execution.participantAccountId(), execution.declaredCompletion(),
-                        execution.idempotencyKey(), execution.recordedAt(), eventId, "PENDING"),
+                        execution.idempotencyKey(), execution.recordedAt(), eventId, "PENDING", outcome, stopReason, attemptId),
                 command.results().stream().map(item -> {
                     validateResultValues(item);
                     PrescriptionReference reference = prescribed.stream()
@@ -130,15 +151,16 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
                             item.actualLoadKg(), item.actualExternalLoadValue(), item.actualExternalLoadUnit(),
                             item.actualIntensityType(), item.actualIntensityValue(), item.actualIntensityZone(),
                             item.side(), Boolean.TRUE.equals(item.modified()),
-                            Boolean.TRUE.equals(item.skipped()), mode(item.observationMode()));
+                            Boolean.TRUE.equals(item.skipped()), mode(item.observationMode()), setDetails(item.actualSetDetails()));
                 }).toList(),
                 new ReportData(report.id(), report.sessionExecutionId(), report.painLevel(),
                         report.difficultyLevel(), report.techniqueConfidenceLevel(), report.note(), command.sessionRpe(),
                         mode(command.observationMode()), report.reportedAt()), alerts);
-        attempts.completeAfterFinalDeclaration(subject, participantId, plannedSessionId);
-        adherence.executionCompleted(participantId, plannedSessionId, execution.id());
+        if (completed) {
+            adherence.executionCompleted(participantId, plannedSessionId, execution.id());
+        }
         adherence.detect(participantId);
-        plannedSessions.markCompleted(plannedSessionId);
+        if (completed) plannedSessions.markCompleted(plannedSessionId);
         audit.record(subject, "SESSION_EXECUTION_DECLARED", "SessionExecution", execution.id());
         return execution(execution.id());
     }
@@ -176,6 +198,14 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
                 .filter(item -> item.exercisePrescriptionId().equals(command.exercisePrescriptionId()))
                 .map(ResultData::id).findFirst()
                 .orElseThrow(() -> badRequest("corrected result must belong to execution"));
+        if (resultId != null && persistence.findById(executionId).orElseThrow().results().stream()
+                .anyMatch(item -> item.id().equals(resultId) && item.actualSetDetails() != null)
+                && (command.correctedSets() != null || command.correctedRepetitions() != null
+                || command.correctedDurationSeconds() != null || command.correctedContacts() != null
+                || command.correctedExternalLoadValue() != null || command.correctedExternalLoadUnit() != null)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "scalar correction is not supported for a result with actual set details");
+        }
         ExecutionCorrection correction = new ExecutionCorrection(UUID.randomUUID(), executionId, actor.id(), reason,
                 command.correctedPainLevel(), command.correctedDifficultyLevel(), clock.instant());
         persistence.appendCorrection(new CorrectionData(correction.id(), correction.sessionExecutionId(),
@@ -237,7 +267,13 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
         }
     }
 
-    private static void validateResultValues(ResultCommand result) {
+    private static String derivedLegacyOutcome(List<ResultCommand> results, List<PrescriptionReference> prescribed) {
+        if (results.stream().allMatch(item -> Boolean.TRUE.equals(item.skipped()))) return "SKIPPED";
+        if (results.size() < prescribed.size() || results.stream().anyMatch(item -> Boolean.TRUE.equals(item.skipped()))) return "PARTIAL";
+        return "COMPLETED";
+    }
+
+    static void validateResultValues(ResultCommand result) {
         if (result.actualSets() != null && result.actualSets() < 0
                 || result.actualRepetitions() != null && result.actualRepetitions() < 0
                 || result.actualDurationSeconds() != null && result.actualDurationSeconds() < 0
@@ -252,6 +288,11 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
                 .contains(result.side())) {
             throw badRequest("exercise result side is invalid");
         }
+        if (result.actualExternalLoadValue() != null && (result.actualExternalLoadUnit() == null
+                || result.actualExternalLoadUnit().isBlank()) || result.actualExternalLoadValue() == null
+                && result.actualExternalLoadUnit() != null && !result.actualExternalLoadUnit().isBlank()) {
+            throw badRequest("external load value and unit must be supplied together");
+        }
         if (Boolean.TRUE.equals(result.skipped()) && (positive(result.actualSets())
                 || positive(result.actualRepetitions()) || positive(result.actualDurationSeconds())
                 || positive(result.actualContacts()))) {
@@ -259,6 +300,23 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
         }
         if (!Set.of("DECLARED", "DEVICE", "ESTIMATED").contains(mode(result.observationMode()))) {
             throw badRequest("observation mode is invalid");
+        }
+        if (result.actualSetDetails() != null) {
+            if (result.actualSetDetails().isEmpty() || result.actualSetDetails().size() > 100) {
+                throw badRequest("actual set details must contain 1..100 items");
+            }
+            if (result.actualSets() != null && result.actualSets() != result.actualSetDetails().size()) {
+                throw badRequest("actual set count must match actual set details");
+            }
+            for (ActualSet actualSet : result.actualSetDetails()) {
+                if (actualSet == null || negative(actualSet.repetitions()) || negative(actualSet.durationSeconds())
+                        || negative(actualSet.contacts()) || negative(actualSet.loadKg())
+                        || negative(actualSet.externalLoadValue())) throw badRequest("actual set values are outside range");
+            }
+            if (Boolean.TRUE.equals(result.skipped()) && result.actualSetDetails().stream().anyMatch(item ->
+                    positive(item.repetitions()) || positive(item.durationSeconds()) || positive(item.contacts()))) {
+                throw badRequest("skipped result cannot contain a positive set dose");
+            }
         }
     }
 
@@ -295,6 +353,13 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
     private static boolean negative(Integer value) {
         return value != null && value < 0;
     }
+    private static boolean negative(BigDecimal value) { return value != null && value.signum() < 0; }
+
+    private String setDetails(List<ActualSet> details) {
+        if (details == null) return null;
+        try { return objectMapper.writeValueAsString(details); }
+        catch (JacksonException exception) { throw new IllegalStateException("cannot serialize actual set details", exception); }
+    }
 
     private static boolean positive(Integer value) {
         return value != null && value > 0;
@@ -318,14 +383,14 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
         ReportData report = aggregate.report();
         return new ExecutionView(execution.id(), execution.plannedSessionId(), execution.participantAccountId(),
                 execution.declaredCompletion(), execution.recordedAt(), report.painLevel(), report.difficultyLevel(), report.techniqueConfidenceLevel(),
-                report.note(), report.sessionRpe(), report.observationMode(),
+                report.note(), report.sessionRpe(), report.observationMode(), execution.outcome(), execution.stopReason(),
                 aggregate.results().stream().map(item -> new ResultView(
                 item.exercisePrescriptionId(), item.exerciseVersionId(), item.actualSets(),
                 item.actualRepetitions(), item.actualDurationSeconds(), item.actualContacts(),
                 item.actualDistanceMeters(), item.actualLoadKg(), item.actualExternalLoadValue(),
                 item.actualExternalLoadUnit(), item.actualIntensityType(), item.actualIntensityValue(),
                 item.actualIntensityZone(), item.side(), item.modified(), item.skipped(),
-                item.observationMode())).toList(), aggregate.corrections().stream().map(item -> new CorrectionView(
+                item.observationMode(), readSetDetails(item.actualSetDetails()))).toList(), aggregate.corrections().stream().map(item -> new CorrectionView(
                 item.id(), item.reason(), item.correctedPainLevel(), item.correctedDifficultyLevel(),
                 item.correctedResultId(), item.correctedSets(), item.correctedRepetitions(),
                 item.correctedDurationSeconds(), item.correctedContacts(), item.correctedExternalLoadValue(),
@@ -363,7 +428,7 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
         return new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
     }
 
-    private record PrescriptionReference(UUID id, UUID exerciseVersionId) {
+    record PrescriptionReference(UUID id, UUID exerciseVersionId) {
     }
 
     private record ExecutionOwner(UUID id, UUID participantAccountId) {
@@ -371,6 +436,12 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
 
     private static String mode(String value) {
         return value == null || value.isBlank() ? "DECLARED" : value;
+    }
+
+    private List<ActualSet> readSetDetails(String json) {
+        if (json == null) return List.of();
+        try { return objectMapper.readValue(json, objectMapper.getTypeFactory().constructCollectionType(List.class, ActualSet.class)); }
+        catch (JacksonException exception) { throw new IllegalStateException("stored actual set details are invalid", exception); }
     }
 
     public record DeclareExecutionCommand(boolean declaredCompletion, List<ResultCommand> results,
@@ -383,8 +454,12 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
             Integer actualDurationSeconds, Integer actualContacts, BigDecimal actualDistanceMeters,
             BigDecimal actualLoadKg, BigDecimal actualExternalLoadValue, String actualExternalLoadUnit,
             String actualIntensityType, BigDecimal actualIntensityValue, String actualIntensityZone,
-            String side, Boolean modified, Boolean skipped, String observationMode) {
+            String side, Boolean modified, Boolean skipped, String observationMode,
+            List<ActualSet> actualSetDetails) {
     }
+
+    public record ActualSet(Integer repetitions, Integer durationSeconds, Integer contacts,
+                            BigDecimal loadKg, BigDecimal externalLoadValue, String externalLoadUnit) { }
 
     public record CorrectionCommand(
             String reason, Integer correctedPainLevel, Integer correctedDifficultyLevel,
@@ -398,7 +473,7 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
     public record ExecutionView(UUID id, UUID plannedSessionId, UUID participantId,
                                  boolean declaredCompletion, Instant recordedAt, int painLevel,
                                  int difficultyLevel, Integer techniqueConfidenceLevel, String note, Integer sessionRpe,
-                                String observationMode, List<ResultView> results,
+                                String observationMode, String outcome, String stopReason, List<ResultView> results,
                                 List<CorrectionView> corrections, List<String> alerts,
                                 List<AlertData> safetyAlerts) {
     }
@@ -409,7 +484,7 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
             BigDecimal actualDistanceMeters, BigDecimal actualLoadKg,
             BigDecimal actualExternalLoadValue, String actualExternalLoadUnit,
             String actualIntensityType, BigDecimal actualIntensityValue, String actualIntensityZone, String side,
-            boolean modified, boolean skipped, String observationMode) {
+            boolean modified, boolean skipped, String observationMode, List<ActualSet> actualSetDetails) {
     }
 
     public record CorrectionView(UUID id, String reason, Integer correctedPainLevel,

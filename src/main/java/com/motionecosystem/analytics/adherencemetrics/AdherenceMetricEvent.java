@@ -11,7 +11,8 @@ import java.util.UUID;
 @Table(name = "adherence_metric_event", schema = "analytics")
 class AdherenceMetricEvent {
     @Id UUID id;
-    @Column(name = "participant_account_id", nullable = false) UUID participantAccountId;
+    @Column(name = "participant_account_id") UUID participantAccountId;
+    @Column(name = "participant_id") UUID participantId;
     @Column(name = "event_code", nullable = false) String eventCode;
     @Column(name = "technical_reference_id") UUID technicalReferenceId;
     @Column(name = "plan_revision_id") UUID planRevisionId;
@@ -24,10 +25,10 @@ class AdherenceMetricEvent {
     @Column(name = "expires_at", nullable = false) Instant expiresAt;
 
     protected AdherenceMetricEvent() { }
-    AdherenceMetricEvent(UUID participant, String eventCode, UUID reference, UUID planRevisionId,
+    AdherenceMetricEvent(UUID participantAccountId, UUID participantId, String eventCode, UUID reference, UUID planRevisionId,
                          UUID plannedSessionId, UUID sessionAttemptId, String ruleVersionCode,
                          String variantCode, String deduplicationKey, Instant occurredAt, Instant expiresAt) {
-        id = UUID.randomUUID(); participantAccountId = participant; this.eventCode = eventCode;
+        id = UUID.randomUUID(); this.participantAccountId = participantAccountId; this.participantId = participantId; this.eventCode = eventCode;
         technicalReferenceId = reference; this.planRevisionId = planRevisionId; this.plannedSessionId = plannedSessionId;
         this.sessionAttemptId = sessionAttemptId; this.ruleVersionCode = ruleVersionCode; this.variantCode = variantCode;
         this.deduplicationKey = deduplicationKey; this.occurredAt = occurredAt; this.expiresAt = expiresAt;

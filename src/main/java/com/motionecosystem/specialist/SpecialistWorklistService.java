@@ -117,7 +117,7 @@ class SpecialistWorklistService {
         ParticipantIssueReply reply = replies.save(new ParticipantIssueReply(issue.id, specialist, text, clock.instant()));
         item.acknowledge(clock.instant());
         audit.record(subject, "SPECIALIST_REPLIED_TO_PARTICIPANT_ISSUE", "ParticipantIssueReply", reply.id);
-        metrics.record(item.participantId, "WORKLIST_REPLIED", reply.id, item.planRevisionId, null, null,
+        metrics.recordForParticipant(item.participantId, "WORKLIST_REPLIED", reply.id, item.planRevisionId, null, null,
                 "WORKLIST_REPLY_V1", null);
         return new ReplyView(reply.id, reply.shortText, reply.createdAt);
     }

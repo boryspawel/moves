@@ -111,7 +111,7 @@ public class SpecialistParticipantReadService {
         revision.ifPresent(value -> addPlanEvents(events, value, normalized));
         if (normalized.types().contains(TimelineType.EXECUTION) && canViewExecutionHistory(access, participantId)) {
             executionHistory.timeline(participantId, normalized.from(), normalized.to(), null, MAX_LIMIT)
-                    .forEach(item -> events.add(executionEvent(item, revision.orElse(null))));
+                    .forEach(item -> events.add(executionEvent(item)));
         }
         List<ParticipantTimelineEvent> aggregatedEvents = aggregate(events, normalized.granularity());
         Comparator<ParticipantTimelineEvent> order = Comparator
@@ -321,14 +321,26 @@ public class SpecialistParticipantReadService {
         };
     }
 
-    private static ParticipantTimelineEvent executionEvent(ParticipantExecutionHistoryQueryPort.ExecutionStart item,
-                                                            PlanRevisionQueryPort.PlanRevisionSnapshot activeRevision) {
+    private ParticipantTimelineEvent executionEvent(ParticipantExecutionHistoryQueryPort.ExecutionStart item) {
         Instant effective = item.completedAt() != null ? item.completedAt() : item.abandonedAt() != null ? item.abandonedAt() : item.startedAt();
-        String type = item.completedAt() != null ? "SESSION_COMPLETED" : item.abandonedAt() != null ? "SESSION_ABANDONED" : "SESSION_STARTED";
-        return new ParticipantTimelineEvent("session-execution:" + item.attemptId(), type, "EXECUTION", item.state(),
-                effective, null, item.startedAt(), item.updatedAt(), "Session execution", item.variant(), "NORMAL", "OPERATIONAL",
-                null, "SESSION_EXECUTION_ATTEMPT", List.of(), item.planRevisionId(), comparison(item, activeRevision), null, null,
+        String type = executionEventType(item);
+        String outcome = item.outcome() == null ? item.state() : item.outcome();
+        String summary = "Execution outcome recorded";
+        return new ParticipantTimelineEvent("session-execution:" + item.attemptId(), type, "EXECUTION", outcome,
+                effective, null, item.startedAt(), item.updatedAt(), "Session execution", summary, "NORMAL", "OPERATIONAL",
+                null, "SESSION_EXECUTION_ATTEMPT", List.of(), item.planRevisionId(), comparison(item), null, null,
                 List.of(), new EventDetail("SESSION_EXECUTION_ATTEMPT", item.attemptId().toString()));
+    }
+
+    public static String executionEventType(ParticipantExecutionHistoryQueryPort.ExecutionStart item) {
+        if (item.outcome() != null) return switch (item.outcome()) {
+            case "COMPLETED" -> "SESSION_COMPLETED";
+            case "PARTIAL" -> "SESSION_PARTIALLY_COMPLETED";
+            case "SKIPPED" -> "SESSION_SKIPPED";
+            case "STOPPED" -> "SESSION_STOPPED";
+            default -> item.completedAt() != null ? "SESSION_COMPLETED" : item.abandonedAt() != null ? "SESSION_ABANDONED" : "SESSION_STARTED";
+        };
+        return item.completedAt() != null ? "SESSION_COMPLETED" : item.abandonedAt() != null ? "SESSION_ABANDONED" : "SESSION_STARTED";
     }
 
     private static List<ParticipantTimelineEvent> aggregate(List<ParticipantTimelineEvent> events, Granularity granularity) {
@@ -358,24 +370,31 @@ public class SpecialistParticipantReadService {
                         date.get(java.time.temporal.WeekFields.ISO.weekOfWeekBasedYear()));
     }
 
-    private static PlannedExecutionComparison comparison(ParticipantExecutionHistoryQueryPort.ExecutionStart execution,
-                                                          PlanRevisionQueryPort.PlanRevisionSnapshot activeRevision) {
-        if (activeRevision == null || !activeRevision.revisionId().equals(execution.planRevisionId())) {
-            return new PlannedExecutionComparison(null, new PerformedSession(execution.plannedSessionId(), execution.variant(), null),
+    private PlannedExecutionComparison comparison(ParticipantExecutionHistoryQueryPort.ExecutionStart execution) {
+        if (execution.planRevisionId() == null) return new PlannedExecutionComparison(null, performed(execution),
+                execution.state(), List.of());
+        PlanRevisionQueryPort.PlanRevisionSnapshot historicalRevision = revisions.findRevision(execution.planRevisionId()).orElse(null);
+        if (historicalRevision == null) {
+            return new PlannedExecutionComparison(null, performed(execution),
                     execution.state(), List.of());
         }
-        PlanRevisionQueryPort.SessionSnapshot planned = activeRevision.cycles().stream()
+        PlanRevisionQueryPort.SessionSnapshot planned = historicalRevision.cycles().stream()
                 .flatMap(cycle -> cycle.microcycles().stream()).flatMap(microcycle -> microcycle.sessions().stream())
                 .filter(session -> session.id().equals(execution.plannedSessionId())).findFirst().orElse(null);
         if (planned == null) return new PlannedExecutionComparison(null,
-                new PerformedSession(execution.plannedSessionId(), execution.variant(), null), execution.state(), List.of());
+                performed(execution), execution.state(), List.of());
         List<PlannedDose> doses = planned.prescriptions().stream().map(item -> new PlannedDose(item.id(), item.exerciseVersionId(),
                 item.sets(), item.repetitions(), item.durationSeconds(), item.externalLoadValue(), item.externalLoadUnit(),
                 item.distanceMeters(), item.tempo(), item.restSeconds())).toList();
         List<ExecutionDeviation> deviations = "STANDARD".equals(execution.variant()) ? List.of()
                 : List.of(new ExecutionDeviation("VARIANT_SELECTED", null, execution.variant()));
         return new PlannedExecutionComparison(new PlannedSession(planned.id(), planned.title(), doses),
-                new PerformedSession(execution.plannedSessionId(), execution.variant(), null), execution.state(), deviations);
+                performed(execution), execution.state(), deviations);
+    }
+    private static PerformedSession performed(ParticipantExecutionHistoryQueryPort.ExecutionStart execution) {
+        return new PerformedSession(execution.plannedSessionId(), execution.variant(), null, execution.outcome(),
+                execution.performedCount(), execution.partialCount(), execution.skippedCount(), execution.notReachedCount(),
+                execution.painLevel(), execution.difficultyLevel(), execution.stopReason());
     }
 
     private static AppointmentView appointment(SpecialistAppointmentQueryPort.AppointmentSummary item) {
@@ -508,7 +527,9 @@ public class SpecialistParticipantReadService {
     public record PlannedDose(UUID prescriptionId, UUID exerciseVersionId, Integer sets, Integer repetitions,
                               Integer durationSeconds, BigDecimal load, String loadUnit, BigDecimal distance,
                               String tempo, Integer restSeconds) { }
-    public record PerformedSession(UUID plannedSessionId, String selectedVariant, String detailResourceId) { }
+    public record PerformedSession(UUID plannedSessionId, String selectedVariant, String detailResourceId, String outcome,
+                                   Integer performedCount, Integer partialCount, Integer skippedCount, Integer notReachedCount,
+                                   Integer painLevel, Integer difficultyLevel, String stopReason) { }
     public record ExecutionDeviation(String type, String plannedValue, String performedValue) { }
     public record Measurement(String metricCode, BigDecimal value, String unit) { }
     public record Problem(UUID problemId, String type, String status, String summary) { }

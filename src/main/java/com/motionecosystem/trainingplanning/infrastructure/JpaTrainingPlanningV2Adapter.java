@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel;
 import com.motionecosystem.trainingplanning.TrainingPlanningV2Persistence;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort;
+import com.motionecosystem.exercisesets.api.ExerciseSetVersionQueryPort;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Repository;
 public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persistence, PlanRevisionQueryPort {
 
     private final EntityManager entityManager;
+    private final ObjectMapper json;
 
     @Override
     public void createDraft(TrainingPlanningModel.PlanDraft plan, TrainingPlanningModel.Revision revision) {
@@ -590,7 +593,7 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
                         item.evidenceSource)).toList());
     }
 
-    private static CycleSnapshot cycleSnapshot(TrainingCycleJpaEntity cycle,
+    private CycleSnapshot cycleSnapshot(TrainingCycleJpaEntity cycle,
                                                 List<MicrocycleJpaEntity> microcycles,
                                                 Map<UUID, List<PlannedSessionJpaEntity>> sessions,
                                                 Map<UUID, List<ExercisePrescriptionJpaEntity>> prescriptions,
@@ -604,14 +607,14 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
                                 variants.getOrDefault(session.id, List.of()), variantItems)).toList())).toList());
     }
 
-    private static SessionSnapshot sessionSnapshot(PlannedSessionJpaEntity session,
+    private SessionSnapshot sessionSnapshot(PlannedSessionJpaEntity session,
                                                    List<ExercisePrescriptionJpaEntity> prescriptions,
                                                    List<PlannedSessionVariantJpaEntity> variants,
                                                    Map<UUID, List<PlannedSessionVariantItemJpaEntity>> variantItems) {
         return new SessionSnapshot(session.id, session.sourceExerciseSetId, session.sourceExerciseSetVersionId,
                 session.title, session.scheduledDate, session.availableFrom,
                 session.availableTo, session.expectedDurationMinutes == null ? 0 : session.expectedDurationMinutes,
-                session.status.name(), session.sourceSnapshot, prescriptions.stream().map(JpaTrainingPlanningV2Adapter::prescriptionSnapshot).toList(),
+                session.status.name(), session.sourceSnapshot, prescriptions.stream().map(this::prescriptionSnapshot).toList(),
                 variants.stream().map(variant -> new SessionVariantSnapshot(variant.id, variant.variantType,
                         variant.expectedDurationMinutes, variantItems.getOrDefault(variant.id, List.of()).stream()
                         .map(item -> new SessionVariantItemSnapshot(item.id, item.basePrescriptionId, item.position,
@@ -619,12 +622,22 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
                                 item.overrideContacts)).toList())).toList());
     }
 
-    private static PrescriptionSnapshot prescriptionSnapshot(ExercisePrescriptionJpaEntity item) {
+    private PrescriptionSnapshot prescriptionSnapshot(ExercisePrescriptionJpaEntity item) {
         return new PrescriptionSnapshot(item.id, item.sourceExerciseSetItemId, item.sourceExerciseSetVersionId,
                 item.materializedSnapshot, item.canonicalDoseType, item.exerciseVersionId, item.position, item.side,
                 item.doseType, item.targetSets, item.targetRepetitions, item.targetDurationSeconds,
                 item.distanceMeters, item.contacts, item.externalLoadValue, item.externalLoadUnit,
                 item.intensityType, item.intensityValue, item.intensityZone, item.tempo, item.rangeOfMotion,
-                item.restSeconds, item.substituteGroup, item.notes);
+                item.restSeconds, item.substituteGroup, item.notes, exerciseName(item));
+    }
+
+    private String exerciseName(ExercisePrescriptionJpaEntity item) {
+        if (item.materializedSnapshot == null) return null;
+        try {
+            return json.readValue(item.materializedSnapshot, ExerciseSetVersionQueryPort.ItemSnapshot.class)
+                    .exercise().canonicalName();
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 }

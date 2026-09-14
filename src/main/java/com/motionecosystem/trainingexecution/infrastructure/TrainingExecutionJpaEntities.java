@@ -15,6 +15,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity(name = "SessionExecutionJpaEntity")
 @Table(name = "session_execution", schema = "training_execution")
@@ -27,6 +29,9 @@ class SessionExecutionJpaEntity {
     @Column(name = "recorded_at", nullable = false, updatable = false) Instant recordedAt;
     @Column(name = "declaration_event_id") UUID declarationEventId;
     @Column(name = "projection_status") String projectionStatus;
+    String outcome;
+    @Column(name = "stop_reason") String stopReason;
+    @Column(name = "attempt_id") UUID attemptId;
 
     protected SessionExecutionJpaEntity() {
     }
@@ -40,6 +45,9 @@ class SessionExecutionJpaEntity {
         recordedAt = source.recordedAt();
         declarationEventId = source.declarationEventId();
         projectionStatus = source.projectionStatus();
+        outcome = source.outcome();
+        stopReason = source.stopReason();
+        attemptId = source.attemptId();
     }
 
     UUID id() { return id; }
@@ -47,7 +55,7 @@ class SessionExecutionJpaEntity {
 
     ExecutionData data() {
         return new ExecutionData(id, plannedSessionId, participantAccountId,
-                declaredCompletion, idempotencyKey, recordedAt, declarationEventId, projectionStatus);
+                declaredCompletion, idempotencyKey, recordedAt, declarationEventId, projectionStatus, outcome, stopReason, attemptId);
     }
 }
 
@@ -73,6 +81,7 @@ class ExerciseResultJpaEntity {
     boolean modified;
     boolean skipped;
     @Column(name = "observation_mode") String observationMode;
+    @JdbcTypeCode(SqlTypes.JSON) @Column(name = "actual_set_details", columnDefinition = "jsonb") String actualSetDetails;
 
     protected ExerciseResultJpaEntity() {
     }
@@ -97,6 +106,7 @@ class ExerciseResultJpaEntity {
         modified = source.modified();
         skipped = source.skipped();
         observationMode = source.observationMode();
+        actualSetDetails = source.actualSetDetails();
     }
 
     UUID sessionExecutionId() { return sessionExecutionId; }
@@ -106,7 +116,7 @@ class ExerciseResultJpaEntity {
                 actualSets, actualRepetitions, actualDurationSeconds, actualContacts,
                 actualDistanceMeters, actualLoadKg, actualExternalLoadValue, actualExternalLoadUnit,
                 actualIntensityType, actualIntensityValue, actualIntensityZone, side,
-                modified, skipped, observationMode);
+                modified, skipped, observationMode, actualSetDetails);
     }
 }
 

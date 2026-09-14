@@ -109,7 +109,7 @@ public class RecoveryEpisodeService implements SessionStartAuthorizationPort, Ex
         UUID target = targetSession(active);
         episode.select(path, target, clock.instant());
         choices.save(new RecoveryChoice(episode.id, offer.id, path, key.trim(), clock.instant()));
-        metrics.record(participant, "RECOVERY_CHOICE_SELECTED", episode.id, active.revisionId(), target, null,
+        metrics.recordForParticipant(participant, "RECOVERY_CHOICE_SELECTED", episode.id, active.revisionId(), target, null,
                 episode.policyVersionCode, path);
         if ("CONTACT_SPECIALIST".equals(path)) specialistSignals.signalRecoveryContact(participant, episode.id);
         if ("START_MINIMUM".equals(path) || "START_SHORT".equals(path)) {
@@ -156,7 +156,7 @@ public class RecoveryEpisodeService implements SessionStartAuthorizationPort, Ex
         episodes.findFirstByParticipantAccountIdAndTargetPlannedSessionIdAndStatusIn(participant, sessionId, ACTIVE)
                 .ifPresent(episode -> {
                     episode.resolved(executionId, clock.instant());
-                    metrics.record(participant, "RECOVERY_RETURN_COMPLETED", episode.id, episode.planRevisionIdAtOpening,
+                    metrics.recordForParticipant(participant, "RECOVERY_RETURN_COMPLETED", episode.id, episode.planRevisionIdAtOpening,
                             sessionId, episode.returnAttemptId, episode.policyVersionCode, episode.selectedPath);
                 });
     }

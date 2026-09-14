@@ -13,6 +13,14 @@
  */
 
 import { mapValues } from '../runtime';
+import type { ActualSet } from './ActualSet';
+import {
+  ActualSetFromJSON,
+  ActualSetFromJSONTyped,
+  ActualSetToJSON,
+  ActualSetToJSONTyped,
+} from './ActualSet';
+
 /**
  *
  * @export
@@ -79,6 +87,12 @@ export interface ResultCommand {
    * @memberof ResultCommand
    */
   actualRepetitions?: number;
+  /**
+   *
+   * @type {Array<ActualSet>}
+   * @memberof ResultCommand
+   */
+  actualSetDetails?: Array<ActualSet>;
   /**
    *
    * @type {number}
@@ -150,6 +164,10 @@ export function ResultCommandFromJSONTyped(json: any, ignoreDiscriminator: boole
       json['actualIntensityZone'] == null ? undefined : json['actualIntensityZone'],
     actualLoadKg: json['actualLoadKg'] == null ? undefined : json['actualLoadKg'],
     actualRepetitions: json['actualRepetitions'] == null ? undefined : json['actualRepetitions'],
+    actualSetDetails:
+      json['actualSetDetails'] == null
+        ? undefined
+        : (json['actualSetDetails'] as Array<any>).map(ActualSetFromJSON),
     actualSets: json['actualSets'] == null ? undefined : json['actualSets'],
     exercisePrescriptionId:
       json['exercisePrescriptionId'] == null ? undefined : json['exercisePrescriptionId'],
@@ -183,6 +201,10 @@ export function ResultCommandToJSONTyped(
     actualIntensityZone: value['actualIntensityZone'],
     actualLoadKg: value['actualLoadKg'],
     actualRepetitions: value['actualRepetitions'],
+    actualSetDetails:
+      value['actualSetDetails'] == null
+        ? undefined
+        : (value['actualSetDetails'] as Array<any>).map(ActualSetToJSON),
     actualSets: value['actualSets'],
     exercisePrescriptionId: value['exercisePrescriptionId'],
     modified: value['modified'],

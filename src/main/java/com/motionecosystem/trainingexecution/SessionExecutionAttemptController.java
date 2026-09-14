@@ -33,6 +33,12 @@ class SessionExecutionAttemptController {
         return attempts.start(jwt.getSubject(), command.plannedSessionId(), command.planRevisionId(), command.selectedVariantType(), idempotencyKey);
     }
 
+    @GetMapping("/active")
+    @PreAuthorize("hasRole('PARTICIPANT')")
+    AttemptView active(@AuthenticationPrincipal Jwt jwt, @org.springframework.web.bind.annotation.RequestParam UUID plannedSessionId) {
+        return attempts.active(jwt.getSubject(), plannedSessionId);
+    }
+
     @PostMapping("/{attemptId}/pause")
     @PreAuthorize("hasRole('PARTICIPANT')")
     AttemptView pause(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID attemptId) {
@@ -53,20 +59,35 @@ class SessionExecutionAttemptController {
     }
 
     @PutMapping("/{attemptId}/progress")
-    @PreAuthorize("hasRole(PARTICIPANT)")
+    @PreAuthorize("hasRole('PARTICIPANT')")
     AttemptView progress(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID attemptId,
                          @RequestBody ProgressCommand command) {
         return attempts.updateProgress(jwt.getSubject(), attemptId, command.exercisePrescriptionId(), command.completed());
     }
 
+    @PostMapping("/{attemptId}/facts")
+    @PreAuthorize("hasRole('PARTICIPANT')")
+    SessionExecutionAttemptService.AttemptDetailView fact(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID attemptId,
+                                                           @RequestBody SessionExecutionAttemptService.FactCommand command) {
+        return attempts.recordFact(jwt.getSubject(), attemptId, command);
+    }
+
+    @PostMapping("/{attemptId}/finish")
+    @PreAuthorize("hasRole('PARTICIPANT')")
+    SessionExecutionService.ExecutionView finish(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID attemptId,
+            @RequestHeader("Idempotency-Key") String idempotencyKey,
+            @RequestBody SessionExecutionAttemptService.FinishCommand command) {
+        return attempts.finish(jwt.getSubject(), attemptId, idempotencyKey, command);
+    }
+
     @GetMapping("/{attemptId}")
-    @PreAuthorize("hasRole(PARTICIPANT)")
+    @PreAuthorize("hasRole('PARTICIPANT')")
     SessionExecutionAttemptService.AttemptDetailView get(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID attemptId) {
         return attempts.get(jwt.getSubject(), attemptId);
     }
 
     @PostMapping("/{attemptId}/complete")
-    @PreAuthorize("hasRole(PARTICIPANT)")
+    @PreAuthorize("hasRole('PARTICIPANT')")
     SessionExecutionService.ExecutionView complete(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID attemptId,
             @RequestHeader("Idempotency-Key") String idempotencyKey,
             @RequestBody SessionExecutionService.DeclareExecutionCommand command) {
@@ -75,8 +96,10 @@ class SessionExecutionAttemptController {
                     "techniqueConfidenceLevel is required for guided completion");
         }
         attempts.validateCompletionResults(jwt.getSubject(), attemptId, command);
-        return executions.declare(jwt.getSubject(), attempts.plannedSessionForCompletion(jwt.getSubject(), attemptId),
+        var result = executions.declare(jwt.getSubject(), attempts.plannedSessionForCompletion(jwt.getSubject(), attemptId),
                 idempotencyKey, command);
+        attempts.completeAfterFinalDeclaration(jwt.getSubject(), result.participantId(), result.plannedSessionId());
+        return result;
     }
 
     record StartAttemptCommand(UUID plannedSessionId, UUID planRevisionId, String selectedVariantType) { }

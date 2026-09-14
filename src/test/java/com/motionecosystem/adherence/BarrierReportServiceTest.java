@@ -54,7 +54,7 @@ class BarrierReportServiceTest {
         assertThat(view.proposedOptions()).containsExactly("START_SHORT", "START_MINIMUM", "RESCHEDULE", "CONTACT_SPECIALIST");
         assertThat(view.actionOutcome()).isEqualTo("OPTIONS_PRESENTED");
         verify(reports).saveAndFlush(any(BarrierReport.class));
-        verify(metrics).record(eq(participant), eq("BARRIER_REPORTED"), any(), eq(revision), eq(session),
+        verify(metrics).recordForParticipant(eq(participant), eq("BARRIER_REPORTED"), any(), eq(revision), eq(session),
                 org.mockito.ArgumentMatchers.isNull(), eq("BARRIER_RESPONSE_V1"), org.mockito.ArgumentMatchers.isNull());
         verify(signals, never()).signalContact(any(), any(), any(), anyBoolean());
     }

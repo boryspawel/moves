@@ -27,6 +27,42 @@ export interface PerformedSession {
   detailResourceId?: string;
   /**
    *
+   * @type {number}
+   * @memberof PerformedSession
+   */
+  difficultyLevel?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof PerformedSession
+   */
+  notReachedCount?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof PerformedSession
+   */
+  outcome?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof PerformedSession
+   */
+  painLevel?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof PerformedSession
+   */
+  partialCount?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof PerformedSession
+   */
+  performedCount?: number;
+  /**
+   *
    * @type {string}
    * @memberof PerformedSession
    */
@@ -37,6 +73,18 @@ export interface PerformedSession {
    * @memberof PerformedSession
    */
   selectedVariant?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof PerformedSession
+   */
+  skippedCount?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof PerformedSession
+   */
+  stopReason?: string;
 }
 
 /**
@@ -59,8 +107,16 @@ export function PerformedSessionFromJSONTyped(
   }
   return {
     detailResourceId: json['detailResourceId'] == null ? undefined : json['detailResourceId'],
+    difficultyLevel: json['difficultyLevel'] == null ? undefined : json['difficultyLevel'],
+    notReachedCount: json['notReachedCount'] == null ? undefined : json['notReachedCount'],
+    outcome: json['outcome'] == null ? undefined : json['outcome'],
+    painLevel: json['painLevel'] == null ? undefined : json['painLevel'],
+    partialCount: json['partialCount'] == null ? undefined : json['partialCount'],
+    performedCount: json['performedCount'] == null ? undefined : json['performedCount'],
     plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
     selectedVariant: json['selectedVariant'] == null ? undefined : json['selectedVariant'],
+    skippedCount: json['skippedCount'] == null ? undefined : json['skippedCount'],
+    stopReason: json['stopReason'] == null ? undefined : json['stopReason'],
   };
 }
 
@@ -78,7 +134,15 @@ export function PerformedSessionToJSONTyped(
 
   return {
     detailResourceId: value['detailResourceId'],
+    difficultyLevel: value['difficultyLevel'],
+    notReachedCount: value['notReachedCount'],
+    outcome: value['outcome'],
+    painLevel: value['painLevel'],
+    partialCount: value['partialCount'],
+    performedCount: value['performedCount'],
     plannedSessionId: value['plannedSessionId'],
     selectedVariant: value['selectedVariant'],
+    skippedCount: value['skippedCount'],
+    stopReason: value['stopReason'],
   };
 }

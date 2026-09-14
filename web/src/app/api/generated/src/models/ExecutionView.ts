@@ -85,6 +85,12 @@ export interface ExecutionView {
   observationMode?: string;
   /**
    *
+   * @type {string}
+   * @memberof ExecutionView
+   */
+  outcome?: string;
+  /**
+   *
    * @type {number}
    * @memberof ExecutionView
    */
@@ -127,6 +133,12 @@ export interface ExecutionView {
   sessionRpe?: number;
   /**
    *
+   * @type {string}
+   * @memberof ExecutionView
+   */
+  stopReason?: string;
+  /**
+   *
    * @type {number}
    * @memberof ExecutionView
    */
@@ -159,6 +171,7 @@ export function ExecutionViewFromJSONTyped(json: any, ignoreDiscriminator: boole
     id: json['id'] == null ? undefined : json['id'],
     note: json['note'] == null ? undefined : json['note'],
     observationMode: json['observationMode'] == null ? undefined : json['observationMode'],
+    outcome: json['outcome'] == null ? undefined : json['outcome'],
     painLevel: json['painLevel'] == null ? undefined : json['painLevel'],
     participantId: json['participantId'] == null ? undefined : json['participantId'],
     plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
@@ -170,6 +183,7 @@ export function ExecutionViewFromJSONTyped(json: any, ignoreDiscriminator: boole
         ? undefined
         : (json['safetyAlerts'] as Array<any>).map(AlertDataFromJSON),
     sessionRpe: json['sessionRpe'] == null ? undefined : json['sessionRpe'],
+    stopReason: json['stopReason'] == null ? undefined : json['stopReason'],
     techniqueConfidenceLevel:
       json['techniqueConfidenceLevel'] == null ? undefined : json['techniqueConfidenceLevel'],
   };
@@ -198,6 +212,7 @@ export function ExecutionViewToJSONTyped(
     id: value['id'],
     note: value['note'],
     observationMode: value['observationMode'],
+    outcome: value['outcome'],
     painLevel: value['painLevel'],
     participantId: value['participantId'],
     plannedSessionId: value['plannedSessionId'],
@@ -210,6 +225,7 @@ export function ExecutionViewToJSONTyped(
         ? undefined
         : (value['safetyAlerts'] as Array<any>).map(AlertDataToJSON),
     sessionRpe: value['sessionRpe'],
+    stopReason: value['stopReason'],
     techniqueConfidenceLevel: value['techniqueConfidenceLevel'],
   };
 }

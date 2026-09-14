@@ -335,3 +335,9 @@ uczestnika i wymaga aktywnej relacji oraz capability właściwych dla tego konte
 # Participant documentation
 
 The specialist participant workspace backend now exposes specialist-owned initial interviews and notes as participant documentation over canonical participant IDs. Historical access is intentionally denied after relationship termination pending a retention/consent policy; see `docs/architecture/participant-documentation.md`.
+
+# P4 — execution attempt facts and terminal outcomes
+
+Planned dose remains a planning snapshot and is never treated as actual work. A participant records append-only execution facts per prescription; the latest revision is the current fact while prior revisions remain audit history. Per-set actual details are retained in order and projections sum their supported dimensions. `COMPLETED` requires every selected prescription to be `PERFORMED`; `PARTIAL`, `SKIPPED` and `STOPPED` are terminal non-completion outcomes, not successful qualifications. Recovery completion is therefore emitted only for a fully completed execution.
+
+The participant timeline is typed by terminal outcome and includes fact counts. Adherence metrics now have an additive canonical `participant_id` bridge for participant-keyed producers while legacy account-keyed metrics remain preserved; the V058-to-V059 migration backfills only through an existing unique access link and never invents execution facts or identity links.

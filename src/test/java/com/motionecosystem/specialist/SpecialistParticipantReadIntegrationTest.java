@@ -86,6 +86,14 @@ class SpecialistParticipantReadIntegrationTest {
     }
 
     @Test
+    void usesTheRecordedPartialAndStoppedOutcomesForExecutionEventTypes() {
+        assertThat(SpecialistParticipantReadService.executionEventType(executionStart("PARTIAL")))
+                .isEqualTo("SESSION_PARTIALLY_COMPLETED");
+        assertThat(SpecialistParticipantReadService.executionEventType(executionStart("STOPPED")))
+                .isEqualTo("SESSION_STOPPED");
+    }
+
+    @Test
     void combinesSourcesInDeterministicOrderAndUsesCursorForCalendarSeek() {
         Fixture fixture = fixture(true, EnumSet.of(ConsentDecisionPort.DataScope.PLAN, ConsentDecisionPort.DataScope.EXECUTION));
         Instant effectiveAt = Instant.parse("2030-06-10T09:00:00Z");
@@ -257,6 +265,12 @@ class SpecialistParticipantReadIntegrationTest {
     private void execution(UUID participantId, Instant completedAt, String key) {
         transactions.executeWithoutResult(status -> TimelineExecutionAttemptFixture.completed(
                 entityManager, participantId, UUID.randomUUID(), key, completedAt));
+    }
+
+    private static com.motionecosystem.trainingexecution.api.ParticipantExecutionHistoryQueryPort.ExecutionStart executionStart(String outcome) {
+        Instant now = Instant.parse("2030-06-10T09:00:00Z");
+        return new com.motionecosystem.trainingexecution.api.ParticipantExecutionHistoryQueryPort.ExecutionStart(UUID.randomUUID(), UUID.randomUUID(), null,
+                "COMPLETED", "STANDARD", now, now, null, now, null, outcome, 1, 1, 0, 2, 3, 4, "Ból");
     }
 
     private static void set(Object target, String fieldName, Object value) {

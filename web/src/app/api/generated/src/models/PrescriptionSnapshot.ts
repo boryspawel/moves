@@ -54,6 +54,12 @@ export interface PrescriptionSnapshot {
    * @type {string}
    * @memberof PrescriptionSnapshot
    */
+  exerciseName?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PrescriptionSnapshot
+   */
   exerciseVersionId?: string;
   /**
    *
@@ -189,6 +195,7 @@ export function PrescriptionSnapshotFromJSONTyped(
     distanceMeters: json['distanceMeters'] == null ? undefined : json['distanceMeters'],
     doseType: json['doseType'] == null ? undefined : json['doseType'],
     durationSeconds: json['durationSeconds'] == null ? undefined : json['durationSeconds'],
+    exerciseName: json['exerciseName'] == null ? undefined : json['exerciseName'],
     exerciseVersionId: json['exerciseVersionId'] == null ? undefined : json['exerciseVersionId'],
     externalLoadUnit: json['externalLoadUnit'] == null ? undefined : json['externalLoadUnit'],
     externalLoadValue: json['externalLoadValue'] == null ? undefined : json['externalLoadValue'],
@@ -232,6 +239,7 @@ export function PrescriptionSnapshotToJSONTyped(
     distanceMeters: value['distanceMeters'],
     doseType: value['doseType'],
     durationSeconds: value['durationSeconds'],
+    exerciseName: value['exerciseName'],
     exerciseVersionId: value['exerciseVersionId'],
     externalLoadUnit: value['externalLoadUnit'],
     externalLoadValue: value['externalLoadValue'],

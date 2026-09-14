@@ -14,6 +14,8 @@ public interface SessionExecutionPersistence {
 
     Optional<ExecutionAggregate> findByPlannedSessionId(UUID plannedSessionId);
 
+    Optional<ExecutionAggregate> findByAttemptId(UUID attemptId);
+
     Optional<ExecutionOwner> findOwner(UUID executionId);
 
     Optional<ExecutionAggregate> findById(UUID executionId);
@@ -51,7 +53,8 @@ public interface SessionExecutionPersistence {
 
     record ExecutionData(UUID id, UUID plannedSessionId, UUID participantAccountId,
                          boolean declaredCompletion, String idempotencyKey, Instant recordedAt,
-                         UUID declarationEventId, String projectionStatus) {
+                         UUID declarationEventId, String projectionStatus, String outcome, String stopReason,
+                         UUID attemptId) {
     }
 
     record ResultData(UUID id, UUID sessionExecutionId, UUID exercisePrescriptionId,
@@ -60,7 +63,7 @@ public interface SessionExecutionPersistence {
                       BigDecimal actualLoadKg, BigDecimal actualExternalLoadValue,
                       String actualExternalLoadUnit, String actualIntensityType,
                       BigDecimal actualIntensityValue, String actualIntensityZone, String side,
-                      boolean modified, boolean skipped, String observationMode) {
+                      boolean modified, boolean skipped, String observationMode, String actualSetDetails) {
     }
 
     record ReportData(UUID id, UUID sessionExecutionId, int painLevel, int difficultyLevel,

@@ -17,6 +17,9 @@ import com.motionecosystem.trainingexecution.SessionExecutionPersistence.Correct
 import com.motionecosystem.trainingexecution.SessionExecutionPersistence.ExecutedObservationData;
 import com.motionecosystem.trainingexecution.SessionExecutionPersistence.Post24hData;
 import com.motionecosystem.trainingexecution.SessionExecutionPersistence.ResultData;
+import com.motionecosystem.trainingexecution.SessionExecutionService.ActualSet;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
@@ -47,6 +50,7 @@ public class ExecutionProjectionService {
     private final TransactionalOutbox outbox;
     private final AuditRecorder audit;
     private final Clock clock;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public ProjectionResult project(UUID executionId) {
@@ -127,7 +131,7 @@ public class ExecutionProjectionService {
             outbox.append("SessionExecution", executionId, "ExecutedLoadProjected",
                     "{\"executionId\":\"" + executionId + "\",\"calculatorVersion\":\""
                             + CALCULATOR_VERSION + "\"}", now);
-            if (!rebuild) {
+            if (!rebuild && aggregate.execution().declaredCompletion()) {
                 outbox.append("SessionExecution", executionId, "ExecutionQualifiedForGamification",
                         "{\"executionId\":\"" + executionId
                                 + "\",\"qualificationType\":\"COMPLETED_SESSION\"}", now);
@@ -202,8 +206,19 @@ public class ExecutionProjectionService {
                 .orElseThrow(() -> forbidden("an active participant access link is required"));
     }
 
-    private static Dose dose(ResultData result, String channel) {
+    private Dose dose(ResultData result, String channel) {
         if (result.skipped()) return new Dose(BigDecimal.ZERO, unit(channel));
+        List<ActualSet> details = setDetails(result.actualSetDetails());
+        if (!details.isEmpty()) {
+            return switch (channel) {
+                case "DYN_EXU" -> sum(details, ActualSet::repetitions, "EXU");
+                case "ISO_SEC" -> sum(details, ActualSet::durationSeconds, "s");
+                case "IMPACT_CONTACTS" -> sum(details, ActualSet::contacts, "contacts");
+                case "ENDURANCE_MIN_ZONE" -> sum(details, ActualSet::durationSeconds, "s") == null ? null :
+                        new Dose(sum(details, ActualSet::durationSeconds, "s").value().divide(BigDecimal.valueOf(60), 8, RoundingMode.HALF_UP), "min");
+                default -> null;
+            };
+        }
         int sets = result.actualSets() == null ? 1 : result.actualSets();
         return switch (channel) {
             case "DYN_EXU" -> result.actualRepetitions() == null ? null
@@ -217,6 +232,17 @@ public class ExecutionProjectionService {
                             .divide(BigDecimal.valueOf(60), 8, RoundingMode.HALF_UP), "min");
             default -> null;
         };
+    }
+
+    private List<ActualSet> setDetails(String json) {
+        if (json == null) return List.of();
+        try { return objectMapper.readValue(json, objectMapper.getTypeFactory().constructCollectionType(List.class, ActualSet.class)); }
+        catch (JacksonException exception) { throw new IllegalStateException("stored actual set details are invalid", exception); }
+    }
+    private static Dose sum(List<ActualSet> values, java.util.function.Function<ActualSet, Integer> field, String unit) {
+        BigDecimal total = BigDecimal.ZERO; boolean present = false;
+        for (ActualSet value : values) { Integer item = field.apply(value); if (item != null) { total = total.add(BigDecimal.valueOf(item)); present = true; } }
+        return present ? new Dose(total, unit) : null;
     }
 
     private static ResultData corrected(ResultData original, List<CorrectionData> corrections) {
@@ -233,7 +259,7 @@ public class ExecutionProjectionService {
                     value.actualIntensityType(), value.actualIntensityValue(), value.actualIntensityZone(),
                     first(correction.correctedSide(), value.side()),
                     first(correction.correctedModified(), value.modified()),
-                    first(correction.correctedSkipped(), value.skipped()), correction.observationMode());
+                    first(correction.correctedSkipped(), value.skipped()), correction.observationMode(), value.actualSetDetails());
         }
         return value;
     }

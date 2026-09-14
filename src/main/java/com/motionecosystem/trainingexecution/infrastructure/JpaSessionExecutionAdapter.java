@@ -46,6 +46,15 @@ public class JpaSessionExecutionAdapter implements SessionExecutionPersistence {
     }
 
     @Override
+    public Optional<ExecutionAggregate> findByAttemptId(UUID attemptId) {
+        return entityManager.createQuery("""
+                SELECT execution FROM SessionExecutionJpaEntity execution
+                WHERE execution.attemptId = :attemptId
+                """, SessionExecutionJpaEntity.class)
+                .setParameter("attemptId", attemptId).getResultStream().findFirst().map(this::aggregate);
+    }
+
+    @Override
     public Optional<ExecutionOwner> findOwner(UUID executionId) {
         return Optional.ofNullable(entityManager.find(SessionExecutionJpaEntity.class, executionId))
                 .map(item -> new ExecutionOwner(item.id(), item.participantAccountId()));
@@ -146,7 +155,7 @@ public class JpaSessionExecutionAdapter implements SessionExecutionPersistence {
         receipt.processedAt = processedAt;
         receipt.attempts = 1;
         entityManager.persist(receipt);
-        if (!rebuild) {
+        if (!rebuild && execution.declaredCompletion) {
             ExecutionQualificationJpaEntity qualification = new ExecutionQualificationJpaEntity();
             qualification.id = UUID.randomUUID();
             qualification.executionId = executionId;

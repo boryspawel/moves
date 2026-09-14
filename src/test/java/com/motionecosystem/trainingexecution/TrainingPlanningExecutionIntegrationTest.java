@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import com.motionecosystem.application.MotionEcosystemApplication;
 import com.motionecosystem.audit.api.TransactionalOutbox.OutboxMessage;
 import com.motionecosystem.support.PostgresTestConfiguration;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,7 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.security.web.FilterChainProxy;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest(classes = MotionEcosystemApplication.class)
@@ -47,6 +49,12 @@ class TrainingPlanningExecutionIntegrationTest {
     ExecutionProjectionService projections;
     @Autowired
     SessionExecutionAttemptRepository attempts;
+    @Autowired
+    EntityManager entityManager;
+    @Autowired
+    TransactionTemplate transactionTemplate;
+    @Autowired
+    tools.jackson.databind.ObjectMapper objectMapper;
 
     MockMvc mvc;
     UUID participantId;
@@ -55,6 +63,7 @@ class TrainingPlanningExecutionIntegrationTest {
     UUID foreignSpecialistId;
     UUID exerciseVersionId;
     UUID executionStructureId;
+    String p4Subject;
 
     @BeforeEach
     void setUp() {
@@ -92,6 +101,8 @@ class TrainingPlanningExecutionIntegrationTest {
                     training_execution.pain_difficulty_report,
                     training_execution.exercise_result,
                     training_execution.session_execution,
+                    training_execution.session_execution_attempt_fact,
+                    training_execution.session_execution_attempt,
                     training_planning.exercise_prescription,
                     training_planning.planned_session,
                     training_planning.microcycle,
@@ -202,6 +213,138 @@ class TrainingPlanningExecutionIntegrationTest {
                         .param("to", Instant.now().plusSeconds(3600).toString())
                         .with(role("other-participant", "PARTICIPANT")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
+    void partialFactCompletionProjectsDetailedActualDoseInRecordedOrder() throws Exception {
+        P4Fixture fixture = p4Fixture();
+
+        String started = mvc.perform(post("/api/v1/participant/session-attempts")
+                        .with(role(p4Subject, "PARTICIPANT"))
+                        .header("Idempotency-Key", "p4-start")
+                        .contentType("application/json")
+                        .content("""
+                                {"plannedSessionId":"%s","planRevisionId":"%s","selectedVariantType":"STANDARD"}
+                                """.formatted(fixture.sessionId(), fixture.revisionId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.state").value("STARTED"))
+                .andReturn().getResponse().getContentAsString();
+        UUID attemptId = UUID.fromString(objectMapper.readTree(started).path("attemptId").asText());
+
+        String fact = """
+                {"exercisePrescriptionId":"%s","outcome":"PARTIAL","reason":"FATIGUE",
+                 "result":{"exercisePrescriptionId":"%s","actualSets":3,"observationMode":"DECLARED",
+                 "actualSetDetails":[{"repetitions":10},{"repetitions":10},{"repetitions":7}]}}
+                """.formatted(fixture.prescriptionId(), fixture.prescriptionId());
+        mvc.perform(post("/api/v1/participant/session-attempts/{attemptId}/facts", attemptId)
+                        .with(role(p4Subject, "PARTICIPANT"))
+                        .contentType("application/json").content(fact))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.state").value("STARTED"))
+                .andExpect(jsonPath("$.facts[0].outcome").value("PARTIAL"))
+                .andExpect(jsonPath("$.facts[0].result.actualSetDetails[0].repetitions").value(10))
+                .andExpect(jsonPath("$.facts[0].result.actualSetDetails[1].repetitions").value(10))
+                .andExpect(jsonPath("$.facts[0].result.actualSetDetails[2].repetitions").value(7));
+
+        mvc.perform(post("/api/v1/participant/session-attempts/{attemptId}/finish", attemptId)
+                        .with(role(p4Subject, "PARTICIPANT"))
+                        .header("Idempotency-Key", "p4-finish")
+                        .contentType("application/json")
+                        .content("{\"intent\":\"COMPLETE\",\"painLevel\":0,\"difficultyLevel\":4}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.outcome").value("PARTIAL"))
+                .andExpect(jsonPath("$.declaredCompletion").value(false))
+                .andExpect(jsonPath("$.results[0].actualSetDetails[0].repetitions").value(10))
+                .andExpect(jsonPath("$.results[0].actualSetDetails[1].repetitions").value(10))
+                .andExpect(jsonPath("$.results[0].actualSetDetails[2].repetitions").value(7));
+
+        UUID executionId = transactionTemplate.execute(status -> (UUID) entityManager.createNativeQuery(
+                "SELECT id FROM training_execution.session_execution WHERE attempt_id=:attemptId")
+                .setParameter("attemptId", attemptId).getSingleResult());
+        assertThat(projections.consume(declarationEventNative(executionId)).created()).isTrue();
+        java.math.BigDecimal projectedActual = transactionTemplate.execute(status -> (java.math.BigDecimal) entityManager
+                .createNativeQuery("SELECT value_high FROM training_execution.executed_load_observation WHERE session_execution_id=:executionId AND channel='DYN_EXU'")
+                .setParameter("executionId", executionId).getSingleResult());
+        assertThat(projectedActual).isEqualByComparingTo("27.000000");
+    }
+
+    @Test
+    void factsAreAppendOnlyLatestWinsAndTerminalAttemptRejectsFurtherFacts() throws Exception {
+        P4Fixture fixture = p4Fixture();
+        UUID attemptId = startP4Attempt(fixture, "revision-start");
+        mvc.perform(post("/api/v1/participant/session-attempts/{attemptId}/facts", attemptId)
+                        .with(role(p4Subject, "PARTICIPANT")).contentType("application/json")
+                        .content(fact(fixture.prescriptionId(), "PERFORMED", null, "{\"actualSets\":1}")))
+                .andExpect(status().isBadRequest());
+        recordP4Fact(attemptId, fixture.prescriptionId(), "PERFORMED", null, "{\"actualRepetitions\":10}");
+        mvc.perform(post("/api/v1/participant/session-attempts/{attemptId}/facts", attemptId)
+                        .with(role("other-participant", "PARTICIPANT")).contentType("application/json")
+                        .content(fact(fixture.prescriptionId(), "PARTIAL", "FATIGUE", "{\"actualRepetitions\":7}")))
+                .andExpect(status().isNotFound());
+        recordP4Fact(attemptId, fixture.prescriptionId(), "PARTIAL", "FATIGUE", "{\"actualRepetitions\":7}");
+        mvc.perform(get("/api/v1/participant/session-attempts/{attemptId}", attemptId).with(role(p4Subject, "PARTICIPANT")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.facts.length()").value(1))
+                .andExpect(jsonPath("$.facts[0].revisionNumber").value(2)).andExpect(jsonPath("$.facts[0].outcome").value("PARTIAL"));
+        finish(attemptId, "revision-finish", "COMPLETE", null).andExpect(status().isOk()).andExpect(jsonPath("$.outcome").value("PARTIAL"));
+        mvc.perform(post("/api/v1/participant/session-attempts/{attemptId}/facts", attemptId)
+                        .with(role(p4Subject, "PARTICIPANT")).contentType("application/json")
+                        .content(fact(fixture.prescriptionId(), "PERFORMED", null, "{\"actualRepetitions\":10}")))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void stoppedAttemptsAreTerminalWithoutCompletionQualificationOrRestart() throws Exception {
+        P4Fixture empty = p4Fixture();
+        UUID emptyAttempt = startP4Attempt(empty, "stop-empty-start");
+        finish(emptyAttempt, "stop-empty-finish", "STOP", "TIME").andExpect(status().isOk())
+                .andExpect(jsonPath("$.outcome").value("STOPPED")).andExpect(jsonPath("$.declaredCompletion").value(false));
+        startP4(empty, "stop-empty-restart").andExpect(status().isConflict());
+
+        P4Fixture recorded = p4Fixture();
+        UUID recordedAttempt = startP4Attempt(recorded, "stop-work-start");
+        recordP4Fact(recordedAttempt, recorded.prescriptionId(), "PERFORMED", null, "{\"actualRepetitions\":10}");
+        finish(recordedAttempt, "stop-work-finish", "STOP", "FATIGUE").andExpect(status().isOk())
+                .andExpect(jsonPath("$.outcome").value("STOPPED")).andExpect(jsonPath("$.declaredCompletion").value(false));
+        startP4(recorded, "stop-work-restart").andExpect(status().isConflict());
+        Long qualifications = transactionTemplate.execute(status -> ((Number) entityManager.createNativeQuery("""
+                SELECT COUNT(*) FROM training_execution.execution_qualification q
+                JOIN training_execution.session_execution e ON e.id=q.session_execution_id
+                WHERE e.attempt_id=:attemptId
+                """).setParameter("attemptId", recordedAttempt).getSingleResult()).longValue());
+        assertThat(qualifications).isZero();
+    }
+
+    @Test
+    void completeRequiresFactsAndSeparatesCompletedFromSkippedTerminalOutcomes() throws Exception {
+        P4Fixture missing = p4Fixture();
+        UUID missingAttempt = startP4Attempt(missing, "missing-start");
+        finish(missingAttempt, "missing-finish", "COMPLETE", null).andExpect(status().isConflict());
+
+        P4Fixture completed = p4Fixture();
+        UUID completedAttempt = startP4Attempt(completed, "completed-start");
+        recordP4Fact(completedAttempt, completed.prescriptionId(), "PERFORMED", null, "{\"actualRepetitions\":10}");
+        finish(completedAttempt, "completed-finish", "COMPLETE", null).andExpect(status().isOk())
+                .andExpect(jsonPath("$.outcome").value("COMPLETED")).andExpect(jsonPath("$.declaredCompletion").value(true));
+
+        P4Fixture skipped = p4Fixture();
+        UUID skippedAttempt = startP4Attempt(skipped, "skipped-start");
+        recordP4Fact(skippedAttempt, skipped.prescriptionId(), "SKIPPED", "OTHER", "{\"skipped\":true}");
+        finish(skippedAttempt, "skipped-finish", "COMPLETE", null).andExpect(status().isOk())
+                .andExpect(jsonPath("$.outcome").value("SKIPPED")).andExpect(jsonPath("$.declaredCompletion").value(false));
+        mvc.perform(get("/api/v1/participant/execution-history").param("from", Instant.now().minusSeconds(3600).toString())
+                        .param("to", Instant.now().plusSeconds(3600).toString()).with(role(p4Subject, "PARTICIPANT")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].outcome").value("SKIPPED"));
+    }
+
+    @Test
+    void durationOnlyPinnedPrescriptionRejectsRepetitionsAndAcceptsDuration() throws Exception {
+        P4Fixture fixture = p4Fixture(true);
+        UUID attemptId = startP4Attempt(fixture, "duration-start");
+        mvc.perform(post("/api/v1/participant/session-attempts/{attemptId}/facts", attemptId)
+                        .with(role(p4Subject, "PARTICIPANT")).contentType("application/json")
+                        .content(fact(fixture.prescriptionId(), "PERFORMED", null, "{\"actualRepetitions\":10}")))
+                .andExpect(status().isBadRequest());
+        recordP4Fact(attemptId, fixture.prescriptionId(), "PERFORMED", null, "{\"actualDurationSeconds\":30}");
     }
 
     @Test
@@ -395,6 +538,36 @@ class TrainingPlanningExecutionIntegrationTest {
     }
 
     @Test
+    void skippedLegacyDeclarationIsTerminalButDoesNotQualifyOrCompleteThePlannedSession() throws Exception {
+        createPlan();
+        UUID sessionId = sessionId();
+        UUID prescriptionId = prescriptionId();
+        String request = """
+                {"declaredCompletion":true,"painLevel":0,"difficultyLevel":4,"results":[{
+                "exercisePrescriptionId":"%s","skipped":true}]}
+                """.formatted(prescriptionId);
+
+        mvc.perform(post("/api/v1/planned-sessions/{id}/executions", sessionId)
+                        .with(role("participant", "PARTICIPANT"))
+                        .header("Idempotency-Key", "skipped-terminal")
+                        .contentType("application/json").content(request))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.outcome").value("SKIPPED"))
+                .andExpect(jsonPath("$.declaredCompletion").value(false));
+
+        UUID executionId = jdbc.queryForObject("SELECT id FROM training_execution.session_execution", UUID.class);
+        assertThat(projections.consume(declarationEvent(executionId)).created()).isTrue();
+        assertThat(jdbc.queryForObject("SELECT status FROM training_planning.planned_session WHERE id=?", String.class, sessionId))
+                .isEqualTo("ASSIGNED");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM training_execution.execution_qualification", Long.class)).isZero();
+        mvc.perform(post("/api/v1/planned-sessions/{id}/executions", sessionId)
+                        .with(role("participant", "PARTICIPANT"))
+                        .header("Idempotency-Key", "skipped-terminal-retry")
+                        .contentType("application/json").content(request))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
     void post24hAlertsHaveAuthorizedLifecycleAndIdempotentHistory() throws Exception {
         createPlan();
         declare(sessionId(), prescriptionId(), "alert-execution", 2, 6);
@@ -535,6 +708,167 @@ class TrainingPlanningExecutionIntegrationTest {
     private UUID executionContribution() {
         return executionStructureId;
     }
+
+    private P4Fixture p4Fixture() { return p4Fixture(false); }
+
+    private P4Fixture p4Fixture(boolean durationOnly) {
+        UUID accountId = UUID.randomUUID();
+        UUID canonicalParticipantId = UUID.randomUUID();
+        UUID exerciseId = UUID.randomUUID();
+        UUID versionId = UUID.randomUUID();
+        UUID goalId = UUID.randomUUID();
+        UUID planId = UUID.randomUUID();
+        UUID revisionId = UUID.randomUUID();
+        UUID cycleId = UUID.randomUUID();
+        UUID microcycleId = UUID.randomUUID();
+        UUID sessionId = UUID.randomUUID();
+        UUID prescriptionId = UUID.randomUUID();
+        transactionTemplate.executeWithoutResult(status -> {
+            nativeUpdate("""
+                    INSERT INTO identity_access.principal_account (id, external_subject, status, profile_type, created_at, version)
+                    VALUES (:accountId, :subject, 'ACTIVE', 'PARTICIPANT', now(), 0)
+                    """, "accountId", accountId, "subject", p4Subject = "p4-participant-" + accountId);
+            nativeUpdate("""
+                    INSERT INTO participant.participant_record (id, display_name, record_status, relationship_context, created_by_specialist_id, created_at, updated_at, version)
+                    VALUES (:participantId, 'P4 participant', 'ACTIVE', 'CLIENT', :specialistId, now(), now(), 0)
+                    """, "participantId", canonicalParticipantId, "specialistId", specialistId);
+            nativeUpdate("""
+                    INSERT INTO participant.participant_access_link (id, participant_id, principal_account_id, access_status, linked_at, activated_at, version)
+                    VALUES (:id, :participantId, :accountId, 'ACTIVE', now(), now(), 0)
+                    """, "id", UUID.randomUUID(), "participantId", canonicalParticipantId, "accountId", accountId);
+            nativeUpdate("""
+                    INSERT INTO specialist.participant_specialist_relationship (id, specialist_account_id, participant_id, status, activated_at)
+                    VALUES (:id, :specialistId, :participantId, 'ACTIVE', now())
+                    """, "id", UUID.randomUUID(), "specialistId", specialistId, "participantId", canonicalParticipantId);
+            nativeUpdate("""
+                    INSERT INTO exercise_catalog.exercise (id, canonical_name, created_at, created_by_subject)
+                    VALUES (:exerciseId, 'P4 controlled squat', now(), 'p4-fixture')
+                    """, "exerciseId", exerciseId);
+            nativeUpdate("""
+                    INSERT INTO exercise_catalog.exercise_version (id, exercise_id, version_number, status, instruction, movement_pattern,
+                        stimulus_type, fatigue_profile, technical_level, environment, created_at, published_at, version)
+                    VALUES (:versionId, :exerciseId, 1, 'APPROVED', 'P4 controlled squat', 'SQUAT',
+                        'STRENGTH', 'MODERATE', 'FOUNDATIONAL', 'ANY', now(), NULL, 0)
+                    """, "versionId", versionId, "exerciseId", exerciseId);
+            nativeUpdate("""
+                    INSERT INTO anatomy_reference.anatomical_structure (id, code, type, display_name, side_policy, status, taxonomy_version,
+                        created_by_subject, created_at, published_at, version)
+                    VALUES (:id, :code, 'JOINT', 'P4 knee', 'LEFT_RIGHT', 'PUBLISHED', 1, 'p4-fixture', now(), now(), 0)
+                    """, "id", UUID.randomUUID(), "code", "P4_KNEE_" + versionId);
+            nativeUpdate("""
+                    INSERT INTO exercise_catalog.exercise_contribution (id, exercise_version_id, anatomical_structure_id, contribution_role,
+                        load_channel, contribution_band, coefficient_low, coefficient_high, confidence_class, evidence_grade,
+                        calculation_role, side_rule, created_at, created_by_subject)
+                    SELECT :id, :versionId, id, 'PRIMARY', 'DYN_EXU', 'HIGH', 1.0, 1.0, 'TEST', 'TEST',
+                        'ALLOCATION', 'AS_PRESCRIBED', now(), 'p4-fixture'
+                    FROM anatomy_reference.anatomical_structure WHERE code=:code
+                    """, "id", UUID.randomUUID(), "versionId", versionId, "code", "P4_KNEE_" + versionId);
+            nativeUpdate("""
+                    INSERT INTO exercise_catalog.exercise_review (id, exercise_version_id, review_area, decision, reviewer_subject, reviewed_at)
+                    SELECT gen_random_uuid(), :versionId, area, 'APPROVED', 'p4-fixture-reviewer', now()
+                    FROM unnest(ARRAY['CONTENT','TECHNIQUE','ANATOMY_EXPOSURE','LICENSE']) area
+                    """, "versionId", versionId);
+            nativeUpdate("UPDATE exercise_catalog.exercise_version SET status='PUBLISHED', published_at=now() WHERE id=:versionId",
+                    "versionId", versionId);
+            nativeUpdate("""
+                    INSERT INTO training_planning.training_goal (id, participant_id, name, created_by_account_id, created_at, perspective, category, title, priority, status)
+                    VALUES (:goalId, :participantId, 'P4 goal', :specialistId, now(), 'GENERAL_FITNESS', 'LEGACY', 'P4 goal', 50, 'ACTIVE')
+                    """, "goalId", goalId, "participantId", canonicalParticipantId, "specialistId", specialistId);
+            nativeUpdate("""
+                    INSERT INTO training_planning.training_plan (id, goal_id, participant_id, created_by_account_id, name, plan_mode, status, created_at, purpose, owner_account_id, version)
+                    VALUES (:planId, :goalId, :participantId, :specialistId, 'P4 plan', 'SPECIALIST_ASSIGNED', 'ACTIVE', now(), 'P4 fixture', :specialistId, 0)
+                    """, "planId", planId, "goalId", goalId, "participantId", canonicalParticipantId, "specialistId", specialistId);
+            nativeUpdate("""
+                    INSERT INTO training_planning.plan_revision (id, plan_id, revision_number, status, phase_intent, author_account_id,
+                        author_capability, migration_origin, assessment_status, draft_updated_at, created_at, version)
+                    VALUES (:revisionId, :planId, 1, 'ACTIVE', 'P4 fixture', :specialistId, 'LEGACY_AUTHOR',
+                        'LEGACY_V1', 'NOT_ASSESSED', now(), now(), 0)
+                    """, "revisionId", revisionId, "planId", planId, "specialistId", specialistId);
+            nativeUpdate("UPDATE training_planning.training_plan SET current_revision_id=:revisionId WHERE id=:planId",
+                    "revisionId", revisionId, "planId", planId);
+            nativeUpdate("UPDATE training_planning.training_goal SET revision_id=:revisionId WHERE id=:goalId",
+                    "revisionId", revisionId, "goalId", goalId);
+            nativeUpdate("""
+                    INSERT INTO training_planning.training_cycle (id, plan_id, revision_id, sequence_number, name, phase_intent)
+                    VALUES (:cycleId, :planId, :revisionId, 1, 'P4 cycle', 'P4 fixture')
+                    """, "cycleId", cycleId, "planId", planId, "revisionId", revisionId);
+            nativeUpdate("""
+                    INSERT INTO training_planning.microcycle (id, cycle_id, sequence_number, name, phase_intent)
+                    VALUES (:microcycleId, :cycleId, 1, 'P4 microcycle', 'P4 fixture')
+                    """, "microcycleId", microcycleId, "cycleId", cycleId);
+            nativeUpdate("""
+                    INSERT INTO training_planning.planned_session (id, microcycle_id, participant_id, title, session_kind, status, assigned_at, creation_source)
+                    VALUES (:sessionId, :microcycleId, :participantId, 'P4 session', 'SELF_GUIDED', 'ASSIGNED', now(), 'LEGACY_V1')
+                    """, "sessionId", sessionId, "microcycleId", microcycleId, "participantId", canonicalParticipantId);
+            nativeUpdate("""
+                    INSERT INTO training_planning.exercise_prescription (id, planned_session_id, exercise_version_id, position, target_sets, target_repetitions, target_load_kg, notes)
+                    VALUES (:prescriptionId, :sessionId, :versionId, 1, 3, :repetitions, 0, 'P4 fixture')
+                    """, "prescriptionId", prescriptionId, "sessionId", sessionId, "versionId", versionId,
+                    "repetitions", durationOnly ? null : 10);
+            if (durationOnly) nativeUpdate("UPDATE training_planning.exercise_prescription SET target_duration_seconds=30 WHERE id=:id", "id", prescriptionId);
+            nativeUpdate("""
+                    INSERT INTO safety.plan_safety_assessment (id, participant_account_id, participant_id, revision_id, load_snapshot_id,
+                        load_input_checksum, load_calculation_version, ruleset_code, ruleset_version, result, restriction_snapshot,
+                        ruleset_snapshot, load_snapshot, assessed_at)
+                    VALUES (:id, :accountId, :participantId, :revisionId, :loadSnapshotId, 'p4', 'P4', 'SAFETY_V2', 1, 'PASS', '', 'P4', 'P4', now())
+                    """, "id", UUID.randomUUID(), "accountId", accountId, "participantId", canonicalParticipantId,
+                    "revisionId", revisionId, "loadSnapshotId", UUID.randomUUID());
+        });
+        return new P4Fixture(accountId, canonicalParticipantId, revisionId, sessionId, prescriptionId);
+    }
+
+    private UUID startP4Attempt(P4Fixture fixture, String key) throws Exception {
+        String response = startP4(fixture, key).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        return UUID.fromString(objectMapper.readTree(response).path("attemptId").asText());
+    }
+
+    private org.springframework.test.web.servlet.ResultActions startP4(P4Fixture fixture, String key) throws Exception {
+        return mvc.perform(post("/api/v1/participant/session-attempts").with(role(p4Subject, "PARTICIPANT"))
+                .header("Idempotency-Key", key).contentType("application/json")
+                .content("{\"plannedSessionId\":\"" + fixture.sessionId() + "\",\"planRevisionId\":\""
+                        + fixture.revisionId() + "\",\"selectedVariantType\":\"STANDARD\"}"));
+    }
+
+    private void recordP4Fact(UUID attemptId, UUID prescriptionId, String outcome, String reason, String resultFields) throws Exception {
+        mvc.perform(post("/api/v1/participant/session-attempts/{attemptId}/facts", attemptId)
+                        .with(role(p4Subject, "PARTICIPANT")).contentType("application/json")
+                        .content(fact(prescriptionId, outcome, reason, resultFields)))
+                .andExpect(status().isOk());
+    }
+
+    private static String fact(UUID prescriptionId, String outcome, String reason, String resultFields) {
+        String suffix = reason == null ? "" : ",\"reason\":\"" + reason + "\"";
+        return "{\"exercisePrescriptionId\":\"" + prescriptionId + "\",\"outcome\":\"" + outcome + "\"" + suffix
+                + ",\"result\":{\"exercisePrescriptionId\":\"" + prescriptionId + "\"," + resultFields.substring(1) + "}";
+    }
+
+    private org.springframework.test.web.servlet.ResultActions finish(UUID attemptId, String key, String intent, String stopReason) throws Exception {
+        String reason = stopReason == null ? "" : ",\"stopReason\":\"" + stopReason + "\"";
+        return mvc.perform(post("/api/v1/participant/session-attempts/{attemptId}/finish", attemptId)
+                .with(role(p4Subject, "PARTICIPANT")).header("Idempotency-Key", key).contentType("application/json")
+                .content("{\"intent\":\"" + intent + "\",\"painLevel\":0,\"difficultyLevel\":4" + reason + "}"));
+    }
+
+    private void nativeUpdate(String sql, Object... bindings) {
+        var query = entityManager.createNativeQuery(sql);
+        for (int index = 0; index < bindings.length; index += 2) {
+            query.setParameter((String) bindings[index], bindings[index + 1]);
+        }
+        query.executeUpdate();
+    }
+
+    private OutboxMessage declarationEventNative(UUID executionId) {
+        return transactionTemplate.execute(status -> {
+            Object[] row = (Object[]) entityManager.createNativeQuery("""
+                    SELECT id, aggregate_type, aggregate_id, event_type, payload, occurred_at
+                    FROM audit.outbox_event WHERE aggregate_id=:executionId AND event_type='SessionExecutionDeclared'
+                    """).setParameter("executionId", executionId).getSingleResult();
+            return new OutboxMessage((UUID) row[0], (String) row[1], (UUID) row[2], (String) row[3],
+                    (String) row[4], (Instant) row[5]);
+        });
+    }
+
+    private record P4Fixture(UUID accountId, UUID participantId, UUID revisionId, UUID sessionId, UUID prescriptionId) { }
 
     private UUID addExecutionContributions(UUID versionId) {
         UUID structureId = UUID.randomUUID();

@@ -84,12 +84,36 @@ export function humanEventTitle(event: ParticipantTimelineEvent): string {
     return interviewEventLabels[normalizedType] ?? 'Wywiad';
   }
   if (event.category === 'NOTE') return 'Notatka';
+  if (event.category === 'EXECUTION') return executionTitle(event.plannedExecutionComparison?.performed?.outcome ?? event.status);
   const rawTitle = safeText(event.title);
   const normalizedTitle = typeLabel(rawTitle);
   if (event.category === 'APPOINTMENT') return appointmentTypeLabel(event) ?? normalizedTitle ?? (rawTitle && !/^[A-Z0-9_]+$/.test(rawTitle) ? rawTitle : 'Spotkanie');
   return normalizedTitle ?? rawTitle ?? typeLabel(event.eventType) ?? categoryLabel(event.category);
 }
-export function eventDescription(event: ParticipantTimelineEvent): string | undefined { return isInterviewEvent(event) ? undefined : safeText(event.summary); }
+export function eventDescription(event: ParticipantTimelineEvent): string | undefined {
+  if (isInterviewEvent(event)) return undefined;
+  if (event.category === 'EXECUTION') return executionDescription(event);
+  return safeText(event.summary);
+}
+function executionTitle(outcome?: string): string {
+  return ({ COMPLETED: 'Sesja wykonana', PARTIAL: 'Sesja wykonana częściowo', SKIPPED: 'Sesja pominięta', STOPPED: 'Sesja zatrzymana' } as Record<string, string>)[outcome ?? ''] ?? 'Wykonanie sesji';
+}
+function executionDescription(event: ParticipantTimelineEvent): string | undefined {
+  const performed = event.plannedExecutionComparison?.performed;
+  if (!performed) return safeText(event.summary);
+  const counts = [
+    performed.performedCount != null ? `wykonano: ${performed.performedCount}` : undefined,
+    performed.partialCount != null ? `częściowo: ${performed.partialCount}` : undefined,
+    performed.skippedCount != null ? `pominięto: ${performed.skippedCount}` : undefined,
+    performed.notReachedCount != null ? `nie osiągnięto: ${performed.notReachedCount}` : undefined,
+  ].filter((value): value is string => value != null);
+  const feedback = [
+    performed.painLevel != null ? `ból: ${performed.painLevel}/10` : undefined,
+    performed.difficultyLevel != null ? `trudność: ${performed.difficultyLevel}/10` : undefined,
+    safeText(performed.stopReason) ? `powód zatrzymania: ${safeText(performed.stopReason)}` : undefined,
+  ].filter((value): value is string => value != null);
+  return [...counts, ...feedback].join(' · ') || undefined;
+}
 export function appointmentLocation(_event: ParticipantTimelineEvent): string | undefined { return undefined; }
 export function appointmentPurpose(_event: ParticipantTimelineEvent): string | undefined { return undefined; }
 export function isPastScheduled(event: ParticipantTimelineEvent, now = new Date()): boolean {

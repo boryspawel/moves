@@ -88,12 +88,15 @@ public class TodayAgendaService {
         boolean inWindow = (session.availableFrom() == null || !now.isBefore(session.availableFrom()))
                 && (session.availableTo() == null || !now.isAfter(session.availableTo()));
         String status = execution.state().name();
-        String nextAction = safetyDecision.status() == SessionSafetyDecisionQueryPort.SafetyDecisionStatus.BLOCKED
+        String nextAction = isTerminal(status) ? "NONE" : safetyDecision.status() == SessionSafetyDecisionQueryPort.SafetyDecisionStatus.BLOCKED
                 ? "CONTACT_SPECIALIST" : (inWindow ? "START_SESSION" : "WAIT_FOR_WINDOW");
         Instant sortAt = session.availableFrom() == null ? Instant.MIN : session.availableFrom();
         return new AgendaSessionView(session.id(), session.title(), session.expectedDurationMinutes(),
                 session.scheduledDate(), session.availableFrom(), session.availableTo(), status,
                 session.prescriptions().size() + " prescriptions", safetyDecision.status().name(), nextAction, sortAt);
+    }
+    private static boolean isTerminal(String status) {
+        return List.of("COMPLETED", "PARTIAL", "SKIPPED", "STOPPED").contains(status);
     }
 
     public record TodayAgendaView(String timeZone, LocalDate localDate, ActivePlanView activePlan,

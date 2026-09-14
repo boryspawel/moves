@@ -10,7 +10,7 @@ public interface SessionExecutionProgressQueryPort {
     Map<UUID, SessionExecutionProgress> findForSessions(
             UUID participantAccountId, Collection<UUID> plannedSessionIds);
 
-    enum ExecutionState { NOT_STARTED, IN_PROGRESS, PAUSED, COMPLETED, ABANDONED }
+    enum ExecutionState { NOT_STARTED, IN_PROGRESS, PAUSED, COMPLETED, PARTIAL, SKIPPED, STOPPED, ABANDONED }
 
     record SessionExecutionProgress(UUID plannedSessionId, UUID activeAttemptId,
                                     ExecutionState state, boolean finalExecutionDeclared,

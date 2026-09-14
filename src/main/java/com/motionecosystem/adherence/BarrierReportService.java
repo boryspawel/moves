@@ -61,7 +61,7 @@ public class BarrierReportService {
                     .map(BarrierReportService::view).orElseThrow(() -> exception);
         }
         recovery.detectFromBarrier(created);
-        metrics.record(participant, "BARRIER_REPORTED", created.id, context.revisionId(), command.plannedSessionId(),
+        metrics.recordForParticipant(participant, "BARRIER_REPORTED", created.id, context.revisionId(), command.plannedSessionId(),
                 command.sessionAttemptId(), created.ruleVersionCode, selected);
         long categoryCount = reports.countByParticipantAccountIdAndCategory(participant, category);
         if (categoryCount >= 2) {

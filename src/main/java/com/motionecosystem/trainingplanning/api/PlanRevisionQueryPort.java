@@ -96,7 +96,20 @@ public interface PlanRevisionQueryPort {
             BigDecimal externalLoadValue, String externalLoadUnit,
             String intensityType, BigDecimal intensityValue, String intensityZone,
             String tempo, String rangeOfMotion, Integer restSeconds,
-            String substituteGroup, String notes) {
+            String substituteGroup, String notes, String exerciseName) {
+        public PrescriptionSnapshot(UUID id, UUID sourceExerciseSetItemId, UUID sourceExerciseSetVersionId,
+                                    String materializedSnapshot, String canonicalDoseType, UUID exerciseVersionId, int position, String side, String doseType,
+                                    Integer sets, Integer repetitions, Integer durationSeconds,
+                                    BigDecimal distanceMeters, Integer contacts,
+                                    BigDecimal externalLoadValue, String externalLoadUnit,
+                                    String intensityType, BigDecimal intensityValue, String intensityZone,
+                                    String tempo, String rangeOfMotion, Integer restSeconds,
+                                    String substituteGroup, String notes) {
+            this(id, sourceExerciseSetItemId, sourceExerciseSetVersionId, materializedSnapshot, canonicalDoseType,
+                    exerciseVersionId, position, side, doseType, sets, repetitions, durationSeconds, distanceMeters,
+                    contacts, externalLoadValue, externalLoadUnit, intensityType, intensityValue, intensityZone,
+                    tempo, rangeOfMotion, restSeconds, substituteGroup, notes, null);
+        }
         public PrescriptionSnapshot(UUID id, UUID exerciseVersionId, int position, String side, String doseType,
                                     Integer sets, Integer repetitions, Integer durationSeconds,
                                     BigDecimal distanceMeters, Integer contacts,
@@ -107,7 +120,7 @@ public interface PlanRevisionQueryPort {
             this(id, null, null, null, null, exerciseVersionId, position, side, doseType, sets, repetitions,
                     durationSeconds, distanceMeters, contacts, externalLoadValue, externalLoadUnit,
                     intensityType, intensityValue, intensityZone, tempo, rangeOfMotion, restSeconds,
-                    substituteGroup, notes);
+                    substituteGroup, notes, null);
         }
     }
 

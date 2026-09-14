@@ -20,6 +20,20 @@ import {
   ProgressViewToJSON,
   ProgressViewToJSONTyped,
 } from './ProgressView';
+import type { SessionSnapshot } from './SessionSnapshot';
+import {
+  SessionSnapshotFromJSON,
+  SessionSnapshotFromJSONTyped,
+  SessionSnapshotToJSON,
+  SessionSnapshotToJSONTyped,
+} from './SessionSnapshot';
+import type { FactView } from './FactView';
+import {
+  FactViewFromJSON,
+  FactViewFromJSONTyped,
+  FactViewToJSON,
+  FactViewToJSONTyped,
+} from './FactView';
 
 /**
  *
@@ -39,6 +53,12 @@ export interface AttemptDetailView {
    * @memberof AttemptDetailView
    */
   attemptId?: string;
+  /**
+   *
+   * @type {Array<FactView>}
+   * @memberof AttemptDetailView
+   */
+  facts?: Array<FactView>;
   /**
    *
    * @type {Date}
@@ -69,6 +89,12 @@ export interface AttemptDetailView {
    * @memberof AttemptDetailView
    */
   selectedVariantType?: string;
+  /**
+   *
+   * @type {SessionSnapshot}
+   * @memberof AttemptDetailView
+   */
+  session?: SessionSnapshot;
   /**
    *
    * @type {Date}
@@ -104,6 +130,7 @@ export function AttemptDetailViewFromJSONTyped(
   return {
     abandonmentReason: json['abandonmentReason'] == null ? undefined : json['abandonmentReason'],
     attemptId: json['attemptId'] == null ? undefined : json['attemptId'],
+    facts: json['facts'] == null ? undefined : (json['facts'] as Array<any>).map(FactViewFromJSON),
     lastActivityAt: json['lastActivityAt'] == null ? undefined : new Date(json['lastActivityAt']),
     planRevisionId: json['planRevisionId'] == null ? undefined : json['planRevisionId'],
     plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
@@ -113,6 +140,7 @@ export function AttemptDetailViewFromJSONTyped(
         : (json['progress'] as Array<any>).map(ProgressViewFromJSON),
     selectedVariantType:
       json['selectedVariantType'] == null ? undefined : json['selectedVariantType'],
+    session: json['session'] == null ? undefined : SessionSnapshotFromJSON(json['session']),
     startedAt: json['startedAt'] == null ? undefined : new Date(json['startedAt']),
     state: json['state'] == null ? undefined : json['state'],
   };
@@ -133,6 +161,7 @@ export function AttemptDetailViewToJSONTyped(
   return {
     abandonmentReason: value['abandonmentReason'],
     attemptId: value['attemptId'],
+    facts: value['facts'] == null ? undefined : (value['facts'] as Array<any>).map(FactViewToJSON),
     lastActivityAt:
       value['lastActivityAt'] == null
         ? value['lastActivityAt']
@@ -144,6 +173,7 @@ export function AttemptDetailViewToJSONTyped(
         ? undefined
         : (value['progress'] as Array<any>).map(ProgressViewToJSON),
     selectedVariantType: value['selectedVariantType'],
+    session: SessionSnapshotToJSON(value['session']),
     startedAt: value['startedAt'] == null ? value['startedAt'] : value['startedAt'].toISOString(),
     state: value['state'],
   };

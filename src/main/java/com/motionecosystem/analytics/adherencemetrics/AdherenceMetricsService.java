@@ -44,13 +44,26 @@ public class AdherenceMetricsService {
     }
 
     @Transactional
-    public void record(UUID participant, String eventCode, UUID reference, UUID planRevisionId,
+    public void record(UUID participantAccountId, String eventCode, UUID reference, UUID planRevisionId,
                        UUID plannedSessionId, UUID sessionAttemptId, String ruleVersionCode, String variantCode) {
+        record(participantAccountId, null, eventCode, reference, planRevisionId, plannedSessionId, sessionAttemptId,
+                ruleVersionCode, variantCode);
+    }
+
+    @Transactional
+    public void recordForParticipant(UUID participantId, String eventCode, UUID reference, UUID planRevisionId,
+                                     UUID plannedSessionId, UUID sessionAttemptId, String ruleVersionCode, String variantCode) {
+        record(null, participantId, eventCode, reference, planRevisionId, plannedSessionId, sessionAttemptId,
+                ruleVersionCode, variantCode);
+    }
+
+    private void record(UUID participantAccountId, UUID participantId, String eventCode, UUID reference, UUID planRevisionId,
+                        UUID plannedSessionId, UUID sessionAttemptId, String ruleVersionCode, String variantCode) {
         String key = eventCode + ":" + reference;
         if (events.existsByDeduplicationKey(key)) return;
         Instant now = clock.instant();
         try {
-            events.saveAndFlush(new AdherenceMetricEvent(participant, eventCode, reference, planRevisionId,
+            events.saveAndFlush(new AdherenceMetricEvent(participantAccountId, participantId, eventCode, reference, planRevisionId,
                     plannedSessionId, sessionAttemptId, ruleVersionCode, variantCode, key, now,
                     now.plus(180, ChronoUnit.DAYS)));
         } catch (DataIntegrityViolationException ignored) { /* idempotent duplicate */ }

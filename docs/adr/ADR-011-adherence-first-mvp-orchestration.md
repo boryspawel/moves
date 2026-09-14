@@ -22,6 +22,10 @@ bezpieczeństwem klinicznym.
 - `trainingexecution` pozostaje właścicielem próby sesji, append-only finalnego
   `SessionExecution`, rzeczywistej dawki, postępu i check-inu. Próba wskazuje
   sesję oraz rewizję; nie kopiuje planu.
+- Planowana dawka nie jest wykonaniem: fakty wykonania są append-only, ich
+  aktualna rewizja zachowuje uporządkowane szczegóły serii, a projekcja sumuje
+  właściwy wymiar. Tylko pełne `COMPLETED` kończy powrót adherence; `PARTIAL`,
+  `SKIPPED` i `STOPPED` pozostają terminalnymi, niekwalifikującymi wynikami.
 - `safety` pozostaje właścicielem ograniczeń i niezmiennych assessmentów. Każde
   rozpoczęcie, wznowienie, wariant i proponowana ścieżka powrotu są ograniczane
   przez effective safety envelope. Adherence nie diagnozuje, nie ujawnia

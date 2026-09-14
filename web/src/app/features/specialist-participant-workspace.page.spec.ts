@@ -455,6 +455,23 @@ describe('PatientTimelineEventPanelComponent', () => {
     expect((panelFixture.nativeElement as HTMLElement).querySelector('dd.stale')).not.toBeNull();
   });
 
+  it('renders typed partial execution counts and stopped-session feedback in Polish', async () => {
+    await TestBed.configureTestingModule({ imports: [TimelineEventComponent] }).compileComponents();
+    const event = {
+      category: 'EXECUTION', eventType: 'SESSION_PARTIALLY_COMPLETED', status: 'PARTIAL', effectiveFrom: new Date('2026-08-03T10:00:00'),
+      summary: 'PARTIAL: 2 performed', plannedExecutionComparison: { performed: { outcome: 'STOPPED', performedCount: 2, partialCount: 1, skippedCount: 0, notReachedCount: 3, painLevel: 6, difficultyLevel: 8, stopReason: 'Ból kolana' } },
+    };
+    const fixture = TestBed.createComponent(TimelineEventComponent); fixture.componentInstance.event = event; fixture.detectChanges();
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Sesja zatrzymana');
+    expect(text).toContain('wykonano: 2');
+    expect(text).toContain('częściowo: 1');
+    expect(text).toContain('nie osiągnięto: 3');
+    expect(text).toContain('ból: 6/10');
+    expect(text).toContain('powód zatrzymania: Ból kolana');
+    expect(text).not.toContain('PARTIAL: 2 performed');
+  });
+
   it('renders interview start and completion as one Polish business line without backend text or status', async () => {
     await TestBed.configureTestingModule({
       imports: [PatientTimelineEventPanelComponent, TimelineEventComponent],

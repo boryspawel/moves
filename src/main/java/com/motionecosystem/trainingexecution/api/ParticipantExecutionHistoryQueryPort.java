@@ -13,5 +13,7 @@ public interface ParticipantExecutionHistoryQueryPort {
     record SeekCursor(Instant effectiveFrom, Instant recordedAt, UUID stableId) { }
     record ExecutionStart(UUID attemptId, UUID plannedSessionId, UUID planRevisionId, String state, String variant,
                           Instant startedAt, Instant completedAt, Instant abandonedAt, Instant updatedAt,
-                          String abandonmentReason) { }
+                          String abandonmentReason, String outcome, int performedCount, int partialCount,
+                          int skippedCount, Integer notReachedCount, Integer painLevel, Integer difficultyLevel,
+                          String stopReason) { }
 }

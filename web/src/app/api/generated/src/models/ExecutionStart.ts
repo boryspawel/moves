@@ -45,6 +45,42 @@ export interface ExecutionStart {
   completedAt?: Date;
   /**
    *
+   * @type {number}
+   * @memberof ExecutionStart
+   */
+  difficultyLevel?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof ExecutionStart
+   */
+  notReachedCount?: number;
+  /**
+   *
+   * @type {string}
+   * @memberof ExecutionStart
+   */
+  outcome?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof ExecutionStart
+   */
+  painLevel?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof ExecutionStart
+   */
+  partialCount?: number;
+  /**
+   *
+   * @type {number}
+   * @memberof ExecutionStart
+   */
+  performedCount?: number;
+  /**
+   *
    * @type {string}
    * @memberof ExecutionStart
    */
@@ -57,6 +93,12 @@ export interface ExecutionStart {
   plannedSessionId?: string;
   /**
    *
+   * @type {number}
+   * @memberof ExecutionStart
+   */
+  skippedCount?: number;
+  /**
+   *
    * @type {Date}
    * @memberof ExecutionStart
    */
@@ -67,6 +109,12 @@ export interface ExecutionStart {
    * @memberof ExecutionStart
    */
   state?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ExecutionStart
+   */
+  stopReason?: string;
   /**
    *
    * @type {Date}
@@ -104,10 +152,18 @@ export function ExecutionStartFromJSONTyped(
     abandonmentReason: json['abandonmentReason'] == null ? undefined : json['abandonmentReason'],
     attemptId: json['attemptId'] == null ? undefined : json['attemptId'],
     completedAt: json['completedAt'] == null ? undefined : new Date(json['completedAt']),
+    difficultyLevel: json['difficultyLevel'] == null ? undefined : json['difficultyLevel'],
+    notReachedCount: json['notReachedCount'] == null ? undefined : json['notReachedCount'],
+    outcome: json['outcome'] == null ? undefined : json['outcome'],
+    painLevel: json['painLevel'] == null ? undefined : json['painLevel'],
+    partialCount: json['partialCount'] == null ? undefined : json['partialCount'],
+    performedCount: json['performedCount'] == null ? undefined : json['performedCount'],
     planRevisionId: json['planRevisionId'] == null ? undefined : json['planRevisionId'],
     plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
+    skippedCount: json['skippedCount'] == null ? undefined : json['skippedCount'],
     startedAt: json['startedAt'] == null ? undefined : new Date(json['startedAt']),
     state: json['state'] == null ? undefined : json['state'],
+    stopReason: json['stopReason'] == null ? undefined : json['stopReason'],
     updatedAt: json['updatedAt'] == null ? undefined : new Date(json['updatedAt']),
     variant: json['variant'] == null ? undefined : json['variant'],
   };
@@ -132,10 +188,18 @@ export function ExecutionStartToJSONTyped(
     attemptId: value['attemptId'],
     completedAt:
       value['completedAt'] == null ? value['completedAt'] : value['completedAt'].toISOString(),
+    difficultyLevel: value['difficultyLevel'],
+    notReachedCount: value['notReachedCount'],
+    outcome: value['outcome'],
+    painLevel: value['painLevel'],
+    partialCount: value['partialCount'],
+    performedCount: value['performedCount'],
     planRevisionId: value['planRevisionId'],
     plannedSessionId: value['plannedSessionId'],
+    skippedCount: value['skippedCount'],
     startedAt: value['startedAt'] == null ? value['startedAt'] : value['startedAt'].toISOString(),
     state: value['state'],
+    stopReason: value['stopReason'],
     updatedAt: value['updatedAt'] == null ? value['updatedAt'] : value['updatedAt'].toISOString(),
     variant: value['variant'],
   };

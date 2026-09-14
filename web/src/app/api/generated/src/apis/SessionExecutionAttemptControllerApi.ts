@@ -34,6 +34,12 @@ import {
   ExecutionViewFromJSON,
   ExecutionViewToJSON,
 } from '../models/ExecutionView';
+import { type FactCommand, FactCommandFromJSON, FactCommandToJSON } from '../models/FactCommand';
+import {
+  type FinishCommand,
+  FinishCommandFromJSON,
+  FinishCommandToJSON,
+} from '../models/FinishCommand';
 import {
   type ProgressCommand,
   ProgressCommandFromJSON,
@@ -50,10 +56,25 @@ export interface AbandonRequest {
   abandonAttemptCommand?: AbandonAttemptCommand;
 }
 
+export interface ActiveRequest {
+  plannedSessionId: string;
+}
+
 export interface Complete1Request {
   attemptId: string;
   idempotencyKey: string;
   declareExecutionCommand: DeclareExecutionCommand;
+}
+
+export interface FactRequest {
+  attemptId: string;
+  factCommand: FactCommand;
+}
+
+export interface FinishRequest {
+  attemptId: string;
+  idempotencyKey: string;
+  finishCommand: FinishCommand;
 }
 
 export interface Get3Request {
@@ -137,6 +158,57 @@ export class SessionExecutionAttemptControllerApi extends runtime.BaseAPI {
   }
 
   /**
+   * Creates request options for active without sending the request
+   */
+  async activeRequestOpts(requestParameters: ActiveRequest): Promise<runtime.RequestOpts> {
+    if (requestParameters['plannedSessionId'] == null) {
+      throw new runtime.RequiredError(
+        'plannedSessionId',
+        'Required parameter "plannedSessionId" was null or undefined when calling active().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters['plannedSessionId'] != null) {
+      queryParameters['plannedSessionId'] = requestParameters['plannedSessionId'];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v1/participant/session-attempts/active`;
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   */
+  async activeRaw(
+    requestParameters: ActiveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AttemptView>> {
+    const requestOptions = await this.activeRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => AttemptViewFromJSON(jsonValue));
+  }
+
+  /**
+   */
+  async active(
+    requestParameters: ActiveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AttemptView> {
+    const response = await this.activeRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
    * Creates request options for complete1 without sending the request
    */
   async complete1RequestOpts(requestParameters: Complete1Request): Promise<runtime.RequestOpts> {
@@ -205,6 +277,141 @@ export class SessionExecutionAttemptControllerApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<ExecutionView> {
     const response = await this.complete1Raw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for fact without sending the request
+   */
+  async factRequestOpts(requestParameters: FactRequest): Promise<runtime.RequestOpts> {
+    if (requestParameters['attemptId'] == null) {
+      throw new runtime.RequiredError(
+        'attemptId',
+        'Required parameter "attemptId" was null or undefined when calling fact().',
+      );
+    }
+
+    if (requestParameters['factCommand'] == null) {
+      throw new runtime.RequiredError(
+        'factCommand',
+        'Required parameter "factCommand" was null or undefined when calling fact().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v1/participant/session-attempts/{attemptId}/facts`;
+    urlPath = urlPath.replace(
+      '{attemptId}',
+      encodeURIComponent(String(requestParameters['attemptId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+      body: FactCommandToJSON(requestParameters['factCommand']),
+    };
+  }
+
+  /**
+   */
+  async factRaw(
+    requestParameters: FactRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AttemptDetailView>> {
+    const requestOptions = await this.factRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      AttemptDetailViewFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async fact(
+    requestParameters: FactRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AttemptDetailView> {
+    const response = await this.factRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for finish without sending the request
+   */
+  async finishRequestOpts(requestParameters: FinishRequest): Promise<runtime.RequestOpts> {
+    if (requestParameters['attemptId'] == null) {
+      throw new runtime.RequiredError(
+        'attemptId',
+        'Required parameter "attemptId" was null or undefined when calling finish().',
+      );
+    }
+
+    if (requestParameters['idempotencyKey'] == null) {
+      throw new runtime.RequiredError(
+        'idempotencyKey',
+        'Required parameter "idempotencyKey" was null or undefined when calling finish().',
+      );
+    }
+
+    if (requestParameters['finishCommand'] == null) {
+      throw new runtime.RequiredError(
+        'finishCommand',
+        'Required parameter "finishCommand" was null or undefined when calling finish().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    if (requestParameters['idempotencyKey'] != null) {
+      headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+    }
+
+    let urlPath = `/api/v1/participant/session-attempts/{attemptId}/finish`;
+    urlPath = urlPath.replace(
+      '{attemptId}',
+      encodeURIComponent(String(requestParameters['attemptId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+      body: FinishCommandToJSON(requestParameters['finishCommand']),
+    };
+  }
+
+  /**
+   */
+  async finishRaw(
+    requestParameters: FinishRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<ExecutionView>> {
+    const requestOptions = await this.finishRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => ExecutionViewFromJSON(jsonValue));
+  }
+
+  /**
+   */
+  async finish(
+    requestParameters: FinishRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<ExecutionView> {
+    const response = await this.finishRaw(requestParameters, initOverrides);
     return await response.value();
   }
 
