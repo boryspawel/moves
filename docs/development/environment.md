@@ -54,6 +54,15 @@ importu realm. Local realm permits the localhost loopback frontend on an ephemer
 port, so the Compose smoke ports work without editing the import. This is strictly
 local-development configuration, not a production redirect policy.
 
+Backend odrzuca jako `401 invalid_token` każdy JWT bez niepustego OIDC `sub`; `sub`
+jest trwałą zewnętrzną referencją konta, nie identyfikatorem uczestnika. Import
+zawiera scope `basic` z mapperem `sub` dla access tokenów. Jeżeli realm został już
+zaimportowany do trwałego środowiska, zmiana pliku JSON go nie naprawia: należy
+addytywnie utworzyć scope `basic`, dodać mapper `oidc-sub-mapper` (`access.token.claim`
+i `introspection.token.claim` ustawione na `true`) i przypiąć scope do domyślnych
+client scopes `motion-web`. Nie resetuj wolumenów ani danych użytkowników wyłącznie
+w celu naprawy tego mapowania.
+
 Backend uruchamia migracje Flyway przy starcie. Flyway jest właścicielem schematu, a
 Hibernate wyłącznie go waliduje. Nie usuwaj wolumenów, aby „naprawić” pojedynczą
 migrację — najpierw sprawdź log backendu i historię Flyway.

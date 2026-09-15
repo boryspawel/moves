@@ -40,7 +40,7 @@
       "redirectUris": ["http://localhost:4200/*"],
       "webOrigins": ["http://localhost:4200"],
       "attributes": { "pkce.code.challenge.method": "S256" },
-      "defaultClientScopes": ["web-origins", "acr", "roles", "profile", "email", "motion-email-verified"],
+      "defaultClientScopes": ["basic", "web-origins", "acr", "roles", "profile", "email", "motion-email-verified"],
       "protocolMappers": [
         {
           "name": "motion-api-audience",
@@ -57,6 +57,28 @@
     }
   ],
   "clientScopes": [
+    {
+      "name": "basic",
+      "description": "OpenID Connect scope for basic claims",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "${scopeBasic}"
+      },
+      "protocolMappers": [
+        {
+          "name": "sub",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-sub-mapper",
+          "consentRequired": false,
+          "config": {
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
     {
       "name": "motion-email-verified",
       "protocol": "openid-connect",
