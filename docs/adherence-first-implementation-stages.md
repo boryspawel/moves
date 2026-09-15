@@ -16,10 +16,20 @@ autoryzacji, idempotencji i dostępności adekwatnymi do zakresu.
 | 4 | bariera i deterministyczna reakcja — dostarczone | `adherence`, sygnały do safety/specialist |
 | 5 | epizod powrotu, oferta i wybór — dostarczone | `adherence` projection/aggregate |
 | 6 | worklista, issue i reply — dostarczone w `d004a36` | `specialist`, V027/V028 |
-| 7 | participant today-only flow — bieżące zmiany niecommitowane | Angular, kontrakty etapów 1–5 |
+| 7 | participant today-only flow — dostarczony jako część P0–P6; nie jest osobnym P7 | Angular, kontrakty etapów 1–5 |
 | 8 | panel specjalisty V2 — dostarczony | Angular, wyłącznie kontrakty V2 i minimalna projekcja aktywnej relacji |
 | 9 | reminders rules-first — preferencje i deterministyczne reguły | `notification.reminders`, neutralny audit/dedupe |
 | 10 | metryki, trzy eksperymenty i audyt slice — dostarczone | `analytics.adherencemetrics`, V032 i dokumentacja końcowa |
+
+## P6 read projections
+
+`adherence` owns the read summary for `CURRENT_ACTIVE_PLANS`: it consumes the existing progress
+port and includes only planned/completed sessions. Scheduled dates are inclusive in the 7- and
+30-day windows; UI-provided `from`/`to` ranges are bounded to 366 days. The projection returns the
+eight explicit states, has a null/zero denominator where no ratio is meaningful, and does not claim
+`MISSED` sessions or reconstruct history. It does not change plan, execution, goal, idempotency,
+or persistence ownership. Existing budget warnings are data signals, not a substitute for manual UI
+review.
 
 P7 prowadzi przez `/sessions`: `TodayAgenda` → wariant → check-in → próba i
 postęp → wynik albo bariera. Id aktywnej próby jest w `sessionStorage`; UI

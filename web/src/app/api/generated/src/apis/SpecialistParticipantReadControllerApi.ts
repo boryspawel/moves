@@ -14,6 +14,11 @@
 
 import * as runtime from '../runtime';
 import {
+  type AdherenceSummary,
+  AdherenceSummaryFromJSON,
+  AdherenceSummaryToJSON,
+} from '../models/AdherenceSummary';
+import {
   type ParticipantTimelineEvent,
   ParticipantTimelineEventFromJSON,
   ParticipantTimelineEventToJSON,
@@ -28,6 +33,12 @@ import {
   SpecialistParticipantWorkspaceViewFromJSON,
   SpecialistParticipantWorkspaceViewToJSON,
 } from '../models/SpecialistParticipantWorkspaceView';
+
+export interface AdherenceSummaryRequest {
+  participantId: string;
+  from?: Date;
+  to?: Date;
+}
 
 export interface TimelineRequest {
   participantId: string;
@@ -52,6 +63,71 @@ export interface WorkspaceRequest {
  *
  */
 export class SpecialistParticipantReadControllerApi extends runtime.BaseAPI {
+  /**
+   * Creates request options for adherenceSummary without sending the request
+   */
+  async adherenceSummaryRequestOpts(
+    requestParameters: AdherenceSummaryRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['participantId'] == null) {
+      throw new runtime.RequiredError(
+        'participantId',
+        'Required parameter "participantId" was null or undefined when calling adherenceSummary().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters['from'] != null) {
+      queryParameters['from'] = (requestParameters['from'] as any).toISOString().substring(0, 10);
+    }
+
+    if (requestParameters['to'] != null) {
+      queryParameters['to'] = (requestParameters['to'] as any).toISOString().substring(0, 10);
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v1/specialist/participants/{participantId}/adherence-summary`;
+    urlPath = urlPath.replace(
+      '{participantId}',
+      encodeURIComponent(String(requestParameters['participantId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   * Get the authorized current-active-plan adherence summary
+   */
+  async adherenceSummaryRaw(
+    requestParameters: AdherenceSummaryRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AdherenceSummary>> {
+    const requestOptions = await this.adherenceSummaryRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      AdherenceSummaryFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   * Get the authorized current-active-plan adherence summary
+   */
+  async adherenceSummary(
+    requestParameters: AdherenceSummaryRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AdherenceSummary> {
+    const response = await this.adherenceSummaryRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
   /**
    * Creates request options for timeline without sending the request
    */

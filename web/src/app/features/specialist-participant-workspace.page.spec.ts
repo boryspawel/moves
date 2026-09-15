@@ -149,7 +149,7 @@ describe('ParticipantGoalsComponent', () => {
     expect(panel.querySelector('.goal-facts dd')?.textContent).toContain('4 km');
     expect(panel.textContent).toContain('Wartość docelowa:5 km');
     expect(panel.textContent).toContain('Porównanie:co najmniej');
-    expect(panel.textContent).toContain('Brak zapisanych pomiarów.');
+    expect(panel.textContent).toContain('Brak pomiarów w wczytanej historii.');
     expect(panel.textContent).toContain('Stan:W trakcie');
     expect(panel.textContent).toContain('Liczba pomiarów:0');
     expect(panel.textContent).not.toContain('BODY_CIRCUMFERENCE:WAIST');
@@ -228,7 +228,7 @@ describe('ParticipantGoalsComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Brak zapisanych pomiarów.');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Brak pomiarów w wczytanej historii.');
   });
 
   it('renders a neutral history error instead of an empty state when loading observations fails', async () => {
@@ -244,7 +244,7 @@ describe('ParticipantGoalsComponent', () => {
 
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('Nie udało się wczytać historii pomiarów.');
-    expect(text).not.toContain('Brak zapisanych pomiarów.');
+    expect(text).not.toContain('Brak pomiarów w wczytanej historii.');
   });
 
   it('reloads the selected goal, list, timeline signal, and observation history after recording without closing the panel', async () => {

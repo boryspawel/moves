@@ -123,6 +123,28 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort {
         return goal;
     }
 
+    @Transactional(readOnly = true)
+    public ParticipantGoalDetail ownGoalDetail(String subject, UUID goalId) {
+        UUID participantId = participantIdFor(subject);
+        ParticipantGoal goal = goals.findById(goalId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "participant goal not found"));
+        if (!participantId.equals(goal.participantId)) throw forbidden("participant goal belongs to another participant");
+        return ownDetail(goal);
+    }
+
+    @Transactional(readOnly = true)
+    public ObservationHistory ownObservationHistory(String subject, UUID goalId, UUID outcomeId, int limit, String cursor) {
+        UUID participantId = participantIdFor(subject);
+        ParticipantGoal goal = goals.findById(goalId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "participant goal not found"));
+        if (!participantId.equals(goal.participantId)) throw forbidden("participant goal belongs to another participant");
+        if (outcomeId != null) outcomes.findByIdAndGoalId(outcomeId, goalId).orElseThrow(() -> bad("outcome does not belong to goal"));
+        if (limit < 1 || limit > 100) throw bad("limit must be from 1 to 100");
+        Cursor after = Cursor.parse(cursor);
+        var page = org.springframework.data.domain.PageRequest.of(0, limit + 1);
+        List<GoalObservation> result = observationPage(goalId, outcomeId, after, page);
+        boolean more = result.size() > limit; List<GoalObservation> items = more ? result.subList(0, limit) : result;
+        return new ObservationHistory(items.stream().map(this::observationSnapshot).toList(), more ? Cursor.of(items.get(items.size() - 1)) : null);
+    }
+
     @Transactional
     public ParticipantGoalView update(String subject, UUID participantId, UUID goalId, ActingContext context, String key, UpdateParticipantGoalCommand command) {
         UUID specialist = authorize(subject, participantId, context, null); String operation = "UPDATE:" + goalId;
@@ -207,7 +229,7 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort {
         Cursor after = measuredBefore == null || recordedBefore == null || idBefore == null ? null : new Cursor(measuredBefore, recordedBefore, idBefore);
         List<GoalObservation> result = observationPage(goalId, outcomeId, after, org.springframework.data.domain.PageRequest.of(0, limit + 1));
         boolean more = result.size() > limit; List<GoalObservation> items = more ? result.subList(0, limit) : result;
-        return new ObservationHistory(items.stream().map(item -> new ObservationSnapshot(item.id, item.goalId, item.outcomeId, item.participantId, item.value, item.unit, item.measurementMethod, item.measuredAt, item.recordedAt)).toList(), more ? Cursor.of(items.get(items.size() - 1)) : null);
+        return new ObservationHistory(items.stream().map(this::observationSnapshot).toList(), more ? Cursor.of(items.get(items.size() - 1)) : null);
     }
 
     private List<GoalObservation> observationPage(UUID goalId, UUID outcomeId, Cursor after, org.springframework.data.domain.Pageable page) {
@@ -246,10 +268,54 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort {
     private static void requireRole(ActingContext context, ParticipantGoal goal) { if (!matches(context.role(), goal.category)) throw forbidden("goal category does not match specialist acting context"); }
     private ParticipantGoalView view(ParticipantGoal goal) { return new ParticipantGoalView(goal.id, goal.participantId, goal.category, goal.title, goal.description, goal.priority, goal.targetDate, goal.status, outcomeViews(goal.id), lifecycle.availableActions(goal), goal.version, goal.createdAt, goal.updatedAt, goal.achievedAt, goal.cancelledAt); }
     private ParticipantGoalSummary summary(ParticipantGoal goal) { return new ParticipantGoalSummary(goal.id, goal.participantId, goal.category.name(), goal.title, goal.description, goal.priority, goal.targetDate, goal.status.name(), outcomeViews(goal.id).stream().map(item -> new OutcomeSnapshot(item.metricCode, item.baseline, item.targetValue, item.unit, item.position)).toList(), goal.version, goal.createdAt, goal.updatedAt); }
-    private List<OutcomeView> outcomeViews(UUID goalId) { return outcomes.findByGoalIdOrderByPositionAsc(goalId).stream().map(item -> {
-        Optional<GoalObservation> latest = observations == null ? Optional.empty() : observations.findTopByGoalIdAndOutcomeIdOrderByMeasuredAtDescRecordedAtDescIdDesc(goalId, item.id);
-        return new OutcomeView(item.id, item.metricCode, item.baseline, item.targetValue, item.unit, item.targetComparator, item.position, latest.map(this::observationView).orElse(null), observations == null ? 0 : (int) observations.countByGoalIdAndOutcomeId(goalId, item.id), item.targetComparator == null ? TargetComparator.ProgressState.NOT_COMPARABLE : latest.map(value -> item.targetComparator.progress(item.targetValue, value.value)).orElse(TargetComparator.ProgressState.NO_DATA));
-    }).toList(); }
+    private ParticipantGoalDetail ownDetail(ParticipantGoal goal) {
+        return new ParticipantGoalDetail(goal.id, goal.participantId, goal.category.name(), goal.title, goal.description, goal.priority,
+                goal.targetDate, goal.status.name(), outcomeViews(goal.id).stream().map(item -> new OwnOutcomeView(item.id, item.metricCode,
+                item.baseline, item.targetValue, item.unit, item.targetComparator, item.position, item.progress)).toList(), goal.version,
+                goal.createdAt, goal.updatedAt);
+    }
+    private List<OutcomeView> outcomeViews(UUID goalId) {
+        List<GoalOutcome> goalOutcomes = outcomes.findByGoalIdOrderByPositionAsc(goalId);
+        if (observations == null || goalOutcomes.isEmpty()) return goalOutcomes.stream().map(item -> outcomeView(item, List.of(), 0)).toList();
+        List<UUID> ids = goalOutcomes.stream().map(item -> item.id).toList();
+        Map<UUID, List<GoalObservation>> latestTwo = observations.findLatestTwoByGoalIdAndOutcomeIdIn(goalId, ids).stream()
+                .collect(java.util.stream.Collectors.groupingBy(item -> item.outcomeId, LinkedHashMap::new, java.util.stream.Collectors.toList()));
+        Map<UUID, Long> counts = observations.countByGoalIdGroupedByOutcomeId(goalId).stream()
+                .collect(java.util.stream.Collectors.toMap(GoalObservationRepository.OutcomeObservationCount::getOutcomeId,
+                        GoalObservationRepository.OutcomeObservationCount::getObservationCount));
+        return goalOutcomes.stream().map(item -> outcomeView(item, latestTwo.getOrDefault(item.id, List.of()), counts.getOrDefault(item.id, 0L).intValue())).toList();
+    }
+    private OutcomeView outcomeView(GoalOutcome outcome, List<GoalObservation> latestTwo, int count) {
+        Optional<GoalObservation> latest = latestTwo.stream().findFirst();
+        TargetComparator.ProgressState legacyState = outcome.targetComparator == null ? TargetComparator.ProgressState.NOT_COMPARABLE
+                : latest.map(value -> outcome.targetComparator.progress(outcome.targetValue, value.value)).orElse(TargetComparator.ProgressState.NO_DATA);
+        OutcomeProgress progress = progress(outcome, latestTwo);
+        return new OutcomeView(outcome.id, outcome.metricCode, outcome.baseline, outcome.targetValue, outcome.unit, outcome.targetComparator,
+                outcome.position, latest.map(this::observationView).orElse(null), count, legacyState, progress);
+    }
+    private OutcomeProgress progress(GoalOutcome outcome, List<GoalObservation> observations) {
+        if (outcome.targetComparator == null) return new OutcomeProgress(OutcomeProgress.State.NOT_COMPARABLE, null, null);
+        List<GoalObservation> compatible = observations.stream().filter(item -> Objects.equals(outcome.unit, item.unit)).toList();
+        if (compatible.isEmpty()) return new OutcomeProgress(outcome.baseline == null ? OutcomeProgress.State.NO_MEASUREMENT : OutcomeProgress.State.BASELINE_ONLY, null, null);
+        GoalObservation latest = compatible.getFirst();
+        ObservationSnapshot latestSnapshot = observationSnapshot(latest);
+        if (outcome.targetComparator.progress(outcome.targetValue, latest.value) == TargetComparator.ProgressState.TARGET_REACHED)
+            return new OutcomeProgress(OutcomeProgress.State.TARGET_REACHED, percent(outcome, latest.value), latestSnapshot);
+        BigDecimal anchor = compatible.size() > 1 ? compatible.get(1).value : outcome.baseline;
+        if (anchor == null) return new OutcomeProgress(OutcomeProgress.State.INSUFFICIENT_DATA, percent(outcome, latest.value), latestSnapshot);
+        int movement = latest.value.subtract(anchor).signum() * outcome.targetValue.subtract(anchor).signum();
+        OutcomeProgress.State state = movement > 0 ? OutcomeProgress.State.PROGRESSING
+                : movement < 0 ? OutcomeProgress.State.MOVING_AWAY : OutcomeProgress.State.UNCHANGED;
+        return new OutcomeProgress(state, percent(outcome, latest.value), latestSnapshot);
+    }
+    private static BigDecimal percent(GoalOutcome outcome, BigDecimal latest) {
+        if (outcome.baseline == null || outcome.targetValue == null || outcome.targetComparator == null) return null;
+        int direction = outcome.targetValue.compareTo(outcome.baseline);
+        if ((outcome.targetComparator == TargetComparator.AT_LEAST && direction <= 0)
+                || (outcome.targetComparator == TargetComparator.AT_MOST && direction >= 0)) return null;
+        return latest.subtract(outcome.baseline).multiply(BigDecimal.valueOf(100))
+                .divide(outcome.targetValue.subtract(outcome.baseline), 8, java.math.RoundingMode.HALF_UP).stripTrailingZeros();
+    }
     private ParticipantGoal owned(UUID specialist, UUID participant, UUID goalId) { return goals.findByIdAndSpecialistAccountIdAndParticipantId(goalId, specialist, participant).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "participant goal not found")); }
     private Optional<ParticipantGoalView> replay(UUID specialist, String operation, String key) { return idempotency.findBySpecialistAccountIdAndOperationAndIdempotencyKey(specialist, operation, key).flatMap(item -> goals.findById(item.goalId)).map(this::view); }
     private void remember(UUID specialist, String operation, String key, UUID goalId, Instant now) { idempotency.saveAndFlush(new GoalIdempotency(specialist, operation, key, goalId, now)); }
@@ -280,9 +346,15 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort {
     public record ObservationView(UUID id, UUID goalId, UUID outcomeId, UUID participantId, BigDecimal value, String unit, String measurementMethod, Instant measuredAt, String note, String evidenceSource, Instant recordedAt) { }
     public record ObservationResult(ObservationView observation, ParticipantGoalView goal) { }
     public record ObservationPage(List<ObservationView> items, String nextCursor) { }
-    public record OutcomeView(UUID id, String metricCode, BigDecimal baseline, BigDecimal targetValue, String unit, TargetComparator targetComparator, int position, ObservationView latestObservation, int observationCount, TargetComparator.ProgressState progressState) { }
+    public record OutcomeProgress(State state, BigDecimal baselineToTargetPercent, ObservationSnapshot latestObservation) {
+        public enum State { NO_MEASUREMENT, BASELINE_ONLY, INSUFFICIENT_DATA, PROGRESSING, MOVING_AWAY, UNCHANGED, TARGET_REACHED, NOT_COMPARABLE }
+    }
+    public record OutcomeView(UUID id, String metricCode, BigDecimal baseline, BigDecimal targetValue, String unit, TargetComparator targetComparator, int position, ObservationView latestObservation, int observationCount, TargetComparator.ProgressState progressState, OutcomeProgress progress) { }
     public record ParticipantGoalView(UUID id, UUID participantId, ParticipantGoal.Category category, String title, String description, int priority, LocalDate targetDate, ParticipantGoal.Status status, List<OutcomeView> outcomes, List<String> availableActions, long version, Instant createdAt, Instant updatedAt, Instant achievedAt, Instant cancelledAt) { }
+    public record OwnOutcomeView(UUID id, String metricCode, BigDecimal baseline, BigDecimal targetValue, String unit, TargetComparator targetComparator, int position, OutcomeProgress progress) { }
+    public record ParticipantGoalDetail(UUID id, UUID participantId, String category, String title, String description, int priority, LocalDate targetDate, String status, List<OwnOutcomeView> outcomes, long version, Instant createdAt, Instant updatedAt) { }
     private ObservationView observationView(GoalObservation item) { return new ObservationView(item.id, item.goalId, item.outcomeId, item.participantId, item.value, item.unit, item.measurementMethod, item.measuredAt, item.note, item.evidenceSource, item.recordedAt); }
+    private ObservationSnapshot observationSnapshot(GoalObservation item) { return new ObservationSnapshot(item.id, item.goalId, item.outcomeId, item.participantId, item.value, item.unit, item.measurementMethod, item.measuredAt, item.recordedAt); }
     private record Cursor(Instant measuredAt, Instant recordedAt, UUID id) {
         boolean before(GoalObservation item) { int measured = item.measuredAt.compareTo(measuredAt); if (measured != 0) return measured < 0; int recorded = item.recordedAt.compareTo(recordedAt); if (recorded != 0) return recorded < 0; return item.id.compareTo(id) < 0; }
         static String of(GoalObservation item) { return java.util.Base64.getUrlEncoder().withoutPadding().encodeToString((item.measuredAt + "|" + item.recordedAt + "|" + item.id).getBytes(java.nio.charset.StandardCharsets.UTF_8)); }

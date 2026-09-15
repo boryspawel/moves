@@ -13,6 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
+import type { AdherenceSummary } from './AdherenceSummary';
+import {
+  AdherenceSummaryFromJSON,
+  AdherenceSummaryFromJSONTyped,
+  AdherenceSummaryToJSON,
+  AdherenceSummaryToJSONTyped,
+} from './AdherenceSummary';
 import type { RelationshipView } from './RelationshipView';
 import {
   RelationshipViewFromJSON,
@@ -48,13 +55,6 @@ import {
   RecentProgressViewToJSON,
   RecentProgressViewToJSONTyped,
 } from './RecentProgressView';
-import type { AdherenceSummaryView } from './AdherenceSummaryView';
-import {
-  AdherenceSummaryViewFromJSON,
-  AdherenceSummaryViewFromJSONTyped,
-  AdherenceSummaryViewToJSON,
-  AdherenceSummaryViewToJSONTyped,
-} from './AdherenceSummaryView';
 import type { AttentionItemView } from './AttentionItemView';
 import {
   AttentionItemViewFromJSON,
@@ -97,10 +97,10 @@ export interface SpecialistParticipantWorkspaceView {
   activeProblems?: Array<ActiveProblemView>;
   /**
    *
-   * @type {AdherenceSummaryView}
+   * @type {AdherenceSummary}
    * @memberof SpecialistParticipantWorkspaceView
    */
-  adherenceSummary?: AdherenceSummaryView;
+  adherenceSummary?: AdherenceSummary;
   /**
    *
    * @type {Array<AttentionItemView>}
@@ -188,7 +188,7 @@ export function SpecialistParticipantWorkspaceViewFromJSONTyped(
     adherenceSummary:
       json['adherenceSummary'] == null
         ? undefined
-        : AdherenceSummaryViewFromJSON(json['adherenceSummary']),
+        : AdherenceSummaryFromJSON(json['adherenceSummary']),
     attentionItems:
       json['attentionItems'] == null
         ? undefined
@@ -232,7 +232,7 @@ export function SpecialistParticipantWorkspaceViewToJSONTyped(
       value['activeProblems'] == null
         ? undefined
         : (value['activeProblems'] as Array<any>).map(ActiveProblemViewToJSON),
-    adherenceSummary: AdherenceSummaryViewToJSON(value['adherenceSummary']),
+    adherenceSummary: AdherenceSummaryToJSON(value['adherenceSummary']),
     attentionItems:
       value['attentionItems'] == null
         ? undefined

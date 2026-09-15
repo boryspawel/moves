@@ -20,6 +20,13 @@ import {
   ObservationViewToJSON,
   ObservationViewToJSONTyped,
 } from './ObservationView';
+import type { OutcomeProgress } from './OutcomeProgress';
+import {
+  OutcomeProgressFromJSON,
+  OutcomeProgressFromJSONTyped,
+  OutcomeProgressToJSON,
+  OutcomeProgressToJSONTyped,
+} from './OutcomeProgress';
 
 /**
  *
@@ -63,6 +70,12 @@ export interface OutcomeView {
    * @memberof OutcomeView
    */
   position?: number;
+  /**
+   *
+   * @type {OutcomeProgress}
+   * @memberof OutcomeView
+   */
+  progress?: OutcomeProgress;
   /**
    *
    * @type {OutcomeViewProgressStateEnum}
@@ -136,6 +149,7 @@ export function OutcomeViewFromJSONTyped(json: any, ignoreDiscriminator: boolean
     metricCode: json['metricCode'] == null ? undefined : json['metricCode'],
     observationCount: json['observationCount'] == null ? undefined : json['observationCount'],
     position: json['position'] == null ? undefined : json['position'],
+    progress: json['progress'] == null ? undefined : OutcomeProgressFromJSON(json['progress']),
     progressState: json['progressState'] == null ? undefined : json['progressState'],
     targetComparator: json['targetComparator'] == null ? undefined : json['targetComparator'],
     targetValue: json['targetValue'] == null ? undefined : json['targetValue'],
@@ -162,6 +176,7 @@ export function OutcomeViewToJSONTyped(
     metricCode: value['metricCode'],
     observationCount: value['observationCount'],
     position: value['position'],
+    progress: OutcomeProgressToJSON(value['progress']),
     progressState: value['progressState'],
     targetComparator: value['targetComparator'],
     targetValue: value['targetValue'],

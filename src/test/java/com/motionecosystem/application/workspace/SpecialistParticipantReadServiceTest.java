@@ -6,8 +6,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.motionecosystem.adherence.api.AdherenceSummaryQueryPort;
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.calendar.api.SpecialistAppointmentQueryPort;
 import com.motionecosystem.calendar.api.SpecialistAppointmentEventQueryPort;
@@ -137,6 +139,31 @@ class SpecialistParticipantReadServiceTest {
         assertThatThrownBy(() -> service.timelineEvent("specialist", participantId, "session-execution:" + UUID.randomUUID()))
                 .isInstanceOfSatisfying(org.springframework.web.server.ResponseStatusException.class,
                         error -> assertThat(error.getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.NOT_FOUND));
+    }
+
+    @Test
+    void directAdherenceSummaryDeniesSpecialistWithoutExecutionConsentCapability() {
+        UUID specialistId = UUID.randomUUID();
+        UUID participantId = UUID.randomUUID();
+        CurrentAccountService accounts = mock(CurrentAccountService.class);
+        SpecialistWorkspacePort workspace = mock(SpecialistWorkspacePort.class);
+        AdherenceSummaryQueryPort summaries = mock(AdherenceSummaryQueryPort.class);
+        when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(specialistId, "specialist", ProfileType.SPECIALIST));
+        when(workspace.findProfile(specialistId)).thenReturn(Optional.of(new SpecialistWorkspacePort.Profile(specialistId,
+                SpecialistWorkspacePort.WorkspaceRole.TRAINER, "UTC")));
+        when(workspace.requireParticipantCapabilities(any(), any(), any(), any(), any()))
+                .thenReturn(new SpecialistWorkspacePort.AuthorizationDecision(SpecialistWorkspacePort.WorkspaceRole.TRAINER,
+                        SpecialistWorkspacePort.WorkspacePurpose.PERFORMANCE_PLANNING, Set.of("PLAN_PERFORMANCE")))
+                .thenThrow(new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN));
+        SpecialistParticipantReadService service = new SpecialistParticipantReadService(accounts, workspace,
+                mock(ParticipantClientPort.class), mock(ParticipantContextQueryPort.class), mock(SpecialistAppointmentQueryPort.class),
+                mock(SpecialistAppointmentEventQueryPort.class), mock(PlanRevisionQueryPort.class),
+                mock(ParticipantExecutionHistoryQueryPort.class), null, null, summaries, mock(AuditRecorder.class), Clock.systemUTC());
+
+        assertThatThrownBy(() -> service.adherenceSummary("specialist", participantId, null, null))
+                .isInstanceOfSatisfying(org.springframework.web.server.ResponseStatusException.class,
+                        error -> assertThat(error.getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.FORBIDDEN));
+        verifyNoInteractions(summaries);
     }
 
     private static SpecialistAppointmentQueryPort.AppointmentSummary appointment(Instant startsAt, Instant endsAt, String status) {

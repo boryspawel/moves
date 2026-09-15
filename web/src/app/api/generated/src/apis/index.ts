@@ -1,5 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
+export * from './AdherenceSummaryControllerApi';
 export * from './AnatomyReferenceAdminControllerApi';
 export * from './AnatomyReferenceControllerApi';
 export * from './AppointmentControllerApi';

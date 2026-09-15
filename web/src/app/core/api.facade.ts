@@ -28,7 +28,7 @@ import {
   ParticipantGoalControllerApi,
   ParticipantDocumentationControllerApi,
   SpecialistPlanFacadeControllerApi, ParticipantExerciseSetControllerApi, ParticipantPlanFacadeControllerApi, PracticalPlanResourceControllerApi
-  ,ParticipantAccessInvitationControllerApi, ParticipantSelfGoalControllerApi, ParticipantExecutionHistoryControllerApi
+  ,ParticipantAccessInvitationControllerApi, ParticipantSelfGoalControllerApi, ParticipantExecutionHistoryControllerApi, AdherenceSummaryControllerApi
 } from '../api/generated/src';
 import { Middleware } from '../api/generated/src/runtime';
 import { AuthService } from './auth.service';
@@ -80,6 +80,7 @@ export class ApiFacade {
   readonly participantAccess: ParticipantAccessInvitationControllerApi;
   readonly ownGoals: ParticipantSelfGoalControllerApi;
   readonly ownExecutionHistory: ParticipantExecutionHistoryControllerApi;
+  readonly adherence: AdherenceSummaryControllerApi;
   readonly participantExerciseSets: ParticipantExerciseSetControllerApi;
   /** Own-plan entry points; no specialist acting context is added here. */
   readonly participantPlans: ParticipantPlanFacadeControllerApi;
@@ -121,6 +122,7 @@ export class ApiFacade {
     this.participantAccess = new ParticipantAccessInvitationControllerApi(configuration);
     this.ownGoals = new ParticipantSelfGoalControllerApi(configuration);
     this.ownExecutionHistory = new ParticipantExecutionHistoryControllerApi(configuration);
+    this.adherence = new AdherenceSummaryControllerApi(configuration);
     this.participantExerciseSets = new ParticipantExerciseSetControllerApi(configuration);
     this.participantPlans = new ParticipantPlanFacadeControllerApi(configuration);
     this.practicalPlans = new PracticalPlanResourceControllerApi(configuration);

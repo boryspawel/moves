@@ -3,6 +3,8 @@ package com.motionecosystem.application.workspace;
 import com.motionecosystem.calendar.api.SpecialistAppointmentQueryPort;
 import com.motionecosystem.calendar.api.SpecialistAppointmentEventQueryPort;
 import com.motionecosystem.audit.AuditRecorder;
+import com.motionecosystem.adherence.api.AdherenceSummary;
+import com.motionecosystem.adherence.api.AdherenceSummaryQueryPort;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.participant.api.ParticipantContextQueryPort;
@@ -50,6 +52,7 @@ public class SpecialistParticipantReadService {
     private final ParticipantExecutionHistoryQueryPort executionHistory;
     private final ParticipantGoalEventQueryPort goalEvents;
     private final ParticipantDocumentationEventQueryPort recordEvents;
+    private final AdherenceSummaryQueryPort adherence;
     private final AuditRecorder audit;
     private final Clock clock;
 
@@ -58,11 +61,21 @@ public class SpecialistParticipantReadService {
             ParticipantClientPort participantClients, ParticipantContextQueryPort participantContexts, SpecialistAppointmentQueryPort appointments,
             SpecialistAppointmentEventQueryPort appointmentEvents, PlanRevisionQueryPort revisions,
             ParticipantExecutionHistoryQueryPort executionHistory, ParticipantGoalEventQueryPort goalEvents, ParticipantDocumentationEventQueryPort recordEvents,
-            AuditRecorder audit, Clock clock) {
+            AdherenceSummaryQueryPort adherence, AuditRecorder audit, Clock clock) {
         this.accounts = accounts; this.specialistWorkspace = specialistWorkspace; this.participantClients = participantClients;
         this.participantContexts = participantContexts; this.appointments = appointments; this.appointmentEvents = appointmentEvents;
         this.revisions = revisions; this.executionHistory = executionHistory; this.goalEvents = goalEvents; this.recordEvents = recordEvents;
-        this.audit = audit; this.clock = clock;
+        this.adherence = adherence; this.audit = audit; this.clock = clock;
+    }
+
+    /** Compatibility constructor for callers predating the adherence projection. */
+    public SpecialistParticipantReadService(CurrentAccountService accounts, SpecialistWorkspacePort specialistWorkspace,
+            ParticipantClientPort participantClients, ParticipantContextQueryPort participantContexts, SpecialistAppointmentQueryPort appointments,
+            SpecialistAppointmentEventQueryPort appointmentEvents, PlanRevisionQueryPort revisions,
+            ParticipantExecutionHistoryQueryPort executionHistory, ParticipantGoalEventQueryPort goalEvents, ParticipantDocumentationEventQueryPort recordEvents,
+            AuditRecorder audit, Clock clock) {
+        this(accounts, specialistWorkspace, participantClients, participantContexts, appointments, appointmentEvents, revisions,
+                executionHistory, goalEvents, recordEvents, null, audit, clock);
     }
 
     public SpecialistParticipantWorkspaceView workspace(String subject, UUID participantId) {
@@ -77,7 +90,8 @@ public class SpecialistParticipantReadService {
                 .sorted(Comparator.comparing(SpecialistAppointmentQueryPort.AppointmentSummary::startsAt))
                 .limit(1)
                 .toList();
-        List<ParticipantExecutionHistoryQueryPort.ExecutionStart> recentExecutions = canViewExecutionHistory(access, participantId)
+        boolean canViewAdherence = canViewExecutionHistory(access, participantId);
+        List<ParticipantExecutionHistoryQueryPort.ExecutionStart> recentExecutions = canViewAdherence
                 ? executionHistory.starts(participantId, now.minusSeconds(366L * 24 * 60 * 60), now.plusSeconds(1), DEFAULT_LIMIT)
                 : List.of();
         List<AttentionItemView> attention = attention(subject, participantId, access);
@@ -85,8 +99,17 @@ public class SpecialistParticipantReadService {
                 relationship(access.specialistId(), participantId), capabilities(access.decision()),
                 upcoming.isEmpty() ? null : appointment(upcoming.getFirst()),
                 revision.map(value -> activePlan(value, now, recentExecutions)).orElse(null),
-                revision.map(value -> goals(value.goals())).orElseGet(List::of), adherence(), recentProgress(recentExecutions),
+                revision.map(value -> goals(value.goals())).orElseGet(List::of),
+                canViewAdherence && adherence != null ? adherence.summarize(participantId, null, null) : AdherenceSummary.noData(), recentProgress(recentExecutions),
                 activeProblems(attention), attention, quickActions(access.decision(), upcoming, revision, attention));
+    }
+
+    public AdherenceSummary adherenceSummary(String subject, UUID participantId, LocalDate from, LocalDate to) {
+        Access access = authorize(subject, participantId);
+        requireAdherenceVisibility(access, participantId);
+        if (adherence == null) return AdherenceSummary.noData();
+        audit.record(subject, "SPECIALIST_PARTICIPANT_ADHERENCE_SUMMARY_VIEWED", "ParticipantAccount", participantId);
+        return adherence.summarize(participantId, from, to);
     }
 
     public ParticipantTimelineView timeline(String subject, UUID participantId, TimelineQuery query) {
@@ -163,14 +186,18 @@ public class SpecialistParticipantReadService {
 
     private boolean canViewExecutionHistory(Access access, UUID participantId) {
         try {
-            specialistWorkspace.requireParticipantCapabilities(access.specialistId(), participantId,
-                    access.decision().role(), Set.of(WorkspaceCapability.VIEW_ADHERENCE_WORKLIST),
-                    access.decision().purpose());
+            requireAdherenceVisibility(access, participantId);
             return true;
         } catch (ResponseStatusException denied) {
             if (denied.getStatusCode() == HttpStatus.FORBIDDEN) return false;
             throw denied;
         }
+    }
+
+    private void requireAdherenceVisibility(Access access, UUID participantId) {
+        specialistWorkspace.requireParticipantCapabilities(access.specialistId(), participantId,
+                access.decision().role(), Set.of(WorkspaceCapability.VIEW_ADHERENCE_WORKLIST),
+                access.decision().purpose());
     }
 
     private ParticipantHeader participant(UUID participantId) {
@@ -429,7 +456,6 @@ public class SpecialistParticipantReadService {
                 null, goal.outcomes().stream().map(PlanRevisionQueryPort.GoalOutcomeSnapshot::unit).filter(value -> value != null).findFirst().orElse(null),
                 null, "NO_DATA", List.of("OPEN_GOAL"))).toList();
     }
-    private static AdherenceSummaryView adherence() { return new AdherenceSummaryView("NO_DATA", null, null, null, null, null, null, null, null); }
     private static RecentProgressView recentProgress(List<ParticipantExecutionHistoryQueryPort.ExecutionStart> executions) {
         return executions.isEmpty() ? new RecentProgressView("NO_DATA", null, null) : new RecentProgressView("AVAILABLE",
                 executions.getFirst().completedAt() != null ? executions.getFirst().completedAt() : executions.getFirst().startedAt(), executions.getFirst().state());
@@ -483,7 +509,7 @@ public class SpecialistParticipantReadService {
     public record TimelineQuery(Instant from, Instant to, Set<TimelineType> types, Granularity granularity, String cursor, Integer limit) { }
     public record SpecialistParticipantWorkspaceView(Instant generatedAt, ParticipantHeader participant, RelationshipView relationship,
                                                       List<String> capabilities, AppointmentView nextAppointment, ActivePlanView activePlan,
-                                                      List<GoalView> goals, AdherenceSummaryView adherenceSummary, RecentProgressView recentProgress,
+                                                      List<GoalView> goals, AdherenceSummary adherenceSummary, RecentProgressView recentProgress,
                                                       List<ActiveProblemView> activeProblems, List<AttentionItemView> attentionItems, List<String> quickActions) { }
     public record ParticipantHeader(UUID participantId, String displayName, String avatarReference, String contextLabel, String timeZoneId,
                                     List<String> availableActions) { }
@@ -496,8 +522,6 @@ public class SpecialistParticipantReadService {
     public record ExecutionFactView(UUID attemptId, Instant completedAt, String status) { }
     public record GoalView(UUID goalId, String title, String type, String status, LocalDate targetDate, BigDecimal baseline, BigDecimal target,
                            BigDecimal latestValue, String unit, String improvementDirection, String dataQuality, List<String> availableActions) { }
-    public record AdherenceSummaryView(String dataStatus, Instant from, Instant to, Integer plannedSessions, Integer startedSessions,
-                                       Integer completedSessions, Integer skippedSessions, BigDecimal prescriptionCompletion, BigDecimal reportingCoverage) { }
     public record RecentProgressView(String dataStatus, Instant latestActivityAt, String latestExecutionState) { }
     public record ActiveProblemView(UUID problemId, String type, String priority, String status, String shortDescription,
                                     Instant effectiveAt, Instant recordedAt, String source, List<String> availableActions) { }

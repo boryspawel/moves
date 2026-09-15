@@ -1,8 +1,10 @@
 package com.motionecosystem.application.workspace;
 
+import com.motionecosystem.adherence.api.AdherenceSummary;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
@@ -51,6 +53,15 @@ public class SpecialistParticipantReadController {
     SpecialistParticipantReadService.ParticipantTimelineEvent timelineEvent(@AuthenticationPrincipal Jwt jwt,
             @PathVariable UUID participantId, @PathVariable String eventId) {
         return reads.timelineEvent(jwt.getSubject(), participantId, eventId);
+    }
+
+    @GetMapping("/adherence-summary")
+    @PreAuthorize("hasRole('SPECIALIST')")
+    @Operation(summary = "Get the authorized current-active-plan adherence summary")
+    AdherenceSummary adherenceSummary(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID participantId,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate to) {
+        return reads.adherenceSummary(jwt.getSubject(), participantId, from, to);
     }
 
     private static Set<SpecialistParticipantReadService.TimelineType> parseTypes(String value) {

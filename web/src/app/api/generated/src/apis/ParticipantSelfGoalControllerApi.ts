@@ -14,6 +14,16 @@
 
 import * as runtime from '../runtime';
 import {
+  type ObservationHistory,
+  ObservationHistoryFromJSON,
+  ObservationHistoryToJSON,
+} from '../models/ObservationHistory';
+import {
+  type ParticipantGoalDetail,
+  ParticipantGoalDetailFromJSON,
+  ParticipantGoalDetailToJSON,
+} from '../models/ParticipantGoalDetail';
+import {
   type ParticipantGoalSummary,
   ParticipantGoalSummaryFromJSON,
   ParticipantGoalSummaryToJSON,
@@ -21,6 +31,13 @@ import {
 
 export interface GetOwnParticipantGoalRequest {
   goalId: string;
+}
+
+export interface ListOwnParticipantGoalObservationsRequest {
+  goalId: string;
+  outcomeId?: string;
+  limit?: number;
+  cursor?: string;
 }
 
 /**
@@ -60,12 +77,12 @@ export class ParticipantSelfGoalControllerApi extends runtime.BaseAPI {
   async getOwnParticipantGoalRaw(
     requestParameters: GetOwnParticipantGoalRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<ParticipantGoalSummary>> {
+  ): Promise<runtime.ApiResponse<ParticipantGoalDetail>> {
     const requestOptions = await this.getOwnParticipantGoalRequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      ParticipantGoalSummaryFromJSON(jsonValue),
+      ParticipantGoalDetailFromJSON(jsonValue),
     );
   }
 
@@ -74,8 +91,76 @@ export class ParticipantSelfGoalControllerApi extends runtime.BaseAPI {
   async getOwnParticipantGoal(
     requestParameters: GetOwnParticipantGoalRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<ParticipantGoalSummary> {
+  ): Promise<ParticipantGoalDetail> {
     const response = await this.getOwnParticipantGoalRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for listOwnParticipantGoalObservations without sending the request
+   */
+  async listOwnParticipantGoalObservationsRequestOpts(
+    requestParameters: ListOwnParticipantGoalObservationsRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['goalId'] == null) {
+      throw new runtime.RequiredError(
+        'goalId',
+        'Required parameter "goalId" was null or undefined when calling listOwnParticipantGoalObservations().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters['outcomeId'] != null) {
+      queryParameters['outcomeId'] = requestParameters['outcomeId'];
+    }
+
+    if (requestParameters['limit'] != null) {
+      queryParameters['limit'] = requestParameters['limit'];
+    }
+
+    if (requestParameters['cursor'] != null) {
+      queryParameters['cursor'] = requestParameters['cursor'];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v1/participant/goals/{goalId}/observations`;
+    urlPath = urlPath.replace('{goalId}', encodeURIComponent(String(requestParameters['goalId'])));
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   */
+  async listOwnParticipantGoalObservationsRaw(
+    requestParameters: ListOwnParticipantGoalObservationsRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<ObservationHistory>> {
+    const requestOptions =
+      await this.listOwnParticipantGoalObservationsRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      ObservationHistoryFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async listOwnParticipantGoalObservations(
+    requestParameters: ListOwnParticipantGoalObservationsRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<ObservationHistory> {
+    const response = await this.listOwnParticipantGoalObservationsRaw(
+      requestParameters,
+      initOverrides,
+    );
     return await response.value();
   }
 

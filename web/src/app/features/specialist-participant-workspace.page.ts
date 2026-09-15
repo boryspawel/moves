@@ -25,6 +25,7 @@ import type { PresetView } from '../api/generated/src/models/PresetView';
 import type { CreateFromPresetRequestPresetIdEnum, CreateFromPresetRequestTargetComparatorEnum } from '../api/generated/src/models/CreateFromPresetRequest';
 import { ParticipantDocumentationComponent, type RecordPanelType } from './participant-documentation.component';
 import { ParticipantAccessPanelComponent } from './participant-access-panel.component';
+import { GoalOutcomeProgressComponent } from './goal-outcome-progress.component';
 import {
   groupEvents,
   rangeDates,
@@ -504,7 +505,7 @@ const comparator: Record<string, string> = { AT_LEAST: 'co najmniej', AT_MOST: '
 @Component({
   selector: 'app-participant-goals',
   standalone: true,
-  imports: [MatButtonModule, MatInputModule, ReactiveFormsModule, DatePipe],
+  imports: [MatButtonModule, MatInputModule, ReactiveFormsModule, DatePipe, GoalOutcomeProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`.goal-card.mat-mdc-outlined-button{display:flex;flex-direction:column;align-items:stretch;min-width:0;gap:var(--space-2);text-align:left}.goal-card.mat-mdc-outlined-button .goal-card-title,.goal-card.mat-mdc-outlined-button .goal-card-target,.goal-card.mat-mdc-outlined-button .goal-card-observation{display:block;min-width:0;text-align:left}`],
   template: `<section class="goals-workspace" aria-labelledby="goals-title">
@@ -673,7 +674,8 @@ const comparator: Record<string, string> = { AT_LEAST: 'co najmniej', AT_MOST: '
               @if (historyLoading()) {
                 <p role="status">Wczytywanie historii pomiarów…</p>
               } @else if (historyError()) {
-                <p role="status">Nie udało się wczytać historii pomiarów.</p>
+                <p role="alert">Nie udało się wczytać historii pomiarów.</p>
+                <button mat-stroked-button type="button" (click)="loadHistory()">Spróbuj ponownie</button>
               } @else if (history().length) {
                 <ol class="goal-observation-history">
                   @for (observation of history(); track observation.id) {
@@ -681,9 +683,10 @@ const comparator: Record<string, string> = { AT_LEAST: 'co najmniej', AT_MOST: '
                   }
                 </ol>
               } @else {
-                <p>Brak zapisanych pomiarów.</p>
+                <p>Brak pomiarów w wczytanej historii.</p>
               }
             </section>
+            <app-goal-outcome-progress [outcomes]="goal.outcomes ?? []" [history]="history()" />
             <div class="goal-panel-lifecycle-actions">
               @if (isMutable(goal) && has('ACHIEVE')) {
                 <button mat-stroked-button type="button" [disabled]="mutating()" (click)="confirm.set('ACHIEVE')">Oznacz jako osiągnięty</button>
@@ -749,8 +752,12 @@ const comparator: Record<string, string> = { AT_LEAST: 'co najmniej', AT_MOST: '
 })
 export class ParticipantGoalsComponent {
   private readonly api = inject(ApiFacade);
+  private refreshRequest = 0;
+  private selectionRequest = 0;
+  private historyRequest = 0;
   @Input({ required: true }) participantId!: string;
   @Input() role?: 'TRAINER' | 'PHYSIOTHERAPIST';
+  @Input() selectedGoalId?: string;
   @Input() eventContext?: string;
   @Output() changed = new EventEmitter<void>();
   protected readonly goals = signal<ParticipantGoalView[]>([]);
@@ -816,17 +823,24 @@ export class ParticipantGoalsComponent {
   }
   protected async refresh() {
     if (!this.role || !this.participantId) return;
+    const request = ++this.refreshRequest;
+    const participantId = this.participantId;
+    const role = this.role;
     this.state.set('loading');
     try {
-      this.goals.set(
-        await this.api.participantGoals.listParticipantGoals({
-          participantId: this.participantId,
-          actingContext: this.context(),
-        }),
-      );
+      const goals = await this.api.participantGoals.listParticipantGoals({
+        participantId,
+        actingContext: role as never,
+      });
+      if (request !== this.refreshRequest || participantId !== this.participantId || role !== this.role) return;
+      this.goals.set(goals);
       this.state.set('loaded');
+      const selected = this.goals().find((goal) => goal.id === this.selectedGoalId);
+      if (selected && this.selected()?.id !== selected.id) void this.open(selected);
     } catch {
-      this.state.set('error');
+      if (request === this.refreshRequest && participantId === this.participantId && role === this.role) {
+        this.state.set('error');
+      }
     }
   }
   protected openCreate() {
@@ -903,12 +917,17 @@ export class ParticipantGoalsComponent {
   }
   protected async open(goal: ParticipantGoalView) {
     if (!this.role || !goal.id) return;
+    const request = ++this.selectionRequest;
+    this.historyRequest++;
+    const participantId = this.participantId;
+    const role = this.role;
     try {
       const detail = await this.api.participantGoals.getParticipantGoal({
-        participantId: this.participantId,
+        participantId,
         goalId: goal.id,
-        actingContext: this.context(),
+        actingContext: role as never,
       });
+      if (request !== this.selectionRequest || participantId !== this.participantId || role !== this.role) return;
       this.selected.set(detail);
       this.panelMode.set('view');
       this.confirm.set(null);
@@ -924,10 +943,14 @@ export class ParticipantGoalsComponent {
       this.historyError.set(false);
       void this.loadHistory();
     } catch {
-      this.selected.set(null);
+      if (request === this.selectionRequest && participantId === this.participantId && role === this.role) {
+        this.selected.set(null);
+      }
     }
   }
   protected close() {
+    this.selectionRequest++;
+    this.historyRequest++;
     this.selected.set(null);
     this.panelMode.set('view');
     this.confirm.set(null);
@@ -944,25 +967,31 @@ export class ParticipantGoalsComponent {
   protected async loadHistory() {
     const goal = this.selected();
     if (!goal?.id || !this.role) return;
+    const request = ++this.historyRequest;
+    const participantId = this.participantId;
+    const goalId = goal.id;
+    const role = this.role;
     this.historyLoading.set(true);
     this.historyError.set(false);
     try {
-      this.history.set(
-        (
-          await this.api.participantGoals.listParticipantGoalObservations({
-            participantId: this.participantId,
-            goalId: goal.id,
-            actingContext: this.context(),
-            limit: 20,
-          })
-        ).items?.slice().sort((left, right) =>
-          (right.measuredAt?.getTime() ?? 0) - (left.measuredAt?.getTime() ?? 0),
-        ) ?? [],
-      );
+      const page = await this.api.participantGoals.listParticipantGoalObservations({
+        participantId,
+        goalId,
+        actingContext: role as never,
+        limit: 20,
+      });
+      if (request !== this.historyRequest || participantId !== this.participantId || goalId !== this.selected()?.id) return;
+      this.history.set(page.items?.slice().sort((left, right) =>
+        (right.measuredAt?.getTime() ?? 0) - (left.measuredAt?.getTime() ?? 0),
+      ) ?? []);
     } catch {
-      this.historyError.set(true);
+      if (request === this.historyRequest && participantId === this.participantId && goalId === this.selected()?.id) {
+        this.historyError.set(true);
+      }
     } finally {
-      this.historyLoading.set(false);
+      if (request === this.historyRequest && participantId === this.participantId && goalId === this.selected()?.id) {
+        this.historyLoading.set(false);
+      }
     }
   }
   protected async update() {
@@ -1102,6 +1131,7 @@ export class ParticipantGoalsComponent {
       /><app-participant-summary-strip [workspace]="data" /><app-participant-goals
         [participantId]="participantId()"
         [role]="actingContext()"
+        [selectedGoalId]="goalId()"
         (changed)="reload()"
       />
       <section class="workspace-planning-link" aria-label="Plan treningowy">
@@ -1208,6 +1238,7 @@ export class SpecialistParticipantWorkspacePage {
   protected readonly types = signal<TimelineCategory[]>([]);
   protected readonly view = signal<WorkspaceView>('timeline');
   protected readonly selected = signal<ParticipantTimelineEvent | null>(null);
+  protected readonly goalId = signal<string | undefined>(undefined);
   protected readonly announcement = signal('');
   protected readonly accessStatus = signal<string | undefined>(undefined);
   protected readonly accessStatusAvailable = signal(true);
@@ -1242,6 +1273,7 @@ export class SpecialistParticipantWorkspacePage {
           ),
       );
       const id = params.get('eventId');
+      this.goalId.set(params.get('goalId') ?? undefined);
       const recordType = params.get('recordType');
       this.recordPanelType.set(recordType === 'interview' || recordType === 'note' ? recordType : null);
       this.recordPanelId.set(params.get('recordId'));

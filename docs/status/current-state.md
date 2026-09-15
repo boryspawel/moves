@@ -15,7 +15,7 @@ udostępniony, bezpieczne usuwanie porzuconych draftów oraz idempotency/retry d
 
 ## Participant Goals — completed scope and next steps
 
-**GOALS-01 through GOALS-05 are complete.** The canonical, participant-owned outcome-goal
+**P0–P6 are complete; manual QA and final validation are the next handoff, with no P7.** The canonical, participant-owned outcome-goal
 aggregate is available in the specialist workspace and is materialized into revision-owned snapshots
 rather than duplicated as a plan-goal aggregate.
 It includes active/achieved/cancelled lifecycle, immutable outcome snapshots, explicit specialist
@@ -34,9 +34,19 @@ ownership and specialist category, then persist source ID/version, metadata and 
 never rewrite an activated revision. Legacy planning-goal rows without a proven canonical source remain
 read-only history.
 
-Deliberate current limits: achievement is
-not automatic; there is no participant self-service UI, measurement correction/edit/delete,
-unit conversion, charts, alerts, device import, analytics or ML.
+Goal read projections use one backend calculation: immutable `GoalOutcome` definitions and append-only
+`GoalObservation` measurements remain the source. `AT_LEAST`/`AT_MOST` retain threshold semantics;
+the per-outcome read state distinguishes no measurement, baseline only, insufficient data, progress,
+moving away, unchanged, target reached and not comparable. The percentage is unclipped and exists
+only for a meaningful baseline-to-target direction. There is no cross-outcome aggregate. Specialist
+timeline is first; the shared UI reads progress/chart data by `goalId`. Participant detail/history is
+read-only, paged and safe (no recorder, note or evidence metadata); planning’s source-port summary
+remains unchanged.
+
+Deliberate current limits: achievement is not automatic; there is no measurement correction/edit/delete,
+unit conversion, alerts, device import, analytics or ML. Earlier ADR text that listed charts or
+participant reading as out of scope records the historical decision; this current-state section
+supersedes that status without rewriting ADR history.
 
 ### Participant Goals — next-steps roadmap
 
@@ -359,3 +369,8 @@ The specialist participant workspace backend now exposes specialist-owned initia
 Planned dose remains a planning snapshot and is never treated as actual work. A participant records append-only execution facts per prescription; the latest revision is the current fact while prior revisions remain audit history. Per-set actual details are retained in order and projections sum their supported dimensions. `COMPLETED` requires every selected prescription to be `PERFORMED`; `PARTIAL`, `SKIPPED` and `STOPPED` are terminal non-completion outcomes, not successful qualifications. Recovery completion is therefore emitted only for a fully completed execution.
 
 The participant timeline is typed by terminal outcome and includes fact counts. Adherence metrics now have an additive canonical `participant_id` bridge for participant-keyed producers while legacy account-keyed metrics remain preserved; the V058-to-V059 migration backfills only through an existing unique access link and never invents execution facts or identity links.
+
+## P0–P6 manual QA handoff
+
+The concise final-validation checklist is [manual-qa-p0-p6.md](../manual-qa-p0-p6.md).
+It records the outstanding manual browser/OIDC/auth/accessibility work without claiming a PASS.

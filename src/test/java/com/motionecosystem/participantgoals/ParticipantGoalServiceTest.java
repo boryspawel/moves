@@ -16,6 +16,8 @@ import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
+import com.motionecosystem.participant.api.ParticipantClientPort;
+import com.motionecosystem.participantgoals.api.ParticipantGoalQueryPort;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -25,6 +27,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.ArrayList;
+import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpStatus;
@@ -286,8 +289,7 @@ class ParticipantGoalServiceTest {
         GoalObservation reached = observation(goal.id, atLeast.id, NOW.minusSeconds(1), NOW.minusSeconds(1), new BigDecimal("5"));
         GoalObservation progressing = observation(goal.id, atMost.id, NOW.minusSeconds(2), NOW.minusSeconds(2), new BigDecimal("6"));
         when(fixture.outcomes.findByGoalIdOrderByPositionAsc(goal.id)).thenReturn(List.of(atLeast, atMost, legacy, noData));
-        when(fixture.observations.findTopByGoalIdAndOutcomeIdOrderByMeasuredAtDescRecordedAtDescIdDesc(goal.id, atLeast.id)).thenReturn(Optional.of(reached));
-        when(fixture.observations.findTopByGoalIdAndOutcomeIdOrderByMeasuredAtDescRecordedAtDescIdDesc(goal.id, atMost.id)).thenReturn(Optional.of(progressing));
+        when(fixture.observations.findLatestTwoByGoalIdAndOutcomeIdIn(eq(goal.id), any())).thenReturn(List.of(reached, progressing));
         when(fixture.observations.findByGoalIdAndOutcomeIdOrderByMeasuredAtDescRecordedAtDescIdDesc(eq(goal.id), eq(atLeast.id), any())).thenReturn(List.of(reached, progressing));
         when(fixture.observations.seekAfterOutcome(eq(goal.id), eq(atLeast.id), eq(reached.measuredAt), eq(reached.recordedAt), eq(reached.id), any())).thenReturn(List.of(progressing));
         when(fixture.goals.findByIdAndSpecialistAccountIdAndParticipantId(goal.id, fixture.specialistId, fixture.participantId)).thenReturn(Optional.of(goal));
@@ -305,6 +307,81 @@ class ParticipantGoalServiceTest {
         verify(fixture.observations).findByGoalIdAndOutcomeIdOrderByMeasuredAtDescRecordedAtDescIdDesc(eq(goal.id), eq(atLeast.id), any());
         verify(fixture.observations).seekAfterOutcome(eq(goal.id), eq(atLeast.id), eq(reached.measuredAt), eq(reached.recordedAt), eq(reached.id), any());
         verify(fixture.observations, never()).seekAfterAllOutcomes(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void calculatesUnclippedProgressFromTheSharedSafeProjectionAndBatchesOutcomeReads() {
+        Fixture fixture = observationFixture();
+        ParticipantGoal goal = goal(fixture, ParticipantGoal.Category.PERFORMANCE);
+        GoalOutcome distance = new GoalOutcome(goal.id, "distance", BigDecimal.ZERO, new BigDecimal("10"), "km", null, TargetComparator.AT_LEAST, 0, NOW);
+        GoalOutcome pain = new GoalOutcome(goal.id, "pain", new BigDecimal("10"), new BigDecimal("5"), "points", null, TargetComparator.AT_MOST, 1, NOW);
+        GoalObservation distanceLatest = observation(goal.id, distance.id, NOW, NOW, new BigDecimal("12"));
+        GoalObservation distancePrevious = observation(goal.id, distance.id, NOW.minusSeconds(1), NOW.minusSeconds(1), new BigDecimal("4"));
+        GoalObservation painLatest = new GoalObservation(goal.id, pain.id, fixture.participantId, new BigDecimal("7"), "points", null, NOW, null, null, fixture.specialistId, NOW);
+        GoalObservation painPrevious = new GoalObservation(goal.id, pain.id, fixture.participantId, new BigDecimal("8"), "points", null, NOW.minusSeconds(1), null, null, fixture.specialistId, NOW.minusSeconds(1));
+        when(fixture.goals.findByIdAndSpecialistAccountIdAndParticipantId(goal.id, fixture.specialistId, fixture.participantId)).thenReturn(Optional.of(goal));
+        when(fixture.outcomes.findByGoalIdOrderByPositionAsc(goal.id)).thenReturn(List.of(distance, pain));
+        when(fixture.observations.findLatestTwoByGoalIdAndOutcomeIdIn(eq(goal.id), any())).thenReturn(List.of(distanceLatest, distancePrevious, painLatest, painPrevious));
+
+        var outcomes = fixture.service.detail("specialist", fixture.participantId, goal.id, trainer()).outcomes();
+
+        assertThat(outcomes.get(0).progress().state()).isEqualTo(ParticipantGoalService.OutcomeProgress.State.TARGET_REACHED);
+        assertThat(outcomes.get(0).progress().baselineToTargetPercent()).isEqualByComparingTo("120");
+        assertThat(outcomes.get(1).progress().state()).isEqualTo(ParticipantGoalService.OutcomeProgress.State.PROGRESSING);
+        assertThat(outcomes.get(1).progress().baselineToTargetPercent()).isEqualByComparingTo("60");
+        verify(fixture.observations).findLatestTwoByGoalIdAndOutcomeIdIn(eq(goal.id), any());
+        verify(fixture.observations, never()).findTopByGoalIdAndOutcomeIdOrderByMeasuredAtDescRecordedAtDescIdDesc(any(), any());
+    }
+
+    @Test
+    void distinguishesBaselineOnlyAndNoMeasurementAndDoesNotInventPercentForWrongDirection() {
+        Fixture fixture = observationFixture();
+        ParticipantGoal goal = goal(fixture, ParticipantGoal.Category.PERFORMANCE);
+        GoalOutcome baselineOnly = new GoalOutcome(goal.id, "distance", BigDecimal.ZERO, new BigDecimal("10"), "km", null, TargetComparator.AT_LEAST, 0, NOW);
+        GoalOutcome noMeasurement = new GoalOutcome(goal.id, "sleep", null, new BigDecimal("8"), "hours", null, TargetComparator.AT_LEAST, 1, NOW);
+        GoalOutcome wrongDirection = new GoalOutcome(goal.id, "legacy", new BigDecimal("10"), new BigDecimal("5"), "count", null, TargetComparator.AT_LEAST, 2, NOW);
+        GoalObservation reached = new GoalObservation(goal.id, wrongDirection.id, fixture.participantId, new BigDecimal("5"), "count", null, NOW, null, null, fixture.specialistId, NOW);
+        when(fixture.goals.findByIdAndSpecialistAccountIdAndParticipantId(goal.id, fixture.specialistId, fixture.participantId)).thenReturn(Optional.of(goal));
+        when(fixture.outcomes.findByGoalIdOrderByPositionAsc(goal.id)).thenReturn(List.of(baselineOnly, noMeasurement, wrongDirection));
+        when(fixture.observations.findLatestTwoByGoalIdAndOutcomeIdIn(eq(goal.id), any())).thenReturn(List.of(reached));
+
+        var outcomes = fixture.service.detail("specialist", fixture.participantId, goal.id, trainer()).outcomes();
+
+        assertThat(outcomes).extracting(item -> item.progress().state()).containsExactly(ParticipantGoalService.OutcomeProgress.State.BASELINE_ONLY,
+                ParticipantGoalService.OutcomeProgress.State.NO_MEASUREMENT, ParticipantGoalService.OutcomeProgress.State.TARGET_REACHED);
+        assertThat(outcomes.get(2).progress().baselineToTargetPercent()).isNull();
+    }
+
+    @Test
+    void returnsOnlySafeObservationSnapshotsForTheOwningParticipant() {
+        UUID participant = UUID.randomUUID(); UUID accountId = UUID.randomUUID();
+        CurrentAccountService accounts = mock(CurrentAccountService.class);
+        when(accounts.requireActive("participant")).thenReturn(new CurrentAccount(accountId, "participant", ProfileType.PARTICIPANT));
+        ParticipantClientPort participants = mock(ParticipantClientPort.class);
+        when(participants.findParticipantIdByPrincipalAccountId(accountId)).thenReturn(Optional.of(participant));
+        ParticipantGoalRepository goals = mock(ParticipantGoalRepository.class);
+        GoalOutcomeRepository outcomes = mock(GoalOutcomeRepository.class);
+        GoalObservationRepository observations = mock(GoalObservationRepository.class);
+        ParticipantGoalService service = new ParticipantGoalService(goals, outcomes, mock(GoalIdempotencyRepository.class), observations,
+                mock(GoalObservationIdempotencyRepository.class), null, accounts, mock(SpecialistAuthorizationPort.class), participants,
+                mock(AuditRecorder.class), Clock.fixed(NOW, ZoneOffset.UTC));
+        ParticipantGoal goal = new ParticipantGoal(participant, UUID.randomUUID(), ParticipantGoal.Category.PERFORMANCE, "Finish 5k", null, 50, null, NOW);
+        GoalOutcome outcome = outcomeEntity(goal.id, "distance", "km", null, TargetComparator.AT_LEAST);
+        GoalObservation observation = new GoalObservation(goal.id, outcome.id, participant, BigDecimal.ONE, "km", null, NOW,
+                "private note", "private evidence", UUID.randomUUID(), NOW);
+        when(goals.findById(goal.id)).thenReturn(Optional.of(goal));
+        when(outcomes.findByIdAndGoalId(outcome.id, goal.id)).thenReturn(Optional.of(outcome));
+        when(observations.findByGoalIdAndOutcomeIdOrderByMeasuredAtDescRecordedAtDescIdDesc(eq(goal.id), eq(outcome.id), any())).thenReturn(List.of(observation));
+
+        var history = service.ownObservationHistory("participant", goal.id, outcome.id, 10, null);
+
+        assertThat(history.items()).singleElement().extracting(ParticipantGoalQueryPort.ObservationSnapshot::value,
+                ParticipantGoalQueryPort.ObservationSnapshot::unit).containsExactly(BigDecimal.ONE, "km");
+        assertThat(Arrays.stream(ParticipantGoalQueryPort.ObservationSnapshot.class.getRecordComponents()).map(item -> item.getName()))
+                .doesNotContain("note", "evidenceSource", "recordedByAccountId");
+        ParticipantGoal foreign = new ParticipantGoal(UUID.randomUUID(), UUID.randomUUID(), ParticipantGoal.Category.PERFORMANCE, "Foreign", null, 50, null, NOW);
+        when(goals.findById(foreign.id)).thenReturn(Optional.of(foreign));
+        assertStatus(HttpStatus.FORBIDDEN, () -> service.ownObservationHistory("participant", foreign.id, null, 10, null));
     }
 
     @Test

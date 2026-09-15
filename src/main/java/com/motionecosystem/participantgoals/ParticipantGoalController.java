@@ -95,5 +95,9 @@ class ParticipantSelfGoalController {
     @GetMapping @PreAuthorize("hasRole('PARTICIPANT')") @Operation(operationId = "listOwnParticipantGoals")
     List<ParticipantGoalQueryPort.ParticipantGoalSummary> list(@AuthenticationPrincipal Jwt jwt) { return goals.participantGoals(jwt.getSubject()); }
     @GetMapping("/{goalId}") @PreAuthorize("hasRole('PARTICIPANT')") @Operation(operationId = "getOwnParticipantGoal")
-    ParticipantGoalQueryPort.ParticipantGoalSummary detail(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID goalId) { return goals.participantGoal(jwt.getSubject(), goalId); }
+    ParticipantGoalService.ParticipantGoalDetail detail(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID goalId) { return goals.ownGoalDetail(jwt.getSubject(), goalId); }
+    @GetMapping("/{goalId}/observations") @PreAuthorize("hasRole('PARTICIPANT')") @Operation(operationId = "listOwnParticipantGoalObservations")
+    ParticipantGoalQueryPort.ObservationHistory observations(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID goalId,
+            @RequestParam(required = false) UUID outcomeId, @RequestParam(defaultValue = "50") int limit,
+            @RequestParam(required = false) String cursor) { return goals.ownObservationHistory(jwt.getSubject(), goalId, outcomeId, limit, cursor); }
 }
