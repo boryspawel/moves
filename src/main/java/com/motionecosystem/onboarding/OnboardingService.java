@@ -77,12 +77,12 @@ public class OnboardingService {
     }
 
     @Transactional
-    public State replaceAvailability(String subject, List<RecurringAvailabilityService.Slot> slots) {
+    public State replaceAvailability(String subject, List<RecurringAvailabilityService.Slot> slots, Integer slotDurationMinutes) {
         CurrentAccount account = accounts.requireActive(subject);
         if (account.profiles().isEmpty()) {
             throw conflict("profile type must be selected first");
         }
-        availability.replace(account.id(), slots);
+        availability.replace(account.id(), slots, slotDurationMinutes);
         audit.record(subject, "RECURRING_AVAILABILITY_REPLACED", "PrincipalAccount", account.id());
         return stateFor(account);
     }
@@ -133,7 +133,8 @@ public class OnboardingService {
                 account.profileType(),
                 profile,
                 legal.current(account.id()),
-                availability.list(account.id()));
+                availability.list(account.id()),
+                availability.slotDurationMinutes(account.id()));
     }
 
     private static ResponseStatusException conflict(String message) {
@@ -164,6 +165,7 @@ public class OnboardingService {
             ProfileType profileType,
             ProfileSummary profile,
             List<LegalAcknowledgementPort.View> currentLegalAcknowledgements,
-            List<RecurringAvailabilityService.Slot> availability) {
+            List<RecurringAvailabilityService.Slot> availability,
+            int slotDurationMinutes) {
     }
 }

@@ -6,12 +6,15 @@ Redakcja katalogu jest dostępna wyłącznie dla `CONTENT_ADMIN` pod
 `/admin/exercise-catalog`; nie zmienia publicznego readera `/catalog`, importu ani
 planowania. Endpoint `GET /api/v1/admin/exercises` zwraca stronicowaną, bieżącą wersję
 każdego ćwiczenia wraz z akcjami dozwolonymi przez backend i tokenem optimistic-lock.
-Ekran szczegółów zaczyna w trybie odczytu, pozwala edytować tylko draft oraz tworzyć
-następną wersję z opublikowanej/wycofanej. Obszary load, anatomii i dowodów są
-progresywnie ujawniane; historia wersji jest odczytowa.
+Ekran szczegółów pozwala edytować tylko draft oraz tworzyć następną wersję z
+opublikowanej/wycofanej. Obszary load, anatomii i dowodów są progresywnie ujawniane;
+historia wersji jest odczytowa. Normalny przepływ to ręczne utworzenie lub import →
+`DRAFT` → edycja → automatyczna walidacja celu → bezpośrednia publikacja. Nie ma
+normalnej kolejki ani kliknięć zatwierdzania recenzenta; stare endpointy i historia
+recenzji pozostają uśpioną kompatybilnością. Usunięcie jest dostępne wyłącznie, gdy
+backend zwróci akcję i jego uzasadnienie blokady jest prezentowane w UI.
 
-TODO: bulk edit, import/export, duplicate exercises, media, pełny review jeśli nie jest
-udostępniony, bezpieczne usuwanie porzuconych draftów oraz idempotency/retry dla create.
+TODO: bulk edit, duplicate exercises i media; import prowadzi do tego samego edytora.
 
 ## Participant Goals — completed scope and next steps
 

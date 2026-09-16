@@ -43,6 +43,13 @@ import {
   AttentionItemViewToJSON,
   AttentionItemViewToJSONTyped,
 } from './AttentionItemView';
+import type { BookableSlotView } from './BookableSlotView';
+import {
+  BookableSlotViewFromJSON,
+  BookableSlotViewFromJSONTyped,
+  BookableSlotViewToJSON,
+  BookableSlotViewToJSONTyped,
+} from './BookableSlotView';
 import type { AppointmentView } from './AppointmentView';
 import {
   AppointmentViewFromJSON,
@@ -75,6 +82,12 @@ export interface TodayView {
    * @memberof TodayView
    */
   availabilityWindows?: Array<AvailabilityWindowView>;
+  /**
+   *
+   * @type {Array<BookableSlotView>}
+   * @memberof TodayView
+   */
+  bookableSlots?: Array<BookableSlotView>;
   /**
    *
    * @type {Counts}
@@ -153,6 +166,10 @@ export function TodayViewFromJSONTyped(json: any, ignoreDiscriminator: boolean):
       json['availabilityWindows'] == null
         ? undefined
         : (json['availabilityWindows'] as Array<any>).map(AvailabilityWindowViewFromJSON),
+    bookableSlots:
+      json['bookableSlots'] == null
+        ? undefined
+        : (json['bookableSlots'] as Array<any>).map(BookableSlotViewFromJSON),
     counts: json['counts'] == null ? undefined : CountsFromJSON(json['counts']),
     currentAppointment:
       json['currentAppointment'] == null
@@ -199,6 +216,10 @@ export function TodayViewToJSONTyped(
       value['availabilityWindows'] == null
         ? undefined
         : (value['availabilityWindows'] as Array<any>).map(AvailabilityWindowViewToJSON),
+    bookableSlots:
+      value['bookableSlots'] == null
+        ? undefined
+        : (value['bookableSlots'] as Array<any>).map(BookableSlotViewToJSON),
     counts: CountsToJSON(value['counts']),
     currentAppointment: AppointmentViewToJSON(value['currentAppointment']),
     generatedAt:

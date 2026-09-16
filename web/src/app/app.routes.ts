@@ -11,22 +11,15 @@ export const routes: Routes = [
   { path: 'catalog/:versionId', canActivate: [authGuard, completedOnboardingGuard], loadComponent: () => import('./features/catalog-detail.page').then(m => m.CatalogDetailPage) },
   { path: 'admin/exercise-import', canActivate: [authGuard, completedOnboardingGuard, roleGuard('CONTENT_ADMIN')], loadComponent: () => import('./features/exercise-import.page').then(m => m.ExerciseImportPage) },
   { path: 'admin/exercise-catalog', canActivate: [authGuard, completedOnboardingGuard, roleGuard('CONTENT_ADMIN')], loadComponent: () => import('./features/exercise-catalog-admin.page').then(m => m.ExerciseCatalogAdminPage) },
+  { path: 'admin/exercise-catalog/new', canActivate: [authGuard, completedOnboardingGuard, roleGuard('CONTENT_ADMIN')], loadComponent: () => import('./features/exercise-catalog-new.page').then(m => m.ExerciseCatalogNewPage) },
   { path: 'admin/exercise-catalog/:versionId', canActivate: [authGuard, completedOnboardingGuard, roleGuard('CONTENT_ADMIN')], loadComponent: () => import('./features/exercise-catalog-admin-detail.page').then(m => m.ExerciseCatalogAdminDetailPage) },
   {
     path: 'admin/exercise-import/batches/:batchId/attention',
     canActivate: [authGuard, completedOnboardingGuard, roleGuard('CONTENT_ADMIN')],
     loadComponent: () => import('./features/exercise-import-attention.page').then(m => m.ExerciseImportAttentionPage)
   },
-  {
-    path: 'admin/exercise-review',
-    canActivate: [authGuard, completedOnboardingGuard, roleGuard('CONTENT_ADMIN')],
-    loadComponent: () => import('./features/exercise-review.page').then(m => m.ExerciseReviewPage)
-  },
-  {
-    path: 'admin/exercise-review/:versionId',
-    canActivate: [authGuard, completedOnboardingGuard, roleGuard('CONTENT_ADMIN')],
-    loadComponent: () => import('./features/exercise-review-detail.page').then(m => m.ExerciseReviewDetailPage)
-  },
+  { path: 'admin/exercise-review', pathMatch: 'full', redirectTo: 'admin/exercise-catalog' },
+  { path: 'admin/exercise-review/:versionId', redirectTo: 'admin/exercise-catalog/:versionId' },
   { path: 'plan', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/plan.page').then(m => m.PlanPage) },
   { path: 'exercise-sets', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/exercise-sets/exercise-set-list.page').then(m => m.ExerciseSetListPage) },
   { path: 'exercise-sets/new', canActivate: [authGuard, completedOnboardingGuard, roleGuard('SPECIALIST')], loadComponent: () => import('./features/exercise-sets/exercise-set-editor.page').then(m => m.ExerciseSetEditorPage) },

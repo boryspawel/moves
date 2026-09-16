@@ -55,6 +55,11 @@ export interface Get4Request {
   structureId: string;
 }
 
+export interface ListPublishedAnatomicalStructuresRequest {
+  query?: string;
+  limit?: number;
+}
+
 export interface PublishAnatomicalStructureRequest {
   structureId: string;
 }
@@ -280,6 +285,62 @@ export class AnatomyReferenceAdminControllerApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<AnatomicalStructureSnapshot> {
     const response = await this.get4Raw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for listPublishedAnatomicalStructures without sending the request
+   */
+  async listPublishedAnatomicalStructuresRequestOpts(
+    requestParameters: ListPublishedAnatomicalStructuresRequest,
+  ): Promise<runtime.RequestOpts> {
+    const queryParameters: any = {};
+
+    if (requestParameters['query'] != null) {
+      queryParameters['query'] = requestParameters['query'];
+    }
+
+    if (requestParameters['limit'] != null) {
+      queryParameters['limit'] = requestParameters['limit'];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v1/admin/anatomical-structures`;
+
+    return {
+      path: urlPath,
+      method: 'GET',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   */
+  async listPublishedAnatomicalStructuresRaw(
+    requestParameters: ListPublishedAnatomicalStructuresRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<AnatomicalStructureSnapshot>>> {
+    const requestOptions =
+      await this.listPublishedAnatomicalStructuresRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(AnatomicalStructureSnapshotFromJSON),
+    );
+  }
+
+  /**
+   */
+  async listPublishedAnatomicalStructures(
+    requestParameters: ListPublishedAnatomicalStructuresRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<AnatomicalStructureSnapshot>> {
+    const response = await this.listPublishedAnatomicalStructuresRaw(
+      requestParameters,
+      initOverrides,
+    );
     return await response.value();
   }
 

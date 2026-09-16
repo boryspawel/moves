@@ -36,48 +36,6 @@ mat-card {
   background: var(--app-surface);
   box-shadow: var(--shadow-card);
 }
-.app-toolbar {
-  position: sticky;
-  z-index: 10;
-  top: 0;
-  gap: var(--space-2);
-  border-bottom: 1px solid var(--app-border);
-  background: var(--app-surface);
-  color: var(--app-text);
-}
-.onboarding-toolbar {
-  position: relative;
-  padding-inline: max(var(--space-4), calc((100% - 1040px) / 2));
-}
-.brand {
-  color: var(--app-text);
-  font-size: 1.35rem;
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  text-decoration: none;
-}
-nav {
-  display: flex;
-  align-items: center;
-  gap: 0.15rem;
-}
-.spacer {
-  flex: 1;
-}
-.user-name {
-  margin-right: var(--space-2);
-  color: var(--app-text-secondary);
-  font-size: 0.9rem;
-}
-.active {
-  background: var(--app-primary-subtle);
-}
-footer {
-  padding: var(--space-5);
-  border-top: 1px solid var(--app-border);
-  color: var(--app-text-secondary);
-  text-align: center;
-}
 .onboarding {
   width: min(1040px, calc(100% - 2 * var(--app-page-padding)));
   margin: 0 auto;
@@ -171,21 +129,6 @@ footer {
   flex-wrap: wrap;
   gap: var(--space-3);
   margin-top: var(--space-5);
-}
-@media (max-width: 760px) {
-  .app-toolbar {
-    height: auto;
-    flex-wrap: wrap;
-    padding-block: 0.55rem;
-  }
-  nav {
-    order: 3;
-    width: 100%;
-    overflow-x: auto;
-  }
-  .user-name {
-    display: none;
-  }
 }
 @media (max-width: 839px) {
   .onboarding {

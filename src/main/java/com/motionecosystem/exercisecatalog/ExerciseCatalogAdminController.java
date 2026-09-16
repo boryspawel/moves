@@ -17,6 +17,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -65,8 +66,16 @@ class ExerciseCatalogAdminController {
     @Operation(operationId = "updateEditorialExerciseDraft")
     CatalogService.ExerciseEditorialVersionView update(@AuthenticationPrincipal Jwt jwt,
                                       @PathVariable UUID versionId,
-                                      @RequestBody CatalogService.VersionCommand request) {
-        return catalog.updateDraft(jwt.getSubject(), versionId, request);
+                                      @RequestBody CatalogService.VersionCommand request,
+                                      @RequestParam long expectedVersion) {
+        return catalog.updateDraft(jwt.getSubject(), versionId, request, expectedVersion);
+    }
+
+    @DeleteMapping("/versions/{versionId}")
+    @Operation(operationId = "deleteEditorialInitialDraft")
+    void deleteInitialDraft(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID versionId,
+                            @Valid @RequestBody DeleteDraftRequest request) {
+        catalog.deleteInitialDraft(jwt.getSubject(), versionId, request.expectedVersion());
     }
 
     @PutMapping("/versions/{versionId}/editorial")
@@ -81,24 +90,57 @@ class ExerciseCatalogAdminController {
     @Operation(operationId = "replaceEditorialLoadCharacteristics")
     CatalogService.ExerciseEditorialEditorView replaceLoadCharacteristics(
             @AuthenticationPrincipal Jwt jwt, @PathVariable UUID versionId,
-            @RequestBody List<LoadCharacteristicCommand> request) {
-        return catalog.replaceLoadCharacteristics(jwt.getSubject(), versionId, request);
+            @RequestBody List<LoadCharacteristicCommand> request,
+            @RequestParam long expectedVersion) {
+        return catalog.replaceLoadCharacteristics(jwt.getSubject(), versionId, request, expectedVersion);
     }
 
     @PostMapping("/versions/{versionId}/evidence")
     @Operation(operationId = "addEditorialEvidence")
     CatalogService.EvidenceView addEvidence(@AuthenticationPrincipal Jwt jwt,
                                             @PathVariable UUID versionId,
-                                            @RequestBody EvidenceCommand request) {
-        return catalog.addEvidence(jwt.getSubject(), versionId, request);
+                                            @RequestBody EvidenceCommand request,
+                                            @RequestParam long expectedVersion) {
+        return catalog.addEvidence(jwt.getSubject(), versionId, request, expectedVersion);
+    }
+
+    @PutMapping("/versions/{versionId}/evidence/{evidenceId}")
+    @Operation(operationId = "updateEditorialEvidence")
+    CatalogService.EvidenceView updateEvidence(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID versionId,
+                                               @PathVariable UUID evidenceId,
+                                               @Valid @RequestBody CatalogService.EvidenceUpdateCommand request) {
+        return catalog.updateEvidence(jwt.getSubject(), versionId, evidenceId, request);
+    }
+
+    @DeleteMapping("/versions/{versionId}/evidence/{evidenceId}")
+    @Operation(operationId = "deleteEditorialEvidence")
+    void deleteEvidence(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID versionId,
+                        @PathVariable UUID evidenceId, @RequestParam long expectedVersion) {
+        catalog.deleteEvidence(jwt.getSubject(), versionId, evidenceId, expectedVersion);
     }
 
     @PostMapping("/versions/{versionId}/contributions")
     @Operation(operationId = "addEditorialContribution")
     CatalogService.ContributionView addContribution(@AuthenticationPrincipal Jwt jwt,
                                                     @PathVariable UUID versionId,
-                                                    @RequestBody ContributionCommand request) {
-        return catalog.addContribution(jwt.getSubject(), versionId, request);
+                                                    @RequestBody ContributionCommand request,
+                                                    @RequestParam long expectedVersion) {
+        return catalog.addContribution(jwt.getSubject(), versionId, request, expectedVersion);
+    }
+
+    @PutMapping("/versions/{versionId}/contributions/{contributionId}")
+    @Operation(operationId = "updateEditorialContribution")
+    CatalogService.ContributionView updateContribution(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID versionId,
+                                                       @PathVariable UUID contributionId,
+                                                       @Valid @RequestBody CatalogService.ContributionUpdateCommand request) {
+        return catalog.updateContribution(jwt.getSubject(), versionId, contributionId, request);
+    }
+
+    @DeleteMapping("/versions/{versionId}/contributions/{contributionId}")
+    @Operation(operationId = "deleteEditorialContribution")
+    void deleteContribution(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID versionId,
+                            @PathVariable UUID contributionId, @RequestParam long expectedVersion) {
+        catalog.deleteContribution(jwt.getSubject(), versionId, contributionId, expectedVersion);
     }
 
     @PostMapping("/versions/{versionId}/submit-review")
@@ -168,5 +210,7 @@ class ExerciseCatalogAdminController {
     }
 
     record PublishRequest(@NotNull @PositiveOrZero Long expectedVersion) {
+    }
+    record DeleteDraftRequest(@NotNull @PositiveOrZero Long expectedVersion) {
     }
 }

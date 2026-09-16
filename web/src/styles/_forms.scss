@@ -3,7 +3,7 @@ mat-form-field {
 }
 button.mat-mdc-button-base,
 a.mat-mdc-button-base {
-  min-height: 44px;
+  min-height: var(--app-control-min-height);
 }
 button[mat-flat-button],
 a[mat-flat-button] {
@@ -18,6 +18,21 @@ button[mat-stroked-button] {
   --mat-button-outlined-outline-color: var(--app-border-strong);
   --mat-button-outlined-label-text-color: var(--app-text);
 }
+.app-native-control {
+  width: 100%;
+  min-height: var(--app-control-min-height);
+  box-sizing: border-box;
+  padding: var(--space-2);
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-control);
+  background: var(--app-surface);
+  color: var(--app-text);
+  font: inherit;
+}
+.app-native-control:focus-visible { outline: 3px solid var(--app-focus); outline-offset: 2px; }
+.app-native-control.ng-invalid.ng-touched { border-color: var(--app-danger); background: var(--app-danger-subtle); }
+.app-native-control:disabled { color: var(--app-text-muted); background: var(--app-surface-subtle); }
+textarea.app-native-control { min-height: 6rem; resize: vertical; }
 .picker {
   display: flex;
   flex-wrap: wrap;
@@ -35,20 +50,20 @@ button[mat-stroked-button] {
   overflow: hidden;
   clip: rect(0 0 0 0);
 }
-.summary {
+.app-summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
   gap: var(--space-4);
 }
-.summary div {
+.app-summary div {
   padding: var(--space-2);
   border-radius: var(--radius-control);
   background: var(--app-surface-subtle);
 }
-.summary dt {
+.app-summary dt {
   font-size: 0.85rem;
 }
-.summary dd {
+.app-summary dd {
   margin: 0.2rem 0 0;
   font-size: 1.35rem;
 }

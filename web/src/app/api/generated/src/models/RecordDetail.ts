@@ -20,6 +20,20 @@ import {
   CandidateViewToJSON,
   CandidateViewToJSONTyped,
 } from './CandidateView';
+import type { MappingProposal } from './MappingProposal';
+import {
+  MappingProposalFromJSON,
+  MappingProposalFromJSONTyped,
+  MappingProposalToJSON,
+  MappingProposalToJSONTyped,
+} from './MappingProposal';
+import type { LicenseRemediation } from './LicenseRemediation';
+import {
+  LicenseRemediationFromJSON,
+  LicenseRemediationFromJSONTyped,
+  LicenseRemediationToJSON,
+  LicenseRemediationToJSONTyped,
+} from './LicenseRemediation';
 import type { IssueView } from './IssueView';
 import {
   IssueViewFromJSON,
@@ -71,6 +85,18 @@ export interface RecordDetail {
    * @memberof RecordDetail
    */
   issues?: Array<IssueView>;
+  /**
+   *
+   * @type {LicenseRemediation}
+   * @memberof RecordDetail
+   */
+  licenseRemediation?: LicenseRemediation;
+  /**
+   *
+   * @type {Array<MappingProposal>}
+   * @memberof RecordDetail
+   */
+  mappingProposals?: Array<MappingProposal>;
   /**
    *
    * @type {Array<CandidateView>}
@@ -167,6 +193,14 @@ export function RecordDetailFromJSONTyped(json: any, ignoreDiscriminator: boolea
     id: json['id'] == null ? undefined : json['id'],
     issues:
       json['issues'] == null ? undefined : (json['issues'] as Array<any>).map(IssueViewFromJSON),
+    licenseRemediation:
+      json['licenseRemediation'] == null
+        ? undefined
+        : LicenseRemediationFromJSON(json['licenseRemediation']),
+    mappingProposals:
+      json['mappingProposals'] == null
+        ? undefined
+        : (json['mappingProposals'] as Array<any>).map(MappingProposalFromJSON),
     matchCandidates:
       json['matchCandidates'] == null
         ? undefined
@@ -205,6 +239,11 @@ export function RecordDetailToJSONTyped(
     id: value['id'],
     issues:
       value['issues'] == null ? undefined : (value['issues'] as Array<any>).map(IssueViewToJSON),
+    licenseRemediation: LicenseRemediationToJSON(value['licenseRemediation']),
+    mappingProposals:
+      value['mappingProposals'] == null
+        ? undefined
+        : (value['mappingProposals'] as Array<any>).map(MappingProposalToJSON),
     matchCandidates:
       value['matchCandidates'] == null
         ? undefined

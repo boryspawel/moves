@@ -151,6 +151,15 @@ class ExerciseImportEndToEndIntegrationTest {
         UUID draft = jdbc.queryForObject("SELECT draft_version_id FROM exercise_import.import_record WHERE id=?", UUID.class, record);
         imports.decideMatch("editor", record, new ExerciseImportService.MatchDecision(candidate, "SAME"));
         assertThat(jdbc.queryForObject("SELECT draft_version_id FROM exercise_import.import_record WHERE id=?", UUID.class, record)).isEqualTo(draft);
+
+        UUID firstDifferent = copyCandidateRecord(imported, batch, 100, "different-one");
+        UUID secondDifferent = copyCandidateRecord(imported, batch, 101, "different-two");
+        UUID firstCandidate = candidate(firstDifferent, exercise);
+        UUID secondCandidate = candidate(secondDifferent, exercise);
+        assertThat(imports.decideMatch("editor", firstDifferent,
+                new ExerciseImportService.MatchDecision(firstCandidate, "DIFFERENT")).status()).isEqualTo("DRAFTED");
+        assertThat(imports.decideMatch("editor", secondDifferent,
+                new ExerciseImportService.MatchDecision(secondCandidate, "DIFFERENT")).status()).isEqualTo("DRAFTED");
     }
 
     @Test void partialFileKeepsValidRecordAndReportsMalformedAndUnsupportedLines()throws Exception{
@@ -177,10 +186,17 @@ class ExerciseImportEndToEndIntegrationTest {
         UUID mappingBatch=upload(source,"mapping-1",false,unknown.getBytes(),contentAdmin("editor"));await(mappingBatch);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_record WHERE batch_id=? AND status='BLOCKED_BY_MAPPING'",Integer.class,mappingBatch)).isGreaterThan(0);
         UUID mapping=jdbc.queryForObject("SELECT id FROM exercise_import.import_mapping WHERE source_id=? AND source_value='UNKNOWN_DEVICE'",UUID.class,source);
+        UUID mappingRecord=jdbc.queryForObject("SELECT id FROM exercise_import.import_record WHERE batch_id=? AND status='BLOCKED_BY_MAPPING' ORDER BY row_number LIMIT 1",UUID.class,mappingBatch);
+        mvc.perform(get("/api/v1/admin/exercise-import/records/{id}",mappingRecord).with(contentAdmin("editor")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mappingProposals[?(@.id == '%s')].field".formatted(mapping)).value("/equipment"))
+                .andExpect(jsonPath("$.mappingProposals[?(@.id == '%s')].rawValue".formatted(mapping)).value("UNKNOWN_DEVICE"))
+                .andExpect(jsonPath("$.mappingProposals[?(@.id == '%s')].canonicalChoices[?(@.value == 'BODYWEIGHT')].value".formatted(mapping)).value("BODYWEIGHT"));
         mvc.perform(post("/api/v1/admin/exercise-import/mappings/{id}/decision",mapping).with(contentAdmin("editor"))
                 .contentType("application/json").content("{\"decision\":\"APPROVED\",\"canonicalValue\":\"BODYWEIGHT\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("APPROVED"));
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_record WHERE batch_id=? AND status='BLOCKED_BY_MAPPING'",Integer.class,mappingBatch)).isZero();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM exercise_import.import_record WHERE batch_id=? AND status='DRAFTED'",Integer.class,mappingBatch)).isEqualTo(2);
     }
 
     @Test void failedChunkRestartsWithoutDuplicatingRecords()throws Exception{
@@ -202,6 +218,19 @@ class ExerciseImportEndToEndIntegrationTest {
     private UUID createSource(String code,boolean verified)throws Exception{String body=mvc.perform(post("/api/v1/admin/exercise-import/sources").with(contentAdmin("editor"))
             .contentType("application/json").content("{\"code\":\""+code+"\",\"displayName\":\"Fixture "+code+"\",\"defaultLocale\":\"pl-PL\",\"licenseCode\":\"CC0-1.0\",\"licenseVerified\":"+verified+"}"))
             .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();return UUID.fromString(json.readTree(body).path("id").asText());}
+    private UUID copyCandidateRecord(UUID sourceRecord, UUID batch, long rowNumber, String sourceKey) {
+        UUID record = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO exercise_import.import_record(id,batch_id,row_number,source_record_key,status,raw_payload,normalized_payload,raw_sha256,normalized_sha256,normalization_version,created_at,updated_at,version)
+                SELECT ?,?,? ,?,'MATCH_CANDIDATES',raw_payload,normalized_payload,raw_sha256,?,normalization_version,now(),now(),0
+                FROM exercise_import.import_record WHERE id=?
+                """, record, batch, rowNumber, sourceKey, "b".repeat(64), sourceRecord);
+        return record;
+    }
+    private UUID candidate(UUID record, UUID exercise) { UUID candidate=UUID.randomUUID(); jdbc.update("""
+                INSERT INTO exercise_import.import_match_candidate(id,record_id,exercise_id,rank,score,reasons,algorithm_version,version)
+                VALUES (?,?,?,1,1.0,CAST('[\"test candidate\"]' AS jsonb),'test',0)
+                """,candidate,record,exercise); return candidate; }
     private UUID upload(UUID source,String request,boolean force,byte[] bytes,RequestPostProcessor auth)throws Exception{MockMultipartFile file=new MockMultipartFile("file","fixture.jsonl","application/x-ndjson",bytes);MockMultipartHttpServletRequestBuilder builder=multipart("/api/v1/admin/exercise-import/batches").file(file).param("sourceId",source.toString()).param("forceReprocess",String.valueOf(force)).header("Idempotency-Key",request);String body=mvc.perform(builder.with(auth)).andExpect(status().isAccepted()).andReturn().getResponse().getContentAsString();return UUID.fromString(json.readTree(body).path("batchId").asText());}
     private void await(UUID batch)throws Exception{Instant end=Instant.now().plus(Duration.ofSeconds(15));while(Instant.now().isBefore(end)){String status=jdbc.queryForObject("SELECT status FROM exercise_import.import_batch WHERE id=?",String.class,batch);if(!status.matches("RECEIVED|QUEUED|PROCESSING")){assertThat(status).doesNotStartWith("FAILED");return;}Thread.sleep(100);}throw new AssertionError("batch did not complete");}
     private void awaitStatus(UUID batch,String expected)throws Exception{Instant end=Instant.now().plus(Duration.ofSeconds(15));while(Instant.now().isBefore(end)){String status=jdbc.queryForObject("SELECT status FROM exercise_import.import_batch WHERE id=?",String.class,batch);if(status.equals(expected))return;Thread.sleep(100);}throw new AssertionError("batch did not reach "+expected);}

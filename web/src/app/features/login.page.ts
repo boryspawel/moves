@@ -7,7 +7,7 @@ import { AuthService } from '../core/auth.service';
   selector: 'app-login-page',
   imports: [MatButtonModule, MatCardModule],
   template: `
-    <mat-card class="panel">
+    <mat-card class="panel login-card">
       <mat-card-header><mat-card-title><h1>Zaloguj się do moves</h1></mat-card-title></mat-card-header>
       <mat-card-content>
         <p>Bezpieczne logowanie i utworzenie konta obsługuje Keycloak w przepływie Authorization Code z PKCE S256.</p>
@@ -19,6 +19,7 @@ import { AuthService } from '../core/auth.service';
       </mat-card-actions>
     </mat-card>
   `,
+  styleUrl: './login.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LoginPage {

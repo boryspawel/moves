@@ -111,6 +111,7 @@ class ExerciseVersion {
         requireEditable();
         apply(command);
         contentRevision++;
+        returnToDraft();
     }
 
     long contentRevision() { return contentRevision; }
@@ -118,6 +119,7 @@ class ExerciseVersion {
     void contentChanged() {
         requireEditable();
         contentRevision++;
+        returnToDraft();
     }
 
     void submitForReview() {
@@ -153,8 +155,8 @@ class ExerciseVersion {
     }
 
     void publish(Instant now) {
-        if (status != ExerciseVersionStatus.APPROVED || reviewedAt == null) {
-            throw new IllegalStateException("exercise version must be reviewed and approved before publication");
+        if (status == ExerciseVersionStatus.PUBLISHED || status == ExerciseVersionStatus.WITHDRAWN) {
+            throw new IllegalStateException("published or withdrawn versions cannot be published");
         }
         status = ExerciseVersionStatus.PUBLISHED;
         publishedAt = now;
@@ -181,8 +183,16 @@ class ExerciseVersion {
     }
 
     void requireEditable() {
-        if (status != ExerciseVersionStatus.DRAFT && status != ExerciseVersionStatus.CHANGES_REQUESTED) {
-            throw new IllegalStateException("only draft or changes-requested versions are editable");
+        if (status == ExerciseVersionStatus.PUBLISHED || status == ExerciseVersionStatus.WITHDRAWN) {
+            throw new IllegalStateException("published or withdrawn versions are immutable");
+        }
+    }
+
+    private void returnToDraft() {
+        if (status != ExerciseVersionStatus.DRAFT) {
+            status = ExerciseVersionStatus.DRAFT;
+            reviewedBySubject = null;
+            reviewedAt = null;
         }
     }
 }

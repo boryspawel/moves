@@ -1,6 +1,7 @@
 package com.motionecosystem.application.workspace;
 
 import com.motionecosystem.availability.RecurringAvailabilityService;
+import com.motionecosystem.availability.api.AvailabilityCalendarPort;
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.calendar.api.SpecialistAppointmentQueryPort;
 import com.motionecosystem.calendar.api.SpecialistOverdueAppointmentQueryPort;
@@ -27,6 +28,7 @@ class SpecialistTodayService {
     private final SpecialistWorkspacePort specialistWorkspace;
     private final ParticipantClientPort participants;
     private final RecurringAvailabilityService availability;
+    private final AvailabilityCalendarPort calendarAvailability;
     private final SpecialistAppointmentQueryPort appointments;
     private final SpecialistOverdueAppointmentQueryPort overdueAppointments;
     private final AuditRecorder audit;
@@ -54,6 +56,10 @@ class SpecialistTodayService {
                 .map(SpecialistAppointmentQueryPort.OperationalAppointment::appointmentId);
         List<AppointmentView> appointmentViews = raw.stream().map(item -> appointmentView(item, labels.get(item.participantId()), nextId.filter(item.appointmentId()::equals).isPresent())).toList();
         List<AvailabilityWindowView> windows = windows(slots, localDate);
+        List<BookableSlotView> bookableSlots = calendarAvailability.bookableSlots(account.id(), localDate,
+                raw.stream().filter(item -> !"CANCELLED".equals(item.status()))
+                        .map(item -> new AvailabilityCalendarPort.TimeRange(item.startsAt(), item.endsAt())).toList())
+                .stream().map(item -> new BookableSlotView(item.startsAt(), item.endsAt())).toList();
         List<AttentionItemView> attention = attention(subject, account.id(), profile, labels);
         List<OperationalTaskView> operationalTasks = operationalTasks(account.id(), activeParticipants, now, labels);
         VisibleRange range = range(zone, localDate, windows, appointmentViews);
@@ -61,7 +67,7 @@ class SpecialistTodayService {
         return new TodayView(now, localDate, zone.getId(), range,
                 current.map(item -> appointmentView(item, labels.get(item.participantId()), false)).orElse(null),
                 nextId.flatMap(id -> appointmentViews.stream().filter(item -> item.appointmentId().equals(id)).findFirst()).orElse(null),
-                appointmentViews, windows, attention, operationalTasks,
+                appointmentViews, windows, bookableSlots, attention, operationalTasks,
                 new Counts(appointmentViews.size(), attention.size(), operationalTasks.size(), current.isPresent() ? 1 : 0));
     }
     private static boolean active(SpecialistAppointmentQueryPort.OperationalAppointment item) { return !Set.of("CANCELLED", "COMPLETED", "NO_SHOW").contains(item.status()); }
@@ -107,10 +113,11 @@ class SpecialistTodayService {
         if (Duration.between(earliest, latest).compareTo(Duration.ofHours(16)) > 0) { Instant midpoint = earliest.plus(Duration.between(earliest, latest).dividedBy(2)); return new VisibleRange(midpoint.minus(Duration.ofHours(8)), midpoint.plus(Duration.ofHours(8)), 30); }
         return new VisibleRange(earliest.minus(Duration.ofHours(1)), latest.plus(Duration.ofHours(1)), 30);
     }
-    record TodayView(Instant generatedAt, LocalDate localDate, String timeZoneId, VisibleRange visibleRange, AppointmentView currentAppointment, AppointmentView nextAppointment, List<AppointmentView> appointments, List<AvailabilityWindowView> availabilityWindows, List<AttentionItemView> attentionItems, List<OperationalTaskView> operationalTasks, Counts counts) { }
+    record TodayView(Instant generatedAt, LocalDate localDate, String timeZoneId, VisibleRange visibleRange, AppointmentView currentAppointment, AppointmentView nextAppointment, List<AppointmentView> appointments, List<AvailabilityWindowView> availabilityWindows, List<BookableSlotView> bookableSlots, List<AttentionItemView> attentionItems, List<OperationalTaskView> operationalTasks, Counts counts) { }
     record VisibleRange(Instant startsAt, Instant endsAt, int recommendedStepMinutes) { }
     record AppointmentView(UUID appointmentId, UUID participantId, String participantLabel, Instant startsAt, Instant endsAt, String type, String status, String locationMode, String location, String shortPurpose, boolean isCurrent, boolean isNext, List<String> availableActions, long version) { }
     record AvailabilityWindowView(Instant startsAt, Instant endsAt, String type) { }
+    record BookableSlotView(Instant startsAt, Instant endsAt) { }
     record AttentionItemView(UUID id, String type, String priority, String participantLabel, String title, String neutralReason, Instant createdAt, Instant dueAt, String status, List<String> availableActions, String navigationReference) { }
     record OperationalTaskView(String type, String title, String navigationReference) { }
     record Counts(int appointments, int attentionItems, int operationalTasks, int currentAppointments) { }

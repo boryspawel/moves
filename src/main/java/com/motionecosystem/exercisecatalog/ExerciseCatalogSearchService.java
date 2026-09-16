@@ -18,6 +18,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
+import com.motionecosystem.anatomyreference.api.AnatomyReferenceQueryPort;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
@@ -44,11 +45,13 @@ public class ExerciseCatalogSearchService {
     private static final Set<String> PURPOSES = Set.of("TRAINING", "THERAPEUTIC_EXERCISE", "ASSESSMENT", "WARM_UP", "RECOVERY");
     private final ObjectMapper objectMapper;
     private final CatalogService catalog;
+    private final AnatomyReferenceQueryPort anatomy;
     @PersistenceContext private EntityManager entityManager;
 
-    public ExerciseCatalogSearchService(ObjectMapper objectMapper, CatalogService catalog) {
+    public ExerciseCatalogSearchService(ObjectMapper objectMapper, CatalogService catalog, AnatomyReferenceQueryPort anatomy) {
         this.objectMapper = objectMapper;
         this.catalog = catalog;
+        this.anatomy = anatomy;
     }
 
     public SearchPage search(SearchRequest raw) {
@@ -143,25 +146,57 @@ public class ExerciseCatalogSearchService {
     private List<Facet> facets(SearchRequest request) {
         List<Facet> result = new ArrayList<>();
         result.addAll(facet(request, "movementPatterns", "mp.movement_pattern", "exercise_catalog.exercise_version_movement_pattern mp", "mp.exercise_version_id=v.id"));
+        result.addAll(facet(request, "equipment", "eq.code", "COALESCE(dictionary.display_name, eq.code)", "((SELECT exercise_version_id, equipment_code AS code FROM exercise_catalog.exercise_equipment UNION SELECT exercise_version_id, equipment AS code FROM exercise_catalog.exercise_version_equipment) eq LEFT JOIN exercise_catalog.exercise_equipment_dictionary dictionary ON dictionary.code=eq.code)", "eq.exercise_version_id=v.id"));
         result.addAll(facet(request, "technicalLevels", "v.technical_level", null, null));
-        result.addAll(facet(request, "equipment", "eq.equipment_code", "exercise_catalog.exercise_equipment eq", "eq.exercise_version_id=v.id"));
-        result.addAll(facet(request, "positionCodes", "mc.position_code", "exercise_catalog.exercise_movement_characteristic mc", "mc.exercise_version_id=v.id"));
+        result.addAll(facet(request, "positionCodes", "mc.position_code", "COALESCE(dictionary.display_name, mc.position_code)", "(exercise_catalog.exercise_movement_characteristic mc LEFT JOIN exercise_catalog.exercise_position_dictionary dictionary ON dictionary.code=mc.position_code)", "mc.exercise_version_id=v.id"));
         result.addAll(facet(request, "unilateral", "mc.unilateral::text", "exercise_catalog.exercise_movement_characteristic mc", "mc.exercise_version_id=v.id"));
         result.addAll(facet(request, "purposes", "p.purpose", "exercise_catalog.exercise_version_purpose p", "p.exercise_version_id=v.id"));
         result.addAll(facet(request, "anatomyStructureTypes", "a.type", "exercise_catalog.exercise_contribution c JOIN anatomy_reference.anatomical_structure a ON a.id=c.anatomical_structure_id", "c.exercise_version_id=v.id AND a.status='PUBLISHED'"));
         result.addAll(facet(request, "anatomyStructureIds", "a.id::text", "exercise_catalog.exercise_contribution c JOIN anatomy_reference.anatomical_structure a ON a.id=c.anatomical_structure_id", "c.exercise_version_id=v.id AND a.status='PUBLISHED'"));
-        return List.copyOf(result);
+        return labeledFacets(result);
     }
 
     private List<Facet> facet(SearchRequest request, String group, String value, String join, String joinOn) {
+        return facet(request, group, value, null, join, joinOn);
+    }
+
+    private List<Facet> facet(SearchRequest request, String group, String value, String displayLabel, String join, String joinOn) {
         Sql base = base(request, group);
         String from = "exercise_catalog.exercise e JOIN exercise_catalog.exercise_version v ON v.exercise_id=e.id LEFT JOIN exercise_catalog.exercise_version_text t ON t.exercise_version_id=v.id AND t.locale=:locale";
         if (join != null) from += " JOIN " + join + " ON " + joinOn;
-        Query query = entityManager.createNativeQuery("SELECT " + value + ", count(DISTINCT v.id) FROM " + from + " WHERE " + base.where
-                + " GROUP BY " + value + " ORDER BY " + value);
+        String label = displayLabel == null ? "NULL" : displayLabel;
+        Query query = entityManager.createNativeQuery("SELECT " + value + ", " + label + ", count(DISTINCT v.id) FROM " + from + " WHERE " + base.where
+                + " GROUP BY 1, 2 ORDER BY 1");
         bind(query, base.params); query.setParameter("locale", request.locale()); if (request.query() != null) query.setParameter("query", request.query());
         Set<String> active = active(request, group);
-        return rows(query).stream().map(row -> new Facet(group, text(row[0]), null, ((Number) row[1]).longValue(), active.contains(text(row[0])))).toList();
+        return rows(query).stream().map(row -> new Facet(group, text(row[0]), null, text(row[1]), ((Number) row[2]).longValue(), active.contains(text(row[0])))).toList();
+    }
+
+    private List<Facet> labeledFacets(List<Facet> facets) {
+        Set<UUID> anatomyIds = facets.stream().filter(facet -> "anatomyStructureIds".equals(facet.group()))
+                .map(Facet::value).map(this::uuidOrNull).filter(Objects::nonNull).collect(java.util.stream.Collectors.toSet());
+        Map<UUID, AnatomyReferenceQueryPort.AnatomicalStructureSnapshot> anatomyById = anatomy.findStructures(anatomyIds);
+        return facets.stream().map(facet -> new Facet(facet.group(), facet.value(), facet.labelKey(),
+                facet.displayLabel() == null ? staticFacetLabel(facet, anatomyById) : facet.displayLabel(), facet.count(), facet.active())).toList();
+    }
+
+    private String staticFacetLabel(Facet facet, Map<UUID, AnatomyReferenceQueryPort.AnatomicalStructureSnapshot> anatomyById) {
+        return switch (facet.group()) {
+            case "movementPatterns" -> switch (facet.value()) {
+                case "SQUAT" -> "Przysiad"; case "HINGE" -> "Zgięcie biodrowe"; case "PUSH" -> "Pchanie"; case "PULL" -> "Przyciąganie";
+                case "LUNGE" -> "Wykrok"; case "CARRY" -> "Przenoszenie"; case "ROTATION" -> "Rotacja"; case "LOCOMOTION" -> "Lokomocja";
+                case "BREATHING" -> "Oddychanie"; case "MOBILITY" -> "Mobilność"; case "OTHER" -> "Inne"; default -> facet.value();
+            };
+            case "technicalLevels" -> switch (facet.value()) { case "FOUNDATIONAL" -> "Podstawowy"; case "INTERMEDIATE" -> "Średniozaawansowany"; case "ADVANCED" -> "Zaawansowany"; default -> facet.value(); };
+            case "unilateral" -> "true".equals(facet.value()) ? "Jednostronne" : "Obustronne";
+            case "purposes" -> switch (facet.value()) { case "TRAINING" -> "Trening"; case "THERAPEUTIC_EXERCISE" -> "Ćwiczenie terapeutyczne"; case "ASSESSMENT" -> "Ocena"; case "WARM_UP" -> "Rozgrzewka"; case "RECOVERY" -> "Regeneracja"; default -> facet.value(); };
+            case "anatomyStructureTypes" -> switch (facet.value()) { case "BODY_REGION" -> "Obszar ciała"; case "MUSCLE_GROUP" -> "Grupa mięśniowa"; case "MUSCLE" -> "Mięsień"; case "TENDON_GROUP" -> "Grupa ścięgien"; case "JOINT" -> "Staw"; default -> facet.value(); };
+            case "anatomyStructureIds" -> {
+                AnatomyReferenceQueryPort.AnatomicalStructureSnapshot structure = anatomyById.get(uuidOrNull(facet.value()));
+                yield structure == null ? facet.value() : structure.displayName();
+            }
+            default -> facet.value();
+        };
     }
 
     private Sql base(SearchRequest request, String exclude) {
@@ -245,6 +280,7 @@ public class ExerciseCatalogSearchService {
     @SuppressWarnings("unchecked") private static List<Object[]> rows(Query q) { return q.getResultList(); }
     private static void bind(Query query, Map<String,Object> params) { params.forEach(query::setParameter); }
     private static UUID uuid(Object value) { return value instanceof UUID id ? id : UUID.fromString(value.toString()); }
+    private UUID uuidOrNull(String value) { try { return value == null ? null : UUID.fromString(value); } catch (IllegalArgumentException ignored) { return null; } }
     private static String text(Object value) { return value == null ? null : value.toString(); }
 
     private static final class Sql { final String where; final Map<String,Object> params; int number; Sql(){this("",new LinkedHashMap<>());} Sql(String where, Map<String,Object> params){this.where=where;this.params=params;} String addList(String prefix, Collection<?> values){ List<String> names=new ArrayList<>(); for(Object value:values){String key=prefix+number++;names.add(":"+key);params.put(key,value);} return String.join(",",names);}}
@@ -258,7 +294,7 @@ public class ExerciseCatalogSearchService {
     public record Result(UUID exerciseId, UUID exerciseVersionId, int versionNumber, String title, String summary, String exerciseType,
                          String technicalLevel, List<String> movementPatterns, List<String> equipment, List<Anatomy> keyAnatomy,
                          String mediaReference, boolean selectable) { public Result { movementPatterns=List.copyOf(movementPatterns); equipment=List.copyOf(equipment); keyAnatomy=List.copyOf(keyAnatomy); } }
-    public record Facet(String group, String value, String labelKey, long count, boolean active) { }
+    public record Facet(String group, String value, String labelKey, String displayLabel, long count, boolean active) { }
     public record Anatomy(UUID structureId, String code, String displayName, String type, String role) { }
     public record Preview(UUID exerciseId, UUID exerciseVersionId, int versionNumber, String title, String instruction, String technicalLevel,
                           List<String> movementPatterns, List<String> requiredEquipment, List<CatalogService.PublicAnatomyContributionView> anatomy,

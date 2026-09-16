@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.availability.RecurringAvailabilityService;
+import com.motionecosystem.availability.api.AvailabilityCalendarPort;
 import com.motionecosystem.calendar.api.SpecialistAppointmentQueryPort;
 import com.motionecosystem.calendar.api.SpecialistAppointmentEventQueryPort;
 import com.motionecosystem.calendar.api.SpecialistOverdueAppointmentQueryPort;
@@ -59,9 +60,11 @@ class SpecialistCalendarParticipantIdTest {
                 new SpecialistOverdueAppointmentQueryPort.OverdueAppointment(UUID.randomUUID(), participantId, NOW.minusSeconds(1),
                         "CONSULTATION", "CONFIRMED", eventId)));
         RecurringAvailabilityService availability = mock(RecurringAvailabilityService.class);
+        AvailabilityCalendarPort calendarAvailability = mock(AvailabilityCalendarPort.class);
         when(availability.list(specialistId)).thenReturn(List.of());
+        when(calendarAvailability.bookableSlots(eq(specialistId), any(), any())).thenReturn(List.of());
         SpecialistTodayService service = new SpecialistTodayService(accounts, specialistWorkspace, participants,
-                availability, appointments, overdueAppointments, audit,
+                availability, calendarAvailability, appointments, overdueAppointments, audit,
                 Clock.fixed(NOW, ZoneOffset.UTC));
 
         SpecialistTodayService.TodayView view = service.today("specialist", LocalDate.of(2030, 6, 10));

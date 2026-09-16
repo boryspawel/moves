@@ -1,0 +1,6 @@
+.appointment-dialog { position: fixed; z-index: 20; inset: 10% var(--space-3) auto; max-width: var(--app-dialog-max-width); margin: auto; padding: var(--space-4); border: 1px solid var(--app-border); background: var(--app-surface); }
+.appointment-dialog form, .appointment-dialog label { display: grid; gap: var(--space-2); }
+.appointment-dialog input, .appointment-dialog select { width: 100%; min-height: var(--app-control-min-height); box-sizing: border-box; padding: var(--space-2); border: 1px solid var(--app-border); border-radius: var(--radius-control); background: var(--app-surface); color: var(--app-text); font: inherit; }
+.appointment-dialog input:focus-visible, .appointment-dialog select:focus-visible, .dialog-close:focus-visible { outline: 3px solid var(--app-focus); outline-offset: 2px; }
+.appointment-dialog input.ng-invalid.ng-touched { border-color: var(--app-danger); background: var(--app-danger-subtle); }.appointment-dialog p[role="alert"] { color: var(--app-danger); }
+.appointment-dialog form > div { display: flex; justify-content: end; gap: var(--space-2); }.dialog-close { float: right; min-width: var(--app-control-min-height); min-height: var(--app-control-min-height); border: 0; background: transparent; color: inherit; font-size: 1.5rem; }

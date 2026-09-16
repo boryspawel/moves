@@ -24,10 +24,20 @@ import {
   ContributionCommandToJSON,
 } from '../models/ContributionCommand';
 import {
+  type ContributionUpdateCommand,
+  ContributionUpdateCommandFromJSON,
+  ContributionUpdateCommandToJSON,
+} from '../models/ContributionUpdateCommand';
+import {
   type ContributionView,
   ContributionViewFromJSON,
   ContributionViewToJSON,
 } from '../models/ContributionView';
+import {
+  type DeleteDraftRequest,
+  DeleteDraftRequestFromJSON,
+  DeleteDraftRequestToJSON,
+} from '../models/DeleteDraftRequest';
 import {
   type DraftUpdateCommand,
   DraftUpdateCommandFromJSON,
@@ -48,6 +58,11 @@ import {
   EvidenceCommandFromJSON,
   EvidenceCommandToJSON,
 } from '../models/EvidenceCommand';
+import {
+  type EvidenceUpdateCommand,
+  EvidenceUpdateCommandFromJSON,
+  EvidenceUpdateCommandToJSON,
+} from '../models/EvidenceUpdateCommand';
 import {
   type EvidenceView,
   EvidenceViewFromJSON,
@@ -96,11 +111,13 @@ import {
 
 export interface AddEditorialContributionRequest {
   versionId: string;
+  expectedVersion: number;
   contributionCommand: ContributionCommand;
 }
 
 export interface AddEditorialEvidenceRequest {
   versionId: string;
+  expectedVersion: number;
   evidenceCommand: EvidenceCommand;
 }
 
@@ -115,6 +132,23 @@ export interface CreateEditorialExerciseRequest {
 export interface CreateEditorialExerciseVersionRequest {
   exerciseId: string;
   versionCommand: VersionCommand;
+}
+
+export interface DeleteEditorialContributionRequest {
+  versionId: string;
+  contributionId: string;
+  expectedVersion: number;
+}
+
+export interface DeleteEditorialEvidenceRequest {
+  versionId: string;
+  evidenceId: string;
+  expectedVersion: number;
+}
+
+export interface DeleteEditorialInitialDraftRequest {
+  versionId: string;
+  deleteDraftRequest: DeleteDraftRequest;
 }
 
 export interface GetEditorialExerciseCapabilitiesRequest {
@@ -142,6 +176,7 @@ export interface PublishEditorialExerciseRequest {
 
 export interface ReplaceEditorialLoadCharacteristicsRequest {
   versionId: string;
+  expectedVersion: number;
   loadCharacteristicCommand: Array<LoadCharacteristicCommand>;
 }
 
@@ -153,6 +188,18 @@ export interface SubmitEditorialExerciseForReviewRequest {
   versionId: string;
 }
 
+export interface UpdateEditorialContributionRequest {
+  versionId: string;
+  contributionId: string;
+  contributionUpdateCommand: ContributionUpdateCommand;
+}
+
+export interface UpdateEditorialEvidenceRequest {
+  versionId: string;
+  evidenceId: string;
+  evidenceUpdateCommand: EvidenceUpdateCommand;
+}
+
 export interface UpdateEditorialExerciseContentRequest {
   versionId: string;
   draftUpdateCommand: DraftUpdateCommand;
@@ -160,6 +207,7 @@ export interface UpdateEditorialExerciseContentRequest {
 
 export interface UpdateEditorialExerciseDraftRequest {
   versionId: string;
+  expectedVersion: number;
   versionCommand: VersionCommand;
 }
 
@@ -184,6 +232,13 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
       );
     }
 
+    if (requestParameters['expectedVersion'] == null) {
+      throw new runtime.RequiredError(
+        'expectedVersion',
+        'Required parameter "expectedVersion" was null or undefined when calling addEditorialContribution().',
+      );
+    }
+
     if (requestParameters['contributionCommand'] == null) {
       throw new runtime.RequiredError(
         'contributionCommand',
@@ -192,6 +247,10 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
     }
 
     const queryParameters: any = {};
+
+    if (requestParameters['expectedVersion'] != null) {
+      queryParameters['expectedVersion'] = requestParameters['expectedVersion'];
+    }
 
     const headerParameters: runtime.HTTPHeaders = {};
 
@@ -249,6 +308,13 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
       );
     }
 
+    if (requestParameters['expectedVersion'] == null) {
+      throw new runtime.RequiredError(
+        'expectedVersion',
+        'Required parameter "expectedVersion" was null or undefined when calling addEditorialEvidence().',
+      );
+    }
+
     if (requestParameters['evidenceCommand'] == null) {
       throw new runtime.RequiredError(
         'evidenceCommand',
@@ -257,6 +323,10 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
     }
 
     const queryParameters: any = {};
+
+    if (requestParameters['expectedVersion'] != null) {
+      queryParameters['expectedVersion'] = requestParameters['expectedVersion'];
+    }
 
     const headerParameters: runtime.HTTPHeaders = {};
 
@@ -469,6 +539,216 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
   ): Promise<ExerciseEditorialVersionView> {
     const response = await this.createEditorialExerciseVersionRaw(requestParameters, initOverrides);
     return await response.value();
+  }
+
+  /**
+   * Creates request options for deleteEditorialContribution without sending the request
+   */
+  async deleteEditorialContributionRequestOpts(
+    requestParameters: DeleteEditorialContributionRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['versionId'] == null) {
+      throw new runtime.RequiredError(
+        'versionId',
+        'Required parameter "versionId" was null or undefined when calling deleteEditorialContribution().',
+      );
+    }
+
+    if (requestParameters['contributionId'] == null) {
+      throw new runtime.RequiredError(
+        'contributionId',
+        'Required parameter "contributionId" was null or undefined when calling deleteEditorialContribution().',
+      );
+    }
+
+    if (requestParameters['expectedVersion'] == null) {
+      throw new runtime.RequiredError(
+        'expectedVersion',
+        'Required parameter "expectedVersion" was null or undefined when calling deleteEditorialContribution().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters['expectedVersion'] != null) {
+      queryParameters['expectedVersion'] = requestParameters['expectedVersion'];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v1/admin/exercises/versions/{versionId}/contributions/{contributionId}`;
+    urlPath = urlPath.replace(
+      '{versionId}',
+      encodeURIComponent(String(requestParameters['versionId'])),
+    );
+    urlPath = urlPath.replace(
+      '{contributionId}',
+      encodeURIComponent(String(requestParameters['contributionId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'DELETE',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   */
+  async deleteEditorialContributionRaw(
+    requestParameters: DeleteEditorialContributionRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<void>> {
+    const requestOptions = await this.deleteEditorialContributionRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.VoidApiResponse(response);
+  }
+
+  /**
+   */
+  async deleteEditorialContribution(
+    requestParameters: DeleteEditorialContributionRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<void> {
+    await this.deleteEditorialContributionRaw(requestParameters, initOverrides);
+  }
+
+  /**
+   * Creates request options for deleteEditorialEvidence without sending the request
+   */
+  async deleteEditorialEvidenceRequestOpts(
+    requestParameters: DeleteEditorialEvidenceRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['versionId'] == null) {
+      throw new runtime.RequiredError(
+        'versionId',
+        'Required parameter "versionId" was null or undefined when calling deleteEditorialEvidence().',
+      );
+    }
+
+    if (requestParameters['evidenceId'] == null) {
+      throw new runtime.RequiredError(
+        'evidenceId',
+        'Required parameter "evidenceId" was null or undefined when calling deleteEditorialEvidence().',
+      );
+    }
+
+    if (requestParameters['expectedVersion'] == null) {
+      throw new runtime.RequiredError(
+        'expectedVersion',
+        'Required parameter "expectedVersion" was null or undefined when calling deleteEditorialEvidence().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters['expectedVersion'] != null) {
+      queryParameters['expectedVersion'] = requestParameters['expectedVersion'];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    let urlPath = `/api/v1/admin/exercises/versions/{versionId}/evidence/{evidenceId}`;
+    urlPath = urlPath.replace(
+      '{versionId}',
+      encodeURIComponent(String(requestParameters['versionId'])),
+    );
+    urlPath = urlPath.replace(
+      '{evidenceId}',
+      encodeURIComponent(String(requestParameters['evidenceId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'DELETE',
+      headers: headerParameters,
+      query: queryParameters,
+    };
+  }
+
+  /**
+   */
+  async deleteEditorialEvidenceRaw(
+    requestParameters: DeleteEditorialEvidenceRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<void>> {
+    const requestOptions = await this.deleteEditorialEvidenceRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.VoidApiResponse(response);
+  }
+
+  /**
+   */
+  async deleteEditorialEvidence(
+    requestParameters: DeleteEditorialEvidenceRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<void> {
+    await this.deleteEditorialEvidenceRaw(requestParameters, initOverrides);
+  }
+
+  /**
+   * Creates request options for deleteEditorialInitialDraft without sending the request
+   */
+  async deleteEditorialInitialDraftRequestOpts(
+    requestParameters: DeleteEditorialInitialDraftRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['versionId'] == null) {
+      throw new runtime.RequiredError(
+        'versionId',
+        'Required parameter "versionId" was null or undefined when calling deleteEditorialInitialDraft().',
+      );
+    }
+
+    if (requestParameters['deleteDraftRequest'] == null) {
+      throw new runtime.RequiredError(
+        'deleteDraftRequest',
+        'Required parameter "deleteDraftRequest" was null or undefined when calling deleteEditorialInitialDraft().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v1/admin/exercises/versions/{versionId}`;
+    urlPath = urlPath.replace(
+      '{versionId}',
+      encodeURIComponent(String(requestParameters['versionId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'DELETE',
+      headers: headerParameters,
+      query: queryParameters,
+      body: DeleteDraftRequestToJSON(requestParameters['deleteDraftRequest']),
+    };
+  }
+
+  /**
+   */
+  async deleteEditorialInitialDraftRaw(
+    requestParameters: DeleteEditorialInitialDraftRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<void>> {
+    const requestOptions = await this.deleteEditorialInitialDraftRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.VoidApiResponse(response);
+  }
+
+  /**
+   */
+  async deleteEditorialInitialDraft(
+    requestParameters: DeleteEditorialInitialDraftRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<void> {
+    await this.deleteEditorialInitialDraftRaw(requestParameters, initOverrides);
   }
 
   /**
@@ -814,6 +1094,13 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
       );
     }
 
+    if (requestParameters['expectedVersion'] == null) {
+      throw new runtime.RequiredError(
+        'expectedVersion',
+        'Required parameter "expectedVersion" was null or undefined when calling replaceEditorialLoadCharacteristics().',
+      );
+    }
+
     if (requestParameters['loadCharacteristicCommand'] == null) {
       throw new runtime.RequiredError(
         'loadCharacteristicCommand',
@@ -822,6 +1109,10 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
     }
 
     const queryParameters: any = {};
+
+    if (requestParameters['expectedVersion'] != null) {
+      queryParameters['expectedVersion'] = requestParameters['expectedVersion'];
+    }
 
     const headerParameters: runtime.HTTPHeaders = {};
 
@@ -988,6 +1279,156 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
   }
 
   /**
+   * Creates request options for updateEditorialContribution without sending the request
+   */
+  async updateEditorialContributionRequestOpts(
+    requestParameters: UpdateEditorialContributionRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['versionId'] == null) {
+      throw new runtime.RequiredError(
+        'versionId',
+        'Required parameter "versionId" was null or undefined when calling updateEditorialContribution().',
+      );
+    }
+
+    if (requestParameters['contributionId'] == null) {
+      throw new runtime.RequiredError(
+        'contributionId',
+        'Required parameter "contributionId" was null or undefined when calling updateEditorialContribution().',
+      );
+    }
+
+    if (requestParameters['contributionUpdateCommand'] == null) {
+      throw new runtime.RequiredError(
+        'contributionUpdateCommand',
+        'Required parameter "contributionUpdateCommand" was null or undefined when calling updateEditorialContribution().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v1/admin/exercises/versions/{versionId}/contributions/{contributionId}`;
+    urlPath = urlPath.replace(
+      '{versionId}',
+      encodeURIComponent(String(requestParameters['versionId'])),
+    );
+    urlPath = urlPath.replace(
+      '{contributionId}',
+      encodeURIComponent(String(requestParameters['contributionId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'PUT',
+      headers: headerParameters,
+      query: queryParameters,
+      body: ContributionUpdateCommandToJSON(requestParameters['contributionUpdateCommand']),
+    };
+  }
+
+  /**
+   */
+  async updateEditorialContributionRaw(
+    requestParameters: UpdateEditorialContributionRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<ContributionView>> {
+    const requestOptions = await this.updateEditorialContributionRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      ContributionViewFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async updateEditorialContribution(
+    requestParameters: UpdateEditorialContributionRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<ContributionView> {
+    const response = await this.updateEditorialContributionRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for updateEditorialEvidence without sending the request
+   */
+  async updateEditorialEvidenceRequestOpts(
+    requestParameters: UpdateEditorialEvidenceRequest,
+  ): Promise<runtime.RequestOpts> {
+    if (requestParameters['versionId'] == null) {
+      throw new runtime.RequiredError(
+        'versionId',
+        'Required parameter "versionId" was null or undefined when calling updateEditorialEvidence().',
+      );
+    }
+
+    if (requestParameters['evidenceId'] == null) {
+      throw new runtime.RequiredError(
+        'evidenceId',
+        'Required parameter "evidenceId" was null or undefined when calling updateEditorialEvidence().',
+      );
+    }
+
+    if (requestParameters['evidenceUpdateCommand'] == null) {
+      throw new runtime.RequiredError(
+        'evidenceUpdateCommand',
+        'Required parameter "evidenceUpdateCommand" was null or undefined when calling updateEditorialEvidence().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    let urlPath = `/api/v1/admin/exercises/versions/{versionId}/evidence/{evidenceId}`;
+    urlPath = urlPath.replace(
+      '{versionId}',
+      encodeURIComponent(String(requestParameters['versionId'])),
+    );
+    urlPath = urlPath.replace(
+      '{evidenceId}',
+      encodeURIComponent(String(requestParameters['evidenceId'])),
+    );
+
+    return {
+      path: urlPath,
+      method: 'PUT',
+      headers: headerParameters,
+      query: queryParameters,
+      body: EvidenceUpdateCommandToJSON(requestParameters['evidenceUpdateCommand']),
+    };
+  }
+
+  /**
+   */
+  async updateEditorialEvidenceRaw(
+    requestParameters: UpdateEditorialEvidenceRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<EvidenceView>> {
+    const requestOptions = await this.updateEditorialEvidenceRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => EvidenceViewFromJSON(jsonValue));
+  }
+
+  /**
+   */
+  async updateEditorialEvidence(
+    requestParameters: UpdateEditorialEvidenceRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<EvidenceView> {
+    const response = await this.updateEditorialEvidenceRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
    * Creates request options for updateEditorialExerciseContent without sending the request
    */
   async updateEditorialExerciseContentRequestOpts(
@@ -1065,6 +1506,13 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
       );
     }
 
+    if (requestParameters['expectedVersion'] == null) {
+      throw new runtime.RequiredError(
+        'expectedVersion',
+        'Required parameter "expectedVersion" was null or undefined when calling updateEditorialExerciseDraft().',
+      );
+    }
+
     if (requestParameters['versionCommand'] == null) {
       throw new runtime.RequiredError(
         'versionCommand',
@@ -1073,6 +1521,10 @@ export class ExerciseCatalogAdminControllerApi extends runtime.BaseAPI {
     }
 
     const queryParameters: any = {};
+
+    if (requestParameters['expectedVersion'] != null) {
+      queryParameters['expectedVersion'] = requestParameters['expectedVersion'];
+    }
 
     const headerParameters: runtime.HTTPHeaders = {};
 

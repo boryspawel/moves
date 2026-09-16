@@ -16,17 +16,19 @@ export const completedOnboardingGuard: CanActivateFn = async () => {
   }
 };
 
-/** Resolves the post-login root landing without changing non-specialist onboarding behaviour. */
+/** Resolves the post-login root landing for recognized, completed account roles. */
 export const rootLandingGuard: CanActivateFn = async () => {
   const router = inject(Router);
   const auth = inject(AuthService);
   if (!auth.authenticated()) return router.createUrlTree(['/login']);
-  if (!auth.hasRole('SPECIALIST')) return router.createUrlTree(['/onboarding']);
 
   try {
-    return (await inject(OnboardingStateService).get()).stage === 'READY'
-      ? router.createUrlTree(['/specialist/today'])
-      : router.createUrlTree(['/onboarding']);
+    if ((await inject(OnboardingStateService).get()).stage !== 'READY') {
+      return router.createUrlTree(['/onboarding']);
+    }
+    if (auth.hasRole('SPECIALIST')) return router.createUrlTree(['/specialist/today']);
+    if (auth.hasRole('PARTICIPANT')) return router.createUrlTree(['/sessions']);
+    return router.createUrlTree(['/onboarding']);
   } catch {
     return router.createUrlTree(['/onboarding']);
   }

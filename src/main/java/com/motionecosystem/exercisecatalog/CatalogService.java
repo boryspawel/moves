@@ -22,6 +22,9 @@ import com.motionecosystem.anatomyreference.api.AnatomyReferenceQueryPort.Struct
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.EditorialCapability;
 import com.motionecosystem.exercisecatalog.api.ExerciseCatalogQueryPort;
+import com.motionecosystem.exercisecatalog.api.ExerciseDraftReferenceQueryPort;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -47,6 +50,9 @@ public class CatalogService implements ExerciseCatalogQueryPort {
     private final Clock clock;
     private final ExerciseReviewReadRepository reviewReads;
     private final ExerciseEditorialWorkflowService workflow;
+    private final ExerciseDraftReferenceQueryPort importReferences;
+    private final ImportedExerciseAliasRepository aliases;
+    private final ExerciseRelationReferenceRepository relations;
 
     @Transactional
     public ExerciseEditorialVersionView create(String actorSubject, String canonicalName, VersionCommand requested) {
@@ -69,22 +75,27 @@ public class CatalogService implements ExerciseCatalogQueryPort {
         return new EditorialCatalogPage(result.getContent().stream().map(item -> new EditorialCatalogItem(
                 item.getExerciseId(), item.getCanonicalName(), item.getVersionId(), item.getVersionNumber(),
                 item.getStatus(), item.getExpectedVersion(), item.getTechnicalLevel(), item.getEnvironment(),
-                availableActions(item.getVersionId(), item.getStatus()))).toList(), result.getNumber(), result.getSize(),
+                availableActions(version(item.getVersionId())))).toList(), result.getNumber(), result.getSize(),
                 result.getTotalElements(), result.getTotalPages());
     }
 
     @Transactional(readOnly = true)
     public EditorialCapabilities editorialCapabilities(UUID versionId) {
         ExerciseVersion value = version(versionId);
+        DeletionEligibility deletion = deletionEligibility(value);
         return new EditorialCapabilities(value.id, value.exerciseId, value.status, value.version,
-                availableActions(value.id, value.status));
+                availableActions(value), workflow.status(value.id), deletion.blockReason());
     }
 
-    private List<String> availableActions(UUID versionId, ExerciseVersionStatus status) {
-        return switch (status) {
-            case DRAFT, CHANGES_REQUESTED -> List.of("EDIT", "SUBMIT_REVIEW");
-            case IN_REVIEW -> List.of("REQUEST_CHANGES");
-            case APPROVED -> workflow.readyToPublish(versionId) ? List.of("PUBLISH") : List.of();
+    private List<String> availableActions(ExerciseVersion version) {
+        return switch (version.status) {
+            case DRAFT, CHANGES_REQUESTED, IN_REVIEW, APPROVED -> {
+                List<String> actions = new ArrayList<>();
+                actions.add("EDIT");
+                if (workflow.readyToPublish(version.id)) actions.add("PUBLISH");
+                if (deletionEligibility(version).blockReason() == null) actions.add("DELETE");
+                yield List.copyOf(actions);
+            }
             case PUBLISHED -> List.of("CREATE_NEXT_VERSION", "WITHDRAW");
             case WITHDRAWN -> List.of("CREATE_NEXT_VERSION");
         };
@@ -111,8 +122,30 @@ public class CatalogService implements ExerciseCatalogQueryPort {
     }
 
     @Transactional
-    public ExerciseEditorialVersionView updateDraft(String actorSubject, UUID versionId, VersionCommand requested) {
+    public void deleteInitialDraft(String actorSubject, UUID versionId, long expectedVersion) {
+        ExerciseVersion version = version(versionId);
+        if (version.version != expectedVersion) throw conflict("exercise version was changed concurrently", null);
+        DeletionEligibility eligibility = deletionEligibility(version);
+        if (eligibility.blockReason() != null) throw conflict(eligibility.blockReason(), null);
+        UUID exerciseId = version.exerciseId;
+        try {
+            versions.delete(version);
+            versions.flush();
+            exercises.deleteById(exerciseId);
+            exercises.flush();
+        } catch (ObjectOptimisticLockingFailureException stale) {
+            throw conflict("exercise version was changed concurrently", stale);
+        } catch (DataIntegrityViolationException blocked) {
+            throw conflict("exercise draft has durable references and cannot be deleted", blocked);
+        }
+        audit.record(actorSubject, "EXERCISE_INITIAL_DRAFT_DELETED", "ExerciseVersion", versionId);
+    }
+
+    @Transactional
+    public ExerciseEditorialVersionView updateDraft(String actorSubject, UUID versionId, VersionCommand requested,
+                                                    long expectedVersion) {
         ExerciseVersion version = lockedVersion(versionId);
+        requireExpectedVersion(version, expectedVersion);
         try {
             version.update(validate(requested));
             invalidateCurrentReviews(versionId, actorSubject);
@@ -155,8 +188,10 @@ public class CatalogService implements ExerciseCatalogQueryPort {
 
     @Transactional
     public ExerciseEditorialEditorView replaceLoadCharacteristics(String actorSubject, UUID versionId,
-                                                 Collection<LoadCharacteristicCommand> requested) {
+                                                 Collection<LoadCharacteristicCommand> requested,
+                                                 Long expectedVersion) {
         ExerciseVersion version = editableVersion(versionId);
+        requireExpectedVersion(version, expectedVersion);
         List<LoadCharacteristicCommand> commands = validateCharacteristics(requested);
         loadCharacteristics.deleteAll(loadCharacteristics.findByExerciseVersionIdOrderById(versionId));
         loadCharacteristics.flush();
@@ -173,7 +208,14 @@ public class CatalogService implements ExerciseCatalogQueryPort {
 
     @Transactional
     public EvidenceView addEvidence(String actorSubject, UUID versionId, EvidenceCommand requested) {
+        return addEvidence(actorSubject, versionId, requested, null);
+    }
+
+    @Transactional
+    public EvidenceView addEvidence(String actorSubject, UUID versionId, EvidenceCommand requested,
+                                    Long expectedVersion) {
         ExerciseVersion version = editableVersion(versionId);
+        requireExpectedVersion(version, expectedVersion);
         if (requested == null) {
             throw badRequest("evidence is required");
         }
@@ -191,7 +233,14 @@ public class CatalogService implements ExerciseCatalogQueryPort {
     @Transactional
     public ContributionView addContribution(String actorSubject, UUID versionId,
                                             ContributionCommand requested) {
+        return addContribution(actorSubject, versionId, requested, null);
+    }
+
+    @Transactional
+    public ContributionView addContribution(String actorSubject, UUID versionId,
+                                            ContributionCommand requested, Long expectedVersion) {
         ExerciseVersion version = editableVersion(versionId);
+        requireExpectedVersion(version, expectedVersion);
         ValidatedContribution command = validateContribution(versionId, requested);
         List<ExerciseContribution> candidate = new ArrayList<>(
                 contributions.findByExerciseVersionIdOrderById(versionId));
@@ -210,6 +259,83 @@ public class CatalogService implements ExerciseCatalogQueryPort {
                 .collect(Collectors.toMap(item -> item.id, Function.identity()));
         return contributionView(contribution, command.evidenceIds().stream()
                 .map(evidence::get).map(CatalogService::evidenceView).toList());
+    }
+
+    @Transactional
+    public EvidenceView updateEvidence(String actorSubject, UUID versionId, UUID evidenceId,
+                                       EvidenceUpdateCommand requested) {
+        if (requested == null || requested.expectedVersion() == null) {
+            throw badRequest("expected version is required");
+        }
+        ExerciseVersion version = editableVersion(versionId);
+        requireExpectedVersion(version, requested.expectedVersion());
+        EvidenceSource evidence = evidenceSources.findByIdAndExerciseVersionId(evidenceId, versionId)
+                .orElseThrow(() -> notFound("evidence source not found"));
+        evidence.update(requiredText(requested.citation(), 500, "citation"),
+                optionalText(requested.sourceUri(), 1_000, "source URI"),
+                normalizedCode(requested.evidenceGrade(), 80, "evidence grade"));
+        version.contentChanged();
+        invalidateCurrentReviews(versionId, actorSubject);
+        audit.record(actorSubject, "EXERCISE_EVIDENCE_UPDATED", "EvidenceSource", evidenceId);
+        return evidenceView(evidence);
+    }
+
+    @Transactional
+    public void deleteEvidence(String actorSubject, UUID versionId, UUID evidenceId, long expectedVersion) {
+        ExerciseVersion version = editableVersion(versionId);
+        requireExpectedVersion(version, expectedVersion);
+        EvidenceSource evidence = evidenceSources.findByIdAndExerciseVersionId(evidenceId, versionId)
+                .orElseThrow(() -> notFound("evidence source not found"));
+        if (contributionEvidence.existsByEvidenceSourceId(evidenceId)) {
+            throw conflict("evidence source is referenced by a contribution", null);
+        }
+        evidenceSources.delete(evidence);
+        version.contentChanged();
+        invalidateCurrentReviews(versionId, actorSubject);
+        audit.record(actorSubject, "EXERCISE_EVIDENCE_DELETED", "EvidenceSource", evidenceId);
+    }
+
+    @Transactional
+    public ContributionView updateContribution(String actorSubject, UUID versionId, UUID contributionId,
+                                               ContributionUpdateCommand requested) {
+        if (requested == null || requested.expectedVersion() == null) {
+            throw badRequest("expected version is required");
+        }
+        ExerciseVersion version = editableVersion(versionId);
+        requireExpectedVersion(version, requested.expectedVersion());
+        ExerciseContribution contribution = contributions.findByIdAndExerciseVersionId(contributionId, versionId)
+                .orElseThrow(() -> notFound("contribution not found"));
+        ValidatedContribution command = validateContribution(versionId, requested.contribution());
+        requirePublishedAnatomy(command.anatomicalStructureId());
+        List<ExerciseContribution> candidate = new ArrayList<>(
+                contributions.findByExerciseVersionIdOrderById(versionId));
+        candidate.removeIf(item -> item.id.equals(contributionId));
+        candidate.add(command.entity(actorSubject, clock.instant()));
+        validateAllocationBranches(candidate);
+        contribution.update(command);
+        contributionEvidence.deleteByContributionId(contributionId);
+        command.evidenceIds().stream().map(evidenceId -> new ExerciseContributionEvidence(contributionId, evidenceId))
+                .forEach(contributionEvidence::save);
+        version.contentChanged();
+        invalidateCurrentReviews(versionId, actorSubject);
+        audit.record(actorSubject, "EXERCISE_CONTRIBUTION_UPDATED", "ExerciseContribution", contributionId);
+        Map<UUID, EvidenceSource> evidence = evidenceSources.findByExerciseVersionIdAndIdIn(versionId, command.evidenceIds())
+                .stream().collect(Collectors.toMap(item -> item.id, Function.identity()));
+        return contributionView(contribution, command.evidenceIds().stream()
+                .map(evidence::get).map(CatalogService::evidenceView).toList());
+    }
+
+    @Transactional
+    public void deleteContribution(String actorSubject, UUID versionId, UUID contributionId, long expectedVersion) {
+        ExerciseVersion version = editableVersion(versionId);
+        requireExpectedVersion(version, expectedVersion);
+        ExerciseContribution contribution = contributions.findByIdAndExerciseVersionId(contributionId, versionId)
+                .orElseThrow(() -> notFound("contribution not found"));
+        contributionEvidence.deleteByContributionId(contributionId);
+        contributions.delete(contribution);
+        version.contentChanged();
+        invalidateCurrentReviews(versionId, actorSubject);
+        audit.record(actorSubject, "EXERCISE_CONTRIBUTION_DELETED", "ExerciseContribution", contributionId);
     }
 
     @Transactional
@@ -468,6 +594,14 @@ public class CatalogService implements ExerciseCatalogQueryPort {
                 optionalCode(command.variantCondition(), 120, "variant condition"), command.sideRule(), evidenceIds);
     }
 
+    private void requirePublishedAnatomy(UUID structureId) {
+        AnatomyReferenceQueryPort.AnatomicalStructureSnapshot structure = anatomy.findStructure(structureId)
+                .orElseThrow(() -> badRequest("anatomical structure does not exist"));
+        if (structure.status() != StructureStatus.PUBLISHED) {
+            throw badRequest("contributions must reference published anatomy");
+        }
+    }
+
     private void validateAllocationBranches(List<ExerciseContribution> profileContributions) {
         List<ExerciseContribution> allocations = profileContributions.stream()
                 .filter(item -> item.calculationRole == CalculationRole.ALLOCATION).toList();
@@ -508,6 +642,36 @@ public class CatalogService implements ExerciseCatalogQueryPort {
             throw conflict(immutable.getMessage(), immutable);
         }
         return version;
+    }
+
+    private static void requireExpectedVersion(ExerciseVersion version, Long expectedVersion) {
+        if (expectedVersion != null && version.version != expectedVersion) {
+            throw conflict("exercise version was changed concurrently", null);
+        }
+    }
+
+    private DeletionEligibility deletionEligibility(ExerciseVersion version) {
+        if (version.status == ExerciseVersionStatus.PUBLISHED || version.status == ExerciseVersionStatus.WITHDRAWN) {
+            return new DeletionEligibility("INITIAL_MANUAL_DRAFT_REQUIRED");
+        }
+        ExerciseDraftReferenceQueryPort.DraftReferenceState references = importReferences.references(version.exerciseId, version.id);
+        if (version.importRecordId != null || references.importRecord()) {
+            return new DeletionEligibility("IMPORTED_DRAFT");
+        }
+        if (reviewReads.existsByExerciseVersionId(version.id)) return new DeletionEligibility("REVIEW_HISTORY_EXISTS");
+        if (version.status != ExerciseVersionStatus.DRAFT || version.versionNumber != 1) {
+            return new DeletionEligibility("INITIAL_MANUAL_DRAFT_REQUIRED");
+        }
+        if (versions.findByExerciseIdOrderByVersionNumber(version.exerciseId).size() != 1) {
+            return new DeletionEligibility("VERSION_HISTORY_EXISTS");
+        }
+        if (aliases.existsByExerciseId(version.exerciseId)) return new DeletionEligibility("ALIAS_EXISTS");
+        if (relations.existsBySourceExerciseIdOrTargetExerciseId(version.exerciseId, version.exerciseId)) {
+            return new DeletionEligibility("RELATION_EXISTS");
+        }
+        if (references.sourceReference()) return new DeletionEligibility("IMPORT_SOURCE_REFERENCE_EXISTS");
+        if (references.matchCandidate()) return new DeletionEligibility("IMPORT_MATCH_CANDIDATE_EXISTS");
+        return new DeletionEligibility(null);
     }
 
     private Exercise exercise(UUID id) {
@@ -744,6 +908,10 @@ public class CatalogService implements ExerciseCatalogQueryPort {
     public record EvidenceCommand(String citation, String sourceUri, String evidenceGrade) {
     }
 
+    public record EvidenceUpdateCommand(String citation, String sourceUri, String evidenceGrade,
+                                        @NotNull @PositiveOrZero Long expectedVersion) {
+    }
+
     public record ContributionCommand(UUID anatomicalStructureId, ContributionRole role,
                                       LoadChannel loadChannel, ContributionBand contributionBand,
                                       BigDecimal coefficientLow, BigDecimal coefficientHigh,
@@ -752,7 +920,11 @@ public class CatalogService implements ExerciseCatalogQueryPort {
                                       ContributionSideRule sideRule, Set<UUID> evidenceSourceIds) {
     }
 
-    private record ValidatedContribution(UUID versionId, UUID anatomicalStructureId, ContributionRole role,
+    public record ContributionUpdateCommand(ContributionCommand contribution,
+                                            @NotNull @PositiveOrZero Long expectedVersion) {
+    }
+
+    record ValidatedContribution(UUID versionId, UUID anatomicalStructureId, ContributionRole role,
                                          LoadChannel loadChannel, ContributionBand contributionBand,
                                          BigDecimal coefficientLow, BigDecimal coefficientHigh,
                                          String confidenceClass, String evidenceGrade,
@@ -793,7 +965,13 @@ public class CatalogService implements ExerciseCatalogQueryPort {
     public record EditorialCatalogPage(List<EditorialCatalogItem> content, int page, int size,
                                        long totalElements, int totalPages) { public EditorialCatalogPage { content = List.copyOf(content); } }
     public record EditorialCapabilities(UUID versionId, UUID exerciseId, ExerciseVersionStatus status,
-                                       long expectedVersion, List<String> availableActions) { public EditorialCapabilities { availableActions = List.copyOf(availableActions); } }
+                                       long expectedVersion, List<String> availableActions,
+                                       com.motionecosystem.exercisecatalog.api.ReviewExerciseVersion.ReviewResult readiness,
+                                       String deleteBlockReason) {
+        public EditorialCapabilities { availableActions = List.copyOf(availableActions); }
+    }
+
+    private record DeletionEligibility(String blockReason) {}
 
     public record ExerciseCatalogDetailView(UUID exerciseId, UUID versionId, int versionNumber,
                                             String canonicalName, String instruction,

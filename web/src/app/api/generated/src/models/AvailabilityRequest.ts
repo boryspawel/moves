@@ -29,6 +29,12 @@ import {
 export interface AvailabilityRequest {
   /**
    *
+   * @type {number}
+   * @memberof AvailabilityRequest
+   */
+  slotDurationMinutes?: number;
+  /**
+   *
    * @type {Array<SlotRequest>}
    * @memberof AvailabilityRequest
    */
@@ -54,6 +60,8 @@ export function AvailabilityRequestFromJSONTyped(
     return json;
   }
   return {
+    slotDurationMinutes:
+      json['slotDurationMinutes'] == null ? undefined : json['slotDurationMinutes'],
     slots:
       json['slots'] == null ? undefined : (json['slots'] as Array<any>).map(SlotRequestFromJSON),
   };
@@ -72,6 +80,7 @@ export function AvailabilityRequestToJSONTyped(
   }
 
   return {
+    slotDurationMinutes: value['slotDurationMinutes'],
     slots:
       value['slots'] == null ? undefined : (value['slots'] as Array<any>).map(SlotRequestToJSON),
   };

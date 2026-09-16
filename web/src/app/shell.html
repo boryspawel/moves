@@ -8,28 +8,28 @@
 } @else {
 <mat-toolbar class="app-toolbar">
   <a class="brand" routerLink="/" aria-label="moves — strona główna">moves</a>
-  <nav aria-label="Główna nawigacja">
+  <nav class="app-primary-nav" aria-label="Główna nawigacja">
     @if (auth.authenticated()) {
-      <a mat-button routerLink="/onboarding" routerLinkActive="active">Profil</a>
-      <a mat-button routerLink="/catalog" routerLinkActive="active">Katalog</a>
+      <a mat-button routerLink="/onboarding" routerLinkActive="app-nav-active">Profil</a>
+      <a mat-button routerLink="/catalog" routerLinkActive="app-nav-active">Katalog</a>
       @if (auth.hasRole('CONTENT_ADMIN')) {
-        <a mat-button routerLink="/admin/exercise-catalog" routerLinkActive="active">Zarządzaj ćwiczeniami</a>
-        <a mat-button routerLink="/admin/exercise-import" routerLinkActive="active">Import ćwiczeń</a>
+        <a mat-button routerLink="/admin/exercise-catalog" routerLinkActive="app-nav-active">Zarządzaj ćwiczeniami</a>
+        <a mat-button routerLink="/admin/exercise-import" routerLinkActive="app-nav-active">Import ćwiczeń</a>
       }
       @if (auth.hasRole('PARTICIPANT')) {
-        <a mat-button routerLink="/sessions" routerLinkActive="active">Sesje</a>
-        <a mat-button routerLink="/my-exercise-sets" routerLinkActive="active">Moje zestawy</a>
-        <a mat-button routerLink="/my-plans" routerLinkActive="active">Plany własne</a>
-        <a mat-button routerLink="/my-data" routerLinkActive="active">Moje dane</a>
-        <a mat-button routerLink="/progress" routerLinkActive="active">Mój postęp</a>
-        <a mat-button routerLink="/reminders" routerLinkActive="active">Przypomnienia</a>
-        <a mat-button routerLink="/gamification" routerLinkActive="active">Punkty</a>
+      <a mat-button routerLink="/sessions" routerLinkActive="app-nav-active">Sesje</a>
+      <a mat-button routerLink="/my-exercise-sets" routerLinkActive="app-nav-active">Moje zestawy</a>
+      <a mat-button routerLink="/my-plans" routerLinkActive="app-nav-active">Plany własne</a>
+      <a mat-button routerLink="/my-data" routerLinkActive="app-nav-active">Moje dane</a>
+      <a mat-button routerLink="/progress" routerLinkActive="app-nav-active">Mój postęp</a>
+      <a mat-button routerLink="/reminders" routerLinkActive="app-nav-active">Przypomnienia</a>
+      <a mat-button routerLink="/gamification" routerLinkActive="app-nav-active">Punkty</a>
       }
       @if (auth.hasRole('SPECIALIST')) {
-        <a mat-button routerLink="/specialist/today" routerLinkActive="active">Dzisiaj</a>
-        <a mat-button routerLink="/specialist/clients" routerLinkActive="active">Klienci</a>
-        <a mat-button routerLink="/exercise-sets" routerLinkActive="active">Zestawy</a>
-        <a mat-button routerLink="/specialist-alerts" routerLinkActive="active">Alerty</a>
+      <a mat-button routerLink="/specialist/today" routerLinkActive="app-nav-active">Dzisiaj</a>
+      <a mat-button routerLink="/specialist/clients" routerLinkActive="app-nav-active">Klienci</a>
+      <a mat-button routerLink="/exercise-sets" routerLinkActive="app-nav-active">Zestawy</a>
+      <a mat-button routerLink="/specialist-alerts" routerLinkActive="app-nav-active">Alerty</a>
       }
     }
   </nav>

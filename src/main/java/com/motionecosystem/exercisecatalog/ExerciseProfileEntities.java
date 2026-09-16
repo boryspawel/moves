@@ -55,6 +55,20 @@ class ExerciseContribution {
         this.createdBySubject = createdBySubject;
         this.createdAt = createdAt;
     }
+
+    void update(CatalogService.ValidatedContribution command) {
+        anatomicalStructureId = command.anatomicalStructureId();
+        role = command.role();
+        loadChannel = command.loadChannel();
+        contributionBand = command.contributionBand();
+        coefficientLow = command.coefficientLow();
+        coefficientHigh = command.coefficientHigh();
+        confidenceClass = command.confidenceClass();
+        evidenceGrade = command.evidenceGrade();
+        calculationRole = command.calculationRole();
+        variantCondition = command.variantCondition();
+        sideRule = command.sideRule();
+    }
 }
 
 @Entity(name = "ExerciseLoadCharacteristicJpaEntity")
@@ -110,6 +124,12 @@ class EvidenceSource {
         this.evidenceGrade = evidenceGrade;
         this.createdBySubject = createdBySubject;
         this.createdAt = createdAt;
+    }
+
+    void update(String citation, String sourceUri, String evidenceGrade) {
+        this.citation = citation;
+        this.sourceUri = sourceUri;
+        this.evidenceGrade = evidenceGrade;
     }
 }
 

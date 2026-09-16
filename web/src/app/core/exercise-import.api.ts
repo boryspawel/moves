@@ -53,12 +53,17 @@ export interface MatchCandidate {
   reasons: unknown;
   decision?: string;
 }
+export interface DictionaryChoice { value?: string; displayName?: string; }
+export interface MappingProposal { id?: string; dictionaryType?: string; field?: string; rawValue?: string; proposedCanonicalValue?: string; status?: string; canonicalChoices?: DictionaryChoice[]; }
+export interface LicenseRemediation { action?: string; code?: string; message?: string; }
 export interface RecordDetail extends ImportRecord {
   raw: unknown;
   normalized?: unknown;
   issues: ImportIssue[];
   matchCandidates: MatchCandidate[];
   normalizedSha256?: string;
+  mappingProposals?: MappingProposal[];
+  licenseRemediation?: LicenseRemediation;
 }
 export interface RecordPage {
   content: ImportRecord[];
@@ -229,6 +234,9 @@ export class ExerciseImportApi {
   }
   decide(recordId: string, candidateId: string, decision: string): Promise<RecordDetail> {
     return this.json(`/exercise-import/records/${recordId}/match`, { candidateId, decision });
+  }
+  decideMapping(mappingId: string, decision: 'APPROVED' | 'REJECTED', canonicalValue?: string): Promise<unknown> {
+    return this.json(`/exercise-import/mappings/${mappingId}/decision`, { decision, canonicalValue });
   }
   createDraft(recordId: string): Promise<{ exerciseVersionId: string }> {
     return this.json(`/exercise-import/records/${recordId}/create-draft`, {});

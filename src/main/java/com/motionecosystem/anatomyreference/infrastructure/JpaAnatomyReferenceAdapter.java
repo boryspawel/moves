@@ -46,6 +46,21 @@ public class JpaAnatomyReferenceAdapter implements AnatomyReferencePersistence {
     }
 
     @Override
+    public List<AnatomicalStructure> findPublished(String query, int limit) {
+        return entityManager.createQuery("""
+                SELECT structure FROM AnatomicalStructureJpaEntity structure
+                WHERE structure.status = com.motionecosystem.anatomyreference.domain.PublicationStatus.PUBLISHED
+                  AND (:query IS NULL OR lower(structure.code) LIKE :pattern
+                       OR lower(structure.displayName) LIKE :pattern)
+                ORDER BY structure.displayName, structure.code
+                """, AnatomicalStructureJpaEntity.class)
+                .setParameter("query", query)
+                .setParameter("pattern", query == null ? "" : "%" + query + "%")
+                .setMaxResults(limit)
+                .getResultList().stream().map(AnatomicalStructureJpaEntity::domain).toList();
+    }
+
+    @Override
     public Map<UUID, AnatomicalStructure> findAll(Collection<UUID> structureIds) {
         if (structureIds.isEmpty()) {
             return Map.of();

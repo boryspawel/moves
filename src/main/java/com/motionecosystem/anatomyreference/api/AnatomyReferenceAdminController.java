@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -78,6 +79,14 @@ class AnatomyReferenceAdminController {
         return queries.findStructure(structureId)
                 .orElseThrow(() -> new ResponseStatusException(
                         org.springframework.http.HttpStatus.NOT_FOUND, "anatomical structure not found"));
+    }
+
+    @GetMapping
+    @Operation(operationId = "listPublishedAnatomicalStructures")
+    List<AnatomyReferenceQueryPort.AnatomicalStructureSnapshot> listPublished(
+            @RequestParam(required = false) String query,
+            @RequestParam(defaultValue = "50") int limit) {
+        return anatomy.findPublished(query, limit);
     }
 
     @GetMapping("/{structureId}/ancestors")

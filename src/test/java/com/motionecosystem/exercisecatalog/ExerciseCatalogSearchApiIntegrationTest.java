@@ -67,6 +67,7 @@ class ExerciseCatalogSearchApiIntegrationTest {
                 .andExpect(jsonPath("$.hasMore").value(true))
                 .andExpect(jsonPath("$.facets[0].group").value("movementPatterns"))
                 .andExpect(jsonPath("$.facets[0].value").value("SQUAT"))
+                .andExpect(jsonPath("$.facets[0].displayLabel").value("Przysiad"))
                 .andExpect(jsonPath("$.facets[0].count").value(2))
                 .andExpect(jsonPath("$.facets[0].active").value(true))
                 .andReturn();
@@ -86,6 +87,7 @@ class ExerciseCatalogSearchApiIntegrationTest {
         UUID secondVersion = UUID.fromString(json.readTree(secondPage.getResponse().getContentAsString())
                 .path("results").get(0).path("exerciseVersionId").asText());
         assertThat(secondVersion).isNotEqualTo(firstVersion);
+        assertThat(firstPage.getResponse().getContentAsString()).contains("\"displayLabel\":\"Search structure\"");
 
         mvc.perform(get("/api/v2/exercises/versions/{versionId}/preview", firstVersion).with(participant()))
                 .andExpect(status().isOk())
@@ -94,13 +96,48 @@ class ExerciseCatalogSearchApiIntegrationTest {
                 .andExpect(jsonPath("$.requiredEquipment[0]").value("BAND"));
     }
 
+    @Test
+    void exposesDictionaryLabelsAndCountsOneVersionWhenLegacyAndImportedEquipmentOverlap() throws Exception {
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        PublishedExercise exercise = createPublishedExercise("Equipment overlap " + suffix, true);
+
+        MvcResult result = mvc.perform(post("/api/v2/exercises/search").with(participant())
+                        .contentType("application/json")
+                        .content("{\"query\":\"equipment overlap %s\",\"equipment\":[\"BAND\"]}".formatted(suffix)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.results.length()").value(1))
+                .andReturn();
+
+        JsonNode facets = json.readTree(result.getResponse().getContentAsString()).path("facets");
+        JsonNode equipment = null;
+        for (JsonNode facet : facets) {
+            if ("equipment".equals(facet.path("group").asText()) && "BAND".equals(facet.path("value").asText())) {
+                equipment = facet;
+                break;
+            }
+        }
+        assertThat(equipment).isNotNull();
+        assertThat(equipment.path("displayLabel").asText()).isEqualTo("Guma oporowa");
+        assertThat(equipment.path("count").asLong()).isEqualTo(1L);
+    }
+
     private PublishedExercise createPublishedExercise(String canonicalName) throws Exception {
+        return createPublishedExercise(canonicalName, false);
+    }
+
+    private PublishedExercise createPublishedExercise(String canonicalName, boolean duplicateImportedEquipment) throws Exception {
         MvcResult created = mvc.perform(post("/api/v1/admin/exercises").with(contentAdmin())
                         .contentType("application/json").content(createRequest(canonicalName)))
                 .andExpect(status().isOk()).andReturn();
         JsonNode createdBody = json.readTree(created.getResponse().getContentAsString());
         UUID exerciseId = UUID.fromString(createdBody.path("exerciseId").asText());
         UUID versionId = UUID.fromString(createdBody.path("versionId").asText());
+        if (duplicateImportedEquipment) {
+            transactions.executeWithoutResult(status -> entityManager.createNativeQuery("""
+                    INSERT INTO exercise_catalog.exercise_equipment (exercise_version_id, equipment_code, required)
+                    VALUES (:versionId, 'BAND', true)
+                    """).setParameter("versionId", versionId).executeUpdate());
+        }
 
         MvcResult structure = mvc.perform(post("/api/v1/admin/anatomical-structures").with(contentAdmin())
                         .contentType("application/json").content("""
@@ -112,12 +149,14 @@ class ExerciseCatalogSearchApiIntegrationTest {
         mvc.perform(post("/api/v1/admin/anatomical-structures/{id}/publish", structureId).with(contentAdmin()))
                 .andExpect(status().isOk());
         mvc.perform(put("/api/v1/admin/exercises/versions/{id}/load-characteristics", versionId).with(contentAdmin())
+                        .param("expectedVersion", Long.toString(editorialExpectedVersion(versionId)))
                         .contentType("application/json").content("""
                                 [{"movementPlane":"SAGITTAL","contractionType":"MIXED",
                                   "rangeOfMotion":"FULL","characteristicType":"DYNAMIC"}]
                                 """))
                 .andExpect(status().isOk());
         MvcResult evidence = mvc.perform(post("/api/v1/admin/exercises/versions/{id}/evidence", versionId).with(contentAdmin())
+                        .param("expectedVersion", Long.toString(editorialExpectedVersion(versionId)))
                         .contentType("application/json").content("""
                                 {"citation":"Search evidence","sourceUri":"https://example.test/search",
                                  "evidenceGrade":"EDITORIAL_REVIEW"}
@@ -125,6 +164,7 @@ class ExerciseCatalogSearchApiIntegrationTest {
                 .andExpect(status().isOk()).andReturn();
         UUID evidenceId = UUID.fromString(json.readTree(evidence.getResponse().getContentAsString()).path("id").asText());
         mvc.perform(post("/api/v1/admin/exercises/versions/{id}/contributions", versionId).with(contentAdmin())
+                        .param("expectedVersion", Long.toString(editorialExpectedVersion(versionId)))
                         .contentType("application/json").content("""
                                 {"anatomicalStructureId":"%s","role":"PRIMARY","loadChannel":"DYN_EXU",
                                  "contributionBand":"HIGH","coefficientLow":0.2,"coefficientHigh":0.7,
@@ -133,13 +173,8 @@ class ExerciseCatalogSearchApiIntegrationTest {
                                  "sideRule":"AS_PRESCRIBED","evidenceSourceIds":["%s"]}
                                 """.formatted(structureId, evidenceId)))
                 .andExpect(status().isOk());
-        mvc.perform(post("/api/v1/admin/exercises/versions/{id}/submit-review", versionId).with(contentAdmin()))
-                .andExpect(status().isOk());
-        MvcResult approved = mvc.perform(post("/api/v1/admin/exercises/versions/{id}/approve", versionId).with(contentAdmin()))
-                .andExpect(status().isOk()).andReturn();
-        long expectedVersion = json.readTree(approved.getResponse().getContentAsString()).path("version").asLong();
         mvc.perform(post("/api/v1/admin/exercises/versions/{id}/publish", versionId).with(contentAdmin())
-                        .contentType("application/json").content("{\"expectedVersion\":%d}".formatted(expectedVersion)))
+                        .contentType("application/json").content("{\"expectedVersion\":%d}".formatted(editorialExpectedVersion(versionId))))
                 .andExpect(status().isOk());
         return new PublishedExercise(exerciseId, versionId);
     }
@@ -160,6 +195,13 @@ class ExerciseCatalogSearchApiIntegrationTest {
                  "stimulusType":"STRENGTH","fatigueProfile":"MODERATE","technicalLevel":"FOUNDATIONAL",
                  "environment":"ANY","requiredEquipment":["band"]}}
                 """.formatted(name);
+    }
+
+    private long editorialExpectedVersion(UUID versionId) throws Exception {
+        MvcResult result = mvc.perform(get("/api/v1/admin/exercises/versions/{id}/capabilities", versionId)
+                        .with(contentAdmin()))
+                .andExpect(status().isOk()).andReturn();
+        return json.readTree(result.getResponse().getContentAsString()).path("expectedVersion").asLong();
     }
 
     private static JwtRequestPostProcessor participant() {

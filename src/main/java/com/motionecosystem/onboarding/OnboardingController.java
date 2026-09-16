@@ -68,7 +68,7 @@ class OnboardingController {
                 .map(item -> new RecurringAvailabilityService.Slot(
                         item.dayOfWeek(), item.startTime(), item.endTime(), item.timeZone()))
                 .toList();
-        return onboarding.replaceAvailability(jwt.getSubject(), slots);
+        return onboarding.replaceAvailability(jwt.getSubject(), slots, request.slotDurationMinutes());
     }
 
     record ProfileTypeRequest(ProfileType profileType) {
@@ -84,7 +84,7 @@ class OnboardingController {
             @Schema(description = "Specialist IANA time zone. Required for new clients; legacy requests are persisted as UTC.", requiredMode = Schema.RequiredMode.REQUIRED, example = "Europe/Warsaw") String timeZoneId) {
     }
 
-    record AvailabilityRequest(List<SlotRequest> slots) {
+    record AvailabilityRequest(List<SlotRequest> slots, Integer slotDurationMinutes) {
     }
 
     record SlotRequest(DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime, String timeZone) {

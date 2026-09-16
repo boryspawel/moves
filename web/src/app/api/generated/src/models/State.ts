@@ -63,6 +63,12 @@ export interface State {
   profileType?: StateProfileTypeEnum;
   /**
    *
+   * @type {number}
+   * @memberof State
+   */
+  slotDurationMinutes?: number;
+  /**
+   *
    * @type {StateStageEnum}
    * @memberof State
    */
@@ -129,6 +135,8 @@ export function StateFromJSONTyped(json: any, ignoreDiscriminator: boolean): Sta
     missingSteps: json['missingSteps'] == null ? undefined : json['missingSteps'],
     profile: json['profile'] == null ? undefined : ProfileSummaryFromJSON(json['profile']),
     profileType: json['profileType'] == null ? undefined : json['profileType'],
+    slotDurationMinutes:
+      json['slotDurationMinutes'] == null ? undefined : json['slotDurationMinutes'],
     stage: json['stage'] == null ? undefined : json['stage'],
   };
 }
@@ -154,6 +162,7 @@ export function StateToJSONTyped(value?: State | null, ignoreDiscriminator: bool
     missingSteps: value['missingSteps'],
     profile: ProfileSummaryToJSON(value['profile']),
     profileType: value['profileType'],
+    slotDurationMinutes: value['slotDurationMinutes'],
     stage: value['stage'],
   };
 }

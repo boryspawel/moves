@@ -6,7 +6,18 @@ import { ApiFacade } from '../../core/api.facade';
 import { ExercisePickerComponent } from './exercise-picker.component';
 
 const result = (id: string, title = 'Przysiad') => ({exerciseId: `exercise-${id}`, exerciseVersionId: id, title, summary: 'Krótki opis', exerciseType: 'STRENGTH', technicalLevel: 'FOUNDATIONAL', movementPatterns: ['SQUAT'], equipment: ['bodyweight'], selectable: true});
-const page = (results = [result('v1')], more = false, cursor?: string) => ({results, facets: [{group: 'MOVEMENT_PATTERN', value: 'SQUAT', labelKey: 'SQUAT', count: 1, active: false}], hasMore: more, nextCursor: cursor});
+const anatomyId = '11111111-1111-1111-1111-111111111111';
+const facets = [
+  {group: 'movementPatterns', value: 'SQUAT', displayLabel: 'Przysiad', count: 1, active: false},
+  {group: 'equipment', value: 'BAND', displayLabel: 'Guma oporowa', count: 1, active: false},
+  {group: 'technicalLevels', value: 'FOUNDATIONAL', displayLabel: 'Podstawowy', count: 1, active: false},
+  {group: 'positionCodes', value: 'STANDING', displayLabel: 'Stanie', count: 1, active: false},
+  {group: 'unilateral', value: 'true', displayLabel: 'Jednostronne', count: 1, active: false},
+  {group: 'anatomyStructureIds', value: anatomyId, displayLabel: 'Mięsień pośladkowy', count: 1, active: false},
+  {group: 'anatomyStructureTypes', value: 'MUSCLE', displayLabel: 'Mięsień', count: 1, active: false},
+  {group: 'purposes', value: 'TRAINING', displayLabel: 'Trening', count: 1, active: false}
+];
+const page = (results = [result('v1')], more = false, cursor?: string) => ({results, facets, hasMore: more, nextCursor: cursor});
 
 describe('ExercisePickerComponent', () => {
   afterEach(() => vi.useRealTimers());
@@ -24,15 +35,30 @@ describe('ExercisePickerComponent', () => {
 
   it('czyści frazę i wszystkie filtry', async () => {
     const {fixture} = await setup(); const component = fixture.componentInstance;
-    component.query.setValue('przysiad', {emitEvent: false}); component.toggleFacet({group:'MOVEMENT_PATTERN', value:'SQUAT'}); await Promise.resolve(); component.reset(); await Promise.resolve();
+    component.query.setValue('przysiad', {emitEvent: false}); component.toggleFacet(facets[0]); await Promise.resolve(); component.reset(); await Promise.resolve();
     expect(component.query.value).toBe(''); expect(component.activeFilterCount()).toBe(0);
   });
 
-  it('wysyła wybrany filtr i pokazuje facetę', async () => {
+  it('wysyła każdy filtr pod rzeczywistą nazwą kontraktu i pokazuje etykiety API', async () => {
     const {fixture, search} = await setup(); const component = fixture.componentInstance;
-    component.toggleFacet({group:'MOVEMENT_PATTERN', value:'SQUAT'}); await Promise.resolve();
-    expect(search).toHaveBeenLastCalledWith({searchRequest: expect.objectContaining({movementPatterns:['SQUAT']})});
+    const expected = [
+      ['movementPatterns', ['SQUAT']], ['equipment', ['BAND']], ['technicalLevels', ['FOUNDATIONAL']], ['positionCodes', ['STANDING']],
+      ['unilateral', true], ['anatomyStructureIds', [anatomyId]], ['anatomyStructureTypes', ['MUSCLE']], ['purposes', ['TRAINING']]
+    ];
+    for (const [field, value] of expected) {
+      component.reset(); component.toggleFacet(facets.find(facet => facet.group === field)!); await Promise.resolve();
+      expect(search).toHaveBeenLastCalledWith({searchRequest: expect.objectContaining({[field]: value})});
+    }
     expect(fixture.nativeElement.textContent).toContain('Wzorzec ruchu');
+    expect(fixture.nativeElement.textContent).toContain('Guma oporowa');
+  });
+
+  it('zachowuje licznik aktywnych filtrów zaawansowanych gdy odpowiedź nie zwraca facet', async () => {
+    const search = vi.fn().mockResolvedValueOnce(page()).mockResolvedValueOnce({results: [], facets: [], hasMore: false});
+    const {fixture} = await setup(search); const component = fixture.componentInstance;
+    component.toggleFacet(facets[5]); await Promise.resolve(); await Promise.resolve(); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Zaawansowane filtry (1)');
+    expect(fixture.nativeElement.textContent).not.toContain(anatomyId);
   });
 
   it('doładowuje kolejną stronę bez duplikatu wersji', async () => {

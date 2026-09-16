@@ -10,11 +10,52 @@ import { ResponseError } from '../api/generated/src/runtime';
 import {
   PatientTimelineEventPanelComponent,
   ParticipantGoalsComponent,
+  ScheduleAppointmentDialogComponent,
   SpecialistParticipantWorkspacePage,
   TimelineEventComponent,
 } from './specialist-participant-workspace.page';
 
 registerLocaleData(localePl);
+
+describe('SpecialistParticipantWorkspacePage scheduling', () => {
+  it('opens the client quick-action dialog without an end picker and submits an elapsed cross-date end instant', async () => {
+    const { fixture, api } = await pageFixture([], [], appointmentApi(), {
+      workspace: vi.fn().mockResolvedValue({ quickActions: ['SCHEDULE_APPOINTMENT'] }),
+    });
+    (fixture.componentInstance as any).state.set('loaded');
+    (fixture.componentInstance as any).workspace.set({ quickActions: ['SCHEDULE_APPOINTMENT'] });
+    fixture.detectChanges();
+    const action = [...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('button')].find(button => button.textContent?.includes('Zaplanuj spotkanie'));
+    expect(action).toBeTruthy();
+    action!.click(); fixture.detectChanges();
+    const dialog = (fixture.nativeElement as HTMLElement).querySelector('app-schedule-appointment-dialog')!;
+    expect(dialog.querySelector('input[formcontrolname="endsAt"]')).toBeNull();
+    const start = dialog.querySelector<HTMLInputElement>('input[formcontrolname="startsAt"]')!;
+    const duration = dialog.querySelector<HTMLInputElement>('input[formcontrolname="durationMinutes"]')!;
+    start.value = '2026-07-24T23:30'; start.dispatchEvent(new Event('input'));
+    duration.value = '50'; duration.dispatchEvent(new Event('input'));
+    dialog.querySelector('form')!.dispatchEvent(new Event('submit'));
+    await fixture.whenStable();
+    const command = api.appointments.create2.mock.calls[0][0].createCommand;
+    expect(command.startsAt.getTime()).toBe(new Date('2026-07-24T23:30').getTime());
+    expect(command.endsAt.getTime()).toBe(new Date('2026-07-24T23:30').getTime() + 50 * 60_000);
+  });
+
+  it('rejects zero and fractional duration in the client dialog', async () => {
+    await TestBed.configureTestingModule({ imports: [ScheduleAppointmentDialogComponent] }).compileComponents();
+    const fixture = TestBed.createComponent(ScheduleAppointmentDialogComponent); const submitted = vi.fn();
+    fixture.componentInstance.submitted.subscribe(submitted); fixture.detectChanges();
+    const start = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>('input[formcontrolname="startsAt"]')!;
+    start.value = '2026-07-24T09:00'; start.dispatchEvent(new Event('input'));
+    for (const value of ['0', '45.5']) {
+      const duration = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>('input[formcontrolname="durationMinutes"]')!;
+      duration.value = value; duration.dispatchEvent(new Event('input'));
+      (fixture.nativeElement as HTMLElement).querySelector('form')!.dispatchEvent(new Event('submit')); fixture.detectChanges();
+      expect(submitted).not.toHaveBeenCalled();
+      expect((fixture.nativeElement as HTMLElement).textContent).toContain('Podaj dodatnią liczbę całkowitą minut.');
+    }
+  });
+});
 
 describe('ParticipantGoalsComponent', () => {
   it('creates a catalog preset with a derived title and no technical metadata fields', async () => {

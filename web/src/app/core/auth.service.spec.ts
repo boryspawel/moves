@@ -37,6 +37,14 @@ describe('AuthService', () => {
     expect(auth.hasRole('SPECIALIST')).toBe(true);
   });
 
+  it('recognizes a role assigned in the realm claim', () => {
+    keycloakClient.tokenParsed = { realm_access: { roles: ['SPECIALIST'] } };
+
+    const auth = TestBed.inject(AuthService);
+
+    expect(auth.hasRole('SPECIALIST')).toBe(true);
+  });
+
   it('does not recognize roles when the token has no role claims', () => {
     keycloakClient.tokenParsed = {};
 
@@ -51,6 +59,22 @@ describe('AuthService', () => {
         [environment.keycloak.clientId]: { roles: ['SPECIALIST'] }
       }
     };
+    keycloakClient.init.mockResolvedValue(true);
+    await TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: OnboardingStateService, useValue: { get: vi.fn().mockResolvedValue({ stage: 'READY' }) } }
+      ]
+    }).compileComponents();
+
+    await TestBed.inject(AuthService).initialize();
+    const result = await TestBed.runInInjectionContext(() => rootLandingGuard({} as never, {} as never));
+
+    expect(TestBed.inject(Router).serializeUrl(result as ReturnType<Router['createUrlTree']>)).toBe('/specialist/today');
+  });
+
+  it('sends a ready specialist with only a realm role to today', async () => {
+    keycloakClient.tokenParsed = { realm_access: { roles: ['SPECIALIST'] } };
     keycloakClient.init.mockResolvedValue(true);
     await TestBed.configureTestingModule({
       providers: [

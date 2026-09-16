@@ -14,15 +14,28 @@ class ImportCatalogReadRepository {
     private final EntityManager entityManager;
 
     boolean activeDictionaryContains(String type, String code) {
-        String entity = switch (type) {
+        String entity = dictionaryEntity(type);
+        return !entityManager.createQuery("select item.code from " + entity + " item where item.code = :code and item.active = true", String.class)
+                .setParameter("code", code).setMaxResults(1).getResultList().isEmpty();
+    }
+
+    List<DictionaryOption> activeDictionaryOptions(String type) {
+        return entityManager.createQuery("select item.code, item.displayName from " + dictionaryEntity(type)
+                        + " item where item.active = true order by item.code", Object[].class)
+                .setMaxResults(100).getResultList().stream()
+                .map(row -> new DictionaryOption((String) row[0], (String) row[1])).toList();
+    }
+
+    private static String dictionaryEntity(String type) {
+        return switch (type) {
             case "EQUIPMENT" -> "ExerciseImportEquipmentDictionaryJpaEntity";
             case "POSITION" -> "ExerciseImportPositionDictionaryJpaEntity";
             case "DOSE_UNIT" -> "ExerciseImportDoseUnitDictionaryJpaEntity";
             default -> throw new IllegalArgumentException("unsupported dictionary");
         };
-        return !entityManager.createQuery("select item.code from " + entity + " item where item.code = :code and item.active = true", String.class)
-                .setParameter("code", code).setMaxResults(1).getResultList().isEmpty();
     }
+
+    record DictionaryOption(String value, String displayName) {}
 
     UUID publishedAnatomyId(String code) {
         List<UUID> anatomyIds = entityManager.createQuery("select item.id from AnatomicalStructureJpaEntity item where item.code = :code and item.status = com.motionecosystem.anatomyreference.domain.PublicationStatus.PUBLISHED", UUID.class)

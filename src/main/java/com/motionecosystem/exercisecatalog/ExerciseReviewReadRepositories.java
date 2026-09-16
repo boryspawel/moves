@@ -18,6 +18,7 @@ interface ImportIssueReviewRepository extends JpaRepository<ImportIssue, UUID> {
 }
 
 interface ExerciseReviewReadRepository extends JpaRepository<ExerciseReview, UUID> {
+    boolean existsByExerciseVersionId(UUID exerciseVersionId);
     List<ExerciseReview> findByExerciseVersionIdInAndInvalidatedAtIsNull(Collection<UUID> exerciseVersionIds);
     List<ExerciseReview> findByExerciseVersionIdOrderByReviewedAtAscIdAsc(UUID exerciseVersionId);
     List<ExerciseReview> findByExerciseVersionIdAndInvalidatedAtIsNull(UUID exerciseVersionId);

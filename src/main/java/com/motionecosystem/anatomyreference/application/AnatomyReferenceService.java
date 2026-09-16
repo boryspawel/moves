@@ -134,6 +134,13 @@ public class AnatomyReferenceService implements AnatomyReferenceQueryPort {
         return persistence.findPublishedByCode(code).map(AnatomyReferenceService::snapshot);
     }
 
+    @Transactional(readOnly = true)
+    public List<AnatomicalStructureSnapshot> findPublished(String query, int limit) {
+        String text = query == null || query.isBlank() ? null : query.trim().toLowerCase(Locale.ROOT);
+        int capped = Math.min(Math.max(limit, 1), 100);
+        return persistence.findPublished(text, capped).stream().map(AnatomyReferenceService::snapshot).toList();
+    }
+
     @Override
     @Transactional(readOnly = true)
     public Map<UUID, AnatomicalStructureSnapshot> findStructures(Collection<UUID> structureIds) {

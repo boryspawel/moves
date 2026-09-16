@@ -1,10 +1,10 @@
 .body-map { min-width:0; }
-.warning { border-left:4px solid #8a6200; padding-left:.75rem; }
+.body-map .warning { border-left:4px solid var(--app-warning); padding-left:.75rem; }
 .map-controls { display:flex; margin:.5rem 0; }
 .view-switch { display:inline-flex; gap:.125rem; padding:.1875rem; border:1px solid var(--app-border); border-radius:.5rem; background:var(--surface-secondary); }
 .view-switch button { min-height:2rem; padding:.25rem .65rem; border:0; border-radius:.3125rem; background:transparent; font:inherit; }
 .view-switch button[aria-pressed="true"] { background:var(--surface); box-shadow:0 1px 2px rgb(0 0 0 / .12); font-weight:700; }
-.view-switch button:focus-visible,.active-regions button:focus-visible { outline:3px solid #1261a0; outline-offset:2px; }
+.view-switch button:focus-visible,.active-regions button:focus-visible { outline:3px solid var(--app-focus); outline-offset:2px; }
 .svg-host { width:100%; height:clamp(17.5rem,22vw,20rem); display:grid; place-items:center; overflow:hidden; }
 .svg-host svg { display:block; width:100%; height:100%; max-width:100%; max-height:100%; }
 .svg-host [data-layer="base-silhouette"] { pointer-events:none; }

@@ -36,6 +36,12 @@ export interface Facet {
    * @type {string}
    * @memberof Facet
    */
+  displayLabel?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Facet
+   */
   group?: string;
   /**
    *
@@ -69,6 +75,7 @@ export function FacetFromJSONTyped(json: any, ignoreDiscriminator: boolean): Fac
   return {
     active: json['active'] == null ? undefined : json['active'],
     count: json['count'] == null ? undefined : json['count'],
+    displayLabel: json['displayLabel'] == null ? undefined : json['displayLabel'],
     group: json['group'] == null ? undefined : json['group'],
     labelKey: json['labelKey'] == null ? undefined : json['labelKey'],
     value: json['value'] == null ? undefined : json['value'],
@@ -87,6 +94,7 @@ export function FacetToJSONTyped(value?: Facet | null, ignoreDiscriminator: bool
   return {
     active: value['active'],
     count: value['count'],
+    displayLabel: value['displayLabel'],
     group: value['group'],
     labelKey: value['labelKey'],
     value: value['value'],

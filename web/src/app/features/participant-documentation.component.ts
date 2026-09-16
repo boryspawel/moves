@@ -24,6 +24,7 @@ const SECTION_ORDER = ['Cel wizyty', 'Zdrowie i bezpieczeństwo', 'Ból i urazy'
   imports: [MatButtonModule, MatDatepickerModule, MatFormFieldModule, MatInputModule, MatNativeDateModule, MatRadioModule, MatSelectModule, ReactiveFormsModule],
   providers: [{ provide: MAT_DATE_LOCALE, useValue: 'pl-PL' }],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: './participant-documentation.component.scss',
   styles: [`.interview-actions{position:sticky;bottom:0;padding:.75rem 0;display:flex;gap:.5rem;flex-wrap:wrap;background:var(--mat-sys-surface,white);z-index:1}.section-tabs{display:grid;gap:.5rem;margin:0 0 1rem}.section-tabs button{text-align:left;border-left:3px solid var(--app-border,#ddd)}.section-tabs button.active{border-color:var(--app-primary,#6750a4);font-weight:700}.interview-question{display:block;margin:1rem 0}.interview-question mat-form-field{width:100%}.field-error{color:var(--mat-sys-error,#b3261e);margin:-.5rem 0 .5rem}.section-content{max-width:48rem}.record-panel-body{padding-bottom:4.5rem}.new-note-form{display:grid;gap:1.125rem;max-width:48rem;margin-top:1.5rem}.new-note-form mat-form-field{width:100%}.new-note-form textarea{min-height:10rem;resize:vertical}.new-note-actions{display:flex;flex-wrap:wrap;gap:.5rem;padding-top:1rem;border-top:1px solid var(--app-border,#ddd)}`],
   template: `<section class="records-workspace" aria-labelledby="records-title">
     <div class="records-heading"><div><h2 id="records-title">Wywiad i notatki</h2><p>Dokumentacja klienta</p></div></div>

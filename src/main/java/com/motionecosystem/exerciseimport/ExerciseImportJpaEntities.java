@@ -157,6 +157,7 @@ class ExerciseImportMatchCandidateEntity {
 @Table(name = "exercise_equipment_dictionary", schema = "exercise_catalog")
 class ExerciseImportEquipmentDictionaryEntity {
     @Id String code;
+    @Column(name = "display_name", nullable = false) String displayName;
     @Column(nullable = false) boolean active;
 }
 
@@ -164,6 +165,7 @@ class ExerciseImportEquipmentDictionaryEntity {
 @Table(name = "exercise_position_dictionary", schema = "exercise_catalog")
 class ExerciseImportPositionDictionaryEntity {
     @Id String code;
+    @Column(name = "display_name", nullable = false) String displayName;
     @Column(nullable = false) boolean active;
 }
 
@@ -171,6 +173,7 @@ class ExerciseImportPositionDictionaryEntity {
 @Table(name = "dose_unit_dictionary", schema = "exercise_catalog")
 class ExerciseImportDoseUnitDictionaryEntity {
     @Id String code;
+    @Column(name = "display_name", nullable = false) String displayName;
     @Column(nullable = false) boolean active;
 }
 

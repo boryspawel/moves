@@ -1,1 +1,67 @@
-/* Shell styling is provided by the global design system. */
+:host {
+  display: block;
+}
+.app-toolbar {
+  position: sticky;
+  z-index: 10;
+  top: 0;
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-text);
+}
+.onboarding-toolbar {
+  position: relative;
+  padding-inline: max(var(--space-4), calc((100% - 1040px) / 2));
+}
+.brand {
+  color: var(--app-text);
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  text-decoration: none;
+}
+.app-primary-nav {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.15rem;
+  overflow-x: auto;
+  scrollbar-gutter: stable;
+}
+.app-primary-nav a {
+  flex: 0 0 auto;
+}
+.spacer {
+  flex: 1;
+}
+.user-name {
+  margin-right: var(--space-2);
+  color: var(--app-text-secondary);
+  font-size: 0.9rem;
+}
+.app-nav-active {
+  background: var(--app-primary-subtle);
+}
+footer {
+  padding: var(--space-5);
+  border-top: 1px solid var(--app-border);
+  color: var(--app-text-secondary);
+  text-align: center;
+}
+@media (max-width: 1024px) {
+  .app-toolbar {
+    height: auto;
+    flex-wrap: wrap;
+    padding-block: 0.55rem;
+  }
+  .app-primary-nav {
+    order: 3;
+    width: 100%;
+  }
+}
+@media (max-width: 600px) {
+  .user-name {
+    display: none;
+  }
+}

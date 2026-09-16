@@ -36,3 +36,10 @@ response before calling any authorization result green.
 
 No other concrete blocking debt is recorded here. The required manual browser/accessibility/auth review
 remains outstanding. Existing budget warnings are data signals, not a UI defect without manual review.
+
+## Katalog ćwiczeń i import
+
+- **Tworzenie i edycja:** jako `CONTENT_ADMIN` utwórz ręczny szkic, wypełnij dane podstawowe, media, load, dowód i anatomię. Edge: 409 odświeża dane i nie nadpisuje zmian.
+- **Publikacja i wersje:** spróbuj publikacji z brakami, następnie uzupełnij je i opublikuj. Edge: nie ma ręcznych przycisków review; published jest readonly, kolejna wersja i wycofanie pozostają dostępne wyłącznie według możliwości backendu.
+- **Bezpieczne usuwanie:** sprawdź szkic kwalifikujący się i niekwalifikujący się do usunięcia. Edge: UI pokazuje wyłącznie akcję zwróconą przez backend, pyta o potwierdzenie, a blokada ma czytelną przyczynę.
+- **Import:** upload poprawnego JSONL prowadzi do szkicu/katalogu. Zatwierdź mapowanie przez wartość dostarczoną przez serwer i sprawdź automatyczne przygotowanie szkicu; dla licencji utwórz zastępcze źródło z potwierdzonymi danymi i wczytaj artefakt ponownie. Edge: błąd tworzenia szkicu pozostaje widoczny jako retry, a rekord po `DRAFTED` znika z uwagi.

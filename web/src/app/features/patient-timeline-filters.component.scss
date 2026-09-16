@@ -1,0 +1,68 @@
+.timeline-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  margin: var(--space-3) 0;
+}
+
+.timeline-controls button {
+  min-height: var(--app-control-min-height);
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-card);
+  background: transparent;
+  color: inherit;
+  padding: var(--space-2);
+  cursor: pointer;
+}
+
+.ranges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+}
+
+.ranges button {
+  border-radius: 0;
+}
+
+.ranges button:first-child {
+  border-radius: var(--radius-card) 0 0 var(--radius-card);
+}
+
+.ranges button:last-child {
+  border-radius: 0 var(--radius-card) var(--radius-card) 0;
+}
+
+.active {
+  background: var(--app-primary-subtle);
+  border-color: var(--app-primary);
+}
+
+.filter-chips {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+@media (max-width: 600px) {
+  .timeline-controls {
+    align-items: stretch;
+  }
+
+  .filter-toggle {
+    flex: 1;
+  }
+}
+
+@media (max-width: 320px) {
+  .ranges {
+    width: 100%;
+  }
+
+  .ranges button {
+    flex: 1;
+    padding: var(--space-1);
+  }
+}

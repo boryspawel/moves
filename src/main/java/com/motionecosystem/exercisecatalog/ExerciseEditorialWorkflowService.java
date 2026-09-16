@@ -26,12 +26,7 @@ public class ExerciseEditorialWorkflowService implements ReviewExerciseVersion, 
     private static final Set<String> DECISIONS = Set.of("APPROVED", "CHANGES_REQUESTED");
     private final ExerciseVersionRepository versions;
     private final ExerciseReviewReadRepository reviews;
-    private final ExerciseMediaReviewRepository media;
-    private final ExerciseLoadCharacteristicRepository characteristics;
-    private final ExerciseContributionRepository contributions;
-    private final EvidenceSourceRepository evidence;
-    private final ImportRecordReviewRepository records;
-    private final ImportIssueReviewRepository issues;
+    private final ExercisePublicationReadinessService readiness;
     private final TransactionalOutbox outbox;
     private final AuditRecorder audit;
     private final Clock clock;
@@ -54,8 +49,6 @@ public class ExerciseEditorialWorkflowService implements ReviewExerciseVersion, 
                 version.contentRevision));
         if ("CHANGES_REQUESTED".equals(decision)) {
             version.requestChanges();
-        } else if (unmet(version).isEmpty()) {
-            version.approve(actor, now);
         }
         versions.flush();
         audit.record(actor, "EXERCISE_VERSION_REVIEW_RECORDED", "ExerciseVersion", versionId);
@@ -69,7 +62,9 @@ public class ExerciseEditorialWorkflowService implements ReviewExerciseVersion, 
         ExerciseVersion version = locked(versionId);
         requireExpected(expectedVersion, version.version);
         List<String> unmet = unmet(version);
-        if (version.status != ExerciseVersionStatus.APPROVED) unmet = append(unmet, "STATUS_APPROVED_REQUIRED");
+        if (version.status == ExerciseVersionStatus.PUBLISHED || version.status == ExerciseVersionStatus.WITHDRAWN) {
+            unmet = append(unmet, "UNPUBLISHED_VERSION_REQUIRED");
+        }
         if (!unmet.isEmpty()) throw conflict("publication requirements not met: " + String.join(",", unmet));
         Instant now = clock.instant();
         try {
@@ -91,7 +86,8 @@ public class ExerciseEditorialWorkflowService implements ReviewExerciseVersion, 
     @Transactional(readOnly = true)
     public boolean readyToPublish(UUID versionId) {
         ExerciseVersion version = version(versionId);
-        return version.status == ExerciseVersionStatus.APPROVED && unmet(version).isEmpty();
+        return version.status != ExerciseVersionStatus.PUBLISHED && version.status != ExerciseVersionStatus.WITHDRAWN
+                && unmet(version).isEmpty();
     }
 
     @Transactional(readOnly = true)
@@ -103,30 +99,11 @@ public class ExerciseEditorialWorkflowService implements ReviewExerciseVersion, 
     }
 
     private List<String> unmet(ExerciseVersion version) {
-        List<String> result = new ArrayList<>();
-        for (String area : List.of("CONTENT", "TECHNIQUE", "ANATOMY_EXPOSURE", "LICENSE")) {
-            if (!latestApproved(version, area)) result.add("REVIEW_" + area + "_REQUIRED");
-        }
-        if (hasMedia(version.id) && !latestApproved(version, "MEDIA")) result.add("REVIEW_MEDIA_REQUIRED");
-        if (!characteristics.existsByExerciseVersionId(version.id)) result.add("LOAD_CHARACTERISTIC_REQUIRED");
-        if (!contributions.existsByExerciseVersionId(version.id)) result.add("ANATOMY_EXPOSURE_REQUIRED");
-        if (!evidence.existsByExerciseVersionId(version.id)) result.add("EVIDENCE_REQUIRED");
-        records.findByDraftVersionId(version.id).ifPresent(record -> {
-            if (issues.countByRecordIdAndResolvedAtIsNullAndSeverityIn(record.id, List.of("ERROR", "BLOCKER")) > 0) {
-                result.add("UNRESOLVED_IMPORT_ISSUES");
-            }
-        });
-        return List.copyOf(result);
+        return readiness.unmet(version);
     }
 
     private ReviewResult reviewResult(ExerciseVersion version) {
-        return new ReviewResult(version.id, version.status.name(), version.version, reviews(version.id), unmet(version), requiredAreas(version.id));
-    }
-
-    private List<String> requiredAreas(UUID versionId) {
-        List<String> result = new ArrayList<>(List.of("CONTENT", "TECHNIQUE", "ANATOMY_EXPOSURE", "LICENSE"));
-        if (hasMedia(versionId)) result.add("MEDIA");
-        return List.copyOf(result);
+        return new ReviewResult(version.id, version.status.name(), version.version, reviews(version.id), unmet(version), List.of());
     }
 
     private boolean latestApproved(ExerciseVersion version, String area) {
@@ -140,7 +117,6 @@ public class ExerciseEditorialWorkflowService implements ReviewExerciseVersion, 
                 .max(Comparator.comparing((ExerciseReview item) -> item.reviewedAt).thenComparing(item -> item.id));
     }
 
-    private boolean hasMedia(UUID versionId) { return !media.findByIdExerciseVersionIdIn(List.of(versionId)).isEmpty(); }
     private List<ReviewItem> reviews(UUID id) { return reviews.findByExerciseVersionIdOrderByReviewedAtAscIdAsc(id).stream()
             .map(item -> new ReviewItem(item.id, item.reviewArea, item.decision, item.comment, item.reviewerSubject,
                     item.reviewedAt, item.version, item.contentRevision, item.invalidatedAt, item.invalidatedBySubject)).toList(); }

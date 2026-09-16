@@ -327,6 +327,7 @@ export class OnboardingBasicProfileComponent {
       <p class="time-zone">Strefa czasowa: {{ timeZone }}</p>
       <form [formGroup]="form" (ngSubmit)="saved.emit()">
         <fieldset class="day-picker"><legend>Dodaj zakres na wybrane dni</legend>@for (day of days; track day.value) { <label><input type="checkbox" [checked]="selectedDays.has(day.value)" (change)="toggleDay(day.value)"> {{ day.label }}</label> }<button mat-stroked-button type="button" (click)="copyToSelectedDays(slots.at(0))" [disabled]="!selectedDays.size">Dodaj zakres</button></fieldset>
+        <label>Domyślna długość terminu (min)<input class="app-native-control" type="number" min="1" max="480" formControlName="slotDurationMinutes" /></label>
         <div formArrayName="slots" class="availability-list">
           @for (slot of slots.controls; track $index; let index = $index) {
             <fieldset [formGroupName]="index">
@@ -415,7 +416,10 @@ export class OnboardingBasicProfileComponent {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OnboardingAvailabilityComponent {
-  @Input({ required: true }) form!: FormGroup<{ slots: FormArray<FormGroup<any>> }>;
+  @Input({ required: true }) form!: FormGroup<{
+    slots: FormArray<FormGroup<any>>;
+    slotDurationMinutes: FormControl<number>;
+  }>;
   @Input() busy = false;
   @Input() showCancel = false;
   @Output() readonly add = new EventEmitter<void>();

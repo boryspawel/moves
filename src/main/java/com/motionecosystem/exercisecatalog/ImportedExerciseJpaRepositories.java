@@ -9,6 +9,7 @@ interface ImportedExerciseVersionTextRepository extends JpaRepository<ImportedEx
 interface ImportedExerciseInstructionStepRepository extends JpaRepository<ImportedExerciseInstructionStep, UUID> {}
 interface ImportedExerciseAliasRepository extends JpaRepository<ImportedExerciseAlias, UUID> {
     boolean existsByExerciseIdAndLocaleAndNormalizedAlias(UUID exerciseId, String locale, String normalizedAlias);
+    boolean existsByExerciseId(UUID exerciseId);
 }
 interface ImportedExerciseMovementCharacteristicRepository extends JpaRepository<ImportedExerciseMovementCharacteristic, UUID> {}
 interface ImportedExerciseEquipmentRepository extends JpaRepository<ImportedExerciseEquipment, ImportedExerciseEquipmentId> {}

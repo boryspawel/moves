@@ -119,7 +119,7 @@ describe('OnboardingPage', () => {
     expect(slot.controls.dayOfWeek.value).toBe('WEDNESDAY');
     expect(slot.controls.startTime.value).toBe('12:00');
     instance.saveAvailability(); await settle(fixture);
-    expect(api.availability).toHaveBeenCalledWith({ availabilityRequest: { slots: [{ dayOfWeek: 'WEDNESDAY', startTime: '12:00', endTime: '14:00', timeZone: 'Europe/Warsaw' }] } });
+    expect(api.availability).toHaveBeenCalledWith({ availabilityRequest: { slotDurationMinutes: 50, slots: [{ dayOfWeek: 'WEDNESDAY', startTime: '12:00', endTime: '14:00', timeZone: 'Europe/Warsaw' }] } });
     expect(navigate).toHaveBeenCalledWith(['/specialist/today'], { queryParams: { date: '2026-08-03' } });
   });
 
@@ -180,7 +180,7 @@ describe('OnboardingPage', () => {
 
     instance.saveAvailability(); await settle(fixture);
 
-    expect(api.availability).toHaveBeenCalledWith({ availabilityRequest: { slots: [
+    expect(api.availability).toHaveBeenCalledWith({ availabilityRequest: { slotDurationMinutes: 50, slots: [
       { dayOfWeek: 'MONDAY', startTime: '09:00', endTime: '11:00', timeZone: expect.any(String) },
       { dayOfWeek: 'MONDAY', startTime: '10:00', endTime: '12:00', timeZone: expect.any(String) },
       { dayOfWeek: 'WEDNESDAY', startTime: '09:00', endTime: '11:00', timeZone: expect.any(String) },

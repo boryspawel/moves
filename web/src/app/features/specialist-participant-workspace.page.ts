@@ -5,7 +5,6 @@ import {
   EventEmitter,
   Input,
   Output,
-  ViewEncapsulation,
   computed,
   inject,
   signal,
@@ -60,6 +59,7 @@ const label = (value: string | undefined, labels: Record<string, string>) =>
   standalone: true,
   imports: [MatButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: './participant-workspace-header.component.scss',
   template: `<header class="workspace-header">
     <div>
       <h1 id="workspace-title">{{ workspace.participant?.displayName || 'Klient' }}</h1>
@@ -113,6 +113,7 @@ export class ParticipantWorkspaceHeaderComponent {
   selector: 'app-participant-summary-strip',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: './participant-summary-strip.component.scss',
   template: `<section class="summary-strip" aria-label="Podsumowanie klienta">
     <div>
       <strong>Aktywny plan</strong
@@ -147,6 +148,7 @@ export class ParticipantSummaryStripComponent {
   selector: 'app-patient-timeline-filters',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: './patient-timeline-filters.component.scss',
   template: `<section class="timeline-controls" aria-label="Filtry osi czasu">
     <div class="ranges" role="group" aria-label="Zakres czasu">
       @for (item of ranges; track item.key) {
@@ -222,6 +224,7 @@ export class PatientTimelineFiltersComponent {
   selector: 'app-timeline-event',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: './timeline-event.component.scss',
   template: `<article class="timeline-event">
     <button type="button" [attr.data-event-id]="event.eventId" (click)="opened.emit(event)">
       <span class="event-category">{{ category(event.category) }}</span>
@@ -254,6 +257,7 @@ export class TimelineEventComponent {
   standalone: true,
   imports: [TimelineEventComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: './timeline-period-group.component.scss',
   template: `<section class="period-group">
     <h3>{{ group.label }}</h3>
     <ol>
@@ -290,6 +294,7 @@ export class PatientTimelineComponent {
   standalone: true,
   imports: [TimelineEventComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: './patient-timeline-list-view.component.scss',
   template: `<section aria-label="Widok listy">
     <ol class="timeline-list">
       @for (event of events; track event.eventId) {
@@ -307,6 +312,7 @@ export class PatientTimelineListViewComponent {
   standalone: true,
   imports: [MatButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: './patient-timeline-event-panel.component.scss',
   template: `<aside
     class="event-panel"
     role="dialog"
@@ -410,13 +416,14 @@ export class PatientTimelineEventPanelComponent {
   standalone: true,
   imports: [ReactiveFormsModule, MatButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: './schedule-appointment-dialog.component.scss',
   template: `<section
     class="appointment-dialog"
     role="dialog"
     aria-modal="true"
     aria-labelledby="appointment-dialog-title"
   >
-    <form [formGroup]="form" (ngSubmit)="submitted.emit(form.getRawValue())">
+    <form [formGroup]="form" (ngSubmit)="submit()">
       <button
         class="dialog-close"
         type="button"
@@ -432,8 +439,10 @@ export class PatientTimelineEventPanelComponent {
           formControlName="startsAt"
           required /></label
       ><label
-        >Termin zakończenia<input type="datetime-local" formControlName="endsAt" required /></label
-      ><label
+        >Długość spotkania (min)<input type="number" min="1" formControlName="durationMinutes" required /></label
+      >@if (form.controls.durationMinutes.invalid && form.controls.durationMinutes.touched) {
+        <p role="alert">Podaj dodatnią liczbę całkowitą minut.</p>
+      }<p class="readonly-summary">Koniec: {{ endLabel }}</p><label
         >Rodzaj spotkania<select formControlName="type">
           <option value="TRAINING">Trening</option>
           <option value="PHYSIOTHERAPY">Fizjoterapia</option>
@@ -477,12 +486,29 @@ export class ScheduleAppointmentDialogComponent {
   }>();
   protected readonly form = new FormGroup({
     startsAt: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    endsAt: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    durationMinutes: new FormControl(50, { nonNullable: true, validators: [Validators.required, Validators.min(1), control => Number.isFinite(control.value) && Number.isInteger(control.value) ? null : { positiveInteger: true }] }),
     type: new FormControl('TRAINING', { nonNullable: true }),
     locationMode: new FormControl('IN_PERSON', { nonNullable: true }),
     location: new FormControl('', { nonNullable: true }),
     shortPurpose: new FormControl('', { nonNullable: true }),
   });
+  protected get endLabel(): string {
+    const end = this.endInstant();
+    return end ? new Intl.DateTimeFormat('pl-PL', { dateStyle: 'short', timeStyle: 'short' }).format(end) : '—';
+  }
+  protected submit(): void {
+    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    const value = this.form.getRawValue();
+    const end = this.endInstant();
+    if (!end) { this.form.markAllAsTouched(); return; }
+    this.submitted.emit({ ...value, endsAt: end.toISOString() });
+  }
+  private endInstant(): Date | null {
+    const value = this.form.getRawValue();
+    const startsAt = new Date(value.startsAt);
+    const endsAt = new Date(startsAt.getTime() + value.durationMinutes * 60_000);
+    return Number.isFinite(endsAt.getTime()) && endsAt > startsAt ? endsAt : null;
+  }
 }
 
 const goalStatus: Record<string, string> = {
@@ -507,6 +533,7 @@ const comparator: Record<string, string> = { AT_LEAST: 'co najmniej', AT_MOST: '
   standalone: true,
   imports: [MatButtonModule, MatInputModule, ReactiveFormsModule, DatePipe, GoalOutcomeProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: './participant-goals.component.scss',
   styles: [`.goal-card.mat-mdc-outlined-button{display:flex;flex-direction:column;align-items:stretch;min-width:0;gap:var(--space-2);text-align:left}.goal-card.mat-mdc-outlined-button .goal-card-title,.goal-card.mat-mdc-outlined-button .goal-card-target,.goal-card.mat-mdc-outlined-button .goal-card-observation{display:block;min-width:0;text-align:left}`],
   template: `<section class="goals-workspace" aria-labelledby="goals-title">
     <div class="goals-heading">
@@ -1101,7 +1128,6 @@ export class ParticipantGoalsComponent {
     RouterLink,
   ],
   styleUrl: './specialist-participant-workspace.page.scss',
-  encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<main
     class="workspace"

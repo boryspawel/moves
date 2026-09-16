@@ -13,6 +13,14 @@
  */
 
 import { mapValues } from '../runtime';
+import type { ReviewResult } from './ReviewResult';
+import {
+  ReviewResultFromJSON,
+  ReviewResultFromJSONTyped,
+  ReviewResultToJSON,
+  ReviewResultToJSONTyped,
+} from './ReviewResult';
+
 /**
  *
  * @export
@@ -30,6 +38,12 @@ export interface EditorialCapabilities {
    * @type {string}
    * @memberof EditorialCapabilities
    */
+  deleteBlockReason?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof EditorialCapabilities
+   */
   exerciseId?: string;
   /**
    *
@@ -37,6 +51,12 @@ export interface EditorialCapabilities {
    * @memberof EditorialCapabilities
    */
   expectedVersion?: number;
+  /**
+   *
+   * @type {ReviewResult}
+   * @memberof EditorialCapabilities
+   */
+  readiness?: ReviewResult;
   /**
    *
    * @type {EditorialCapabilitiesStatusEnum}
@@ -85,8 +105,10 @@ export function EditorialCapabilitiesFromJSONTyped(
   }
   return {
     availableActions: json['availableActions'] == null ? undefined : json['availableActions'],
+    deleteBlockReason: json['deleteBlockReason'] == null ? undefined : json['deleteBlockReason'],
     exerciseId: json['exerciseId'] == null ? undefined : json['exerciseId'],
     expectedVersion: json['expectedVersion'] == null ? undefined : json['expectedVersion'],
+    readiness: json['readiness'] == null ? undefined : ReviewResultFromJSON(json['readiness']),
     status: json['status'] == null ? undefined : json['status'],
     versionId: json['versionId'] == null ? undefined : json['versionId'],
   };
@@ -106,8 +128,10 @@ export function EditorialCapabilitiesToJSONTyped(
 
   return {
     availableActions: value['availableActions'],
+    deleteBlockReason: value['deleteBlockReason'],
     exerciseId: value['exerciseId'],
     expectedVersion: value['expectedVersion'],
+    readiness: ReviewResultToJSON(value['readiness']),
     status: value['status'],
     versionId: value['versionId'],
   };

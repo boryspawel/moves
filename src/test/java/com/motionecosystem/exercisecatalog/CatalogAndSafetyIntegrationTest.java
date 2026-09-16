@@ -3,6 +3,7 @@ package com.motionecosystem.exercisecatalog;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -112,29 +113,6 @@ class CatalogAndSafetyIntegrationTest {
         addContribution(versionId, child, evidenceId, "ALLOCATION", "STANDARD", "RIGHT", "0.300000")
                 .andExpect(status().isOk());
 
-        publish(versionId).andExpect(status().isConflict());
-
-        mvc.perform(post("/api/v1/admin/exercises/versions/{id}/submit-review", versionId)
-                        .with(contentAdmin()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("IN_REVIEW"));
-        mvc.perform(put("/api/v1/admin/exercises/versions/{id}", versionId)
-                        .with(contentAdmin()).contentType("application/json").content(versionCommand()))
-                .andExpect(status().isConflict());
-        mvc.perform(post("/api/v1/admin/exercises/versions/{id}/request-changes", versionId)
-                        .with(contentAdmin()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("CHANGES_REQUESTED"));
-        mvc.perform(put("/api/v1/admin/exercises/versions/{id}", versionId)
-                        .with(contentAdmin()).contentType("application/json").content(versionCommand()))
-                .andExpect(status().isOk());
-        mvc.perform(post("/api/v1/admin/exercises/versions/{id}/submit-review", versionId)
-                        .with(contentAdmin()))
-                .andExpect(status().isOk());
-        mvc.perform(post("/api/v1/admin/exercises/versions/{id}/approve", versionId)
-                        .with(contentAdmin()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("APPROVED"));
         publish(versionId)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PUBLISHED"));
@@ -144,7 +122,8 @@ class CatalogAndSafetyIntegrationTest {
                   AND aggregate_id = ?
                 """, Long.class, versionId)).isOne();
         mvc.perform(post("/api/v1/admin/exercises/versions/{id}/evidence", versionId)
-                        .with(contentAdmin()).contentType("application/json").content(evidenceRequest()))
+                        .with(contentAdmin()).param("expectedVersion", Long.toString(editorialExpectedVersion(versionId)))
+                        .contentType("application/json").content(evidenceRequest()))
                 .andExpect(status().isConflict());
 
         ExerciseCatalogQueryPort.PublishedExerciseVersionSnapshot snapshot = catalogPort
@@ -153,6 +132,88 @@ class CatalogAndSafetyIntegrationTest {
         assertThat(snapshot.movementPatterns()).hasSize(2);
         assertThat(snapshot.contributions()).hasSize(4)
                 .allSatisfy(item -> assertThat(item.evidence()).isNotEmpty());
+    }
+
+    @Test
+    void only_unreviewed_manual_initial_draft_can_be_deleted() throws Exception {
+        CreatedExercise removable = createExercise("Disposable draft");
+        mvc.perform(get("/api/v1/admin/exercises/versions/{id}/capabilities", removable.versionId()).with(contentAdmin()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.availableActions").value(org.hamcrest.Matchers.hasItem("DELETE")));
+        long expected = editorialExpectedVersion(removable.versionId());
+        mvc.perform(delete("/api/v1/admin/exercises/versions/{id}", removable.versionId()).with(contentAdmin())
+                        .contentType("application/json").content("{\"expectedVersion\":" + expected + "}"))
+                .andExpect(status().isOk());
+        assertThat(versions.findById(removable.versionId())).isEmpty();
+
+        CreatedExercise reviewed = createExercise("Reviewed draft");
+        long reviewExpectedVersion = editorialExpectedVersion(reviewed.versionId());
+        mvc.perform(post("/api/v1/admin/exercise-versions/{id}/reviews", reviewed.versionId()).with(contentAdmin())
+                        .contentType("application/json").content("""
+                                {"area":"CONTENT","decision":"CHANGES_REQUESTED","comment":"legacy","expectedVersion":%d}
+                                """.formatted(reviewExpectedVersion)))
+                .andExpect(status().isOk());
+        mvc.perform(delete("/api/v1/admin/exercises/versions/{id}", reviewed.versionId()).with(contentAdmin())
+                        .contentType("application/json").content("{\"expectedVersion\":"
+                                + editorialExpectedVersion(reviewed.versionId()) + "}"))
+                .andExpect(status().isConflict());
+        mvc.perform(get("/api/v1/admin/exercises/versions/{id}/capabilities", reviewed.versionId()).with(contentAdmin()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.availableActions").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("DELETE"))))
+                .andExpect(jsonPath("$.deleteBlockReason").value("REVIEW_HISTORY_EXISTS"));
+    }
+
+    @Test
+    void draftEvidenceAndContributionsRequireVersionsAndKeepReferencesSafe() throws Exception {
+        UUID anatomy = createPublishedAnatomy("EDITOR_KNEE", "JOINT");
+        UUID versionId = createExercise("Editor draft").versionId();
+        mvc.perform(post("/api/v1/admin/exercises/versions/{id}/evidence", versionId)
+                        .with(contentAdmin()).contentType("application/json").content(evidenceRequest()))
+                .andExpect(status().isBadRequest());
+        long beforeEvidence = editorialExpectedVersion(versionId);
+        String evidence = mvc.perform(post("/api/v1/admin/exercises/versions/{id}/evidence", versionId)
+                        .with(contentAdmin()).param("expectedVersion", Long.toString(beforeEvidence))
+                        .contentType("application/json").content(evidenceRequest()))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        UUID evidenceId = UUID.fromString(new tools.jackson.databind.ObjectMapper().readTree(evidence).path("id").asText());
+        mvc.perform(post("/api/v1/admin/exercises/versions/{id}/evidence", versionId)
+                        .with(contentAdmin()).param("expectedVersion", Long.toString(beforeEvidence))
+                        .contentType("application/json").content(evidenceRequest()))
+                .andExpect(status().isConflict());
+
+        long updateEvidence = editorialExpectedVersion(versionId);
+        mvc.perform(put("/api/v1/admin/exercises/versions/{versionId}/evidence/{evidenceId}", versionId, evidenceId)
+                        .with(contentAdmin()).contentType("application/json").content("""
+                                {"citation":"Updated evidence","sourceUri":"https://example.test/evidence",
+                                 "evidenceGrade":"EDITORIAL_REVIEW","expectedVersion":%d}
+                                """.formatted(updateEvidence)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(evidenceId.toString()));
+
+        long addContribution = editorialExpectedVersion(versionId);
+        String contribution = mvc.perform(post("/api/v1/admin/exercises/versions/{id}/contributions", versionId)
+                        .with(contentAdmin()).param("expectedVersion", Long.toString(addContribution))
+                        .contentType("application/json").content(contributionRequest(anatomy, evidenceId)))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        UUID contributionId = UUID.fromString(new tools.jackson.databind.ObjectMapper().readTree(contribution).path("id").asText());
+
+        mvc.perform(delete("/api/v1/admin/exercises/versions/{versionId}/evidence/{evidenceId}", versionId, evidenceId)
+                        .with(contentAdmin()).param("expectedVersion", Long.toString(editorialExpectedVersion(versionId))))
+                .andExpect(status().isConflict());
+        mvc.perform(delete("/api/v1/admin/exercises/versions/{versionId}/contributions/{contributionId}", versionId, contributionId)
+                        .with(contentAdmin()).param("expectedVersion", Long.toString(editorialExpectedVersion(versionId))))
+                .andExpect(status().isOk());
+        mvc.perform(delete("/api/v1/admin/exercises/versions/{versionId}/evidence/{evidenceId}", versionId, evidenceId)
+                        .with(contentAdmin()).param("expectedVersion", Long.toString(editorialExpectedVersion(versionId))))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void publishedAnatomySelectorExcludesDraftsAndCapsResults() throws Exception {
+        createPublishedAnatomy("SELECTOR_PUBLISHED", "MUSCLE_GROUP");
+        createAnatomy("SELECTOR_DRAFT", "MUSCLE_GROUP");
+
+        mvc.perform(get("/api/v1/admin/anatomical-structures").with(contentAdmin())
+                        .param("query", "selector").param("limit", "500"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].code").value("SELECTOR_PUBLISHED"))
+                .andExpect(jsonPath("$[1]").doesNotExist());
     }
 
     @Test
@@ -218,7 +279,8 @@ class CatalogAndSafetyIntegrationTest {
         completeAndPublish(created.versionId(), structureId);
         mvc.perform(get("/api/v1/admin/exercises/versions/{id}/capabilities", created.versionId()).with(contentAdmin()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.availableActions[0]").value("CREATE_NEXT_VERSION"));
+                .andExpect(jsonPath("$.availableActions[0]").value("CREATE_NEXT_VERSION"))
+                .andExpect(jsonPath("$.deleteBlockReason").value("INITIAL_MANUAL_DRAFT_REQUIRED"));
         mvc.perform(put("/api/v1/admin/exercises/versions/{id}/editorial", created.versionId()).with(contentAdmin())
                         .contentType("application/json").content("""
                                 {"canonicalName":"Must remain read only","expectedVersion":1,"version":%s}
@@ -358,21 +420,25 @@ class CatalogAndSafetyIntegrationTest {
                 """, UUID.class, exerciseId);
     }
 
+    private long editorialExpectedVersion(UUID versionId) throws Exception {
+        String response = mvc.perform(get("/api/v1/admin/exercises/versions/{id}/capabilities", versionId)
+                        .with(contentAdmin()))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        return new tools.jackson.databind.ObjectMapper().readTree(response).path("expectedVersion").asLong();
+    }
+
     private void completeAndPublish(UUID versionId, UUID structureId) throws Exception {
         addLoadCharacteristics(versionId);
         UUID evidenceId = addEvidence(versionId);
         addContribution(versionId, structureId, evidenceId, "ALLOCATION", "STANDARD",
                 "AS_PRESCRIBED", "0.700000").andExpect(status().isOk());
-        mvc.perform(post("/api/v1/admin/exercises/versions/{id}/submit-review", versionId)
-                        .with(contentAdmin())).andExpect(status().isOk());
-        mvc.perform(post("/api/v1/admin/exercises/versions/{id}/approve", versionId)
-                        .with(contentAdmin())).andExpect(status().isOk());
         publish(versionId).andExpect(status().isOk());
     }
 
     private void addLoadCharacteristics(UUID versionId) throws Exception {
         mvc.perform(put("/api/v1/admin/exercises/versions/{id}/load-characteristics", versionId)
-                        .with(contentAdmin()).contentType("application/json").content("""
+                        .with(contentAdmin()).param("expectedVersion", Long.toString(editorialExpectedVersion(versionId))).contentType("application/json").content("""
                                 [{"movementPlane":"SAGITTAL","contractionType":"MIXED",
                                   "rangeOfMotion":"FULL","characteristicType":"DYNAMIC"}]
                                 """))
@@ -380,8 +446,7 @@ class CatalogAndSafetyIntegrationTest {
     }
 
     private org.springframework.test.web.servlet.ResultActions publish(UUID versionId) throws Exception {
-        long expectedVersion = jdbc.queryForObject(
-                "SELECT version FROM exercise_catalog.exercise_version WHERE id = ?", Long.class, versionId);
+        long expectedVersion = editorialExpectedVersion(versionId);
         return mvc.perform(post("/api/v1/admin/exercises/versions/{id}/publish", versionId)
                 .with(contentAdmin()).contentType("application/json")
                 .content("{\"expectedVersion\":" + expectedVersion + "}"));
@@ -389,7 +454,7 @@ class CatalogAndSafetyIntegrationTest {
 
     private UUID addEvidence(UUID versionId) throws Exception {
         mvc.perform(post("/api/v1/admin/exercises/versions/{id}/evidence", versionId)
-                        .with(contentAdmin()).contentType("application/json").content(evidenceRequest()))
+                        .with(contentAdmin()).param("expectedVersion", Long.toString(editorialExpectedVersion(versionId))).contentType("application/json").content(evidenceRequest()))
                 .andExpect(status().isOk());
         return jdbc.queryForObject("""
                 SELECT id FROM exercise_catalog.evidence_source
@@ -401,13 +466,23 @@ class CatalogAndSafetyIntegrationTest {
             UUID versionId, UUID structureId, UUID evidenceId, String calculationRole,
             String variant, String sideRule, String high) throws Exception {
         return mvc.perform(post("/api/v1/admin/exercises/versions/{id}/contributions", versionId)
-                .with(contentAdmin()).contentType("application/json").content("""
+                .with(contentAdmin()).param("expectedVersion", Long.toString(editorialExpectedVersion(versionId))).contentType("application/json").content("""
                         {"anatomicalStructureId":"%s","role":"PRIMARY","loadChannel":"DYN_EXU",
                          "contributionBand":"HIGH","coefficientLow":0.200000,"coefficientHigh":%s,
                          "confidenceClass":"MODERATE","evidenceGrade":"EDITORIAL_REVIEW",
                          "calculationRole":"%s","variantCondition":"%s","sideRule":"%s",
                          "evidenceSourceIds":["%s"]}
                         """.formatted(structureId, high, calculationRole, variant, sideRule, evidenceId)));
+    }
+
+    private static String contributionRequest(UUID structureId, UUID evidenceId) {
+        return """
+                {"anatomicalStructureId":"%s","role":"PRIMARY","loadChannel":"DYN_EXU",
+                 "contributionBand":"HIGH","coefficientLow":0.200000,"coefficientHigh":0.700000,
+                 "confidenceClass":"MODERATE","evidenceGrade":"EDITORIAL_REVIEW",
+                 "calculationRole":"ALLOCATION","variantCondition":"STANDARD","sideRule":"AS_PRESCRIBED",
+                 "evidenceSourceIds":["%s"]}
+                """.formatted(structureId, evidenceId);
     }
 
     private UUID createPublishedAnatomy(String code, String type) throws Exception {

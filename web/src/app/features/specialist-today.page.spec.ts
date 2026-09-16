@@ -40,25 +40,53 @@ describe('SpecialistTodayPage', () => {
     participant.value = 'canonical-participant-id';
     participant.dispatchEvent(new Event('change'));
     setTime(fixture, 'startTime', '09:10');
-    setTime(fixture, 'endTime', '09:55');
+    numberInput(fixture).value = '45';
+    numberInput(fixture).dispatchEvent(new Event('input'));
     (fixture.nativeElement as HTMLElement).querySelector('form')!.dispatchEvent(new Event('submit'));
 
     expect(submitted).toHaveBeenCalledWith(expect.objectContaining({ participantId: 'canonical-participant-id', startsAt: new Date('2026-07-24T07:10:00.000Z'), endsAt: new Date('2026-07-24T07:55:00.000Z') }));
   });
 
-  it('autofills end time until manually overridden, then preserves the manual end and its duration', async () => {
+  it('derives the end instant from the selected start and duration', async () => {
     await TestBed.configureTestingModule({ imports: [TodayAppointmentDialogComponent] }).compileComponents();
     const fixture = TestBed.createComponent(TodayAppointmentDialogComponent);
     const instance = fixture.componentInstance;
     instance.date = '2026-07-24';
     fixture.detectChanges();
+    const submitted = vi.fn(); instance.submitted.subscribe(submitted);
     setTime(fixture, 'startTime', '09:10');
-    expect(timeInput(fixture, 'endTime').value).toBe('10:10');
-    setTime(fixture, 'endTime', '09:55');
-    expect(numberInput(fixture).value).toBe('45');
-    setTime(fixture, 'startTime', '09:20');
-    expect(timeInput(fixture, 'endTime').value).toBe('09:55');
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Godziny w formacie 24-godzinnym.');
+    numberInput(fixture).value = '45'; numberInput(fixture).dispatchEvent(new Event('input'));
+    const participant = (fixture.nativeElement as HTMLElement).querySelector<HTMLSelectElement>('select[formControlName="participantId"]')!;
+    instance.participants = [{ participantId: 'participant', label: 'P' }]; fixture.detectChanges(); participant.value = 'participant'; participant.dispatchEvent(new Event('change'));
+    (fixture.nativeElement as HTMLElement).querySelector('form')!.dispatchEvent(new Event('submit'));
+    expect(submitted).toHaveBeenCalledWith(expect.objectContaining({ startsAt: new Date('2026-07-24T07:10:00.000Z'), endsAt: new Date('2026-07-24T07:55:00.000Z') }));
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('godziny w formacie 24-godzinnym.');
+  });
+
+  it('rejects zero and fractional meeting durations', async () => {
+    await TestBed.configureTestingModule({ imports: [TodayAppointmentDialogComponent] }).compileComponents();
+    const fixture = TestBed.createComponent(TodayAppointmentDialogComponent); const instance = fixture.componentInstance;
+    instance.date = '2026-07-24'; instance.participants = [{ participantId: 'participant', label: 'P' }];
+    const submitted = vi.fn(); instance.submitted.subscribe(submitted); fixture.detectChanges();
+    const participant = (fixture.nativeElement as HTMLElement).querySelector<HTMLSelectElement>('select[formControlName="participantId"]')!; participant.value = 'participant'; participant.dispatchEvent(new Event('change'));
+    for (const duration of ['0', '45.5']) {
+      numberInput(fixture).value = duration; numberInput(fixture).dispatchEvent(new Event('input'));
+      (fixture.nativeElement as HTMLElement).querySelector('form')!.dispatchEvent(new Event('submit')); fixture.detectChanges();
+      expect(submitted).not.toHaveBeenCalled();
+      expect((fixture.nativeElement as HTMLElement).textContent).toContain('Podaj dodatnią liczbę całkowitą minut.');
+    }
+  });
+
+  it('uses elapsed duration across the spring DST transition', async () => {
+    await TestBed.configureTestingModule({ imports: [TodayAppointmentDialogComponent] }).compileComponents();
+    const fixture = TestBed.createComponent(TodayAppointmentDialogComponent); const instance = fixture.componentInstance;
+    instance.date = '2026-03-29'; instance.timeZone = 'Europe/Warsaw'; instance.participants = [{ participantId: 'participant', label: 'P' }];
+    instance.selectedStart = new Date('2026-03-29T01:30:00Z'); instance.selectedEnd = new Date('2026-03-29T02:30:00Z');
+    instance.ngOnChanges({ selectedStart: {} } as any);
+    const submitted = vi.fn(); instance.submitted.subscribe(submitted); fixture.detectChanges();
+    const participant = (fixture.nativeElement as HTMLElement).querySelector<HTMLSelectElement>('select[formControlName="participantId"]')!; participant.value = 'participant'; participant.dispatchEvent(new Event('change'));
+    (fixture.nativeElement as HTMLElement).querySelector('form')!.dispatchEvent(new Event('submit'));
+    expect(submitted).toHaveBeenCalledWith(expect.objectContaining({ startsAt: new Date('2026-03-29T01:30:00Z'), endsAt: new Date('2026-03-29T02:30:00Z') }));
   });
 
   it('renders availability as one non-interactive background range, without generated free-slot cards', async () => {
@@ -121,6 +149,17 @@ describe('SpecialistTodayPage', () => {
     expect(today.availableSlots).not.toHaveBeenCalled();
     expect((fixture.nativeElement as HTMLElement).querySelector('.appointment-dialog')).toBeTruthy();
     expect((fixture.nativeElement as HTMLElement).querySelector('.free-slot')).toBeNull();
+  });
+
+  it('opens the scheduling dialog with a clicked availability slot prefilled', async () => {
+    const queryParamMap = new BehaviorSubject(convertToParamMap({ date: '2026-07-24' }));
+    const view = { ...emptyView, bookableSlots: [{ startsAt: new Date('2026-07-24T07:10:00Z'), endsAt: new Date('2026-07-24T08:00:00Z') }] };
+    const today = { get: vi.fn().mockResolvedValue(view), availableSlots: vi.fn() };
+    await TestBed.configureTestingModule({ imports: [SpecialistTodayPage], providers: [{ provide: SpecialistTodayApi, useValue: today }, { provide: ApiFacade, useValue: { specialistParticipants: { activeParticipants: vi.fn().mockResolvedValue([]) }, appointments: { create2: vi.fn() } } }, { provide: ActivatedRoute, useValue: { queryParamMap, snapshot: { queryParamMap: queryParamMap.value } } }, { provide: Router, useValue: { navigate: vi.fn() } }] }).compileComponents();
+    const fixture = TestBed.createComponent(SpecialistTodayPage); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.free-slot')!.click(); await fixture.whenStable(); fixture.detectChanges();
+    expect(timeInput(fixture, 'startTime').value).toBe('09:10');
+    expect(numberInput(fixture).value).toBe('50');
   });
 
   it('clears the selected appointment when the route date changes and passes the selected date to weekly availability editing', async () => {

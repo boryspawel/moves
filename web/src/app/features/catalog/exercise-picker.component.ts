@@ -19,7 +19,16 @@ export interface ExerciseSelection {
   presentation: { summary?: string; technicalLevel?: string; movementPatterns: string[]; equipment: string[]; mediaReference?: string };
 }
 
-type FilterState = Record<string, string[]>;
+const PRIMARY_FACET_GROUPS = ['movementPatterns', 'equipment', 'technicalLevels'] as const;
+const ADVANCED_FACET_GROUPS = ['positionCodes', 'unilateral', 'anatomyStructureIds', 'anatomyStructureTypes', 'purposes'] as const;
+const FACET_GROUP_LABELS = {
+  movementPatterns: 'Wzorzec ruchu', equipment: 'Sprzęt', technicalLevels: 'Poziom', positionCodes: 'Pozycja', unilateral: 'Stronność',
+  anatomyStructureIds: 'Struktura anatomiczna', anatomyStructureTypes: 'Typ struktury', purposes: 'Zastosowanie'
+} as const;
+type FacetGroup = keyof typeof FACET_GROUP_LABELS;
+type FilterState = Partial<Record<FacetGroup, string[]>>;
+
+const isFacetGroup = (group: string): group is FacetGroup => group in FACET_GROUP_LABELS;
 
 @Component({
   selector: 'app-exercise-picker',
@@ -30,8 +39,11 @@ type FilterState = Record<string, string[]>;
     <header><h2 id="exercise-picker-title">Wyszukaj ćwiczenie</h2><p>Wyniki obejmują tylko opublikowane, możliwe do użycia wersje ćwiczeń.</p></header>
     <div class="search-row"><mat-form-field class="query"><mat-label>Szukaj ćwiczenia</mat-label><input #queryInput matInput type="search" [formControl]="query" placeholder="Szukaj po nazwie, regionie lub sprzęcie" autocomplete="off"><button matSuffix mat-icon-button type="button" aria-label="Wyczyść wyszukiwaną frazę" (click)="clearQuery()" [disabled]="!query.value">×</button></mat-form-field><button mat-stroked-button type="button" (click)="reset()" [disabled]="!hasFilters()">Wyczyść filtry</button></div>
     <p class="sr-only" aria-live="polite">{{ announcement() }}</p>
-    @if (facets().length) { <section class="facets" aria-label="Filtry wyników"><h3>Filtry @if (activeFilterCount()) {<span>({{ activeFilterCount() }})</span>}</h3>
-      @for (group of facetGroups(); track group.name) {<fieldset><legend>{{ group.label }}</legend><div class="facet-options">@for (facet of group.values; track facet.group + ':' + facet.value) {<mat-checkbox [checked]="facet.active" (change)="toggleFacet(facet)">{{ facetLabel(facet) }} <span class="count">({{ facet.count ?? 0 }})</span></mat-checkbox>}</div></fieldset>}
+    @if (facetGroups().length || advancedActiveFilterCount()) { <section class="facets" aria-label="Filtry wyników"><h3>Filtry @if (activeFilterCount()) {<span>({{ activeFilterCount() }})</span>}</h3>
+      @for (group of primaryFacetGroups(); track group.name) {<fieldset><legend>{{ group.label }}</legend><div class="facet-options">@for (facet of group.values; track facet.group + ':' + facet.value) {<mat-checkbox [checked]="facet.active" (change)="toggleFacet(facet)">{{ facetLabel(facet) }} <span class="count">({{ facet.count ?? 0 }})</span></mat-checkbox>}</div></fieldset>}
+      @if (advancedFacetGroups().length || advancedActiveFilterCount()) {<button mat-stroked-button type="button" aria-controls="advanced-catalog-filters" [attr.aria-expanded]="advancedOpen()" (click)="advancedOpen.set(!advancedOpen())">Zaawansowane filtry @if (advancedActiveFilterCount()) {<span>({{ advancedActiveFilterCount() }})</span>}</button>
+        @if (advancedOpen()) {<div id="advanced-catalog-filters">@for (group of advancedFacetGroups(); track group.name) {<fieldset><legend>{{ group.label }}</legend><div class="facet-options">@for (facet of group.values; track facet.group + ':' + facet.value) {<mat-checkbox [checked]="facet.active" (change)="toggleFacet(facet)">{{ facetLabel(facet) }} <span class="count">({{ facet.count ?? 0 }})</span></mat-checkbox>}</div></fieldset>}</div>}
+      }
     </section> }
     @if (loading() && !results().length) {
       <p role="status">Ładowanie ćwiczeń…</p>
@@ -56,16 +68,19 @@ export class ExercisePickerComponent {
   readonly selected = output<ExerciseSelection>();
   readonly query = new FormControl('', { nonNullable: true });
   readonly results = signal<Result[]>([]); readonly facets = signal<Facet[]>([]); readonly hasMore = signal(false); readonly cursor = signal<string | undefined>(undefined);
-  readonly loading = signal(true); readonly error = signal(false); readonly preview = signal<Preview | undefined>(undefined); readonly previewResult = signal<Result | undefined>(undefined); readonly announcement = signal('Ładowanie wyników.');
+  readonly loading = signal(true); readonly error = signal(false); readonly preview = signal<Preview | undefined>(undefined); readonly previewResult = signal<Result | undefined>(undefined); readonly announcement = signal('Ładowanie wyników.'); readonly advancedOpen = signal(false);
   private readonly filters = signal<FilterState>({}); private readonly api = inject(ApiFacade).catalogSearch; private readonly destroyRef = inject(DestroyRef); private readonly previewDialog = viewChild<ElementRef<HTMLElement>>('previewDialog'); private previewOpener?: HTMLElement;
   constructor() { this.query.valueChanges.pipe(debounceTime(250), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef)).subscribe(() => this.search()); this.search(); }
   readonly catalogLabel = catalogLabel;
-  facetGroups() { const grouped = new Map<string, Facet[]>(); for (const facet of this.facets()) { const group = facet.group || 'OTHER'; grouped.set(group, [...(grouped.get(group) || []), facet]); } return [...grouped.entries()].map(([name, values]) => ({name, label: this.groupLabel(name), values})); }
+  facetGroups() { const grouped = new Map<FacetGroup, Facet[]>(); for (const facet of this.facets()) { if (facet.group && isFacetGroup(facet.group)) grouped.set(facet.group, [...(grouped.get(facet.group) || []), facet]); } return [...grouped.entries()].map(([name, values]) => ({name, label: FACET_GROUP_LABELS[name], values})); }
+  primaryFacetGroups() { const groups = new Map(this.facetGroups().map(group => [group.name, group])); return PRIMARY_FACET_GROUPS.flatMap(name => groups.get(name) ? [groups.get(name)!] : []); }
+  advancedFacetGroups() { const groups = new Map(this.facetGroups().map(group => [group.name, group])); return ADVANCED_FACET_GROUPS.flatMap(name => groups.get(name) ? [groups.get(name)!] : []); }
   activeFilterCount() { return Object.values(this.filters()).reduce((total, values) => total + values.length, 0); }
+  advancedActiveFilterCount() { return ADVANCED_FACET_GROUPS.reduce((total, group) => total + (this.filters()[group]?.length || 0), 0); }
   hasFilters() { return !!this.query.value.trim() || this.activeFilterCount() > 0; }
   clearQuery() { this.query.setValue(''); }
   reset() { this.filters.set({}); this.query.setValue('', {emitEvent: false}); this.search(); }
-  toggleFacet(facet: Facet) { const group = facet.group; const value = facet.value; if (!group || !value) return; const current = this.filters(); const values = current[group] || []; this.filters.set({...current, [group]: values.includes(value) ? values.filter(item => item !== value) : [...values, value]}); this.search(); }
+  toggleFacet(facet: Facet) { const group = facet.group; const value = facet.value; if (!group || !value || !isFacetGroup(group)) return; const current = this.filters(); const values = current[group] || []; this.filters.set({...current, [group]: values.includes(value) ? values.filter(item => item !== value) : [...values, value]}); this.search(); }
   search() { this.request(undefined, false); }
   loadMore() { if (this.cursor() && !this.loading()) this.request(this.cursor(), true); }
   openPreview(result: Result, opener: EventTarget | null) { if (!result.exerciseVersionId) return; this.previewOpener = opener instanceof HTMLElement ? opener : undefined; this.previewResult.set(result); this.api.preview({exerciseVersionId: result.exerciseVersionId}).then(value => { this.preview.set(value); queueMicrotask(() => this.previewDialog()?.nativeElement.focus()); }).catch(() => { this.announcement.set('Nie udało się pobrać podglądu ćwiczenia.'); }); }
@@ -73,8 +88,7 @@ export class ExercisePickerComponent {
   select(result: Result) { if (!result.exerciseId || !result.exerciseVersionId) return; this.selected.emit({exerciseId: result.exerciseId, exerciseVersionId: result.exerciseVersionId, name: result.title || 'Ćwiczenie', suggestedDoseType: result.exerciseType, presentation: {summary: result.summary, technicalLevel: result.technicalLevel, movementPatterns: result.movementPatterns || [], equipment: result.equipment || [], mediaReference: result.mediaReference}}); this.closePreview(); }
   labels(values?: string[]) { return values?.length ? values.map(catalogLabel).join(', ') : '—'; }
   resultMeta(result: Result) { return [this.labels(result.movementPatterns), catalogLabel(result.technicalLevel), result.equipment?.join(', ')].filter(Boolean).join(' · '); }
-  facetLabel(facet: Facet) { return facet.labelKey ? catalogLabel(facet.labelKey) : catalogLabel(facet.value); }
+  facetLabel(facet: Facet) { return facet.displayLabel || (facet.labelKey ? catalogLabel(facet.labelKey) : catalogLabel(facet.value)); }
   private request(cursor: string | undefined, append: boolean) { this.loading.set(true); this.error.set(false); const request = this.requestFor(cursor); this.api.search({searchRequest: request}).then(page => { const incoming = page.results || []; const existing = append ? this.results() : []; const seen = new Set(existing.map(item => item.exerciseVersionId)); this.results.set([...existing, ...incoming.filter(item => !!item.exerciseVersionId && !seen.has(item.exerciseVersionId))]); this.facets.set(page.facets || []); this.cursor.set(page.nextCursor); this.hasMore.set(!!page.hasMore); this.announcement.set(`${this.results().length} wyników wyszukiwania.`); }).catch(() => { this.error.set(true); this.announcement.set('Nie udało się pobrać wyników.'); }).finally(() => this.loading.set(false)); }
-  private requestFor(cursor?: string): SearchRequest { const filters = this.filters(); return {query: this.query.value.trim() || undefined, locale: 'pl-PL', movementPatterns: filters['MOVEMENT_PATTERN'], technicalLevels: filters['TECHNICAL_LEVEL'], equipment: filters['EQUIPMENT'], positionCodes: filters['POSITION'], anatomyStructureIds: filters['ANATOMY_STRUCTURE'], anatomyStructureTypes: filters['ANATOMY_STRUCTURE_TYPE'], purposes: filters['PURPOSE'], unilateral: filters['UNILATERAL']?.[0] === 'true' ? true : filters['UNILATERAL']?.[0] === 'false' ? false : undefined, sort: 'RELEVANCE', limit: 20, cursor}; }
-  private groupLabel(group: string) { return ({MOVEMENT_PATTERN: 'Wzorzec ruchu', TECHNICAL_LEVEL: 'Poziom', EQUIPMENT: 'Sprzęt', POSITION: 'Pozycja', UNILATERAL: 'Stronność', ANATOMY_STRUCTURE: 'Struktura anatomiczna', ANATOMY_STRUCTURE_TYPE: 'Typ struktury', PURPOSE: 'Zastosowanie'} as Record<string, string>)[group] || 'Pozostałe'; }
+  private requestFor(cursor?: string): SearchRequest { const filters = this.filters(); return {query: this.query.value.trim() || undefined, locale: 'pl-PL', movementPatterns: filters.movementPatterns, technicalLevels: filters.technicalLevels, equipment: filters.equipment, positionCodes: filters.positionCodes, anatomyStructureIds: filters.anatomyStructureIds, anatomyStructureTypes: filters.anatomyStructureTypes, purposes: filters.purposes, unilateral: filters.unilateral?.[0] === 'true' ? true : filters.unilateral?.[0] === 'false' ? false : undefined, sort: 'RELEVANCE', limit: 20, cursor}; }
 }

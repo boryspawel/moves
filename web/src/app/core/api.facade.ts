@@ -24,7 +24,7 @@ import {
   SpecialistClientControllerApi,
   ExerciseSetControllerApi,
   ExerciseCatalogSearchControllerApi,
-  AnatomyReferenceControllerApi,
+  AnatomyReferenceControllerApi, AnatomyReferenceAdminControllerApi,
   ParticipantGoalControllerApi,
   ParticipantDocumentationControllerApi,
   SpecialistPlanFacadeControllerApi, ParticipantExerciseSetControllerApi, ParticipantPlanFacadeControllerApi, PracticalPlanResourceControllerApi
@@ -73,6 +73,7 @@ export class ApiFacade {
   readonly exerciseSets: ExerciseSetControllerApi;
   readonly catalogSearch: ExerciseCatalogSearchControllerApi;
   readonly anatomyReference: AnatomyReferenceControllerApi;
+  readonly anatomyReferenceAdmin: AnatomyReferenceAdminControllerApi;
   readonly participantGoals: ParticipantGoalControllerApi;
   readonly participantDocumentation: ParticipantDocumentationControllerApi;
   /** Participant-scoped specialist planning façade; hierarchy stays server-side. */
@@ -116,6 +117,7 @@ export class ApiFacade {
     this.exerciseSets = new ExerciseSetControllerApi(configuration);
     this.catalogSearch = new ExerciseCatalogSearchControllerApi(configuration);
     this.anatomyReference = new AnatomyReferenceControllerApi(configuration);
+    this.anatomyReferenceAdmin = new AnatomyReferenceAdminControllerApi(configuration);
     this.participantGoals = new ParticipantGoalControllerApi(configuration);
     this.participantDocumentation = new ParticipantDocumentationControllerApi(configuration);
     this.specialistPlans = new SpecialistPlanFacadeControllerApi(configuration);

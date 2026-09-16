@@ -28,9 +28,11 @@ Walidacja obejmuje kontrakt, słowniki, licencję źródła i rekordu, instrukcj
 
 Matching `deterministic-catalog-v1` stosuje kolejno source reference, checksum, a następnie ograniczoną listę (maks. 5) po nazwie/aliasie i cechach: locale, wzorzec, pozycja, sprzęt, jednostronność i charakter obciążenia. Wynik i powody są trwałe. Inne źródło zawsze wymaga `SAME`, `DIFFERENT` albo `UNSURE` człowieka.
 
-## Szkic, recenzja i publikacja
+## Szkic i publikacja
 
-Brak powiązania tworzy nowe `Exercise` i v1; zmiana powiązanego rekordu tworzy kolejny `DRAFT`; ten sam checksum daje `UNCHANGED`. Szkic i source reference są tworzone w jednej transakcji. Publikacja wymaga najnowszych akceptacji `CONTENT`, `TECHNIQUE`, `ANATOMY_EXPOSURE`, `LICENSE` oraz `MEDIA`, jeśli są media, a także kompletnego load/anatomy/evidence i braku nierozwiązanych `ERROR/BLOCKER`. Cel `THERAPEUTIC_EXERCISE` wymaga co najmniej dwóch różnych reviewer subjects. Użytkownik pochodzi wyłącznie z JWT Keycloak.
+Brak powiązania tworzy nowe `Exercise` i v1; zmiana powiązanego rekordu tworzy kolejny `DRAFT`; ten sam checksum daje `UNCHANGED`. Szkic i source reference są tworzone w jednej transakcji. Po imporcie lub ręcznym utworzeniu wersja jest `DRAFT`. Redaktor poprawia treść i metadane w jednym edytorze; publikacja uruchamia automatyczną walidację celu i wymaga kompletnego load/anatomy/evidence oraz braku nierozwiązanych `ERROR/BLOCKER`. Nie ma interaktywnych akceptacji recenzenta ani dodatkowej bramki review. Użytkownik pochodzi wyłącznie z JWT Keycloak.
+
+Rekord blokowany przez słownik zwraca propozycję mapowania wraz z bezpiecznymi opcjami kanonicznymi; `APPROVED` może automatycznie przygotować szkic, a `REJECTED` nie jest autoweryfikacją. Blokada licencji zwraca wyłącznie instrukcję utworzenia zastępczego źródła z potwierdzoną licencją i ponownego uploadu; źródła oraz artefaktu nie edytuje się po zgłoszeniu.
 
 Publikacja atomowo ustawia `PUBLISHED`, dopisuje audyt i `ExerciseVersionPublished` do istniejącego outbox. Trigger blokuje zmianę wersji i wszystkich semantycznych dzieci. Wycofanie zmienia tylko stan i timestamp; definicja pozostaje niezmienna.
 

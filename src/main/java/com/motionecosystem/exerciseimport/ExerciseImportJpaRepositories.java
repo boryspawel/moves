@@ -41,6 +41,8 @@ interface ExerciseImportRecordRepository extends JpaRepository<ExerciseImportRec
     boolean existsByBatchIdAndRowNumber(UUID batchId, long rowNumber);
     List<ExerciseImportRecordEntity> findByBatchIdAndStatusAndDraftVersionIdIsNullOrderByRowNumberAscIdAsc(UUID batchId, String status);
     List<ExerciseImportRecordEntity> findByBatchId(UUID batchId);
+    boolean existsByDraftVersionId(UUID draftVersionId);
+    Optional<ExerciseImportRecordEntity> findByDraftVersionId(UUID draftVersionId);
     @Query("""
             select record from ExerciseImportRecordJpaEntity record
             where record.batchId = :batchId
@@ -65,9 +67,11 @@ interface ExerciseImportRecordRepository extends JpaRepository<ExerciseImportRec
 interface ExerciseImportSourceReferenceRepository extends JpaRepository<ExerciseImportSourceReferenceEntity, UUID> {
     Optional<ExerciseImportSourceReferenceEntity> findBySourceIdAndSourceRecordKey(UUID sourceId, String sourceRecordKey);
     List<ExerciseImportSourceReferenceEntity> findByNormalizedSha256AndSourceIdNotOrderByExerciseId(String normalizedSha256, UUID sourceId);
+    boolean existsByExerciseIdOrLatestExerciseVersionId(UUID exerciseId, UUID exerciseVersionId);
 }
 interface ExerciseImportMappingRepository extends JpaRepository<ExerciseImportMappingEntity, UUID> {
     Optional<ExerciseImportMappingEntity> findBySourceIdAndDictionaryTypeAndSourceValue(UUID sourceId, String dictionaryType, String sourceValue);
+    List<ExerciseImportMappingEntity> findBySourceIdOrderByDictionaryTypeAscSourceValueAsc(UUID sourceId);
 }
 interface ExerciseImportIssueRepository extends JpaRepository<ExerciseImportIssueEntity, UUID> {
     boolean existsByRecordIdAndCodeAndResolvedAtIsNull(UUID recordId, String code);
@@ -77,6 +81,7 @@ interface ExerciseImportIssueRepository extends JpaRepository<ExerciseImportIssu
     List<ExerciseImportIssueEntity> findByRecordIdOrderBySeverityAscCodeAscIdAsc(UUID recordId);
     List<ExerciseImportIssueEntity> findByBatchIdOrderByRowNumberAscSeverityAscCodeAscIdAsc(UUID batchId);
     void deleteByRecordIdAndCode(UUID recordId, String code);
+    long countByRecordIdAndResolvedAtIsNullAndSeverityIn(UUID recordId, List<String> severities);
 }
 interface ExerciseImportMatchCandidateRepository extends JpaRepository<ExerciseImportMatchCandidateEntity, UUID> {
     void deleteByRecordId(UUID recordId);
@@ -84,5 +89,11 @@ interface ExerciseImportMatchCandidateRepository extends JpaRepository<ExerciseI
     @Query("select candidate from ExerciseImportMatchCandidateJpaEntity candidate where candidate.id = :id and candidate.recordId = :recordId")
     Optional<ExerciseImportMatchCandidateEntity> findLockedByIdAndRecordId(@Param("id") UUID id, @Param("recordId") UUID recordId);
     List<ExerciseImportMatchCandidateEntity> findByRecordIdOrderByRankAscIdAsc(UUID recordId);
-    boolean existsByRecordIdAndDecisionNotOrDecisionIsNull(UUID recordId, String decision);
+    boolean existsByExerciseId(UUID exerciseId);
+    @Query("""
+            select (count(candidate) > 0) from ExerciseImportMatchCandidateJpaEntity candidate
+            where candidate.recordId = :recordId
+              and (candidate.decision <> :decision or candidate.decision is null)
+            """)
+    boolean existsUndecidedOrNotDecision(@Param("recordId") UUID recordId, @Param("decision") String decision);
 }

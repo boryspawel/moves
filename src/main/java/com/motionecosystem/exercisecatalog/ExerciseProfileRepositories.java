@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 interface ExerciseContributionRepository extends JpaRepository<ExerciseContribution, UUID> {
     List<ExerciseContribution> findByExerciseVersionIdOrderById(UUID exerciseVersionId);
     List<ExerciseContribution> findByExerciseVersionIdIn(Set<UUID> exerciseVersionIds);
+    java.util.Optional<ExerciseContribution> findByIdAndExerciseVersionId(UUID id, UUID exerciseVersionId);
     boolean existsByExerciseVersionId(UUID exerciseVersionId);
 }
 
@@ -22,9 +23,12 @@ interface EvidenceSourceRepository extends JpaRepository<EvidenceSource, UUID> {
     List<EvidenceSource> findByExerciseVersionIdOrderById(UUID exerciseVersionId);
     List<EvidenceSource> findByExerciseVersionIdIn(Set<UUID> exerciseVersionIds);
     List<EvidenceSource> findByExerciseVersionIdAndIdIn(UUID exerciseVersionId, Set<UUID> ids);
+    java.util.Optional<EvidenceSource> findByIdAndExerciseVersionId(UUID id, UUID exerciseVersionId);
     boolean existsByExerciseVersionId(UUID exerciseVersionId);
 }
 
 interface ExerciseContributionEvidenceRepository extends JpaRepository<ExerciseContributionEvidence, UUID> {
     List<ExerciseContributionEvidence> findByContributionIdIn(Set<UUID> contributionIds);
+    boolean existsByEvidenceSourceId(UUID evidenceSourceId);
+    void deleteByContributionId(UUID contributionId);
 }

@@ -194,6 +194,7 @@ export class OnboardingPage {
   });
   protected readonly availabilityForm = new FormGroup({
     slots: new FormArray<AvailabilitySlotForm>([this.createSlot()]),
+    slotDurationMinutes: new FormControl(50, { nonNullable: true, validators: [Validators.min(1), Validators.max(480)] }),
   });
 
   constructor() {
@@ -266,7 +267,7 @@ export class OnboardingPage {
       .slots.map((slot) => ({ ...slot, dayOfWeek: slot.dayOfWeek as SlotRequestDayOfWeekEnum }));
     void this.submit(
       'availability',
-      () => this.api.availability({ availabilityRequest: { slots } }),
+      () => this.api.availability({ availabilityRequest: { slots, slotDurationMinutes: this.availabilityForm.controls.slotDurationMinutes.value } }),
       'Dostępność zapisana.',
     );
   }
@@ -303,6 +304,7 @@ export class OnboardingPage {
     if (!this.availabilityEdit || state.stage !== 'READY' || !state.availability?.length) return;
     this.availabilityForm.controls.slots.clear();
     state.availability.forEach(slot => this.availabilityForm.controls.slots.push(this.createSlotFrom(slot)));
+    this.availabilityForm.controls.slotDurationMinutes.setValue(state.slotDurationMinutes ?? 50);
   }
   private async refresh(force = false): Promise<void> {
     this.loadState.set('loading');

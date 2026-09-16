@@ -63,6 +63,12 @@ i `introspection.token.claim` ustawione na `true`) i przypiąć scope do domyśl
 client scopes `motion-web`. Nie resetuj wolumenów ani danych użytkowników wyłącznie
 w celu naprawy tego mapowania.
 
+Scope `roles` zawiera standardowe mapowania ról realm i client do access tokenu.
+W już zaimportowanym realmie należy addytywnie odtworzyć ten scope i przypiąć go do
+domyślnych client scopes `motion-web`, bez zmiany przypisań ról. Po naprawie użytkownik
+musi uzyskać świeży token (odświeżenie sesji lub ponowne logowanie); nie resetuj
+wolumenów ani danych użytkowników wyłącznie z tego powodu.
+
 Backend uruchamia migracje Flyway przy starcie. Flyway jest właścicielem schematu, a
 Hibernate wyłącznie go waliduje. Nie usuwaj wolumenów, aby „naprawić” pojedynczą
 migrację — najpierw sprawdź log backendu i historię Flyway.

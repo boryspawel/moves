@@ -82,7 +82,7 @@ const MAX_FILE_BYTES = 10 * 1024 * 1024;
           } @else {
             <p>{{ summary(current) }}</p>
           }
-          <dl class="summary">
+          <dl class="app-summary">
             <div>
               <dt>Zaimportowano</dt>
               <dd>{{ current.totalCount }}</dd>
@@ -118,9 +118,8 @@ const MAX_FILE_BYTES = 10 * 1024 * 1024;
           @if (!isProcessing(current) && current.draftedCount > 0) {
             <a
               mat-flat-button
-              [routerLink]="['/admin/exercise-review']"
-              [queryParams]="{ batchId: current.id }"
-              >Zobacz utworzone szkice</a
+              routerLink="/admin/exercise-catalog"
+              >Zobacz utworzone szkice w katalogu</a
             >
           }
           <a mat-button routerLink="/catalog">Wróć do katalogu</a>

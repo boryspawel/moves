@@ -340,21 +340,20 @@ class ExerciseSetApiIntegrationTest {
         UUID structureId = UUID.fromString(json.readTree(structure.getResponse().getContentAsString()).path("id").asText());
         mvc.perform(post("/api/v1/admin/anatomical-structures/{id}/publish", structureId).with(contentAdmin())).andExpect(status().isOk());
         mvc.perform(put("/api/v1/admin/exercises/versions/{id}/load-characteristics", versionId).with(contentAdmin())
+                        .param("expectedVersion", Long.toString(editorialExpectedVersion(versionId)))
                         .contentType("application/json").content("[{\"movementPlane\":\"SAGITTAL\",\"contractionType\":\"MIXED\",\"rangeOfMotion\":\"FULL\",\"characteristicType\":\"DYNAMIC\"}]"))
                 .andExpect(status().isOk());
         MvcResult evidence = mvc.perform(post("/api/v1/admin/exercises/versions/{id}/evidence", versionId).with(contentAdmin())
+                        .param("expectedVersion", Long.toString(editorialExpectedVersion(versionId)))
                         .contentType("application/json").content("{\"citation\":\"Test evidence\",\"sourceUri\":\"https://example.test/evidence\",\"evidenceGrade\":\"EDITORIAL_REVIEW\"}"))
                 .andExpect(status().isOk()).andReturn();
         UUID evidenceId = UUID.fromString(json.readTree(evidence.getResponse().getContentAsString()).path("id").asText());
         mvc.perform(post("/api/v1/admin/exercises/versions/{id}/contributions", versionId).with(contentAdmin())
+                        .param("expectedVersion", Long.toString(editorialExpectedVersion(versionId)))
                         .contentType("application/json").content("{\"anatomicalStructureId\":\"%s\",\"role\":\"PRIMARY\",\"loadChannel\":\"DYN_EXU\",\"contributionBand\":\"HIGH\",\"coefficientLow\":0.2,\"coefficientHigh\":0.7,\"confidenceClass\":\"MODERATE\",\"evidenceGrade\":\"EDITORIAL_REVIEW\",\"calculationRole\":\"ALLOCATION\",\"variantCondition\":\"STANDARD\",\"sideRule\":\"AS_PRESCRIBED\",\"evidenceSourceIds\":[\"%s\"]}".formatted(structureId, evidenceId)))
                 .andExpect(status().isOk());
-        mvc.perform(post("/api/v1/admin/exercises/versions/{id}/submit-review", versionId).with(contentAdmin())).andExpect(status().isOk());
-        MvcResult approved = mvc.perform(post("/api/v1/admin/exercises/versions/{id}/approve", versionId).with(contentAdmin()))
-                .andExpect(status().isOk()).andReturn();
-        long expected = json.readTree(approved.getResponse().getContentAsString()).path("version").asLong();
         mvc.perform(post("/api/v1/admin/exercises/versions/{id}/publish", versionId).with(contentAdmin())
-                        .contentType("application/json").content("{\"expectedVersion\":%d}".formatted(expected)))
+                        .contentType("application/json").content("{\"expectedVersion\":%d}".formatted(editorialExpectedVersion(versionId))))
                 .andExpect(status().isOk());
         return versionId;
     }
@@ -371,6 +370,13 @@ class ExerciseSetApiIntegrationTest {
     }
 
     private static String publishRequest(long expectedVersion) { return "{\"expectedVersion\":%d}".formatted(expectedVersion); }
+
+    private long editorialExpectedVersion(UUID versionId) throws Exception {
+        MvcResult result = mvc.perform(get("/api/v1/admin/exercises/versions/{id}/capabilities", versionId)
+                        .with(contentAdmin()))
+                .andExpect(status().isOk()).andReturn();
+        return json.readTree(result.getResponse().getContentAsString()).path("expectedVersion").asLong();
+    }
 
     private static String strengthDose() { return "{\"type\":\"STRENGTH\",\"sets\":3,\"reps\":8,\"restSeconds\":60,\"side\":\"BILATERAL\"}"; }
     private static JwtRequestPostProcessor contentAdmin() { return jwt().jwt(builder -> builder.subject("exercise-set-content-admin").audience(List.of("motion-api"))).authorities(new SimpleGrantedAuthority("ROLE_CONTENT_ADMIN")); }
