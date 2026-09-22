@@ -9,7 +9,7 @@ Zewnętrzny katalog nie może ominąć granic `exercisecatalog`, `anatomyreferen
 
 ## Decyzja
 
-Import jest osobnym modułem `exerciseimport`. Oryginał trafia przez port magazynu do trwałego wolumenu, a PostgreSQL przechowuje jego SHA-256, niezmienne rekordy `raw_payload` JSONB, wersjonowany staging znormalizowany, problemy i decyzje. Spring Batch 6 realizuje kroki `RECEIVE → PARSE → NORMALIZE → VALIDATE → MATCH → CREATE_DRAFT` w metadanych zarządzanych przez Flyway. Katalog zachowuje stabilne `Exercise`; każda zmiana jest nowym, niezmiennym po publikacji `ExerciseVersion`. Podobieństwo tworzy wyłącznie kandydaturę, nigdy cross-source merge. Recenzje ludzi i publikacja są transakcyjne, a publikacja dopisuje zdarzenie outbox.
+Import jest osobnym modułem `exerciseimport`. Oryginał trafia przez port magazynu do trwałego wolumenu, a PostgreSQL przechowuje jego SHA-256, niezmienne rekordy `raw_payload` JSONB, wersjonowany staging znormalizowany, problemy i decyzje. Spring Batch 6 realizuje kroki `RECEIVE → PARSE → NORMALIZE → VALIDATE → MATCH → CREATE_DRAFT` w metadanych zarządzanych przez Flyway. Katalog zachowuje stabilne `Exercise`; każda zmiana jest nowym, niezmiennym po publikacji `ExerciseVersion`. Podobieństwo tworzy wyłącznie kandydaturę, nigdy cross-source merge. Import kończy się draftem; publikacja przechodzi automatyczną walidację gotowości i dopisuje zdarzenie outbox. Historia oraz endpointy recenzji pozostają kompatybilne, lecz nie są warunkiem publikacji.
 
 ## Konsekwencje
 

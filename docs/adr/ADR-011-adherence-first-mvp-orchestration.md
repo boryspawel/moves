@@ -3,10 +3,6 @@
 Status: accepted  
 Data: 2026-07-21
 
-Aktualny zakres realizacyjny określa [`prompt.md`](../../prompt.md). Starszy
-`docs/moves-codex-implementation-prompts-training.md` ma inną numerację i nie
-jest statusową roadmapą tego strumienia.
-
 ## Kontekst
 
 MVP ma pomagać uczestnikowi przejść przez cztery momenty: rozpoczęcie,

@@ -3,9 +3,8 @@
 **Status: SET-04–SET-06 implemented; SET-06A diagnostics in progress.** This document is the canonical description of the
 specialist-facing builder UI. The aggregate and HTTP contract remain defined by the
 [exercise-set model](exercise-set-model.md); catalog search and selection are defined in
-[exercise-catalog search](exercise-catalog-search.md). Delivery state and follow-on work
-are maintained in [current state](../status/current-state.md) and the
-[exercise-set builder roadmap](../roadmap/exercise-set-builder.md).
+[exercise-catalog search](exercise-catalog-search.md). Delivery state is maintained in
+[current state](../status/current-state.md).
 
 ## Scope and routes
 

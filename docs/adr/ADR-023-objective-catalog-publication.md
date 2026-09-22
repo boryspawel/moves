@@ -12,6 +12,6 @@ następnej wersji albo wycofania zgodnie z istniejącymi regułami.
 
 ## Konsekwencje
 
-Historia i endpointy recenzji pozostają kompatybilnym, uśpionym zapisem, ale nie są
-bramką normalnego UI ani publikacji. Import nadal zachowuje staging, mapowania,
+Zapis i endpointy recenzji pozostają kompatybilne i opcjonalne, ale nie są warunkiem
+publikacji ani bramką normalnego UI. Import nadal zachowuje staging, mapowania,
 licencję i artefakt z ADR-010; przechodzi do tego samego szkicu i edytora.

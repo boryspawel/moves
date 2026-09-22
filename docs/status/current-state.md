@@ -47,9 +47,7 @@ read-only, paged and safe (no recorder, note or evidence metadata); planning’s
 remains unchanged.
 
 Deliberate current limits: achievement is not automatic; there is no measurement correction/edit/delete,
-unit conversion, alerts, device import, analytics or ML. Earlier ADR text that listed charts or
-participant reading as out of scope records the historical decision; this current-state section
-supersedes that status without rewriting ADR history.
+unit conversion, alerts, device import, analytics or ML.
 
 ### Participant Goals — next-steps roadmap
 
@@ -61,9 +59,6 @@ supersedes that status without rewriting ADR history.
 - **Participant access:** enable `GENERAL_FITNESS` self-service with own-goal reading and only
   explicitly allowed observations; keep participant authorization separate from specialist
   authorization.
-- **Lifecycle and data compliance:** define access after relation termination, consent withdrawal
-  versus legal retention, retention/access-limitation/anonymization/audit rules, and handling of
-  unfinished operations after cooperation ends.
 - **Outside the MVP:** notifications, reminders, achievement suggestions, device import,
   analytics and ML.
 _Zaktualizowano: 2026-08-05._
@@ -233,8 +228,6 @@ biomechaniczną ani kliniczną. SET-07B może rozpocząć prototyp techniczny.
   `web/src/app/api/generated/`.
 - Konfiguracja lokalnego środowiska: `.env.example`, `compose.yaml` i główny
   `README.md`.
-- Historyczne raporty oraz audyty pozostają w `docs/` jako materiały
-  referencyjne i nie określają bieżącego stanu wdrożenia.
 
 ## Tożsamość uczestnika i rekordy klientów
 
@@ -365,7 +358,7 @@ lifecycle z wersją terminu. Deep link do szczegółu zdarzenia zachowuje kontek
 uczestnika i wymaga aktywnej relacji oraz capability właściwych dla tego kontekstu.
 # Participant documentation
 
-The specialist participant workspace backend now exposes specialist-owned initial interviews and notes as participant documentation over canonical participant IDs. Historical access is intentionally denied after relationship termination pending a retention/consent policy; see `docs/architecture/participant-documentation.md`.
+The specialist participant workspace exposes specialist-owned initial interviews and notes over canonical participant IDs. Documentation access requires an active specialist-participant relationship; see `docs/architecture/participant-documentation.md`.
 
 # P4 — execution attempt facts and terminal outcomes
 

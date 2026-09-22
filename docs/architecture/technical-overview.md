@@ -1,6 +1,6 @@
 # Dokumentacja techniczna `moves`
 
-Status: dokument rozwijany wraz z migracją. `spec.md` jest źródłem nadrzędnym i nie jest przez ten dokument zastępowany. Dla adherence bieżący zakres określa [`prompt.md`](../../prompt.md); starszy `docs/moves-codex-implementation-prompts-training.md` ma inną numerację i nie jest roadmapą statusową.
+`spec.md` jest źródłem nadrzędnym i nie jest przez ten dokument zastępowany.
 
 ## Kontekst i topologia
 
@@ -165,7 +165,7 @@ neutralny audit. P10 dostarcza `analytics.adherencemetrics` w V032: wyłącznie
 techniczne identyfikatory, kody zdarzeń/reguł/wariantów i czas; rekordy wygasają
 po 180 dniach, a automatyczny, codzienny cleanup wywołuje wewnętrzny job przez
 `purgeExpired()`.
-# Participant documentation (test vertical)
+# Participant documentation
 
 Canonical participant records are separate from access accounts. Participant
 documentation is a specialist-owned boundary for interviews and notes over that

@@ -98,12 +98,7 @@ Oba skrypty aktywują Java 25.0.2-open przez SDKMAN i bezpośrednio uruchamiają
 
 ## Adherence-first
 
-Aktualny zakres tego strumienia określa [prompt.md](prompt.md); starszy
-`docs/moves-codex-implementation-prompts-training.md` ma inną numerację i nie
-jest roadmapą statusową adherence. Stan implementacji i ograniczenia opisują
-[etapy](docs/adherence-first-implementation-stages.md),
-[mapa wymagań](docs/adherence-first-requirements-map.md) oraz
-[ADR-011](docs/adr/ADR-011-adherence-first-mvp-orchestration.md).
+Granice przepływu adherence określa [ADR-011](docs/adr/ADR-011-adherence-first-mvp-orchestration.md).
 
 Główny przepływ uczestnika to `/sessions`: agenda „Dzisiaj” → wybór
 zatwierdzonego wariantu → check-in → prowadzona próba z zapisem postępu → wynik
@@ -147,9 +142,7 @@ mvn verify
 ## Stan bieżący i weryfikacja
 
 Aktualny, potwierdzony stan projektu oraz obowiązkowe kontrole CI opisuje
-[docs/status/current-state.md](docs/status/current-state.md). Dokumenty audytowe i raporty
-z wcześniejszych etapów pozostają w `docs/` jako materiały historyczne; nie są
-źródłem bieżącego statusu.
+[docs/status/current-state.md](docs/status/current-state.md).
 # Participant-record test vertical
 
 The account-free specialist-client test vertical and its consent/migration constraints are documented in [docs/test-participant-record-consent-debt.md](docs/test-participant-record-consent-debt.md).
