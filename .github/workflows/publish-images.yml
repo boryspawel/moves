@@ -1,0 +1,121 @@
+name: publish-images
+
+on:
+  workflow_run:
+    workflows: [ci]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publish-images-${{ github.event.workflow_run.id || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.source.outputs.sha }}
+      api_image: ${{ steps.images.outputs.api_image }}
+      web_image: ${{ steps.images.outputs.web_image }}
+    steps:
+      - id: source
+        env:
+          WORKFLOW_SHA: ${{ github.event.workflow_run.head_sha }}
+          DISPATCH_SHA: ${{ github.sha }}
+        run: |
+          sha="${WORKFLOW_SHA:-$DISPATCH_SHA}"
+          test -n "$sha"
+          printf 'sha=%s\n' "$sha" >> "$GITHUB_OUTPUT"
+      - id: images
+        env:
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          owner="$(printf '%s' "$OWNER" | tr '[:upper:]' '[:lower:]')"
+          printf 'api_image=ghcr.io/%s/moves-api\n' "$owner" >> "$GITHUB_OUTPUT"
+          printf 'web_image=ghcr.io/%s/moves-web\n' "$owner" >> "$GITHUB_OUTPUT"
+
+  api:
+    needs: prepare
+    runs-on: ubuntu-latest
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ needs.prepare.outputs.api_image }}:${{ needs.prepare.outputs.sha }}
+          labels: org.opencontainers.image.revision=${{ needs.prepare.outputs.sha }}
+          cache-from: type=gha,scope=moves-api
+          cache-to: type=gha,mode=max,scope=moves-api
+          provenance: mode=max
+          sbom: true
+
+  web:
+    needs: prepare
+    runs-on: ubuntu-latest
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: ./web
+          file: ./web/Dockerfile
+          push: true
+          tags: ${{ needs.prepare.outputs.web_image }}:${{ needs.prepare.outputs.sha }}
+          labels: org.opencontainers.image.revision=${{ needs.prepare.outputs.sha }}
+          cache-from: type=gha,scope=moves-web
+          cache-to: type=gha,mode=max,scope=moves-web
+          provenance: mode=max
+          sbom: true
+
+  summary:
+    needs: [prepare, api, web]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - env:
+          SHA: ${{ needs.prepare.outputs.sha }}
+          API_IMAGE: ${{ needs.prepare.outputs.api_image }}
+          API_DIGEST: ${{ needs.api.outputs.digest }}
+          WEB_IMAGE: ${{ needs.prepare.outputs.web_image }}
+          WEB_DIGEST: ${{ needs.web.outputs.digest }}
+        run: |
+          {
+            echo '## Published images'
+            echo
+            echo "Source SHA: \`$SHA\`"
+            echo
+            echo "- \`$API_IMAGE:$SHA\` — \`$API_DIGEST\`"
+            echo "- \`$WEB_IMAGE:$SHA\` — \`$WEB_DIGEST\`"
+          } >> "$GITHUB_STEP_SUMMARY"

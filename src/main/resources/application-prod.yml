@@ -1,0 +1,70 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  flyway:
+    enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER_URI}
+          jwk-set-uri: ${OIDC_JWK_SET_URI}
+  servlet:
+    multipart:
+      max-file-size: ${EXERCISE_IMPORT_MAX_FILE_BYTES}
+      max-request-size: ${EXERCISE_IMPORT_MAX_FILE_BYTES}
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  forward-headers-strategy: framework
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+    include-exception: false
+
+security:
+  oauth2:
+    audience: ${OIDC_AUDIENCE}
+    client-id: ${OIDC_CLIENT_ID}
+
+participant-access:
+  trusted-frontend-url: ${TRUSTED_FRONTEND_URL}
+  cookie-secure: true
+
+exercise-import:
+  artifacts:
+    directory: ${EXERCISE_IMPORT_ARTIFACT_DIR}
+  limits:
+    file-bytes: ${EXERCISE_IMPORT_MAX_FILE_BYTES}
+    record-bytes: ${EXERCISE_IMPORT_MAX_RECORD_BYTES}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+logging:
+  level:
+    root: INFO
+    com.motionecosystem: INFO

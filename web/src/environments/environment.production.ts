@@ -1,5 +1,7 @@
+import { loadRuntimeConfig } from '../runtime-config';
+
 export const environment = {
   production: true,
   apiBaseUrl: '/api',
-  keycloak: { url: '__KEYCLOAK_URL__', realm: 'motion-local', clientId: 'motion-web' }
+  keycloak: loadRuntimeConfig(window.__MOVES_RUNTIME_CONFIG__).keycloak
 };

@@ -1,0 +1,181 @@
+name: moves
+
+services:
+  caddy:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Set APP_DOMAIN in .env}
+      AUTH_DOMAIN: ${AUTH_DOMAIN:?Set AUTH_DOMAIN in .env}
+      ACME_EMAIL: ${ACME_EMAIL:?Set ACME_EMAIL in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks: [edge]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: ["CMD", "caddy", "version"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  web:
+    image: ${WEB_IMAGE_REPOSITORY:?Set WEB_IMAGE_REPOSITORY in .env}:${RELEASE_SHA:?Set RELEASE_SHA in .env}
+    restart: unless-stopped
+    environment:
+      KEYCLOAK_URL: https://${AUTH_DOMAIN:?Set AUTH_DOMAIN in .env}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:?Set KEYCLOAK_REALM in .env}
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:?Set KEYCLOAK_CLIENT_ID in .env}
+    expose: ["8080"]
+    networks: [edge, backend]
+    read_only: true
+    tmpfs: [/tmp, /var/cache/nginx, /var/run]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    depends_on:
+      backend:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  backend:
+    image: ${BACKEND_IMAGE_REPOSITORY:?Set BACKEND_IMAGE_REPOSITORY in .env}:${RELEASE_SHA:?Set RELEASE_SHA in .env}
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://moves-db:5432/${MOVES_DB_NAME:?Set MOVES_DB_NAME in .env}
+      DB_USER: ${MOVES_DB_USER:?Set MOVES_DB_USER in .env}
+      DB_PASSWORD: ${MOVES_DB_PASSWORD:?Set MOVES_DB_PASSWORD in .env}
+      OIDC_ISSUER_URI: https://${AUTH_DOMAIN:?Set AUTH_DOMAIN in .env}/realms/${KEYCLOAK_REALM:?Set KEYCLOAK_REALM in .env}
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/${KEYCLOAK_REALM:?Set KEYCLOAK_REALM in .env}/protocol/openid-connect/certs
+      OIDC_AUDIENCE: ${OIDC_AUDIENCE:?Set OIDC_AUDIENCE in .env}
+      OIDC_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:?Set KEYCLOAK_CLIENT_ID in .env}
+      PARTICIPANT_ACCESS_TRUSTED_FRONTEND_URL: https://${APP_DOMAIN:?Set APP_DOMAIN in .env}
+      PARTICIPANT_ACCESS_COOKIE_SECURE: "true"
+      PARTICIPANT_INVITATION_DELIVERY_ENABLED: ${PARTICIPANT_INVITATION_DELIVERY_ENABLED:-false}
+      PARTICIPANT_INVITATION_DELIVERY_SENDER: ${PARTICIPANT_INVITATION_DELIVERY_SENDER:?Set PARTICIPANT_INVITATION_DELIVERY_SENDER in .env}
+      PARTICIPANT_INVITATION_DELIVERY_FRONTEND_BASE_URL: https://${APP_DOMAIN:?Set APP_DOMAIN in .env}
+      PARTICIPANT_INVITATION_DELIVERY_SMTP_HOST: ${PARTICIPANT_INVITATION_DELIVERY_SMTP_HOST:?Set PARTICIPANT_INVITATION_DELIVERY_SMTP_HOST in .env}
+      PARTICIPANT_INVITATION_DELIVERY_SMTP_PORT: ${PARTICIPANT_INVITATION_DELIVERY_SMTP_PORT:-587}
+      PARTICIPANT_INVITATION_DELIVERY_CONNECT_TIMEOUT: ${PARTICIPANT_INVITATION_DELIVERY_CONNECT_TIMEOUT:-5s}
+      PARTICIPANT_INVITATION_DELIVERY_READ_TIMEOUT: ${PARTICIPANT_INVITATION_DELIVERY_READ_TIMEOUT:-5s}
+      PARTICIPANT_INVITATION_DELIVERY_WRITE_TIMEOUT: ${PARTICIPANT_INVITATION_DELIVERY_WRITE_TIMEOUT:-5s}
+      EXERCISE_IMPORT_ARTIFACT_DIR: /var/lib/moves/exercise-import
+      EXERCISE_IMPORT_MAX_FILE_BYTES: ${EXERCISE_IMPORT_MAX_FILE_BYTES:-10485760}
+      EXERCISE_IMPORT_MAX_RECORD_BYTES: ${EXERCISE_IMPORT_MAX_RECORD_BYTES:-262144}
+      SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:-10MB}
+      SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:-12MB}
+    expose: ["8080"]
+    volumes:
+      - moves-import-artifacts:/var/lib/moves/exercise-import
+    networks: [backend]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    depends_on:
+      moves-db:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8080/actuator/health/readiness >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
+
+  moves-db:
+    image: postgres:18.1-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${MOVES_DB_NAME:?Set MOVES_DB_NAME in .env}
+      POSTGRES_USER: ${MOVES_DB_USER:?Set MOVES_DB_USER in .env}
+      POSTGRES_PASSWORD: ${MOVES_DB_PASSWORD:?Set MOVES_DB_PASSWORD in .env}
+    volumes:
+      - moves-postgres-data:/var/lib/postgresql
+    networks: [backend]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4.0
+    restart: unless-stopped
+    command: ["start", "--http-enabled=true", "--http-port=8080"]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL_HOST: keycloak-db
+      KC_DB_URL_DATABASE: ${KEYCLOAK_DB_NAME:?Set KEYCLOAK_DB_NAME in .env}
+      KC_DB_USERNAME: ${KEYCLOAK_DB_USER:?Set KEYCLOAK_DB_USER in .env}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?Set KEYCLOAK_DB_PASSWORD in .env}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME:?Set KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME in .env}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD:?Set KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD in .env}
+      KC_HOSTNAME: https://${AUTH_DOMAIN:?Set AUTH_DOMAIN in .env}
+      KC_HOSTNAME_STRICT: "true"
+      KC_PROXY_HEADERS: xforwarded
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+    expose: ["8080"]
+    networks: [edge, backend]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000; printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3; grep -q '200' <&3"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  keycloak-db:
+    image: postgres:18.1-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${KEYCLOAK_DB_NAME:?Set KEYCLOAK_DB_NAME in .env}
+      POSTGRES_USER: ${KEYCLOAK_DB_USER:?Set KEYCLOAK_DB_USER in .env}
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?Set KEYCLOAK_DB_PASSWORD in .env}
+    volumes:
+      - keycloak-postgres-data:/var/lib/postgresql
+    networks: [backend]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+networks:
+  edge:
+    internal: false
+  backend:
+    internal: true
+
+volumes:
+  caddy-data:
+  caddy-config:
+  moves-postgres-data:
+  keycloak-postgres-data:
+  moves-import-artifacts:

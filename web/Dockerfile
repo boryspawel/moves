@@ -3,12 +3,11 @@ WORKDIR /workspace
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-ARG KEYCLOAK_URL
-RUN test -n "$KEYCLOAK_URL" \
-    && sed -i "s|__KEYCLOAK_URL__|$KEYCLOAK_URL|g" src/environments/environment.production.ts \
-    && npm run build
+RUN npm run build
 
 FROM nginx:1.27.5-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /workspace/dist/web/browser /usr/share/nginx/html
+COPY docker-entrypoint.d/40-runtime-config.sh /docker-entrypoint.d/40-runtime-config.sh
+RUN chmod 755 /docker-entrypoint.d/40-runtime-config.sh
 EXPOSE 8080
