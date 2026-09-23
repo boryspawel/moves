@@ -6,7 +6,28 @@ if [ -z "${KEYCLOAK_URL:-}" ] || [ -z "${KEYCLOAK_REALM:-}" ] || [ -z "${KEYCLOA
     exit 1
 fi
 
-if ! printf '%s' "$KEYCLOAK_URL" | grep -Eq '^https?://[A-Za-z0-9._~:/?#[\]@!$&()*+,;=%-]+$'; then
+newline='
+'
+case "$KEYCLOAK_URL" in
+    *"$newline"*)
+        echo 'KEYCLOAK_URL must be an absolute HTTP(S) URL without executable characters' >&2
+        exit 1
+        ;;
+esac
+case "$KEYCLOAK_REALM" in
+    *"$newline"*)
+        echo 'KEYCLOAK_REALM and KEYCLOAK_CLIENT_ID may contain only letters, digits, dot, underscore, and hyphen' >&2
+        exit 1
+        ;;
+esac
+case "$KEYCLOAK_CLIENT_ID" in
+    *"$newline"*)
+        echo 'KEYCLOAK_REALM and KEYCLOAK_CLIENT_ID may contain only letters, digits, dot, underscore, and hyphen' >&2
+        exit 1
+        ;;
+esac
+
+if ! printf '%s' "$KEYCLOAK_URL" | grep -Eq '^https?://[][A-Za-z0-9._~:/?@!$&()*+,;=%#-]+$'; then
     echo 'KEYCLOAK_URL must be an absolute HTTP(S) URL without executable characters' >&2
     exit 1
 fi

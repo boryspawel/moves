@@ -31,6 +31,8 @@ EOF
 docker compose --project-name "$project" --env-file "$env_file" up --build --wait --wait-timeout 300
 curl --fail --silent http://localhost:14200/ >/dev/null
 curl --fail --silent http://localhost:14200/plan >/dev/null
+runtime_config="$(curl --fail --silent http://localhost:14200/assets/runtime-config.js)"
+test "$runtime_config" = 'window.__MOVES_RUNTIME_CONFIG__ = Object.freeze({keycloak: {url: "http://localhost:18180", realm: "motion-local", clientId: "motion-web"}});'
 curl --fail --silent http://localhost:18080/actuator/health >/dev/null
 curl --fail --silent http://localhost:18180/realms/motion-local/.well-known/openid-configuration >/dev/null
 curl --fail --silent http://127.0.0.1:18025/ >/dev/null

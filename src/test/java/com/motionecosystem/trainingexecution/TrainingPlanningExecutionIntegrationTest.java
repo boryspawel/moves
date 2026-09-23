@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import com.motionecosystem.application.MotionEcosystemApplication;
 import com.motionecosystem.adherence.TodayAgendaService;
 import com.motionecosystem.audit.api.TransactionalOutbox.OutboxMessage;
+import com.motionecosystem.support.AnatomyReferenceFixtureTracker;
 import com.motionecosystem.support.PostgresTestConfiguration;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
@@ -67,9 +68,12 @@ class TrainingPlanningExecutionIntegrationTest {
     UUID exerciseVersionId;
     UUID executionStructureId;
     String p4Subject;
+    AnatomyReferenceFixtureTracker anatomyFixtures;
 
     @BeforeEach
     void setUp() {
+        anatomyFixtures = new AnatomyReferenceFixtureTracker(jdbc);
+        anatomyFixtures.snapshot();
         mvc = MockMvcBuilders.webAppContextSetup(context)
                 .addFilters(securityFilterChain)
                 .build();
@@ -122,10 +126,10 @@ class TrainingPlanningExecutionIntegrationTest {
                     exercise_catalog.exercise_contribution,
                     exercise_catalog.exercise_version,
                     exercise_catalog.exercise,
-                    anatomy_reference.anatomical_structure,
                     identity_access.principal_account
                 CASCADE
                 """);
+        anatomyFixtures.removeAddedFixtures();
     }
 
     @Test

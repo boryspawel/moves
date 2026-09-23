@@ -17,6 +17,7 @@ import com.motionecosystem.safety.domain.SafetyRules.SemanticType;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
 import com.motionecosystem.support.PostgresTestConfiguration;
+import com.motionecosystem.support.AnatomyReferenceFixtureTracker;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort.CycleSnapshot;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort.MicrocycleSnapshot;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort.PlanRevisionSnapshot;
@@ -54,9 +55,12 @@ class SafetyV2IntegrationTest {
     private UUID physio;
     private UUID structure;
     private UUID consentTemplate;
+    private AnatomyReferenceFixtureTracker anatomyFixtures;
 
     @BeforeEach
     void setUp() {
+        anatomyFixtures = new AnatomyReferenceFixtureTracker(jdbc);
+        anatomyFixtures.snapshot();
         participant = account("safety-participant", "PARTICIPANT");
         trainer = account("safety-trainer", "SPECIALIST");
         physio = account("safety-physio", "SPECIALIST");
@@ -94,9 +98,9 @@ class SafetyV2IntegrationTest {
                     specialist.professional_scope,
                     participant.participant_access_link,
                     participant.participant_record,
-                    anatomy_reference.anatomical_structure,
                     identity_access.principal_account CASCADE
                 """);
+        anatomyFixtures.removeAddedFixtures();
     }
 
     @Test

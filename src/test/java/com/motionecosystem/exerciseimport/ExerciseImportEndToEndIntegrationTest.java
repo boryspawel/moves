@@ -2,6 +2,7 @@ package com.motionecosystem.exerciseimport;
 
 import com.motionecosystem.application.MotionEcosystemApplication;
 import com.motionecosystem.support.PostgresTestConfiguration;
+import com.motionecosystem.support.AnatomyReferenceFixtureTracker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,9 +54,12 @@ class ExerciseImportEndToEndIntegrationTest {
     @Autowired
     ExerciseImportService imports;
     MockMvc mvc;
+    AnatomyReferenceFixtureTracker anatomyFixtures;
     @MockitoSpyBean ImportRecordUseCases useCases;
 
     @BeforeEach void setup(){mvc=MockMvcBuilders.webAppContextSetup(context).addFilters(filters).build();
+        anatomyFixtures = new AnatomyReferenceFixtureTracker(jdbc);
+        anatomyFixtures.snapshot();
         jdbc.update("""
                 INSERT INTO anatomy_reference.anatomical_structure(
                     id,code,type,display_name,side_policy,status,taxonomy_version,created_by_subject,
@@ -64,9 +68,9 @@ class ExerciseImportEndToEndIntegrationTest {
                 """,UUID.fromString("00000000-0000-0000-0000-000000000777"));}
     @AfterEach void clean(){jdbc.execute("""
             TRUNCATE TABLE exercise_import.import_source,exercise_catalog.exercise,
-            anatomy_reference.anatomical_structure,audit.audit_event,audit.outbox_event,
+            audit.audit_event,audit.outbox_event,
             batch_job_instance CASCADE
-            """);}
+            """); anatomyFixtures.removeAddedFixtures();}
 
     @Test void jsonlToDraftReviewPublishAndForcedReimportIsUnchanged()throws Exception{
         UUID source=createSource("FIXTURE",true);byte[] file=resource("fixtures/exercise-import-valid.jsonl");

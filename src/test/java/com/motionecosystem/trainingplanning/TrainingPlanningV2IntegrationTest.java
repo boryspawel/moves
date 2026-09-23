@@ -20,6 +20,7 @@ import com.motionecosystem.consent.api.ConsentDecisionPort;
 import com.motionecosystem.consent.api.TestDefaultConsentOverridePort;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
+import com.motionecosystem.support.AnatomyReferenceFixtureTracker;
 import com.motionecosystem.support.PostgresTestConfiguration;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.BudgetAction;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.GoalPerspective;
@@ -87,9 +88,12 @@ class TrainingPlanningV2IntegrationTest {
     UUID exerciseVersionId;
     UUID exerciseSetVersionId;
     UUID fixtureSafetyStructureId;
+    AnatomyReferenceFixtureTracker anatomyFixtures;
 
     @BeforeEach
     void setUp() {
+        anatomyFixtures = new AnatomyReferenceFixtureTracker(jdbc);
+        anatomyFixtures.snapshot();
         participantId = account("planning-participant", "PARTICIPANT");
         otherParticipantId = account("other-planning-participant", "PARTICIPANT");
         specialistId = account("planning-specialist", "SPECIALIST");
@@ -124,6 +128,7 @@ class TrainingPlanningV2IntegrationTest {
                     identity_access.principal_account
                 CASCADE
                 """);
+        anatomyFixtures.removeAddedFixtures();
     }
 
     @Test

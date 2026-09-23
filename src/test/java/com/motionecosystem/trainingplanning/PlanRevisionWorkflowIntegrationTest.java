@@ -15,6 +15,7 @@ import com.motionecosystem.safety.api.SafetyAssessmentPort.Result;
 import com.motionecosystem.safety.domain.SafetyRules.SemanticType;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
+import com.motionecosystem.support.AnatomyReferenceFixtureTracker;
 import com.motionecosystem.support.PostgresTestConfiguration;
 import com.motionecosystem.planworkflow.PlanRevisionWorkflowService;
 import com.motionecosystem.planworkflow.PlanRevisionWorkflowService.AcknowledgeWarningCommand;
@@ -81,9 +82,12 @@ class PlanRevisionWorkflowIntegrationTest {
     UUID structure;
     UUID exerciseVersion;
     UUID exerciseSetVersion;
+    AnatomyReferenceFixtureTracker anatomyFixtures;
 
     @BeforeEach
     void setUp() {
+        anatomyFixtures = new AnatomyReferenceFixtureTracker(jdbc);
+        anatomyFixtures.snapshot();
         participant = account("workflow-participant", "PARTICIPANT");
         otherParticipant = account("workflow-other", "PARTICIPANT");
         trainer = account("workflow-trainer", "SPECIALIST");
@@ -126,10 +130,10 @@ class PlanRevisionWorkflowIntegrationTest {
                     participant.participant_access_link,
                     participant.participant_record,
                     exercise_catalog.exercise,
-                    anatomy_reference.anatomical_structure,
                     identity_access.principal_account
                 CASCADE
                 """);
+        anatomyFixtures.removeAddedFixtures();
     }
 
     @Test

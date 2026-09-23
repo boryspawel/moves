@@ -94,8 +94,10 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
-      args:
-        KEYCLOAK_URL: http://localhost:${KEYCLOAK_HOST_PORT:-8180}
+    environment:
+      KEYCLOAK_URL: http://localhost:${KEYCLOAK_HOST_PORT:-8180}
+      KEYCLOAK_REALM: motion-local
+      KEYCLOAK_CLIENT_ID: motion-web
     restart: unless-stopped
     ports:
       - "${FRONTEND_HOST_PORT:-4200}:8080"

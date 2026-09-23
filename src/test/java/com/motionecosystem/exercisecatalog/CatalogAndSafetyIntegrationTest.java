@@ -27,6 +27,7 @@ import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.participant.ParticipantRecord;
 import com.motionecosystem.safety.domain.SafetyRules;
 import com.motionecosystem.support.PostgresTestConfiguration;
+import com.motionecosystem.support.AnatomyReferenceFixtureTracker;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityManager;
 import org.hibernate.SessionFactory;
@@ -61,9 +62,12 @@ class CatalogAndSafetyIntegrationTest {
     @Autowired TransactionTemplate transactions;
 
     MockMvc mvc;
+    AnatomyReferenceFixtureTracker anatomyFixtures;
 
     @BeforeEach
     void setUp() {
+        anatomyFixtures = new AnatomyReferenceFixtureTracker(jdbc);
+        anatomyFixtures.snapshot();
         mvc = MockMvcBuilders.webAppContextSetup(context)
                 .addFilters(securityFilterChain)
                 .build();
@@ -77,10 +81,10 @@ class CatalogAndSafetyIntegrationTest {
                     safety.readiness_check_in,
                     safety.participant_restriction,
                     exercise_catalog.exercise,
-                    anatomy_reference.anatomical_structure,
                     identity_access.principal_account
                 CASCADE
                 """);
+        anatomyFixtures.removeAddedFixtures();
     }
 
     @Test

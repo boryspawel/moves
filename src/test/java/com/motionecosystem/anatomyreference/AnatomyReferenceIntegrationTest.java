@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 import com.motionecosystem.anatomyreference.api.AnatomyReferenceQueryPort;
 import com.motionecosystem.anatomyreference.api.AnatomyReferenceQueryPort.StructureStatus;
 import com.motionecosystem.application.MotionEcosystemApplication;
+import com.motionecosystem.support.AnatomyReferenceFixtureTracker;
 import com.motionecosystem.support.PostgresTestConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,9 +44,12 @@ class AnatomyReferenceIntegrationTest {
     @Autowired AnatomyReferenceQueryPort queries;
 
     MockMvc mvc;
+    AnatomyReferenceFixtureTracker anatomyFixtures;
 
     @BeforeEach
     void setUp() {
+        anatomyFixtures = new AnatomyReferenceFixtureTracker(jdbc);
+        anatomyFixtures.snapshot();
         mvc = MockMvcBuilders.webAppContextSetup(context)
                 .addFilters(securityFilterChain)
                 .build();
@@ -53,13 +57,8 @@ class AnatomyReferenceIntegrationTest {
 
     @AfterEach
     void clean() {
-        jdbc.execute("""
-                TRUNCATE TABLE
-                    audit.audit_event,
-                    anatomy_reference.anatomical_structure_relation,
-                    anatomy_reference.anatomical_structure
-                CASCADE
-                """);
+        jdbc.execute("TRUNCATE TABLE audit.audit_event CASCADE");
+        anatomyFixtures.removeAddedFixtures();
     }
 
     @Test
@@ -159,7 +158,10 @@ class AnatomyReferenceIntegrationTest {
                     .containsExactlyInAnyOrder(200, 409);
         }
         assertThat(jdbc.queryForObject(
-                "SELECT COUNT(*) FROM anatomy_reference.anatomical_structure_relation", Long.class)).isEqualTo(1);
+                """
+                SELECT COUNT(*) FROM anatomy_reference.anatomical_structure_relation
+                WHERE (parent_id = ? AND child_id = ?) OR (parent_id = ? AND child_id = ?)
+                """, Long.class, first, second, second, first)).isEqualTo(1);
     }
 
     @Test
