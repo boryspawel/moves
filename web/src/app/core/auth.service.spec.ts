@@ -99,4 +99,20 @@ describe('AuthService', () => {
     release(); await pending;
     expect(keycloakClient.init).toHaveBeenCalledOnce();
   });
+
+  it('becomes ready and anonymous when silent SSO initialization is rejected', async () => {
+    keycloakClient.init.mockRejectedValue(new Error('silent SSO failed'));
+
+    const auth = TestBed.inject(AuthService);
+    await expect(auth.initialize()).resolves.toBeUndefined();
+
+    expect(auth.ready()).toBe(true);
+    expect(auth.authenticated()).toBe(false);
+    expect(keycloakClient.init).toHaveBeenCalledWith({
+      onLoad: 'check-sso',
+      pkceMethod: 'S256',
+      checkLoginIframe: false,
+      silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso.html`
+    });
+  });
 });

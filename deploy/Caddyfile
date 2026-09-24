@@ -5,16 +5,24 @@
 
 https://{$APP_DOMAIN} {
 	encode zstd gzip
+	@silent_check path /silent-check-sso.html
+	@normal_response not path /silent-check-sso.html
 	request_body {
 		max_size 12MB
 	}
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options "nosniff"
-		X-Frame-Options "DENY"
 		Referrer-Policy "strict-origin-when-cross-origin"
 		Permissions-Policy "camera=(), microphone=(), geolocation=()"
 		-Server
+	}
+	header @normal_response {
+		>X-Frame-Options "DENY"
+	}
+	header @silent_check {
+		-X-Frame-Options
+		>Content-Security-Policy "frame-ancestors 'self'"
 	}
 	reverse_proxy web:8080
 }

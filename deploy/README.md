@@ -29,6 +29,8 @@ docker compose --env-file .env -f compose.prod.yml config -q
 
 Usługa `web` działa jako użytkownik nginx (UID/GID 101) z read-only root filesystem. Katalogi runtime nginx i konfiguracji frontendowej są osobnymi tmpfs należącymi do tego użytkownika; nie dodawaj capability ani nie uruchamiaj tej usługi jako root.
 
+`/silent-check-sso.html` jest jedynym wyjątkiem od `X-Frame-Options: DENY`: Caddy usuwa ten nagłówek tylko dla dokładnej ścieżki i zwraca `Content-Security-Policy: frame-ancestors 'self'`, aby umożliwić silent SSO Keycloak. Wszystkie pozostałe ścieżki, w tym `/login`, `/assets/**` i `/api/**`, zachowują `DENY`.
+
 On the first deployment, start the stack and then perform the one-time realm/client bootstrap. It never imports the demo realm and refuses to modify an existing realm:
 
 ```bash

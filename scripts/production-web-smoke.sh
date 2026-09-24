@@ -11,7 +11,7 @@ compose=(docker compose --project-name "$project" --env-file "$env_file" -f depl
 cleanup() {
   status=$?
   if (( status != 0 )); then
-    "${compose[@]}" logs --no-color web || true
+    "${compose[@]}" logs --no-color web caddy || true
   fi
   "${compose[@]}" down --volumes --remove-orphans || true
   docker image rm "$image" >/dev/null 2>&1 || true
@@ -21,9 +21,9 @@ cleanup() {
 trap cleanup EXIT
 
 cat > "$env_file" <<EOF
-APP_DOMAIN=app.smoke.invalid
-AUTH_DOMAIN=auth.smoke.invalid
-ACME_EMAIL=ops@smoke.invalid
+APP_DOMAIN=app.localhost
+AUTH_DOMAIN=auth.localhost
+ACME_EMAIL=ops@localhost
 WEB_IMAGE_REPOSITORY=unused/web
 BACKEND_IMAGE_REPOSITORY=unused/api
 RELEASE_SHA=smoke
@@ -46,6 +46,9 @@ write_override() {
   local url=$1 realm=$2 client_id=$3
   cat > "$override_file" <<EOF
 services:
+  caddy:
+    ports: !override
+      - "127.0.0.1::443"
   web:
     image: $image
     environment:
@@ -55,9 +58,11 @@ services:
     ports:
       - "127.0.0.1::8080"
     # The focused smoke does not start backend; this only satisfies nginx's
-    # startup-time upstream name resolution. The full Compose smoke exercises it.
+    # startup-time upstream name resolution. nginx listens only on IPv4, so
+    # the IPv6 loopback keeps absent backend requests from reaching web itself.
+    # The full Compose smoke exercises the real backend flow.
     extra_hosts:
-      - "backend:127.0.0.1"
+      backend: "::1"
 EOF
 }
 
@@ -122,6 +127,18 @@ expect_entrypoint_failure invalid-client-quote "$first_url" "$first_realm" 'runt
 expect_entrypoint_failure invalid-client-backslash "$first_url" "$first_realm" 'runtime\injection'
 expect_entrypoint_failure invalid-client-line-feed "$first_url" "$first_realm" "$invalid_client_lf"
 
+caddy_request() {
+  local path=$1 headers=$2 body=$3
+  curl --silent --show-error --insecure \
+    --resolve "app.localhost:$caddy_port:127.0.0.1" \
+    --dump-header "$headers" --output "$body" --write-out '%{http_code}' \
+    "https://app.localhost:$caddy_port$path"
+}
+
+assert_x_frame_options_deny() {
+  grep -Eiq '^x-frame-options:[[:space:]]*DENY[[:space:]]*$' "$1"
+}
+
 write_override "$first_url" "$first_realm" "$first_client"
 "${compose[@]}" config -q
 "${compose[@]}" up --no-deps --wait --wait-timeout 60 web
@@ -154,6 +171,55 @@ if "${compose[@]}" exec -T web sh -c 'touch /usr/share/nginx/html/runtime-smoke-
   echo 'static frontend assets must remain read-only' >&2
   exit 1
 fi
+
+"${compose[@]}" run --rm --no-deps --entrypoint caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+"${compose[@]}" up --no-deps --detach caddy
+caddy_id="$("${compose[@]}" ps -q caddy)"
+test -n "$caddy_id"
+caddy_bindings="$(docker inspect --format '{{json .HostConfig.PortBindings}}' "$caddy_id")"
+grep -Fq '"443/tcp"' <<<"$caddy_bindings"
+! grep -Fq '"80/tcp"' <<<"$caddy_bindings"
+grep -Fq '"HostIp":"127.0.0.1"' <<<"$caddy_bindings"
+grep -Fq '"HostPort":""' <<<"$caddy_bindings"
+caddy_endpoint="$("${compose[@]}" port caddy 443)"
+caddy_port="${caddy_endpoint##*:}"
+test -n "$caddy_port"
+for attempt in {1..30}; do
+  if curl --silent --show-error --insecure --output /dev/null \
+    --resolve "app.localhost:$caddy_port:127.0.0.1" \
+    "https://app.localhost:$caddy_port/healthz"; then
+    break
+  fi
+  sleep 1
+done
+test "$attempt" -le 30
+
+for path in / /login /assets/runtime-config.js; do
+  headers="$temp_dir/caddy$(tr '/' '_' <<<"$path").headers"
+  body="$temp_dir/caddy$(tr '/' '_' <<<"$path").body"
+  test "$(caddy_request "$path" "$headers" "$body")" = 200
+  assert_x_frame_options_deny "$headers"
+done
+test "$(cat "$temp_dir/caddy_assets_runtime-config.js.body")" = "$expected_first"
+
+headers="$temp_dir/caddy_api.headers"
+body="$temp_dir/caddy_api.body"
+caddy_request /api/test "$headers" "$body" >/dev/null
+assert_x_frame_options_deny "$headers"
+
+headers="$temp_dir/caddy_silent.headers"
+body="$temp_dir/caddy_silent.body"
+test "$(caddy_request /silent-check-sso.html "$headers" "$body")" = 200
+! grep -Eiq '^x-frame-options:' "$headers"
+grep -Eiq "^content-security-policy:[[:space:]]*frame-ancestors 'self'[[:space:]]*$" "$headers"
+test "$(cat "$body")" = '<!doctype html><html><body><script>parent.postMessage(location.href, location.origin)</script></body></html>'
+
+for path in /silent-check-sso.html/ /silent-check-sso.html.suffix; do
+  headers="$temp_dir/caddy$(tr '/' '_' <<<"$path").headers"
+  body="$temp_dir/caddy$(tr '/' '_' <<<"$path").body"
+  test "$(caddy_request "$path" "$headers" "$body")" = 200
+  assert_x_frame_options_deny "$headers"
+done
 
 write_override "$second_url" "$second_realm" "$second_client"
 "${compose[@]}" up --no-deps --force-recreate --wait --wait-timeout 60 web
