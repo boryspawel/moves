@@ -44,3 +44,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: bash scripts/compose-smoke.sh
+      - run: bash scripts/production-web-smoke.sh

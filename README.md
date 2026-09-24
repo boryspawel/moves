@@ -73,7 +73,7 @@ docker compose up
 
 Frontend używa `/api` na tym samym originie; Nginx przekazuje ten prefiks do usługi `backend`. Dzięki temu zwykłe wywołania aplikacji nie wymagają CORS. Backend jest także wystawiony na `8080` dla OpenAPI i diagnostyki.
 
-Keycloak emituje tokeny z publicznym issuerem `http://localhost:8180/realms/motion-local`. Backend zachowuje walidację `iss` względem tego adresu, ale pobiera JWK po wewnętrznym adresie `http://keycloak:8080/...`, więc kontenery komunikują się po nazwach usług. Adres Keycloak w produkcyjnym bundle Angulara jest jednorazowo wstrzykiwany z `KEYCLOAK_HOST_PORT` podczas buildu; nie jest to ustawienie z developmentowego `environment.ts`.
+Keycloak emituje tokeny z publicznym issuerem `http://localhost:8180/realms/motion-local`. Backend zachowuje walidację `iss` względem tego adresu, ale pobiera JWK po wewnętrznym adresie `http://keycloak:8080/...`, więc kontenery komunikują się po nazwach usług. Obraz Angulara nie zawiera adresu Keycloak z buildu: lokalny Compose przekazuje przy starcie `http://localhost:${KEYCLOAK_HOST_PORT:-8180}`, a produkcyjny Compose przekazuje `https://${AUTH_DOMAIN}` wraz z realm i client ID. Ten sam obraz odczytuje konfigurację runtime z kontenera.
 
 Domyślne porty są częścią kontraktu lokalnego realm importu. Dla zmienionych portów należy odpowiednio zmienić `redirectUris` i `webOrigins` w `infra/keycloak/motion-local-realm.json` przed pierwszym importem realm. Konfiguracja produkcyjna powinna mieć konkretne HTTPS originy, zarządzane sekrety i trwałą konfigurację Keycloak.
 
@@ -127,9 +127,12 @@ nie jest trwałą worklistą ani nie zmienia lifecycle automatycznie.
 docker compose ps
 docker compose logs -f backend keycloak
 bash scripts/compose-smoke.sh
+bash scripts/production-web-smoke.sh
 ```
 
 Smoke test uruchamia osobny projekt Compose z oddzielnym wolumenem i portami, czeka na healthchecki, weryfikuje frontend, routing Angulara, Actuator, konfigurację OIDC i odpowiedź `401` chronionego endpointu, po czym usuwa wyłącznie własne zasoby. Przy błędzie wypisuje logi usług.
+
+`production-web-smoke.sh` buduje obraz frontendowy i uruchamia wyłącznie usługę `web` z produkcyjnego Compose oraz tymczasowym override. Weryfikuje runtime configuration, read-only root filesystem i tmpfs bez uruchamiania usług produkcyjnych.
 
 Do lokalnych testów Java nadal aktywuj Java 25 w SDKMAN przed Mavenem:
 

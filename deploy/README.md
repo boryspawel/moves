@@ -27,6 +27,8 @@ Set `RELEASE_SHA` to a full SHA already published for both GHCR repositories. Va
 docker compose --env-file .env -f compose.prod.yml config -q
 ```
 
+Usługa `web` działa jako użytkownik nginx (UID/GID 101) z read-only root filesystem. Katalogi runtime nginx i konfiguracji frontendowej są osobnymi tmpfs należącymi do tego użytkownika; nie dodawaj capability ani nie uruchamiaj tej usługi jako root.
+
 On the first deployment, start the stack and then perform the one-time realm/client bootstrap. It never imports the demo realm and refuses to modify an existing realm:
 
 ```bash
@@ -34,7 +36,7 @@ On the first deployment, start the stack and then perform the one-time realm/cli
 BOOTSTRAP_CONFIRM=moves ./scripts/bootstrap-keycloak.sh
 ```
 
-Replace `moves` with the exact `KEYCLOAK_REALM` value. `AUTH_DOMAIN` is the public Keycloak hostname; `KEYCLOAK_URL`, `KEYCLOAK_REALM`, and `KEYCLOAK_CLIENT_ID` are passed unchanged to the frontend runtime configuration. The script creates that public PKCE client, exact HTTPS redirect/origin, audience mapper, and application roles. It deliberately creates no user. Use the Keycloak admin console to create named operators and assign the minimum required roles; keep the bootstrap admin only for break-glass administration and rotate its password afterwards.
+Replace `moves` with the exact `KEYCLOAK_REALM` value. `AUTH_DOMAIN` is the public Keycloak hostname; production Compose derives `KEYCLOAK_URL` as `https://${AUTH_DOMAIN}` and passes it with `KEYCLOAK_REALM` and `KEYCLOAK_CLIENT_ID` to the frontend runtime configuration. The script creates that public PKCE client, exact HTTPS redirect/origin, audience mapper, and application roles. It deliberately creates no user. Use the Keycloak admin console to create named operators and assign the minimum required roles; keep the bootstrap admin only for break-glass administration and rotate its password afterwards.
 
 ## Deploy, health, logs, and rollback
 

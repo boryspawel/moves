@@ -36,6 +36,7 @@ if ! printf '%s' "$KEYCLOAK_REALM" | grep -Eq '^[A-Za-z0-9._-]+$' || ! printf '%
     exit 1
 fi
 
+mkdir -p /var/run/moves
 printf 'window.__MOVES_RUNTIME_CONFIG__ = Object.freeze({keycloak: {url: "%s", realm: "%s", clientId: "%s"}});\n' \
     "$KEYCLOAK_URL" "$KEYCLOAK_REALM" "$KEYCLOAK_CLIENT_ID" \
-    > /usr/share/nginx/html/assets/runtime-config.js
+    > /var/run/moves/runtime-config.js
