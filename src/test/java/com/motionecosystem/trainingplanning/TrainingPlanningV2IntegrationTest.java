@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -98,6 +99,7 @@ class TrainingPlanningV2IntegrationTest {
     @Autowired SessionExecutionService executions;
     @Autowired SessionExecutionAttemptService executionAttempts;
     @Autowired RecurringAvailabilityService availability;
+    @Autowired Clock clock;
 
     UUID participantId;
     UUID otherParticipantId;
@@ -476,7 +478,9 @@ class TrainingPlanningV2IntegrationTest {
         availability.replace(specialistId, Arrays.stream(DayOfWeek.values())
                 .map(day -> new RecurringAvailabilityService.Slot(day, LocalTime.of(8, 0), LocalTime.of(22, 0), "UTC")).toList());
 
-        LocalDate scheduled = LocalDate.now();
+        Instant appointmentNow = clock.instant();
+        Instant startsAt = appointmentNow.plusSeconds(15 * 60);
+        LocalDate scheduled = startsAt.atZone(java.time.ZoneOffset.UTC).toLocalDate();
         EditorView editor = planning.createDraft("planning-specialist", new CreateDraftCommand(canonicalParticipantId,
                 "Appointment plan", "Operational appointment", PlanMode.SPECIALIST, "Appointment phase",
                 scheduled, scheduled.plusDays(7), new ActingContext(ProfessionalRole.TRAINER)));
@@ -500,7 +504,6 @@ class TrainingPlanningV2IntegrationTest {
                 new ActivateWorkflowCommand(new ActingContext(ProfessionalRole.TRAINER)));
         transactions.executeWithoutResult(status -> AppointmentSessionFixtureFactory.setStatus(entityManager, sessionId, SessionStatus.ASSIGNED));
 
-        Instant startsAt = scheduled.atTime(10, 0).toInstant(java.time.ZoneOffset.UTC);
         var startedAttempt = executionAttempts.start("appointment-link-participant-account", sessionId, revisionId,
                 "STANDARD", "appointment-link-active-attempt");
         assertStatus(HttpStatus.CONFLICT, () -> appointments.create("planning-specialist", "appointment-link-reject-active-attempt",
