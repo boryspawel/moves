@@ -309,6 +309,36 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
     }
 
     @Override
+    public Optional<AppointmentSessionLink> findAppointmentSessionLink(UUID sessionId) {
+        return appointmentSessionLink(sessionId);
+    }
+
+    @Override
+    public Optional<AppointmentSessionLink> lockAppointmentSessionLink(UUID sessionId) {
+        PlannedSessionJpaEntity session = entityManager.find(PlannedSessionJpaEntity.class, sessionId, LockModeType.PESSIMISTIC_WRITE);
+        return session == null ? Optional.empty() : appointmentSessionLink(sessionId);
+    }
+
+    private Optional<AppointmentSessionLink> appointmentSessionLink(UUID sessionId) {
+        return entityManager.createQuery("""
+                SELECT session, revision, plan
+                FROM PlannedSessionJpaEntity session, MicrocycleJpaEntity microcycle, TrainingCycleJpaEntity cycle,
+                     PlanRevisionJpaEntity revision, TrainingPlanJpaEntity plan
+                WHERE session.id = :sessionId AND session.microcycleId = microcycle.id
+                  AND microcycle.cycleId = cycle.id
+                  AND cycle.revisionId = revision.id AND revision.planId = plan.id
+                """, Object[].class).setParameter("sessionId", sessionId).getResultStream().findFirst()
+                .map(row -> {
+                    PlannedSessionJpaEntity session = (PlannedSessionJpaEntity) row[0];
+                    PlanRevisionJpaEntity revision = (PlanRevisionJpaEntity) row[1];
+                    TrainingPlanJpaEntity plan = (TrainingPlanJpaEntity) row[2];
+                    return new AppointmentSessionLink(session.id, session.participantId, revision.id,
+                            session.title, session.kind.name(), session.status.name(), revision.status,
+                            plan.status, plan.currentRevisionId);
+                });
+    }
+
+    @Override
     public Optional<PlanRevisionSnapshot> findRevision(UUID revisionId) {
         PlanRevisionJpaEntity revision = entityManager.find(PlanRevisionJpaEntity.class, revisionId);
         if (revision == null) {

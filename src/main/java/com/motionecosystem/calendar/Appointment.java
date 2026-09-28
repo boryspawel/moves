@@ -29,15 +29,20 @@ public class Appointment {
 
     protected Appointment() { }
     Appointment(UUID specialist, UUID participant, Instant starts, Instant ends, Type type, LocationMode mode,
-            String location, String purpose, UUID createdBy, Instant now) {
+            String location, String purpose, UUID plannedSessionId, UUID createdBy, Instant now) {
         id = UUID.randomUUID(); specialistAccountId = specialist; participantId = participant;
         startsAt = starts; endsAt = ends; this.type = type; status = Status.SCHEDULED; locationMode = mode;
-        this.location = location; shortPurpose = purpose; createdByAccountId = createdBy; createdAt = now; updatedAt = now;
+        this.location = location; shortPurpose = purpose; this.plannedSessionId = plannedSessionId; createdByAccountId = createdBy; createdAt = now; updatedAt = now;
     }
-    void update(Instant starts, Instant ends, Type type, LocationMode mode, String location, String purpose, Instant now) {
-        startsAt = starts; endsAt = ends; this.type = type; locationMode = mode; this.location = location; shortPurpose = purpose; updatedAt = now;
+    Appointment(UUID specialist, UUID participant, Instant starts, Instant ends, Type type, LocationMode mode,
+            String location, String purpose, UUID createdBy, Instant now) {
+        this(specialist, participant, starts, ends, type, mode, location, purpose, null, createdBy, now);
+    }
+    void update(Instant starts, Instant ends, Type type, LocationMode mode, String location, String purpose, UUID plannedSessionId, Instant now) {
+        startsAt = starts; endsAt = ends; this.type = type; locationMode = mode; this.location = location; shortPurpose = purpose; this.plannedSessionId = plannedSessionId; updatedAt = now;
     }
     void cancel(Instant now) { status = Status.CANCELLED; updatedAt = now; }
+    void start(Instant now) { status = Status.IN_PROGRESS; updatedAt = now; }
     void noShow(Instant now) { status = Status.NO_SHOW; updatedAt = now; }
     void complete(Instant now) { status = Status.COMPLETED; updatedAt = now; }
 }

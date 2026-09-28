@@ -7,12 +7,15 @@ import java.util.List;
 
 /** The single source of truth for appointment lifecycle decisions. */
 public final class AppointmentLifecyclePolicy {
-    public enum Action { UPDATE, CANCEL, COMPLETE, MARK_NO_SHOW }
+    public enum Action { UPDATE, CANCEL, START, COMPLETE, MARK_NO_SHOW }
 
     public boolean allows(Action action, Appointment appointment, Instant now) {
         if (appointment == null || now == null) return false;
         return switch (action) {
             case UPDATE, CANCEL -> schedulable(appointment.status) && now.isBefore(appointment.startsAt);
+            case START -> schedulable(appointment.status)
+                    && !now.isBefore(appointment.startsAt.minusSeconds(30 * 60))
+                    && !now.isAfter(appointment.endsAt);
             case COMPLETE -> (schedulable(appointment.status) && !now.isBefore(appointment.startsAt))
                     || appointment.status == Appointment.Status.IN_PROGRESS;
             case MARK_NO_SHOW -> schedulable(appointment.status) && !now.isBefore(appointment.endsAt);
@@ -44,6 +47,7 @@ public final class AppointmentLifecyclePolicy {
         return switch (action) {
             case UPDATE -> "UPDATE";
             case CANCEL -> "CANCEL";
+            case START -> "START";
             case COMPLETE -> "COMPLETE";
             case MARK_NO_SHOW -> "MARK_NO_SHOW";
         };

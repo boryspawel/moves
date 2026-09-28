@@ -196,6 +196,7 @@ export * from './ParticipantProfileRequest';
 export * from './ParticipantTimelineEvent';
 export * from './ParticipantTimelineView';
 export * from './ParticipantVersionView';
+export * from './ParticipantWorkspaceAppointmentView';
 export * from './PerformedSession';
 export * from './PeriodCommand';
 export * from './PlanBundle';

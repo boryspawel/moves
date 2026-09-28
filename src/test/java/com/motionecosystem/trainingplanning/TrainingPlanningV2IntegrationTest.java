@@ -5,16 +5,28 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import com.motionecosystem.application.MotionEcosystemApplication;
 import com.motionecosystem.application.workspace.SpecialistParticipantReadService;
 import com.motionecosystem.application.workspace.SpecialistClientService;
+import com.motionecosystem.availability.RecurringAvailabilityService;
+import com.motionecosystem.calendar.Appointment;
+import com.motionecosystem.calendar.AppointmentService;
 import com.motionecosystem.adherence.TodayAgendaService;
+import com.motionecosystem.trainingexecution.SessionExecutionService;
+import com.motionecosystem.trainingexecution.SessionExecutionAttemptService;
 import com.motionecosystem.consent.ConsentGrantService;
 import com.motionecosystem.consent.api.ConsentDecisionPort;
 import com.motionecosystem.consent.api.TestDefaultConsentOverridePort;
@@ -22,6 +34,8 @@ import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.Acting
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
 import com.motionecosystem.support.AnatomyReferenceFixtureTracker;
 import com.motionecosystem.support.PostgresTestConfiguration;
+import com.motionecosystem.trainingplanning.PlannedSession.SessionStatus;
+import com.motionecosystem.trainingplanning.infrastructure.AppointmentSessionFixtureFactory;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.BudgetAction;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.GoalPerspective;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.PlanMode;
@@ -80,6 +94,10 @@ class TrainingPlanningV2IntegrationTest {
     @Autowired TestDefaultConsentOverridePort testConsentOverrides;
     @Autowired EntityManager entityManager;
     @Autowired TransactionTemplate transactions;
+    @Autowired AppointmentService appointments;
+    @Autowired SessionExecutionService executions;
+    @Autowired SessionExecutionAttemptService executionAttempts;
+    @Autowired RecurringAvailabilityService availability;
 
     UUID participantId;
     UUID otherParticipantId;
@@ -446,6 +464,120 @@ class TrainingPlanningV2IntegrationTest {
     }
 
     @Test
+    void appointmentLinkUsesTheV2PlanningPortForDistinctParticipantRecordsAndPersistsTheUniqueLink() {
+        UUID participantAccountId = account("appointment-link-participant-account", "PARTICIPANT");
+        UUID canonicalParticipantId = UUID.randomUUID();
+        participantRecord(canonicalParticipantId, participantAccountId, "UTC");
+        relationship(specialistId, canonicalParticipantId);
+        UUID template = consents.publishTemplate("APPOINTMENT_LINK", 1, "urn:test:appointment-link", "EXPLICIT_CONSENT").id();
+        consents.grant("appointment-link-participant-account", new ConsentGrantService.GrantCommand(specialistId,
+                ConsentDecisionPort.Purpose.PERFORMANCE_PLANNING, template,
+                Set.of(ConsentDecisionPort.DataScope.PLAN), null, null));
+        availability.replace(specialistId, Arrays.stream(DayOfWeek.values())
+                .map(day -> new RecurringAvailabilityService.Slot(day, LocalTime.of(8, 0), LocalTime.of(22, 0), "UTC")).toList());
+
+        LocalDate scheduled = LocalDate.now();
+        EditorView editor = planning.createDraft("planning-specialist", new CreateDraftCommand(canonicalParticipantId,
+                "Appointment plan", "Operational appointment", PlanMode.SPECIALIST, "Appointment phase",
+                scheduled, scheduled.plusDays(7), new ActingContext(ProfessionalRole.TRAINER)));
+        UUID revisionId = editor.revision().revisionId();
+        editor = planning.addGoal("planning-specialist", revisionId,
+                new AddGoalCommand(version(editor), canonicalGoal(canonicalParticipantId)));
+        editor = planning.addCycle("planning-specialist", revisionId,
+                cycle(version(editor), scheduled, scheduled.plusDays(7)));
+        UUID cycleId = editor.revision().cycles().getFirst().id();
+        editor = planning.addMicrocycle("planning-specialist", revisionId, new AddMicrocycleCommand(version(editor), cycleId,
+                1, "Appointment week", scheduled, scheduled.plusDays(6), "Appointment phase", "Run the appointment"));
+        UUID microcycleId = editor.revision().cycles().getFirst().microcycles().getFirst().id();
+        editor = planning.addSession("planning-specialist", revisionId, new AddSessionCommand(version(editor), microcycleId,
+                "Linked appointment session", scheduled, null, null, 45, exerciseSetVersionId));
+        UUID sessionId = editor.revision().cycles().getFirst().microcycles().getFirst().sessions().getFirst().id();
+        assertThat(planning.validateStructurally("planning-specialist", revisionId, new ValidateCommand(version(editor))).result())
+                .isEqualTo(TrainingPlanningModel.ValidationResult.PASS);
+        workflow.validate("planning-specialist", revisionId,
+                new ValidateWorkflowCommand(version(editor), new ActingContext(ProfessionalRole.TRAINER)));
+        workflow.activate("planning-specialist", revisionId, "appointment-link-activation",
+                new ActivateWorkflowCommand(new ActingContext(ProfessionalRole.TRAINER)));
+        transactions.executeWithoutResult(status -> AppointmentSessionFixtureFactory.setStatus(entityManager, sessionId, SessionStatus.ASSIGNED));
+
+        Instant startsAt = scheduled.atTime(10, 0).toInstant(java.time.ZoneOffset.UTC);
+        var startedAttempt = executionAttempts.start("appointment-link-participant-account", sessionId, revisionId,
+                "STANDARD", "appointment-link-active-attempt");
+        assertStatus(HttpStatus.CONFLICT, () -> appointments.create("planning-specialist", "appointment-link-reject-active-attempt",
+                new AppointmentService.CreateCommand(canonicalParticipantId, startsAt, startsAt.plusSeconds(45 * 60), Appointment.Type.TRAINING,
+                        Appointment.LocationMode.IN_PERSON, null, "Linked appointment", sessionId)));
+        executionAttempts.abandon("appointment-link-participant-account", startedAttempt.attemptId(), "FATIGUE");
+        CountDownLatch linkOwnsSession = new CountDownLatch(1);
+        CountDownLatch startSubmitted = new CountDownLatch(1);
+        ExecutorService workers = Executors.newFixedThreadPool(2);
+        AppointmentService.AppointmentView created;
+        try {
+            Future<AppointmentService.AppointmentView> linking = workers.submit(() -> transactions.execute(status -> {
+                planning.requireLinkable("planning-specialist", canonicalParticipantId, sessionId);
+                linkOwnsSession.countDown();
+                await(startSubmitted);
+                return appointments.create("planning-specialist", "appointment-link-create", new AppointmentService.CreateCommand(
+                        canonicalParticipantId, startsAt, startsAt.plusSeconds(45 * 60), Appointment.Type.TRAINING,
+                        Appointment.LocationMode.IN_PERSON, null, "Linked appointment", sessionId));
+            }));
+            Future<HttpStatus> starting = workers.submit(() -> {
+                await(linkOwnsSession);
+                startSubmitted.countDown();
+                try {
+                    executionAttempts.start("appointment-link-participant-account", sessionId, revisionId,
+                            "STANDARD", "appointment-link-racing-start");
+                    return HttpStatus.OK;
+                } catch (ResponseStatusException rejected) {
+                    return HttpStatus.valueOf(rejected.getStatusCode().value());
+                }
+            });
+            created = get(linking);
+            assertThat(get(starting)).isEqualTo(HttpStatus.CONFLICT);
+        } finally {
+            workers.shutdownNow();
+            awaitTermination(workers);
+        }
+        assertThat(created.participantId()).isEqualTo(canonicalParticipantId).isNotEqualTo(participantAccountId);
+        assertThat(created.plannedSessionId()).isEqualTo(sessionId);
+        assertThat(today.today("appointment-link-participant-account").sessions())
+                .extracting(TodayAgendaService.AgendaSessionView::sessionId).doesNotContain(sessionId);
+        assertStatus(HttpStatus.CONFLICT, () -> executions.declare("appointment-link-participant-account", sessionId,
+                "appointment-bound-declaration", new SessionExecutionService.DeclareExecutionCommand(true, List.of(),
+                        0, 0, null, null, null, "DECLARED")));
+
+        var updated = appointments.update("planning-specialist", created.appointmentId(), "appointment-link-update",
+                new AppointmentService.UpdateCommand(canonicalParticipantId, startsAt, startsAt.plusSeconds(45 * 60),
+                        Appointment.Type.TRAINING, Appointment.LocationMode.IN_PERSON, null, "Updated linked appointment",
+                        sessionId, created.version()));
+        assertThat(updated.plannedSessionId()).isEqualTo(sessionId);
+        assertStatus(HttpStatus.CONFLICT, () -> appointments.create("planning-specialist", "appointment-link-duplicate",
+                new AppointmentService.CreateCommand(canonicalParticipantId, startsAt.plusSeconds(3_600), startsAt.plusSeconds(6_300),
+                        Appointment.Type.TRAINING, Appointment.LocationMode.IN_PERSON, null, "Duplicate link", sessionId)));
+        assertStatus(HttpStatus.BAD_REQUEST, () -> planning.requireLinkable("planning-specialist", canonicalParticipantId, UUID.randomUUID()));
+        assertStatus(HttpStatus.FORBIDDEN, () -> planning.requireLinkable("planning-specialist", otherParticipantId, sessionId));
+        assertStatus(HttpStatus.FORBIDDEN, () -> planning.requireLinkable("foreign-planning-specialist", canonicalParticipantId, sessionId));
+
+        transactions.executeWithoutResult(status -> AppointmentSessionFixtureFactory.setPlanAndRevisionStatus(
+                entityManager, sessionId, "DRAFT", "ACTIVE"));
+        assertStatus(HttpStatus.CONFLICT, () -> planning.requireLinkable("planning-specialist", canonicalParticipantId, sessionId));
+        transactions.executeWithoutResult(status -> AppointmentSessionFixtureFactory.setPlanAndRevisionStatus(
+                entityManager, sessionId, "ACTIVE", "DRAFT"));
+        assertStatus(HttpStatus.CONFLICT, () -> planning.requireLinkable("planning-specialist", canonicalParticipantId, sessionId));
+        transactions.executeWithoutResult(status -> AppointmentSessionFixtureFactory.setPlanAndRevisionStatus(
+                entityManager, sessionId, "ACTIVE", "ACTIVE"));
+        UUID replacementRevisionId = planning.createRevision("planning-specialist", editor.planId(),
+                new CreateRevisionCommand(revisionId, new ActingContext(ProfessionalRole.TRAINER))).revision().revisionId();
+        transactions.executeWithoutResult(status -> AppointmentSessionFixtureFactory.setCurrentRevision(
+                entityManager, sessionId, replacementRevisionId));
+        assertStatus(HttpStatus.CONFLICT, () -> planning.requireLinkable("planning-specialist", canonicalParticipantId, sessionId));
+        transactions.executeWithoutResult(status -> AppointmentSessionFixtureFactory.setCurrentRevision(
+                entityManager, sessionId, revisionId));
+
+        transactions.executeWithoutResult(status -> AppointmentSessionFixtureFactory.setStatus(entityManager, sessionId, SessionStatus.COMPLETED));
+        assertStatus(HttpStatus.CONFLICT, () -> planning.requireLinkable("planning-specialist", canonicalParticipantId, sessionId));
+    }
+
+    @Test
     void accountFreeManagedParticipantActivatesWithoutLegacyMetricsAndAppearsOnSpecialistTimeline() {
         UUID managedParticipantId = UUID.randomUUID();
         jdbc.update("""
@@ -497,6 +629,32 @@ class TrainingPlanningV2IntegrationTest {
 
     private static long version(EditorView editor) {
         return editor.revision().revisionVersion();
+    }
+
+    private static void await(CountDownLatch latch) {
+        try {
+            if (!latch.await(5, TimeUnit.SECONDS)) throw new AssertionError("concurrent operation did not reach its synchronization point");
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError("concurrent operation was interrupted", interrupted);
+        }
+    }
+
+    private static <T> T get(Future<T> future) {
+        try {
+            return future.get(10, TimeUnit.SECONDS);
+        } catch (Exception failure) {
+            throw new AssertionError("concurrent operation did not complete", failure);
+        }
+    }
+
+    private static void awaitTermination(ExecutorService workers) {
+        try {
+            if (!workers.awaitTermination(5, TimeUnit.SECONDS)) throw new AssertionError("concurrent workers did not terminate");
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError("concurrent workers were interrupted", interrupted);
+        }
     }
 
     private static void assertStatus(HttpStatus expected, Runnable action) {

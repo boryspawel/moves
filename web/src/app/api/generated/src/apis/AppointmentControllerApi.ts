@@ -61,6 +61,12 @@ export interface NoShowRequest {
   appointmentVersionCommand: AppointmentVersionCommand;
 }
 
+export interface StartRequest {
+  id: string;
+  idempotencyKey: string;
+  appointmentVersionCommand: AppointmentVersionCommand;
+}
+
 export interface Update1Request {
   id: string;
   idempotencyKey: string;
@@ -396,6 +402,77 @@ export class AppointmentControllerApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<AppointmentView> {
     const response = await this.noShowRaw(requestParameters, initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Creates request options for start without sending the request
+   */
+  async startRequestOpts(requestParameters: StartRequest): Promise<runtime.RequestOpts> {
+    if (requestParameters['id'] == null) {
+      throw new runtime.RequiredError(
+        'id',
+        'Required parameter "id" was null or undefined when calling start().',
+      );
+    }
+
+    if (requestParameters['idempotencyKey'] == null) {
+      throw new runtime.RequiredError(
+        'idempotencyKey',
+        'Required parameter "idempotencyKey" was null or undefined when calling start().',
+      );
+    }
+
+    if (requestParameters['appointmentVersionCommand'] == null) {
+      throw new runtime.RequiredError(
+        'appointmentVersionCommand',
+        'Required parameter "appointmentVersionCommand" was null or undefined when calling start().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters['Content-Type'] = 'application/json';
+
+    if (requestParameters['idempotencyKey'] != null) {
+      headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+    }
+
+    let urlPath = `/api/v1/specialist/appointments/{id}/start`;
+    urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+    return {
+      path: urlPath,
+      method: 'POST',
+      headers: headerParameters,
+      query: queryParameters,
+      body: AppointmentVersionCommandToJSON(requestParameters['appointmentVersionCommand']),
+    };
+  }
+
+  /**
+   * Start a specialist appointment
+   */
+  async startRaw(
+    requestParameters: StartRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AppointmentView>> {
+    const requestOptions = await this.startRequestOpts(requestParameters);
+    const response = await this.request(requestOptions, initOverrides);
+
+    return new runtime.JSONApiResponse(response, (jsonValue) => AppointmentViewFromJSON(jsonValue));
+  }
+
+  /**
+   * Start a specialist appointment
+   */
+  async start(
+    requestParameters: StartRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AppointmentView> {
+    const response = await this.startRaw(requestParameters, initOverrides);
     return await response.value();
   }
 

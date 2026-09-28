@@ -6,7 +6,7 @@ import { ApiFacade } from '../core/api.facade';
 
 const api = {
   today: { today: vi.fn() }, safety: { checkIn: vi.fn() },
-  attempts: { active: vi.fn(), start: vi.fn(), get3: vi.fn(), resume: vi.fn(), pause: vi.fn(), fact: vi.fn(), finish: vi.fn() },
+  attempts: { active: vi.fn(), start1: vi.fn(), get3: vi.fn(), resume: vi.fn(), pause: vi.fn(), fact: vi.fn(), finish: vi.fn() },
   barriers: { report: vi.fn() },
 };
 
@@ -24,7 +24,7 @@ describe('SessionsPage safety and barriers', () => {
     vi.clearAllMocks();
     api.today.today.mockResolvedValue({ sessions: [{ sessionId: 'session', planRevisionId: 'revision', title: 'Sesja' }] });
     api.attempts.active.mockRejectedValue(new Error('no active attempt'));
-    api.attempts.start.mockResolvedValue({});
+    api.attempts.start1.mockResolvedValue({});
     api.safety.checkIn.mockResolvedValue({});
     await TestBed.configureTestingModule({
       imports: [SessionsPage],
@@ -37,7 +37,7 @@ describe('SessionsPage safety and barriers', () => {
   });
 
   it('keeps pain-area input in the safety check-in request', async () => {
-    api.attempts.start.mockResolvedValue({ attemptId: 'attempt' });
+    api.attempts.start1.mockResolvedValue({ attemptId: 'attempt' });
     api.attempts.get3.mockResolvedValue({ attemptId: 'attempt', state: 'STARTED', session: { prescriptions: [] } });
     const fixture = TestBed.createComponent(SessionsPage); fixture.detectChanges(); await settle(fixture);
     const page = fixture.componentInstance;
@@ -83,11 +83,11 @@ describe('SessionsPage safety and barriers', () => {
 
   it('starts the selected session with its exact revision, not the legacy agenda revision', async () => {
     api.today.today.mockResolvedValue({ activePlan: { activeRevisionId: 'legacy-revision' }, sessions: [{ sessionId: 'first', planRevisionId: 'revision-first' }, { sessionId: 'second', planRevisionId: 'revision-second' }] });
-    api.attempts.start.mockResolvedValue({ attemptId: 'attempt' }); api.attempts.get3.mockResolvedValue({ attemptId: 'attempt', state: 'STARTED', session: { prescriptions: [] } });
+    api.attempts.start1.mockResolvedValue({ attemptId: 'attempt' }); api.attempts.get3.mockResolvedValue({ attemptId: 'attempt', state: 'STARTED', session: { prescriptions: [] } });
     const fixture = TestBed.createComponent(SessionsPage); fixture.detectChanges(); await settle(fixture);
     const page = fixture.componentInstance; page.choose((page.agenda()?.sessions || [])[1]!); page.stage.set('checkin');
     await page.start();
-    expect(api.attempts.start).toHaveBeenCalledWith(expect.objectContaining({ startAttemptCommand: expect.objectContaining({ plannedSessionId: 'second', planRevisionId: 'revision-second' }) }));
+    expect(api.attempts.start1).toHaveBeenCalledWith(expect.objectContaining({ startAttemptCommand: expect.objectContaining({ plannedSessionId: 'second', planRevisionId: 'revision-second' }) }));
   });
 
   it('sends ordered actual sets and records partial and skipped facts without skipped dose', async () => {
@@ -172,7 +172,7 @@ describe('SessionsPage safety and barriers', () => {
     await page.finish('COMPLETE');
     expect(api.attempts.finish).toHaveBeenCalledWith(expect.objectContaining({ attemptId: 'attempt', finishCommand: expect.objectContaining({ intent: 'COMPLETE', techniqueConfidenceLevel: 5 }) }));
     expect(page.stage()).toBe('terminal');
-    expect(api.attempts.start).not.toHaveBeenCalled();
+    expect(api.attempts.start1).not.toHaveBeenCalled();
     page.stage.set('finish'); page.stopReason.setValue('Ból'); api.attempts.finish.mockResolvedValue({ outcome: 'STOPPED' });
     await page.finish('STOP');
     expect(api.attempts.finish).toHaveBeenLastCalledWith(expect.objectContaining({ finishCommand: expect.objectContaining({ intent: 'STOP', stopReason: 'Ból' }) }));

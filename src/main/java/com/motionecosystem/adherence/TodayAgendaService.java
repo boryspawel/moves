@@ -7,6 +7,7 @@ import com.motionecosystem.participant.api.ParticipantContextQueryPort;
 import com.motionecosystem.participant.api.ParticipantClientPort;
 import com.motionecosystem.safety.api.SessionSafetyDecisionQueryPort;
 import com.motionecosystem.trainingexecution.api.SessionExecutionProgressQueryPort;
+import com.motionecosystem.calendar.api.AppointmentSessionBindingQueryPort;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort.PlanRevisionSnapshot;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort.SessionSnapshot;
@@ -17,6 +18,7 @@ import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -34,6 +36,7 @@ public class TodayAgendaService {
     private final ParticipantClientPort participantClients;
     private final PlanRevisionQueryPort revisions;
     private final SessionExecutionProgressQueryPort progress;
+    private final AppointmentSessionBindingQueryPort appointmentBindings;
     private final SessionSafetyDecisionQueryPort safety;
     private final RecoveryEpisodeService recovery;
     private final Clock clock;
@@ -65,6 +68,9 @@ public class TodayAgendaService {
                         .map(session -> new RevisionSession(revision, session)))
                 .filter(item -> belongsToLocalDay(item.session(), localDate, timeZone)).toList();
         List<UUID> sessionIds = todaySessions.stream().map(item -> item.session().id()).toList();
+        Set<UUID> boundSessionIds = appointmentBindings.boundSessionIds(participantId, sessionIds);
+        todaySessions = todaySessions.stream().filter(item -> !boundSessionIds.contains(item.session().id())).toList();
+        sessionIds = todaySessions.stream().map(item -> item.session().id()).toList();
         var executionProgress = progress.findForSessions(participantId, sessionIds);
         List<AgendaSessionView> sessions = todaySessions.stream()
                 .map(item -> toView(item.revision(), item.session(), now, executionProgress.get(item.session().id()),

@@ -9,6 +9,7 @@ import com.motionecosystem.safety.api.SessionSafetyDecisionQueryPort;
 import com.motionecosystem.trainingexecution.api.SessionExecutionProgressQueryPort;
 import com.motionecosystem.trainingexecution.api.SessionStartAuthorizationPort;
 import com.motionecosystem.trainingexecution.api.ExecutionAdherencePort;
+import com.motionecosystem.calendar.api.AppointmentSessionBindingQueryPort;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort;
 import com.motionecosystem.trainingplanning.api.PlannedSessionExecutionPort;
 import tools.jackson.core.JacksonException;
@@ -50,6 +51,7 @@ public class SessionExecutionAttemptService implements SessionExecutionProgressQ
     private final SessionExecutionAttemptFactRepository facts;
     private final ObjectMapper objectMapper;
     private final EntityManager entityManager;
+    private final AppointmentSessionBindingQueryPort appointmentBindings;
 
     @Transactional
     public AttemptView start(String subject, UUID plannedSessionId, UUID planRevisionId, String selectedVariantType,
@@ -61,8 +63,9 @@ public class SessionExecutionAttemptService implements SessionExecutionProgressQ
             if (!replay.get().plannedSessionId.equals(plannedSessionId)) throw new ResponseStatusException(HttpStatus.CONFLICT, "idempotency key was already used for another session");
             return view(replay.get());
         }
-        var planned = sessions.findSession(plannedSessionId).filter(session -> participant.equals(session.participantAccountId()))
+        var planned = sessions.lockOwnedSession(plannedSessionId, participant)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "planned session not found"));
+        requireUnbound(participant, plannedSessionId);
         if (planned.state() != PlannedSessionExecutionPort.SessionState.ASSIGNED) throw new ResponseStatusException(HttpStatus.CONFLICT, "planned session is not available for execution");
         var revision = revisions.findActiveRevisions(participant).stream().filter(item -> item.revisionId().equals(planRevisionId)).findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "plan revision is not active for participant"));
@@ -109,6 +112,7 @@ public class SessionExecutionAttemptService implements SessionExecutionProgressQ
     public AttemptView updateProgress(String subject, UUID attemptId, UUID prescriptionId, boolean completed) {
         UUID participant = participant(subject);
         SessionExecutionAttempt attempt = owned(participant, attemptId);
+        requireUnbound(participant, attempt.plannedSessionId);
         if (!SessionExecutionAttempt.Status.STARTED.name().equals(attempt.status)) throw new ResponseStatusException(HttpStatus.CONFLICT, "session attempt is not active");
         requireAllowedPrescription(attempt, prescriptionId);
         Instant now = clock.instant();
@@ -123,6 +127,7 @@ public class SessionExecutionAttemptService implements SessionExecutionProgressQ
     public AttemptDetailView recordFact(String subject, UUID attemptId, FactCommand command) {
         UUID participant = participant(subject);
         SessionExecutionAttempt attempt = owned(participant, attemptId);
+        requireUnbound(participant, attempt.plannedSessionId);
         if (!SessionExecutionAttempt.Status.STARTED.name().equals(attempt.status)) throw new ResponseStatusException(HttpStatus.CONFLICT, "session attempt is not active");
         if (command == null || command.exercisePrescriptionId() == null || command.result() == null
                 || !java.util.Set.of("PERFORMED", "PARTIAL", "SKIPPED").contains(command.outcome())) {
@@ -192,6 +197,7 @@ public class SessionExecutionAttemptService implements SessionExecutionProgressQ
     public SessionExecutionService.ExecutionView finish(String subject, UUID attemptId, String idempotencyKey, FinishCommand command) {
         UUID participant = participant(subject);
         SessionExecutionAttempt attempt = owned(participant, attemptId);
+        requireUnbound(participant, attempt.plannedSessionId);
         if (idempotencyKey != null && !idempotencyKey.isBlank()) {
             var replay = executions.findByParticipantAndIdempotencyKey(participant, idempotencyKey.trim());
             if (replay.isPresent() && replay.get().execution().plannedSessionId().equals(attempt.plannedSessionId)) {
@@ -250,6 +256,7 @@ public class SessionExecutionAttemptService implements SessionExecutionProgressQ
     
     @Transactional
     public void completeAfterFinalDeclaration(String subject, UUID participantAccountId, UUID plannedSessionId) {
+        requireUnbound(participantAccountId, plannedSessionId);
         attempts.findFirstByParticipantAccountIdAndPlannedSessionIdOrderByUpdatedAtDesc(participantAccountId, plannedSessionId)
                 .filter(SessionExecutionAttempt::active).ifPresent(attempt -> {
                     attempt.complete(clock.instant());
@@ -279,6 +286,7 @@ public class SessionExecutionAttemptService implements SessionExecutionProgressQ
     private AttemptView transition(String subject, UUID attemptId, String action, String reason) {
         UUID participant = participant(subject);
         SessionExecutionAttempt attempt = owned(participant, attemptId);
+        requireUnbound(participant, attempt.plannedSessionId);
         Instant now = clock.instant();
         switch (action) {
             case "PAUSE" -> { if (SessionExecutionAttempt.Status.STARTED.name().equals(attempt.status)) { attempt.pause(now); audit.record(subject, "SESSION_ATTEMPT_PAUSED", "SessionExecutionAttempt", attemptId); } }
@@ -293,6 +301,13 @@ public class SessionExecutionAttemptService implements SessionExecutionProgressQ
     private SessionExecutionAttempt owned(UUID participant, UUID attemptId) {
         return attempts.findById(attemptId).filter(item -> participant.equals(item.participantAccountId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "session attempt not found"));
+    }
+    private void requireUnbound(UUID participantId, UUID plannedSessionId) {
+        sessions.lockOwnedSession(plannedSessionId, participantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "planned session not found"));
+        if (appointmentBindings.isBound(participantId, plannedSessionId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "planned session is bound to an appointment");
+        }
     }
     private AttemptDetailView detail(SessionExecutionAttempt attempt) {
         return new AttemptDetailView(attempt.id, attempt.plannedSessionId, attempt.planRevisionId, attempt.selectedVariantType,

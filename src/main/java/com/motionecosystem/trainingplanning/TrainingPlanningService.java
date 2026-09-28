@@ -3,13 +3,16 @@ package com.motionecosystem.trainingplanning;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.participant.api.ParticipantClientPort;
+import com.motionecosystem.calendar.api.AppointmentSessionBindingQueryPort;
 import com.motionecosystem.trainingplanning.PlannedSession.SessionKind;
+import com.motionecosystem.trainingplanning.TrainingPlanningPersistence.StoredSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -22,6 +25,7 @@ public class TrainingPlanningService {
 
     private final CurrentAccountService accounts;
     private final ParticipantClientPort participants;
+    private final AppointmentSessionBindingQueryPort appointmentBindings;
     private final TrainingPlanningPersistence persistence;
 
     @Transactional
@@ -38,7 +42,9 @@ public class TrainingPlanningService {
         UUID participantId = participants.findParticipantIdByPrincipalAccountId(participant.id())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN,
                         "an active participant access link is required"));
-        return persistence.findParticipantSessions(participantId).stream()
+        List<StoredSession> sessions = persistence.findParticipantSessions(participantId);
+        Set<UUID> bound = appointmentBindings.boundSessionIds(participantId, sessions.stream().map(StoredSession::id).toList());
+        return sessions.stream().filter(session -> !bound.contains(session.id()))
                 .map(session -> new SessionView(session.id(), session.title(), session.kind(), session.status(),
                         session.assignedAt(), session.prescriptions().stream()
                         .map(item -> new PrescriptionView(item.id(), item.exerciseVersionId(), item.position(),

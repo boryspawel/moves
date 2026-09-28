@@ -20,6 +20,7 @@ import type { SpecialistParticipantWorkspaceView } from '../api/generated/src/mo
 import type { OperationalFocusView } from '../api/generated/src/models/OperationalFocusView';
 import type { ParticipantTimelineEvent } from '../api/generated/src/models/ParticipantTimelineEvent';
 import type { AppointmentView } from '../api/generated/src/models/AppointmentView';
+import type { ParticipantWorkspaceAppointmentView } from '../api/generated/src/models/ParticipantWorkspaceAppointmentView';
 import type { ParticipantGoalView } from '../api/generated/src/models/ParticipantGoalView';
 import type { PresetView } from '../api/generated/src/models/PresetView';
 import type { CreateFromPresetRequestPresetIdEnum, CreateFromPresetRequestTargetComparatorEnum } from '../api/generated/src/models/CreateFromPresetRequest';
@@ -153,14 +154,15 @@ export class ParticipantSummaryStripComponent {
     <h2 id="operational-focus-title">{{ focus?.title || 'Brak pilnych działań' }}</h2>
     <p>{{ focus?.explanation || 'Nie ma obecnie spraw wymagających reakcji.' }}</p>
     @if (focus?.relevantAt) { <p class="focus-time"><time>{{ focus.relevantAt | date: 'medium' : '' : 'pl' }}</time></p> }
-    @if (focus?.primaryAction) { <button mat-flat-button type="button" (click)="requested.emit(focus!)">{{ actionLabel(focus!.primaryAction) }}</button> }
+    @if (focus?.primaryAction) { <button mat-flat-button type="button" [disabled]="busy" (click)="requested.emit(focus!)">{{ actionLabel(focus!.primaryAction) }}</button> }
   </section>`,
 })
 export class ParticipantOperationalFocusComponent {
   @Input() focus?: OperationalFocusView;
+  @Input() busy = false;
   @Output() requested = new EventEmitter<OperationalFocusView>();
   protected actionLabel(action?: string): string {
-    return ({ OPEN_ATTENTION_ITEMS: 'Otwórz sprawę', OPEN_HISTORY: 'Otwórz historię', OPEN_PLAN: 'Otwórz plan', SCHEDULE_APPOINTMENT: 'Zaplanuj spotkanie' })[action ?? ''] ?? 'Otwórz';
+    return ({ OPEN_ATTENTION_ITEMS: 'Otwórz sprawę', OPEN_HISTORY: 'Otwórz historię', OPEN_PLAN: 'Otwórz plan', SCHEDULE_APPOINTMENT: 'Zaplanuj spotkanie', START_APPOINTMENT: 'Rozpocznij spotkanie' })[action ?? ''] ?? 'Otwórz';
   }
 }
 
@@ -1178,7 +1180,16 @@ export class ParticipantGoalsComponent {
         [actions]="safeActions()"
         (requested)="perform($event)"
       />
-      <app-participant-operational-focus [focus]="focus(data)" (requested)="performFocus($event)" />
+      <app-participant-operational-focus [focus]="focus(data)" [busy]="startingAppointment()" (requested)="performFocus($event)" />
+      @if (linkedSessionAppointment(data); as appointment) {
+        <section class="linked-session-context" aria-label="Kontekst spotkania">
+          <strong>Powiązana sesja</strong>
+          <span>{{ appointment.plannedSessionTitle || appointment.plannedSessionId }}</span>
+          @if (appointment.planId && appointment.revisionId) {
+            <a [routerLink]="['/specialist/clients', participantId(), 'plans', appointment.planId, 'revisions', appointment.revisionId]">Otwórz plan</a>
+          }
+        </section>
+      }
       <app-participant-summary-strip [workspace]="data" />
       <nav class="workspace-sections" aria-label="Sekcje kartoteki">
         <button type="button" [attr.aria-pressed]="section() === 'plan'" (click)="openSection('plan')">Plan</button>
@@ -1277,6 +1288,7 @@ export class SpecialistParticipantWorkspacePage {
   protected readonly currentGoal = signal<ParticipantGoalView | null>(null);
   protected readonly currentGoalUnavailable = signal(false);
   protected readonly savingOutcome = signal(false);
+  protected readonly startingAppointment = signal(false);
   protected readonly selectedOutsideRange = signal(false);
   protected readonly recordPanelType = signal<RecordPanelType | null>(null);
   protected readonly recordPanelId = signal<string | null>(null);
@@ -1328,6 +1340,12 @@ export class SpecialistParticipantWorkspacePage {
   }
   protected focus(data: SpecialistParticipantWorkspaceView): OperationalFocusView | undefined {
     return data.focus;
+  }
+  protected linkedSessionAppointment(data: SpecialistParticipantWorkspaceView): ParticipantWorkspaceAppointmentView | undefined {
+    const appointment = data.nextAppointment;
+    return appointment?.plannedSessionId && appointment.appointmentId === data.focus?.appointmentId
+      ? appointment
+      : undefined;
   }
   protected openSection(section: WorkspaceSection) {
     const cleared: Record<string, string | null> = section === 'plan'
@@ -1491,6 +1509,10 @@ export class SpecialistParticipantWorkspacePage {
     else if (action === 'OPEN_HISTORY' || action === 'OPEN_ATTENTION_ITEMS') this.openSection('history');
   }
   protected async performFocus(focus: OperationalFocusView): Promise<void> {
+    if (focus.primaryAction === 'START_APPOINTMENT') {
+      await this.startFocusedAppointment(focus);
+      return;
+    }
     if (focus.primaryAction === 'OPEN_ATTENTION_ITEMS' && focus.attentionId) {
       await this.router.navigate(['/specialist-alerts'], { queryParams: { itemId: focus.attentionId } });
       return;
@@ -1502,6 +1524,40 @@ export class SpecialistParticipantWorkspacePage {
       return;
     }
     if (focus.primaryAction) this.perform(focus.primaryAction);
+  }
+  private async startFocusedAppointment(focus: OperationalFocusView): Promise<void> {
+    if (this.startingAppointment()) return;
+    const appointment = this.workspace()?.nextAppointment;
+    const appointmentId = focus.appointmentId;
+    if (
+      !appointmentId ||
+      appointment?.appointmentId !== appointmentId ||
+      !appointment.availableActions?.includes('START') ||
+      typeof appointment.version !== 'number'
+    ) {
+      this.announcement.set('Spotkanie nie może zostać obecnie rozpoczęte. Kartoteka została odświeżona.');
+      await this.reload();
+      return;
+    }
+    this.startingAppointment.set(true);
+    try {
+      await this.api.appointments.start({
+        id: appointmentId,
+        idempotencyKey: crypto.randomUUID(),
+        appointmentVersionCommand: { version: appointment.version },
+      });
+      this.announcement.set('Spotkanie rozpoczęto. Kartoteka została odświeżona.');
+      await this.reload();
+    } catch (error) {
+      if (this.status(error) === 409) {
+        this.announcement.set('Spotkanie zmieniło się i kartoteka została odświeżona.');
+        await this.reload();
+      } else {
+        this.announcement.set('Nie udało się rozpocząć spotkania. Spróbuj ponownie.');
+      }
+    } finally {
+      this.startingAppointment.set(false);
+    }
   }
   private async openFocusedAppointment(appointmentId: string): Promise<void> {
     try {

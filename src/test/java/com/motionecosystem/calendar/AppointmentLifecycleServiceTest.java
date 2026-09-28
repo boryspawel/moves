@@ -70,6 +70,61 @@ class AppointmentLifecycleServiceTest {
     }
 
     @Test
+    void starts_owned_appointment_with_event_audit_available_action_and_idempotent_replay() {
+        Fixture fixture = fixture();
+        Appointment appointment = appointment(fixture.specialistId, fixture.participantId, NOW.plusSeconds(20 * 60), NOW.plusSeconds(80 * 60));
+        when(fixture.appointments.findById(appointment.id)).thenReturn(Optional.of(appointment));
+        when(fixture.appointments.saveAndFlush(appointment)).thenReturn(appointment);
+        AppointmentService.AppointmentVersionCommand command = new AppointmentService.AppointmentVersionCommand(appointment.version);
+
+        AppointmentService.AppointmentView started = fixture.service.start("specialist", appointment.id, "start-key", command);
+
+        assertThat(started.status()).isEqualTo(Appointment.Status.IN_PROGRESS);
+        assertThat(started.availableActions()).doesNotContain("START").contains("COMPLETE");
+        verify(fixture.relationships).requireActiveRelationship(fixture.specialistId, fixture.participantId);
+        verify(fixture.audit).record("specialist", "APPOINTMENT_STARTED", "Appointment", appointment.id);
+        ArgumentCaptor<AppointmentEvent> event = ArgumentCaptor.forClass(AppointmentEvent.class);
+        verify(fixture.events).save(event.capture());
+        assertThat(event.getValue().eventType).isEqualTo(AppointmentEvent.Type.STARTED);
+        assertThat(event.getValue().fromStatus).isEqualTo(Appointment.Status.SCHEDULED);
+        assertThat(event.getValue().toStatus).isEqualTo(Appointment.Status.IN_PROGRESS);
+
+        when(fixture.idempotency.findBySpecialistAccountIdAndOperationAndIdempotencyKey(fixture.specialistId, "START:" + appointment.id, "start-key"))
+                .thenReturn(Optional.of(new AppointmentIdempotency(fixture.specialistId, "START:" + appointment.id, "start-key", appointment.id, NOW)));
+        assertThat(fixture.service.start("specialist", appointment.id, "start-key", command).status()).isEqualTo(Appointment.Status.IN_PROGRESS);
+        verify(fixture.events).save(event.capture());
+        verify(fixture.audit).record("specialist", "APPOINTMENT_STARTED", "Appointment", appointment.id);
+    }
+
+    @Test
+    void rejects_start_before_window_after_end_and_from_non_schedulable_states() {
+        Fixture fixture = fixture();
+        AppointmentService.AppointmentVersionCommand command = new AppointmentService.AppointmentVersionCommand(0L);
+        assertStartRejected(fixture, appointment(fixture.specialistId, fixture.participantId, NOW.plusSeconds(30 * 60 + 1), NOW.plusSeconds(90 * 60)), command);
+        assertStartRejected(fixture, appointment(fixture.specialistId, fixture.participantId, NOW.minusSeconds(90 * 60), NOW.minusSeconds(1)), command);
+        for (Appointment.Status status : List.of(Appointment.Status.IN_PROGRESS, Appointment.Status.COMPLETED,
+                Appointment.Status.CANCELLED, Appointment.Status.NO_SHOW)) {
+            Appointment appointment = appointment(fixture.specialistId, fixture.participantId, NOW.minusSeconds(5 * 60), NOW.plusSeconds(5 * 60));
+            appointment.status = status;
+            assertStartRejected(fixture, appointment, command);
+        }
+    }
+
+    @Test
+    void rejects_start_with_stale_version_before_mutation() {
+        Fixture fixture = fixture();
+        Appointment appointment = appointment(fixture.specialistId, fixture.participantId, NOW.plusSeconds(5 * 60), NOW.plusSeconds(65 * 60));
+        appointment.version = 1L;
+        when(fixture.appointments.findById(appointment.id)).thenReturn(Optional.of(appointment));
+
+        assertThatThrownBy(() -> fixture.service.start("specialist", appointment.id, "start-key", new AppointmentService.AppointmentVersionCommand(0L)))
+                .isInstanceOf(ResponseStatusException.class).hasMessageContaining("version is stale");
+        verify(fixture.appointments, never()).saveAndFlush(any());
+        verify(fixture.events, never()).save(any());
+        verify(fixture.audit, never()).record(any(), any(), any(), any());
+    }
+
+    @Test
     void detail_requires_owned_active_relationship_and_returns_current_view() {
         Fixture fixture = fixture();
         Appointment appointment = appointment(fixture.specialistId, fixture.participantId, NOW.minusSeconds(120), NOW.plusSeconds(60));
@@ -105,6 +160,25 @@ class AppointmentLifecycleServiceTest {
                 .containsExactly(eventId, null);
     }
 
+    @Test
+    void in_progress_projection_remains_current_before_start_and_after_end() {
+        Fixture fixture = fixture();
+        Appointment earlyStarted = appointment(fixture.specialistId, fixture.participantId, NOW.plusSeconds(20 * 60), NOW.plusSeconds(80 * 60));
+        earlyStarted.status = Appointment.Status.IN_PROGRESS;
+        Appointment pastEndStarted = appointment(fixture.specialistId, UUID.randomUUID(), NOW.minusSeconds(80 * 60), NOW.minusSeconds(20 * 60));
+        pastEndStarted.status = Appointment.Status.IN_PROGRESS;
+        Set<UUID> participants = Set.of(earlyStarted.participantId, pastEndStarted.participantId);
+        when(fixture.appointments.findInProgress(fixture.specialistId, participants)).thenReturn(List.of(earlyStarted, pastEndStarted));
+
+        var result = fixture.service.inProgress(fixture.specialistId, participants, NOW);
+
+        assertThat(result).extracting(com.motionecosystem.calendar.api.SpecialistAppointmentQueryPort.OperationalAppointment::appointmentId,
+                com.motionecosystem.calendar.api.SpecialistAppointmentQueryPort.OperationalAppointment::current)
+                .containsExactly(
+                        org.assertj.core.groups.Tuple.tuple(earlyStarted.id, true),
+                        org.assertj.core.groups.Tuple.tuple(pastEndStarted.id, true));
+    }
+
     private static Fixture fixture() {
         UUID specialistId = UUID.randomUUID();
         CurrentAccountService accounts = mock(CurrentAccountService.class);
@@ -123,6 +197,12 @@ class AppointmentLifecycleServiceTest {
     private static Appointment appointment(UUID specialist, UUID participant, Instant startsAt, Instant endsAt) {
         return new Appointment(specialist, participant, startsAt, endsAt, Appointment.Type.CONSULTATION,
                 Appointment.LocationMode.REMOTE, null, null, specialist, NOW.minusSeconds(600));
+    }
+
+    private static void assertStartRejected(Fixture fixture, Appointment appointment, AppointmentService.AppointmentVersionCommand command) {
+        when(fixture.appointments.findById(appointment.id)).thenReturn(Optional.of(appointment));
+        assertThatThrownBy(() -> fixture.service.start("specialist", appointment.id, "start-" + appointment.id, command))
+                .isInstanceOf(ResponseStatusException.class).hasMessageContaining("cannot start");
     }
 
     private record Fixture(UUID specialistId, UUID participantId, AppointmentRepository appointments, AppointmentEventRepository events,

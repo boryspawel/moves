@@ -35,16 +35,35 @@ class AppointmentLifecyclePolicyTest {
 
     @Test
     void exposes_only_actions_allowed_at_the_controlled_time() {
-        assertThat(policy.availableActions(appointment(Appointment.Status.SCHEDULED), startsAt.minusSeconds(1)))
+        assertThat(policy.availableActions(appointment(Appointment.Status.SCHEDULED), startsAt.minusSeconds(30 * 60 + 1)))
                 .containsExactly("OPEN_APPOINTMENT", "OPEN_PARTICIPANT", "UPDATE", "CANCEL");
+        assertThat(policy.availableActions(appointment(Appointment.Status.SCHEDULED), startsAt.minusSeconds(30 * 60)))
+                .containsExactly("OPEN_APPOINTMENT", "OPEN_PARTICIPANT", "UPDATE", "CANCEL", "START");
         assertThat(policy.availableActions(appointment(Appointment.Status.SCHEDULED), startsAt))
-                .containsExactly("OPEN_APPOINTMENT", "OPEN_PARTICIPANT", "COMPLETE");
+                .containsExactly("OPEN_APPOINTMENT", "OPEN_PARTICIPANT", "START", "COMPLETE");
         assertThat(policy.availableActions(appointment(Appointment.Status.SCHEDULED), endsAt))
+                .containsExactly("OPEN_APPOINTMENT", "OPEN_PARTICIPANT", "START", "COMPLETE", "MARK_NO_SHOW");
+        assertThat(policy.availableActions(appointment(Appointment.Status.SCHEDULED), endsAt.plusSeconds(1)))
                 .containsExactly("OPEN_APPOINTMENT", "OPEN_PARTICIPANT", "COMPLETE", "MARK_NO_SHOW");
         assertThat(policy.availableActions(appointment(Appointment.Status.COMPLETED), endsAt))
                 .containsExactly("OPEN_APPOINTMENT", "OPEN_PARTICIPANT");
         assertThat(policy.availableActions(appointment(Appointment.Status.IN_PROGRESS), startsAt.minusSeconds(1)))
                 .containsExactly("OPEN_APPOINTMENT", "OPEN_PARTICIPANT", "COMPLETE");
+    }
+
+    @Test
+    void permits_start_only_for_schedulable_appointments_inside_the_inclusive_start_window() {
+        for (Appointment.Status status : Appointment.Status.values()) {
+            boolean expected = status == Appointment.Status.SCHEDULED || status == Appointment.Status.CONFIRMED;
+            assertThat(policy.allows(AppointmentLifecyclePolicy.Action.START, appointment(status), startsAt.minusSeconds(30 * 60)))
+                    .isEqualTo(expected);
+            assertThat(policy.allows(AppointmentLifecyclePolicy.Action.START, appointment(status), startsAt))
+                    .isEqualTo(expected);
+            assertThat(policy.allows(AppointmentLifecyclePolicy.Action.START, appointment(status), endsAt))
+                    .isEqualTo(expected);
+        }
+        assertThat(policy.allows(AppointmentLifecyclePolicy.Action.START, appointment(Appointment.Status.SCHEDULED), startsAt.minusSeconds(30 * 60 + 1))).isFalse();
+        assertThat(policy.allows(AppointmentLifecyclePolicy.Action.START, appointment(Appointment.Status.SCHEDULED), endsAt.plusSeconds(1))).isFalse();
     }
 
     private Appointment appointment(Appointment.Status status) {

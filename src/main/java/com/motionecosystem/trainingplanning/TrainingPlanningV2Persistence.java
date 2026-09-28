@@ -72,6 +72,10 @@ public interface TrainingPlanningV2Persistence {
 
     List<PlanAccess> plansForParticipant(UUID participantId);
 
+    Optional<AppointmentSessionLink> findAppointmentSessionLink(UUID sessionId);
+
+    Optional<AppointmentSessionLink> lockAppointmentSessionLink(UUID sessionId);
+
     record PlanAccess(UUID planId, UUID participantId, String name, String purpose,
                       UUID ownerAccountId, String mode, String status, UUID currentRevisionId,
                       String ownerCapability) {
@@ -85,6 +89,11 @@ public interface TrainingPlanningV2Persistence {
     record RevisionHistoryItem(UUID revisionId, int revisionNumber, UUID basedOnRevisionId,
                                String status, String migrationOrigin, String assessmentStatus,
                                long version, Instant createdAt) {
+    }
+
+    record AppointmentSessionLink(UUID sessionId, UUID participantId, UUID revisionId,
+                                  String title, String kind, String status, String revisionStatus,
+                                  String planStatus, UUID currentRevisionId) {
     }
 
     final class RevisionConflictException extends RuntimeException {

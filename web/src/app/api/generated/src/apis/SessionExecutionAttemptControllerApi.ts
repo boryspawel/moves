@@ -94,7 +94,7 @@ export interface ResumeRequest {
   attemptId: string;
 }
 
-export interface StartRequest {
+export interface Start1Request {
   idempotencyKey: string;
   startAttemptCommand: StartAttemptCommand;
 }
@@ -632,20 +632,20 @@ export class SessionExecutionAttemptControllerApi extends runtime.BaseAPI {
   }
 
   /**
-   * Creates request options for start without sending the request
+   * Creates request options for start1 without sending the request
    */
-  async startRequestOpts(requestParameters: StartRequest): Promise<runtime.RequestOpts> {
+  async start1RequestOpts(requestParameters: Start1Request): Promise<runtime.RequestOpts> {
     if (requestParameters['idempotencyKey'] == null) {
       throw new runtime.RequiredError(
         'idempotencyKey',
-        'Required parameter "idempotencyKey" was null or undefined when calling start().',
+        'Required parameter "idempotencyKey" was null or undefined when calling start1().',
       );
     }
 
     if (requestParameters['startAttemptCommand'] == null) {
       throw new runtime.RequiredError(
         'startAttemptCommand',
-        'Required parameter "startAttemptCommand" was null or undefined when calling start().',
+        'Required parameter "startAttemptCommand" was null or undefined when calling start1().',
       );
     }
 
@@ -673,11 +673,11 @@ export class SessionExecutionAttemptControllerApi extends runtime.BaseAPI {
   /**
    * Start or return the participant\'s active session attempt
    */
-  async startRaw(
-    requestParameters: StartRequest,
+  async start1Raw(
+    requestParameters: Start1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AttemptView>> {
-    const requestOptions = await this.startRequestOpts(requestParameters);
+    const requestOptions = await this.start1RequestOpts(requestParameters);
     const response = await this.request(requestOptions, initOverrides);
 
     return new runtime.JSONApiResponse(response, (jsonValue) => AttemptViewFromJSON(jsonValue));
@@ -686,11 +686,11 @@ export class SessionExecutionAttemptControllerApi extends runtime.BaseAPI {
   /**
    * Start or return the participant\'s active session attempt
    */
-  async start(
-    requestParameters: StartRequest,
+  async start1(
+    requestParameters: Start1Request,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<AttemptView> {
-    const response = await this.startRaw(requestParameters, initOverrides);
+    const response = await this.start1Raw(requestParameters, initOverrides);
     return await response.value();
   }
 }

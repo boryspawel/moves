@@ -24,6 +24,7 @@ import com.motionecosystem.trainingexecution.SessionExecutionPersistence.ResultD
 import com.motionecosystem.trainingplanning.api.PlannedSessionExecutionPort;
 import com.motionecosystem.trainingplanning.api.PlannedSessionExecutionPort.SessionState;
 import com.motionecosystem.trainingexecution.api.ExecutionAdherencePort;
+import com.motionecosystem.calendar.api.AppointmentSessionBindingQueryPort;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +48,7 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
     private final ExecutionAdherencePort adherence;
     private final Clock clock;
     private final ObjectMapper objectMapper;
+    private final AppointmentSessionBindingQueryPort appointmentBindings;
 
     @Transactional
     public ExecutionView declare(String subject, UUID plannedSessionId, String idempotencyKey,
@@ -87,6 +89,9 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
         var plannedSession = plannedSessions.lockOwnedSession(plannedSessionId, participantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "assigned session not found"));
+        if (appointmentBindings.isBound(participantId, plannedSessionId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "planned session is bound to an appointment");
+        }
 
         existing = persistence.findByParticipantAndIdempotencyKey(participantId, key);
         if (existing.isPresent()) {

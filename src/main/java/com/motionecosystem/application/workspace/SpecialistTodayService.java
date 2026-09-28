@@ -48,10 +48,19 @@ class SpecialistTodayService {
         Instant now = clock.instant();
         Set<UUID> activeParticipants = specialistWorkspace.activeParticipantIds(account.id());
         Map<UUID, String> labels = participantLabels(activeParticipants);
-        List<SpecialistAppointmentQueryPort.OperationalAppointment> raw = appointments.inRange(account.id(), start, end, activeParticipants, now);
-        Optional<SpecialistAppointmentQueryPort.OperationalAppointment> current = raw.stream().filter(item -> item.current() && active(item)).findFirst();
+        List<SpecialistAppointmentQueryPort.OperationalAppointment> raw = new ArrayList<>(appointments.inRange(account.id(), start, end, activeParticipants, now));
+        if (localDate.equals(LocalDate.now(clock.withZone(zone)))) {
+            appointments.inProgress(account.id(), activeParticipants, now).forEach(item -> {
+                if (raw.stream().noneMatch(existing -> existing.appointmentId().equals(item.appointmentId()))) raw.add(item);
+            });
+        }
+        Optional<SpecialistAppointmentQueryPort.OperationalAppointment> current = raw.stream().filter(item -> item.current() && active(item))
+                .min(Comparator.comparing((SpecialistAppointmentQueryPort.OperationalAppointment item) -> !"IN_PROGRESS".equals(item.status()))
+                        .thenComparing(SpecialistAppointmentQueryPort.OperationalAppointment::startsAt)
+                        .thenComparing(SpecialistAppointmentQueryPort.OperationalAppointment::appointmentId));
         Optional<UUID> nextId = raw.stream().filter(item -> !"CANCELLED".equals(item.status())
                         && !"COMPLETED".equals(item.status()) && item.startsAt().isAfter(now))
+                .filter(item -> !"IN_PROGRESS".equals(item.status()))
                 .min(Comparator.comparing(SpecialistAppointmentQueryPort.OperationalAppointment::startsAt))
                 .map(SpecialistAppointmentQueryPort.OperationalAppointment::appointmentId);
         List<AppointmentView> appointmentViews = raw.stream().map(item -> appointmentView(item, labels.get(item.participantId()), nextId.filter(item.appointmentId()::equals).isPresent())).toList();

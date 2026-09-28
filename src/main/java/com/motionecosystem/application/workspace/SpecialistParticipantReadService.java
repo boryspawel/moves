@@ -17,6 +17,7 @@ import com.motionecosystem.specialist.api.SpecialistWorkspacePort.WorkspacePurpo
 import com.motionecosystem.specialist.api.SpecialistWorkspacePort.WorkspaceRole;
 import com.motionecosystem.trainingexecution.api.ParticipantExecutionHistoryQueryPort;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort;
+import com.motionecosystem.trainingplanning.api.AppointmentSessionLinkPort;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -49,6 +50,7 @@ public class SpecialistParticipantReadService {
     private final SpecialistAppointmentQueryPort appointments;
     private final SpecialistAppointmentEventQueryPort appointmentEvents;
     private final PlanRevisionQueryPort revisions;
+    private final AppointmentSessionLinkPort appointmentSessions;
     private final ParticipantExecutionHistoryQueryPort executionHistory;
     private final ParticipantGoalEventQueryPort goalEvents;
     private final ParticipantDocumentationEventQueryPort recordEvents;
@@ -60,11 +62,12 @@ public class SpecialistParticipantReadService {
     public SpecialistParticipantReadService(CurrentAccountService accounts, SpecialistWorkspacePort specialistWorkspace,
             ParticipantClientPort participantClients, ParticipantContextQueryPort participantContexts, SpecialistAppointmentQueryPort appointments,
             SpecialistAppointmentEventQueryPort appointmentEvents, PlanRevisionQueryPort revisions,
+            AppointmentSessionLinkPort appointmentSessions,
             ParticipantExecutionHistoryQueryPort executionHistory, ParticipantGoalEventQueryPort goalEvents, ParticipantDocumentationEventQueryPort recordEvents,
             AdherenceSummaryQueryPort adherence, AuditRecorder audit, Clock clock) {
         this.accounts = accounts; this.specialistWorkspace = specialistWorkspace; this.participantClients = participantClients;
         this.participantContexts = participantContexts; this.appointments = appointments; this.appointmentEvents = appointmentEvents;
-        this.revisions = revisions; this.executionHistory = executionHistory; this.goalEvents = goalEvents; this.recordEvents = recordEvents;
+        this.revisions = revisions; this.appointmentSessions = appointmentSessions; this.executionHistory = executionHistory; this.goalEvents = goalEvents; this.recordEvents = recordEvents;
         this.adherence = adherence; this.audit = audit; this.clock = clock;
     }
 
@@ -74,8 +77,17 @@ public class SpecialistParticipantReadService {
             SpecialistAppointmentEventQueryPort appointmentEvents, PlanRevisionQueryPort revisions,
             ParticipantExecutionHistoryQueryPort executionHistory, ParticipantGoalEventQueryPort goalEvents, ParticipantDocumentationEventQueryPort recordEvents,
             AuditRecorder audit, Clock clock) {
-        this(accounts, specialistWorkspace, participantClients, participantContexts, appointments, appointmentEvents, revisions,
+        this(accounts, specialistWorkspace, participantClients, participantContexts, appointments, appointmentEvents, revisions, null,
                 executionHistory, goalEvents, recordEvents, null, audit, clock);
+    }
+
+    public SpecialistParticipantReadService(CurrentAccountService accounts, SpecialistWorkspacePort specialistWorkspace,
+            ParticipantClientPort participantClients, ParticipantContextQueryPort participantContexts, SpecialistAppointmentQueryPort appointments,
+            SpecialistAppointmentEventQueryPort appointmentEvents, PlanRevisionQueryPort revisions,
+            ParticipantExecutionHistoryQueryPort executionHistory, ParticipantGoalEventQueryPort goalEvents, ParticipantDocumentationEventQueryPort recordEvents,
+            AdherenceSummaryQueryPort adherence, AuditRecorder audit, Clock clock) {
+        this(accounts, specialistWorkspace, participantClients, participantContexts, appointments, appointmentEvents, revisions, null,
+                executionHistory, goalEvents, recordEvents, adherence, audit, clock);
     }
 
     public SpecialistParticipantWorkspaceView workspace(String subject, UUID participantId) {
@@ -87,7 +99,8 @@ public class SpecialistParticipantReadService {
         List<SpecialistAppointmentQueryPort.AppointmentSummary> upcoming = appointments.findForParticipant(
                 access.specialistId(), participantId, now, now.plusSeconds(366L * 24 * 60 * 60), MAX_LIMIT).stream()
                 .filter(item -> isNextAppointment(item, now))
-                .sorted(Comparator.comparing(SpecialistAppointmentQueryPort.AppointmentSummary::startsAt))
+                .sorted(Comparator.comparingInt(SpecialistParticipantReadService::appointmentPriority)
+                        .thenComparing(SpecialistAppointmentQueryPort.AppointmentSummary::startsAt))
                 .limit(1)
                 .toList();
         boolean canViewAdherence = canViewExecutionHistory(access, participantId);
@@ -95,7 +108,7 @@ public class SpecialistParticipantReadService {
                 ? executionHistory.starts(participantId, now.minusSeconds(366L * 24 * 60 * 60), now.plusSeconds(1), DEFAULT_LIMIT)
                 : List.of();
         List<AttentionItemView> attention = attention(subject, participantId, access);
-        AppointmentView nextAppointment = upcoming.isEmpty() ? null : appointment(upcoming.getFirst());
+        ParticipantWorkspaceAppointmentView nextAppointment = upcoming.isEmpty() ? null : appointment(subject, participantId, upcoming.getFirst());
         ActivePlanView activePlan = revision.map(value -> activePlan(value, now, recentExecutions)).orElse(null);
         return new SpecialistParticipantWorkspaceView(now, participant,
                 relationship(access.specialistId(), participantId), capabilities(access.decision()),
@@ -425,16 +438,23 @@ public class SpecialistParticipantReadService {
                 execution.painLevel(), execution.difficultyLevel(), execution.stopReason());
     }
 
-    private static AppointmentView appointment(SpecialistAppointmentQueryPort.AppointmentSummary item) {
-        return new AppointmentView(item.appointmentId(), item.startsAt(), item.endsAt(), item.type(), item.status(), item.shortPurpose());
+    private ParticipantWorkspaceAppointmentView appointment(String subject, UUID participantId, SpecialistAppointmentQueryPort.AppointmentSummary item) {
+        var context = appointmentSessions == null || item.plannedSessionId() == null ? null
+                : appointmentSessions.findAuthorizedContext(subject, participantId, item.plannedSessionId()).orElse(null);
+        return new ParticipantWorkspaceAppointmentView(item.appointmentId(), item.startsAt(), item.endsAt(), item.type(), item.status(),
+                item.shortPurpose(), item.plannedSessionId(), context == null ? null : context.title(),
+                context == null ? null : context.planId(), context == null ? null : context.revisionId(), item.availableActions(), item.version());
     }
     private static boolean isNextAppointment(SpecialistAppointmentQueryPort.AppointmentSummary item, Instant now) {
         return switch (item.status()) {
             case "SCHEDULED" -> item.endsAt().isAfter(now);
             case "CONFIRMED" -> !item.startsAt().isBefore(now);
-            case "IN_PROGRESS" -> !item.startsAt().isAfter(now) && item.endsAt().isAfter(now);
+            case "IN_PROGRESS" -> true;
             default -> false;
         };
+    }
+    private static int appointmentPriority(SpecialistAppointmentQueryPort.AppointmentSummary item) {
+        return "IN_PROGRESS".equals(item.status()) ? 0 : 1;
     }
     private static ActivePlanView activePlan(PlanRevisionQueryPort.PlanRevisionSnapshot value, Instant now,
                                              List<ParticipantExecutionHistoryQueryPort.ExecutionStart> executions) {
@@ -465,7 +485,7 @@ public class SpecialistParticipantReadService {
         return attention.stream().map(item -> new ActiveProblemView(item.attentionId(), item.type(), item.priority(), item.status(),
                 item.shortDescription(), item.createdAt(), item.createdAt(), "WORKLIST", item.availableActions())).toList();
     }
-    private static OperationalFocusView focus(List<AttentionItemView> attention, AppointmentView appointment, Instant now) {
+    private static OperationalFocusView focus(List<AttentionItemView> attention, ParticipantWorkspaceAppointmentView appointment, Instant now) {
         List<AttentionItemView> actionableAttention = attention.stream()
                 .filter(item -> !"SNOOZED".equals(item.status()) || item.dueAt() == null || !item.dueAt().isAfter(now))
                 .toList();
@@ -480,18 +500,19 @@ public class SpecialistParticipantReadService {
                             ? "Sprawdź sprawę wymagającą reakcji." : priorityAttention.shortDescription(),
                     "OPEN_ATTENTION_ITEMS", "HISTORY", priorityAttention.attentionId(), null, null, priorityAttention.dueAt());
         }
-        if (appointment != null && "IN_PROGRESS".equals(appointment.status())
-                && !appointment.startsAt().isAfter(now) && appointment.endsAt().isAfter(now)) {
+        if (appointment != null && "IN_PROGRESS".equals(appointment.status())) {
             return new OperationalFocusView(FocusKind.IN_PROGRESS_APPOINTMENT, "Trwa spotkanie",
                     appointment.shortPurpose() == null || appointment.shortPurpose().isBlank()
                             ? "Spotkanie z uczestnikiem jest w toku." : appointment.shortPurpose(),
-                    "OPEN_HISTORY", "HISTORY", null, appointment.appointmentId(), null, appointment.endsAt());
+                    null, null, null, appointment.appointmentId(), null, appointment.endsAt());
         }
         if (appointment != null) {
+            boolean canStart = appointment.availableActions().contains("START");
             return new OperationalFocusView(FocusKind.NEXT_APPOINTMENT, "Następne spotkanie",
                     appointment.shortPurpose() == null || appointment.shortPurpose().isBlank()
                             ? "Najbliższe zaplanowane spotkanie." : appointment.shortPurpose(),
-                    "OPEN_HISTORY", "HISTORY", null, appointment.appointmentId(), null, appointment.startsAt());
+                    canStart ? "START_APPOINTMENT" : "OPEN_HISTORY", canStart ? null : "HISTORY",
+                    null, appointment.appointmentId(), null, appointment.startsAt());
         }
         AttentionItemView followUp = actionableAttention.stream()
                 .min(Comparator.comparingInt(SpecialistParticipantReadService::attentionPriority)
@@ -553,7 +574,7 @@ public class SpecialistParticipantReadService {
     public enum TimelineType { APPOINTMENT, SESSION, EXECUTION, GOAL, INTERVIEW, NOTE }
     public record TimelineQuery(Instant from, Instant to, Set<TimelineType> types, Granularity granularity, String cursor, Integer limit) { }
     public record SpecialistParticipantWorkspaceView(Instant generatedAt, ParticipantHeader participant, RelationshipView relationship,
-                                                      List<String> capabilities, OperationalFocusView focus, AppointmentView nextAppointment, ActivePlanView activePlan,
+                                                      List<String> capabilities, OperationalFocusView focus, ParticipantWorkspaceAppointmentView nextAppointment, ActivePlanView activePlan,
                                                       List<GoalView> goals, AdherenceSummary adherenceSummary, RecentProgressView recentProgress,
                                                       List<ActiveProblemView> activeProblems, List<AttentionItemView> attentionItems, List<String> quickActions) { }
     public record ParticipantHeader(UUID participantId, String displayName, String avatarReference, String contextLabel, String timeZoneId,
@@ -562,7 +583,9 @@ public class SpecialistParticipantReadService {
     public enum FocusKind { IMPORTANT_ATTENTION, IN_PROGRESS_APPOINTMENT, NEXT_APPOINTMENT, FOLLOW_UP, IDLE }
     public record OperationalFocusView(FocusKind kind, String title, String explanation, String primaryAction,
                                        String navigationTarget, UUID attentionId, UUID appointmentId, UUID planId, Instant relevantAt) { }
-    public record AppointmentView(UUID appointmentId, Instant startsAt, Instant endsAt, String type, String status, String shortPurpose) { }
+    public record ParticipantWorkspaceAppointmentView(UUID appointmentId, Instant startsAt, Instant endsAt, String type, String status,
+                                  String shortPurpose, UUID plannedSessionId, String plannedSessionTitle, UUID planId,
+                                  UUID revisionId, List<String> availableActions, long version) { }
     public record ActivePlanView(UUID planId, UUID activeRevisionId, String name, String status, Instant activatedAt, LocalDate validFrom,
                                  LocalDate validTo, int activeSessionCount, SessionFactView nextPlannedSession,
                                  ExecutionFactView lastCompletedSession, List<String> availableActions) { }

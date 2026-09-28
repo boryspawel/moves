@@ -48,6 +48,12 @@ export interface CreateCommand {
    * @type {string}
    * @memberof CreateCommand
    */
+  plannedSessionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof CreateCommand
+   */
   shortPurpose?: string;
   /**
    *
@@ -106,6 +112,7 @@ export function CreateCommandFromJSONTyped(json: any, ignoreDiscriminator: boole
     location: json['location'] == null ? undefined : json['location'],
     locationMode: json['locationMode'] == null ? undefined : json['locationMode'],
     participantId: json['participantId'] == null ? undefined : json['participantId'],
+    plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
     shortPurpose: json['shortPurpose'] == null ? undefined : json['shortPurpose'],
     startsAt: json['startsAt'] == null ? undefined : new Date(json['startsAt']),
     type: json['type'] == null ? undefined : json['type'],
@@ -129,6 +136,7 @@ export function CreateCommandToJSONTyped(
     location: value['location'],
     locationMode: value['locationMode'],
     participantId: value['participantId'],
+    plannedSessionId: value['plannedSessionId'],
     shortPurpose: value['shortPurpose'],
     startsAt: value['startsAt'] == null ? value['startsAt'] : value['startsAt'].toISOString(),
     type: value['type'],

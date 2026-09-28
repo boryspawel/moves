@@ -39,6 +39,7 @@ import com.motionecosystem.trainingplanning.TrainingPlanningModel.RevisionStatus
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.SessionVariantType;
 import com.motionecosystem.trainingplanning.TrainingPlanningModel.ValidationResult;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort;
+import com.motionecosystem.trainingplanning.api.AppointmentSessionLinkPort;
 import com.motionecosystem.trainingplanning.api.TrainingPlanningWorkflowPort;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort.PlanRevisionSnapshot;
 import lombok.RequiredArgsConstructor;
@@ -51,7 +52,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
-public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
+public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort, AppointmentSessionLinkPort {
 
     private final CurrentAccountService accounts;
     private final ParticipantClientPort participants;
@@ -439,6 +440,44 @@ public class TrainingPlanningV2Service implements TrainingPlanningWorkflowPort {
                 return java.util.stream.Stream.empty();
             }
         }).toList();
+    }
+
+    @Override
+    @Transactional
+    public void requireLinkable(String specialistSubject, UUID participantId, UUID plannedSessionId) {
+        if (participantId == null || plannedSessionId == null) throw badRequest("participantId and plannedSessionId are required");
+        var session = persistence.lockAppointmentSessionLink(plannedSessionId)
+                .orElseThrow(() -> badRequest("planned session not found"));
+        if (!participantId.equals(session.participantId())) {
+            throw forbidden("planned session is unavailable for this appointment");
+        }
+        Access access = requireView(specialistSubject, session.revisionId());
+        if (!access.actor().hasProfile(ProfileType.SPECIALIST)) {
+            throw forbidden("specialist profile is required");
+        }
+        if (!"ASSIGNED".equals(session.status()) || !"ACTIVE".equals(session.revisionStatus())
+                || !"ACTIVE".equals(session.planStatus()) || !session.revisionId().equals(session.currentRevisionId())) {
+            throw conflict("planned session is not available for an appointment", null);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.Optional<AppointmentSessionLinkPort.AppointmentSessionContext> findAuthorizedContext(
+            String specialistSubject, UUID participantId, UUID plannedSessionId) {
+        if (participantId == null || plannedSessionId == null) return java.util.Optional.empty();
+        var session = persistence.findAppointmentSessionLink(plannedSessionId);
+        if (session.isEmpty()) return java.util.Optional.empty();
+        if (!participantId.equals(session.get().participantId())) return java.util.Optional.empty();
+        try {
+            Access access = requireView(specialistSubject, session.get().revisionId());
+            if (!access.actor().hasProfile(ProfileType.SPECIALIST)) return java.util.Optional.empty();
+            return java.util.Optional.of(new AppointmentSessionLinkPort.AppointmentSessionContext(session.get().sessionId(),
+                    session.get().title(), access.planId(), session.get().revisionId()));
+        } catch (ResponseStatusException denied) {
+            if (HttpStatus.FORBIDDEN.equals(denied.getStatusCode())) return java.util.Optional.empty();
+            throw denied;
+        }
     }
 
     private List<String> structuralViolations(PlanRevisionSnapshot snapshot, Access access) {

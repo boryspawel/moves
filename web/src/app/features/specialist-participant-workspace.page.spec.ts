@@ -868,6 +868,7 @@ function appointmentApi() {
     getSpecialistAppointment: vi.fn().mockResolvedValue({}),
     noShow: vi.fn(),
     create2: vi.fn(),
+    start: vi.fn().mockResolvedValue({}),
   };
 }
 
@@ -1004,6 +1005,93 @@ describe('specialist workspace disclosure', () => {
     expect(element.querySelector('.operational-focus button[mat-flat-button]')?.textContent).toContain('Zaplanuj spotkanie');
     expect(element.querySelector('.quick-actions button[mat-flat-button]')).toBeNull();
     expect(element.querySelector('.quick-actions button[mat-stroked-button]')?.textContent).toContain('Zaplanuj spotkanie');
+  });
+
+  it('starts only the backend-authorized focused appointment with its current version, then refreshes IN_PROGRESS state', async () => {
+    const appointments = appointmentApi();
+    const workspace = vi.fn().mockResolvedValue({
+        focus: { kind: 'IN_PROGRESS_APPOINTMENT', appointmentId: 'appointment-1' },
+        nextAppointment: { appointmentId: 'appointment-1', version: 8, availableActions: [] },
+      });
+    const { fixture, api } = await pageFixture([], [], appointments, { workspace });
+    (fixture.componentInstance as any).workspace.set({
+      focus: { kind: 'NEXT_APPOINTMENT', primaryAction: 'START_APPOINTMENT', appointmentId: 'appointment-1' },
+      nextAppointment: { appointmentId: 'appointment-1', version: 7, availableActions: ['START'] },
+    });
+
+    await (fixture.componentInstance as any).performFocus({ primaryAction: 'START_APPOINTMENT', appointmentId: 'appointment-1' });
+
+    expect(api.appointments.start).toHaveBeenCalledWith(expect.objectContaining({
+      id: 'appointment-1',
+      appointmentVersionCommand: { version: 7 },
+      idempotencyKey: expect.any(String),
+    }));
+    expect((fixture.componentInstance as any).workspace().focus.kind).toBe('IN_PROGRESS_APPOINTMENT');
+    expect((fixture.componentInstance as any).announcement()).toContain('rozpoczęto');
+  });
+
+  it('does not expose a start action when the backend focus does not authorize it', async () => {
+    const { fixture } = await pageFixture([], [], appointmentApi(), {
+      workspace: vi.fn().mockResolvedValue({
+        focus: { kind: 'NEXT_APPOINTMENT', appointmentId: 'appointment-1' },
+        nextAppointment: { appointmentId: 'appointment-1', version: 7, availableActions: [] },
+      }),
+    });
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('.operational-focus button')).toBeNull();
+  });
+
+  it('does not mutate when the focused appointment is absent, mismatched, or lacks a version', async () => {
+    const appointments = appointmentApi();
+    const { fixture, api } = await pageFixture([], [], appointments, {
+      workspace: vi.fn().mockResolvedValue({
+        focus: { primaryAction: 'START_APPOINTMENT', appointmentId: 'appointment-1' },
+        nextAppointment: { appointmentId: 'another-appointment', availableActions: ['START'] },
+      }),
+    });
+
+    await (fixture.componentInstance as any).performFocus({ primaryAction: 'START_APPOINTMENT', appointmentId: 'appointment-1' });
+
+    expect(api.appointments.start).not.toHaveBeenCalled();
+    expect((fixture.componentInstance as any).announcement()).toContain('nie może');
+  });
+
+  it('refreshes the authoritative workspace after a START conflict without retrying', async () => {
+    const appointments = appointmentApi();
+    appointments.start.mockRejectedValue(new ResponseError(new Response(null, { status: 409 })));
+    const workspace = vi.fn().mockResolvedValue({
+      focus: { kind: 'IN_PROGRESS_APPOINTMENT', appointmentId: 'appointment-1' },
+      nextAppointment: { appointmentId: 'appointment-1', version: 8, availableActions: [] },
+    });
+    const { fixture, api } = await pageFixture([], [], appointments, { workspace });
+    (fixture.componentInstance as any).workspace.set({
+      focus: { primaryAction: 'START_APPOINTMENT', appointmentId: 'appointment-1' },
+      nextAppointment: { appointmentId: 'appointment-1', version: 7, availableActions: ['START'] },
+    });
+
+    await (fixture.componentInstance as any).performFocus({ primaryAction: 'START_APPOINTMENT', appointmentId: 'appointment-1' });
+
+    expect(api.appointments.start).toHaveBeenCalledTimes(1);
+    expect(workspace).toHaveBeenCalledTimes(2);
+    expect((fixture.componentInstance as any).announcement()).toContain('zmieniło się');
+  });
+
+  it('shows the linked session and navigates only with authorized plan and revision identifiers', async () => {
+    const { fixture } = await pageFixture([], [], appointmentApi());
+    (fixture.componentInstance as any).workspace.set({
+      focus: { kind: 'IN_PROGRESS_APPOINTMENT', appointmentId: 'appointment-1' },
+      nextAppointment: {
+        appointmentId: 'appointment-1', plannedSessionId: 'session-1', plannedSessionTitle: 'Mobilność biodra',
+        planId: 'plan-1', revisionId: 'revision-1',
+      },
+    });
+    (fixture.componentInstance as any).state.set('loaded');
+    fixture.detectChanges();
+
+    const context = (fixture.nativeElement as HTMLElement).querySelector('.linked-session-context')!;
+    expect(context.textContent).toContain('Mobilność biodra');
+    expect(context.querySelector('a')?.textContent).toContain('Otwórz plan');
   });
 
   it('clears incompatible deep links when manually changing sections', async () => {

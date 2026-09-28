@@ -8,7 +8,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "appointment_event", schema = "calendar")
 class AppointmentEvent {
-    enum Type { CREATED, UPDATED, RESCHEDULED, COMPLETED, CANCELLED, NO_SHOW, BASELINE }
+    enum Type { CREATED, UPDATED, RESCHEDULED, STARTED, COMPLETED, CANCELLED, NO_SHOW, BASELINE }
 
     @Id UUID id;
     @Column(name = "appointment_id", nullable = false) UUID appointmentId;

@@ -41,6 +41,13 @@ import {
   ActiveProblemViewToJSON,
   ActiveProblemViewToJSONTyped,
 } from './ActiveProblemView';
+import type { ParticipantWorkspaceAppointmentView } from './ParticipantWorkspaceAppointmentView';
+import {
+  ParticipantWorkspaceAppointmentViewFromJSON,
+  ParticipantWorkspaceAppointmentViewFromJSONTyped,
+  ParticipantWorkspaceAppointmentViewToJSON,
+  ParticipantWorkspaceAppointmentViewToJSONTyped,
+} from './ParticipantWorkspaceAppointmentView';
 import type { ParticipantHeader } from './ParticipantHeader';
 import {
   ParticipantHeaderFromJSON,
@@ -69,13 +76,6 @@ import {
   OperationalFocusViewToJSON,
   OperationalFocusViewToJSONTyped,
 } from './OperationalFocusView';
-import type { AppointmentView } from './AppointmentView';
-import {
-  AppointmentViewFromJSON,
-  AppointmentViewFromJSONTyped,
-  AppointmentViewToJSON,
-  AppointmentViewToJSONTyped,
-} from './AppointmentView';
 import type { GoalView } from './GoalView';
 import {
   GoalViewFromJSON,
@@ -140,10 +140,10 @@ export interface SpecialistParticipantWorkspaceView {
   goals?: Array<GoalView>;
   /**
    *
-   * @type {AppointmentView}
+   * @type {ParticipantWorkspaceAppointmentView}
    * @memberof SpecialistParticipantWorkspaceView
    */
-  nextAppointment?: AppointmentView;
+  nextAppointment?: ParticipantWorkspaceAppointmentView;
   /**
    *
    * @type {ParticipantHeader}
@@ -213,7 +213,7 @@ export function SpecialistParticipantWorkspaceViewFromJSONTyped(
     nextAppointment:
       json['nextAppointment'] == null
         ? undefined
-        : AppointmentViewFromJSON(json['nextAppointment']),
+        : ParticipantWorkspaceAppointmentViewFromJSON(json['nextAppointment']),
     participant:
       json['participant'] == null ? undefined : ParticipantHeaderFromJSON(json['participant']),
     quickActions: json['quickActions'] == null ? undefined : json['quickActions'],
@@ -256,7 +256,7 @@ export function SpecialistParticipantWorkspaceViewToJSONTyped(
     generatedAt:
       value['generatedAt'] == null ? value['generatedAt'] : value['generatedAt'].toISOString(),
     goals: value['goals'] == null ? undefined : (value['goals'] as Array<any>).map(GoalViewToJSON),
-    nextAppointment: AppointmentViewToJSON(value['nextAppointment']),
+    nextAppointment: ParticipantWorkspaceAppointmentViewToJSON(value['nextAppointment']),
     participant: ParticipantHeaderToJSON(value['participant']),
     quickActions: value['quickActions'],
     recentProgress: RecentProgressViewToJSON(value['recentProgress']),

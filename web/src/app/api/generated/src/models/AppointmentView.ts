@@ -72,6 +72,12 @@ export interface AppointmentView {
    * @type {string}
    * @memberof AppointmentView
    */
+  plannedSessionId?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof AppointmentView
+   */
   shortPurpose?: string;
   /**
    *
@@ -163,6 +169,7 @@ export function AppointmentViewFromJSONTyped(
     location: json['location'] == null ? undefined : json['location'],
     locationMode: json['locationMode'] == null ? undefined : json['locationMode'],
     participantId: json['participantId'] == null ? undefined : json['participantId'],
+    plannedSessionId: json['plannedSessionId'] == null ? undefined : json['plannedSessionId'],
     shortPurpose: json['shortPurpose'] == null ? undefined : json['shortPurpose'],
     startsAt: json['startsAt'] == null ? undefined : new Date(json['startsAt']),
     status: json['status'] == null ? undefined : json['status'],
@@ -192,6 +199,7 @@ export function AppointmentViewToJSONTyped(
     location: value['location'],
     locationMode: value['locationMode'],
     participantId: value['participantId'],
+    plannedSessionId: value['plannedSessionId'],
     shortPurpose: value['shortPurpose'],
     startsAt: value['startsAt'] == null ? value['startsAt'] : value['startsAt'].toISOString(),
     status: value['status'],
