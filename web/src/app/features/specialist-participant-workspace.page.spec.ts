@@ -600,6 +600,30 @@ describe('SpecialistParticipantWorkspacePage appointment outcomes', () => {
     expect((fixture.componentInstance as any).currentAppointment().version).toBe(8);
     expect((fixture.componentInstance as any).announcement()).toContain('zmieniło się');
   });
+
+  it('keeps History open when an outcome refresh has no replacement event', async () => {
+    const event = appointmentEvent('event-old', 'appointment-1', '2026-07-01T10:00:00Z');
+    const { fixture, router } = await pageFixture([event], [], {
+      complete: vi.fn().mockResolvedValue({}),
+      getSpecialistAppointment: vi.fn(),
+    });
+    (fixture.componentInstance as any).selected.set(event);
+    (fixture.componentInstance as any).currentAppointment.set({
+      appointmentId: 'appointment-1',
+      version: 7,
+      availableActions: ['COMPLETE'],
+    });
+
+    await (fixture.componentInstance as any).recordOutcome('COMPLETE');
+
+    expect(router.navigate).toHaveBeenLastCalledWith(
+      [],
+      expect.objectContaining({
+        queryParams: { section: 'history', eventId: null },
+        queryParamsHandling: 'merge',
+      }),
+    );
+  });
 });
 
 describe('SpecialistParticipantWorkspacePage event deep links', () => {
@@ -698,7 +722,7 @@ describe('SpecialistParticipantWorkspacePage event deep links', () => {
 
     expect(router.navigate).toHaveBeenCalledWith(
       [],
-      expect.objectContaining({ queryParams: { eventId: null }, queryParamsHandling: 'merge' }),
+      expect.objectContaining({ queryParams: { section: 'history', eventId: null }, queryParamsHandling: 'merge' }),
     );
   });
 
@@ -713,7 +737,7 @@ describe('SpecialistParticipantWorkspacePage event deep links', () => {
 
     expect(router.navigate).toHaveBeenCalledWith(
       [],
-      expect.objectContaining({ queryParams: { eventId: null }, queryParamsHandling: 'merge' }),
+      expect.objectContaining({ queryParams: { section: 'history', eventId: null }, queryParamsHandling: 'merge' }),
     );
     expect(document.activeElement).toBe(opener);
     opener.remove();
@@ -747,18 +771,19 @@ describe('SpecialistParticipantWorkspacePage event deep links', () => {
     (fixture.nativeElement as HTMLElement).querySelector('.event-panel')!.dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Escape' }),
     );
-    params.next(convertToParamMap({ range: '2w', view: 'timeline', source: 'history' }));
+    params.next(convertToParamMap({ section: 'history', range: '2w', view: 'timeline', source: 'history' }));
     await fixture.whenStable();
 
     expect(router.navigate).toHaveBeenCalledWith(
       [],
       expect.objectContaining({
-        queryParams: { eventId: null, recordType: null, recordId: null, recordMode: null },
+        queryParams: { section: 'history', eventId: null, recordType: null, recordId: null, recordMode: null },
         queryParamsHandling: 'merge',
       }),
     );
     expect((fixture.componentInstance as any).selected()).toBeNull();
     expect((fixture.componentInstance as any).recordPanelId()).toBeNull();
+    expect((fixture.componentInstance as any).section()).toBe('history');
     expect(document.activeElement).toBe(opener);
     opener.remove();
   });
@@ -963,6 +988,22 @@ describe('specialist workspace disclosure', () => {
     fixture.detectChanges();
     expect(component.section()).toBe('history');
     expect((fixture.nativeElement as HTMLElement).querySelector('.workspace-timeline')).not.toBeNull();
+  });
+
+  it('keeps the focus action as the sole primary button while header scheduling stays secondary', async () => {
+    const { fixture } = await pageFixture([], [], appointmentApi(), {
+      workspace: vi.fn().mockResolvedValue({
+        quickActions: ['SCHEDULE_APPOINTMENT'],
+        focus: { primaryAction: 'SCHEDULE_APPOINTMENT', title: 'Zaplanuj spotkanie' },
+      }),
+    });
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('.operational-focus button[mat-flat-button]')?.textContent).toContain('Zaplanuj spotkanie');
+    expect(element.querySelector('.quick-actions button[mat-flat-button]')).toBeNull();
+    expect(element.querySelector('.quick-actions button[mat-stroked-button]')?.textContent).toContain('Zaplanuj spotkanie');
   });
 
   it('clears incompatible deep links when manually changing sections', async () => {

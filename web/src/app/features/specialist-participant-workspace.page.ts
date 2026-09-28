@@ -80,7 +80,7 @@ type WorkspaceSection = 'plan' | 'documentation' | 'history';
     @if (actions.length) {
       <div class="quick-actions" aria-label="Szybkie działania">
         @for (action of actions; track action) {
-          <button mat-flat-button type="button" (click)="requested.emit(action)">
+          <button mat-stroked-button type="button" (click)="requested.emit(action)">
             {{ actionLabel(action) }}
           </button>
         }
@@ -1409,8 +1409,8 @@ export class SpecialistParticipantWorkspacePage {
   protected close() {
     const event = this.selected();
     void this.navigate(event?.category === 'INTERVIEW' || event?.category === 'NOTE'
-      ? { eventId: null, recordType: null, recordId: null, recordMode: null }
-      : { eventId: null });
+      ? { section: 'history', eventId: null, recordType: null, recordId: null, recordMode: null }
+      : { section: 'history', eventId: null });
     queueMicrotask(() => {
       if (this.opener?.isConnected) this.opener.focus();
     });
