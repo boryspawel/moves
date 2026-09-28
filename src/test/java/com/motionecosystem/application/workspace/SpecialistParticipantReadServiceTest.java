@@ -76,8 +76,9 @@ class SpecialistParticipantReadServiceTest {
         when(specialistWorkspace.findRelationship(specialistId, participantId)).thenReturn(Optional.of(
                 new SpecialistWorkspacePort.Relationship("ACTIVE", Instant.parse("2030-01-01T00:00:00Z"))));
 
-        var workspace = new SpecialistParticipantReadService(accounts, specialistWorkspace, participants, contexts, appointments, appointmentEvents,
-                revisions, executionHistory, null, null, audit, clock).workspace("specialist", participantId);
+        var service = new SpecialistParticipantReadService(accounts, specialistWorkspace, participants, contexts, appointments, appointmentEvents,
+                revisions, executionHistory, null, null, audit, clock);
+        var workspace = service.workspace("specialist", participantId);
 
         assertThat(workspace.participant())
                 .extracting(
@@ -89,6 +90,48 @@ class SpecialistParticipantReadServiceTest {
                 .extracting(SpecialistParticipantReadService.AppointmentView::appointmentId,
                         SpecialistParticipantReadService.AppointmentView::status)
                 .containsExactly(currentInProgress.appointmentId(), "IN_PROGRESS");
+        assertThat(workspace.focus())
+                .extracting(SpecialistParticipantReadService.OperationalFocusView::kind,
+                        SpecialistParticipantReadService.OperationalFocusView::appointmentId,
+                        SpecialistParticipantReadService.OperationalFocusView::primaryAction)
+                .containsExactly(SpecialistParticipantReadService.FocusKind.IN_PROGRESS_APPOINTMENT,
+                        currentInProgress.appointmentId(), "OPEN_HISTORY");
+        UUID attentionId = UUID.randomUUID();
+        when(specialistWorkspace.listParticipantWorklist(any(), any(), any(), any())).thenReturn(List.of(
+                new SpecialistWorkspacePort.WorklistItem(attentionId, participantId, "ESCALATING_SYMPTOMS", "HIGH",
+                        "Objawy wymagają sprawdzenia", "OPEN", now.minusSeconds(60), null)));
+        assertThat(service.workspace("specialist", participantId).focus())
+                .extracting(SpecialistParticipantReadService.OperationalFocusView::kind,
+                        SpecialistParticipantReadService.OperationalFocusView::attentionId)
+                .containsExactly(SpecialistParticipantReadService.FocusKind.IMPORTANT_ATTENTION, attentionId);
+
+        UUID followUpId = UUID.randomUUID();
+        when(specialistWorkspace.listParticipantWorklist(any(), any(), any(), any())).thenReturn(List.of(
+                new SpecialistWorkspacePort.WorklistItem(followUpId, participantId, "POST_24H_FOLLOW_UP", "MEDIUM",
+                        "Potwierdź dalsze kroki", "OPEN", now.minusSeconds(60), null)));
+        when(appointments.findForParticipant(any(), any(), any(), any(), anyInt())).thenReturn(List.of(futureConfirmed));
+        assertThat(service.workspace("specialist", participantId).focus().kind())
+                .isEqualTo(SpecialistParticipantReadService.FocusKind.NEXT_APPOINTMENT);
+        when(appointments.findForParticipant(any(), any(), any(), any(), anyInt())).thenReturn(List.of());
+        assertThat(service.workspace("specialist", participantId).focus())
+                .extracting(SpecialistParticipantReadService.OperationalFocusView::kind,
+                        SpecialistParticipantReadService.OperationalFocusView::attentionId)
+                .containsExactly(SpecialistParticipantReadService.FocusKind.FOLLOW_UP, followUpId);
+        UUID standardFollowUpId = UUID.randomUUID();
+        when(specialistWorkspace.listParticipantWorklist(any(), any(), any(), any())).thenReturn(List.of(
+                new SpecialistWorkspacePort.WorklistItem(UUID.randomUUID(), participantId, "REPEATED_BARRIERS", "LOW",
+                        "Starsza sprawa", "OPEN", now.minusSeconds(120), null),
+                new SpecialistWorkspacePort.WorklistItem(standardFollowUpId, participantId, "TECHNIQUE_UNCERTAINTY", "MEDIUM",
+                        "Nowsza sprawa", "OPEN", now.minusSeconds(30), null)));
+        assertThat(service.workspace("specialist", participantId).focus())
+                .extracting(SpecialistParticipantReadService.OperationalFocusView::kind,
+                        SpecialistParticipantReadService.OperationalFocusView::attentionId)
+                .containsExactly(SpecialistParticipantReadService.FocusKind.FOLLOW_UP, standardFollowUpId);
+        when(specialistWorkspace.listParticipantWorklist(any(), any(), any(), any())).thenReturn(List.of(
+                new SpecialistWorkspacePort.WorklistItem(followUpId, participantId, "POST_24H_FOLLOW_UP", "MEDIUM",
+                        "Potwierdź dalsze kroki", "SNOOZED", now.minusSeconds(60), now.plusSeconds(60))));
+        assertThat(service.workspace("specialist", participantId).focus().kind())
+                .isEqualTo(SpecialistParticipantReadService.FocusKind.IDLE);
 
         when(appointments.findForParticipant(any(), any(), any(), any(), anyInt())).thenReturn(List.of(
                 appointment(now.plusSeconds(14_400), now.plusSeconds(18_000), "SCHEDULED"), futureConfirmed));

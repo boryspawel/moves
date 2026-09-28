@@ -719,7 +719,7 @@ describe('SpecialistParticipantWorkspacePage event deep links', () => {
     opener.remove();
   });
 
-  it('closes a record event panel once, preserves other query parameters, and restores focus on Escape', async () => {
+  it('keeps an event deep link in History and restores focus on Escape', async () => {
     const event = {
       eventId: 'record-event-1',
       category: 'INTERVIEW',
@@ -744,7 +744,7 @@ describe('SpecialistParticipantWorkspacePage event deep links', () => {
     fixture.detectChanges();
     router.navigate.mockClear();
 
-    (fixture.nativeElement as HTMLElement).querySelector('.record-panel')!.dispatchEvent(
+    (fixture.nativeElement as HTMLElement).querySelector('.event-panel')!.dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Escape' }),
     );
     params.next(convertToParamMap({ range: '2w', view: 'timeline', source: 'history' }));
@@ -937,5 +937,75 @@ describe('specialist workspace invitation access', () => {
     await Promise.resolve(); fixture.detectChanges();
     expect(api.participantAccess.readParticipantAccessInvitationStatus).toHaveBeenCalledWith({ participantId: 'participant-1', role: 'TRAINER' });
     expect(fixture.nativeElement.querySelector('app-participant-access-panel')).not.toBeNull();
+  });
+});
+
+describe('specialist workspace disclosure', () => {
+  it('keeps details closed by default and follows goal, record, and event query targets', async () => {
+    const { fixture, params } = await pageFixture([], [], appointmentApi());
+    const component = fixture.componentInstance as any;
+
+    expect(component.section()).toBeNull();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.workspace-timeline')).toBeNull();
+
+    params.next(convertToParamMap({ goalId: 'goal-1' }));
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(component.section()).toBe('plan');
+
+    params.next(convertToParamMap({ recordType: 'note', recordId: 'note-1' }));
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(component.section()).toBe('documentation');
+
+    params.next(convertToParamMap({ eventId: 'event-1' }));
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(component.section()).toBe('history');
+    expect((fixture.nativeElement as HTMLElement).querySelector('.workspace-timeline')).not.toBeNull();
+  });
+
+  it('clears incompatible deep links when manually changing sections', async () => {
+    const { fixture, router } = await pageFixture([], [], appointmentApi());
+    const component = fixture.componentInstance as any;
+
+    component.openSection('documentation');
+    expect(router.navigate).toHaveBeenLastCalledWith([], expect.objectContaining({
+      queryParams: { section: 'documentation', eventId: null, goalId: null },
+      queryParamsHandling: 'merge',
+    }));
+    component.openSection('plan');
+    expect(router.navigate).toHaveBeenLastCalledWith([], expect.objectContaining({
+      queryParams: { section: 'plan', eventId: null, recordType: null, recordId: null, recordMode: null },
+      queryParamsHandling: 'merge',
+    }));
+  });
+
+  it('routes an attention focus to its exact authorized worklist item', async () => {
+    const { fixture, router } = await pageFixture([], [], appointmentApi());
+    (fixture.componentInstance as any).performFocus({ primaryAction: 'OPEN_ATTENTION_ITEMS', attentionId: 'attention-1' });
+    expect(router.navigate).toHaveBeenLastCalledWith(['/specialist-alerts'], { queryParams: { itemId: 'attention-1' } });
+  });
+
+  it('opens the focused appointment by its authoritative identifier', async () => {
+    const appointments = appointmentApi();
+    appointments.getSpecialistAppointment.mockResolvedValue({ id: 'appointment-1', startsAt: new Date('2026-10-01T10:00:00Z'), status: 'CONFIRMED', type: 'CONSULTATION' });
+    const { fixture, api } = await pageFixture([], [], appointments);
+    await (fixture.componentInstance as any).performFocus({ primaryAction: 'OPEN_HISTORY', appointmentId: 'appointment-1' });
+    expect(api.appointments.getSpecialistAppointment).toHaveBeenCalledWith({ id: 'appointment-1' });
+    expect((fixture.componentInstance as any).selected().detail.detailResourceId).toBe('appointment-1');
+  });
+
+  it('does not treat an unavailable access status as an access problem', async () => {
+    const { fixture } = await pageFixture([], [], appointmentApi());
+    const component = fixture.componentInstance as any;
+    component.accessStatusAvailable.set(false);
+    component.accessStatus.set(undefined);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector<HTMLDetailsElement>('.participant-access')?.open).toBe(false);
+    component.accessStatusAvailable.set(true);
+    component.accessStatus.set('NO_ACCOUNT');
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector<HTMLDetailsElement>('.participant-access')?.open).toBe(true);
   });
 });

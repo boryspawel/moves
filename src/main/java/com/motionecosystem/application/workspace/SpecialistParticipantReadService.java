@@ -95,10 +95,11 @@ public class SpecialistParticipantReadService {
                 ? executionHistory.starts(participantId, now.minusSeconds(366L * 24 * 60 * 60), now.plusSeconds(1), DEFAULT_LIMIT)
                 : List.of();
         List<AttentionItemView> attention = attention(subject, participantId, access);
+        AppointmentView nextAppointment = upcoming.isEmpty() ? null : appointment(upcoming.getFirst());
+        ActivePlanView activePlan = revision.map(value -> activePlan(value, now, recentExecutions)).orElse(null);
         return new SpecialistParticipantWorkspaceView(now, participant,
                 relationship(access.specialistId(), participantId), capabilities(access.decision()),
-                upcoming.isEmpty() ? null : appointment(upcoming.getFirst()),
-                revision.map(value -> activePlan(value, now, recentExecutions)).orElse(null),
+                focus(attention, nextAppointment, now), nextAppointment, activePlan,
                 revision.map(value -> goals(value.goals())).orElseGet(List::of),
                 canViewAdherence && adherence != null ? adherence.summarize(participantId, null, null) : AdherenceSummary.noData(), recentProgress(recentExecutions),
                 activeProblems(attention), attention, quickActions(access.decision(), upcoming, revision, attention));
@@ -464,6 +465,50 @@ public class SpecialistParticipantReadService {
         return attention.stream().map(item -> new ActiveProblemView(item.attentionId(), item.type(), item.priority(), item.status(),
                 item.shortDescription(), item.createdAt(), item.createdAt(), "WORKLIST", item.availableActions())).toList();
     }
+    private static OperationalFocusView focus(List<AttentionItemView> attention, AppointmentView appointment, Instant now) {
+        List<AttentionItemView> actionableAttention = attention.stream()
+                .filter(item -> !"SNOOZED".equals(item.status()) || item.dueAt() == null || !item.dueAt().isAfter(now))
+                .toList();
+        AttentionItemView priorityAttention = actionableAttention.stream()
+                .filter(item -> "HIGH".equals(item.priority()) || "ESCALATING_SYMPTOMS".equals(item.type()))
+                .sorted(Comparator.comparingInt(SpecialistParticipantReadService::attentionPriority)
+                        .thenComparing(AttentionItemView::createdAt, Comparator.nullsLast(Comparator.naturalOrder())))
+                .findFirst().orElse(null);
+        if (priorityAttention != null) {
+            return new OperationalFocusView(FocusKind.IMPORTANT_ATTENTION, "Wymaga uwagi",
+                    priorityAttention.shortDescription() == null || priorityAttention.shortDescription().isBlank()
+                            ? "Sprawdź sprawę wymagającą reakcji." : priorityAttention.shortDescription(),
+                    "OPEN_ATTENTION_ITEMS", "HISTORY", priorityAttention.attentionId(), null, null, priorityAttention.dueAt());
+        }
+        if (appointment != null && "IN_PROGRESS".equals(appointment.status())
+                && !appointment.startsAt().isAfter(now) && appointment.endsAt().isAfter(now)) {
+            return new OperationalFocusView(FocusKind.IN_PROGRESS_APPOINTMENT, "Trwa spotkanie",
+                    appointment.shortPurpose() == null || appointment.shortPurpose().isBlank()
+                            ? "Spotkanie z uczestnikiem jest w toku." : appointment.shortPurpose(),
+                    "OPEN_HISTORY", "HISTORY", null, appointment.appointmentId(), null, appointment.endsAt());
+        }
+        if (appointment != null) {
+            return new OperationalFocusView(FocusKind.NEXT_APPOINTMENT, "Następne spotkanie",
+                    appointment.shortPurpose() == null || appointment.shortPurpose().isBlank()
+                            ? "Najbliższe zaplanowane spotkanie." : appointment.shortPurpose(),
+                    "OPEN_HISTORY", "HISTORY", null, appointment.appointmentId(), null, appointment.startsAt());
+        }
+        AttentionItemView followUp = actionableAttention.stream()
+                .min(Comparator.comparingInt(SpecialistParticipantReadService::attentionPriority)
+                        .thenComparing(AttentionItemView::createdAt, Comparator.nullsLast(Comparator.naturalOrder())))
+                .orElse(null);
+        if (followUp != null) {
+            return new OperationalFocusView(FocusKind.FOLLOW_UP, "Dalszy krok",
+                    followUp.shortDescription() == null || followUp.shortDescription().isBlank()
+                            ? "Sprawdź sprawę oczekującą na dalsze działanie." : followUp.shortDescription(),
+                    "OPEN_ATTENTION_ITEMS", "HISTORY", followUp.attentionId(), null, null, followUp.dueAt());
+        }
+        return new OperationalFocusView(FocusKind.IDLE, "Brak pilnych działań",
+                "Nie ma obecnie spraw wymagających reakcji.", "SCHEDULE_APPOINTMENT", null, null, null, null, null);
+    }
+    private static int attentionPriority(AttentionItemView item) {
+        return switch (item.priority()) { case "HIGH" -> 0; case "MEDIUM" -> 1; default -> 2; };
+    }
     private static List<String> quickActions(SpecialistWorkspacePort.AuthorizationDecision decision,
                                              List<SpecialistAppointmentQueryPort.AppointmentSummary> appointments,
                                              Optional<PlanRevisionQueryPort.PlanRevisionSnapshot> revision,
@@ -508,12 +553,15 @@ public class SpecialistParticipantReadService {
     public enum TimelineType { APPOINTMENT, SESSION, EXECUTION, GOAL, INTERVIEW, NOTE }
     public record TimelineQuery(Instant from, Instant to, Set<TimelineType> types, Granularity granularity, String cursor, Integer limit) { }
     public record SpecialistParticipantWorkspaceView(Instant generatedAt, ParticipantHeader participant, RelationshipView relationship,
-                                                      List<String> capabilities, AppointmentView nextAppointment, ActivePlanView activePlan,
+                                                      List<String> capabilities, OperationalFocusView focus, AppointmentView nextAppointment, ActivePlanView activePlan,
                                                       List<GoalView> goals, AdherenceSummary adherenceSummary, RecentProgressView recentProgress,
                                                       List<ActiveProblemView> activeProblems, List<AttentionItemView> attentionItems, List<String> quickActions) { }
     public record ParticipantHeader(UUID participantId, String displayName, String avatarReference, String contextLabel, String timeZoneId,
                                     List<String> availableActions) { }
     public record RelationshipView(String status, Instant startedAt) { }
+    public enum FocusKind { IMPORTANT_ATTENTION, IN_PROGRESS_APPOINTMENT, NEXT_APPOINTMENT, FOLLOW_UP, IDLE }
+    public record OperationalFocusView(FocusKind kind, String title, String explanation, String primaryAction,
+                                       String navigationTarget, UUID attentionId, UUID appointmentId, UUID planId, Instant relevantAt) { }
     public record AppointmentView(UUID appointmentId, Instant startsAt, Instant endsAt, String type, String status, String shortPurpose) { }
     public record ActivePlanView(UUID planId, UUID activeRevisionId, String name, String status, Instant activatedAt, LocalDate validFrom,
                                  LocalDate validTo, int activeSessionCount, SessionFactView nextPlannedSession,

@@ -17,6 +17,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ApiFacade } from '../core/api.facade';
 import { ResponseError } from '../api/generated/src/runtime';
 import type { SpecialistParticipantWorkspaceView } from '../api/generated/src/models/SpecialistParticipantWorkspaceView';
+import type { OperationalFocusView } from '../api/generated/src/models/OperationalFocusView';
 import type { ParticipantTimelineEvent } from '../api/generated/src/models/ParticipantTimelineEvent';
 import type { AppointmentView } from '../api/generated/src/models/AppointmentView';
 import type { ParticipantGoalView } from '../api/generated/src/models/ParticipantGoalView';
@@ -53,6 +54,7 @@ import {
 const actionLabels: Record<string, string> = { SCHEDULE_APPOINTMENT: 'Zaplanuj spotkanie' };
 const label = (value: string | undefined, labels: Record<string, string>) =>
   value ? (labels[value] ?? value.replace(/_/g, ' ').toLocaleLowerCase('pl-PL')) : 'Brak danych';
+type WorkspaceSection = 'plan' | 'documentation' | 'history';
 
 @Component({
   selector: 'app-participant-workspace-header',
@@ -115,26 +117,22 @@ export class ParticipantWorkspaceHeaderComponent {
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './participant-summary-strip.component.scss',
   template: `<section class="summary-strip" aria-label="Podsumowanie klienta">
-    <div>
+    @if (workspace.activePlan) { <div>
       <strong>Aktywny plan</strong
-      ><span>{{ workspace.activePlan?.name || 'Brak aktywnego planu' }}</span>
-    </div>
-    <div>
-      <strong>Cele</strong><span>{{ goals(workspace.goals?.length) }}</span>
-    </div>
-    <div>
-      <strong>Realizacja</strong
-      ><span>{{ realization(workspace.adherenceSummary?.completedSessions) }}</span>
-    </div>
-    <div>
+      ><span>{{ workspace.activePlan.name || 'Brak aktywnego planu' }}</span>
+    </div> }
+    @if (workspace.goals?.length) { <div>
+      <strong>Cele</strong><span>{{ goals(workspace.goals.length) }}</span>
+    </div> }
+    @if (workspace.recentProgress?.latestActivityAt) { <div>
       <strong>Ostatnia aktywność</strong
       ><span>{{
-        workspace.recentProgress?.latestActivityAt ? 'Zarejestrowana' : 'Brak danych'
+        workspace.recentProgress.latestActivityAt ? 'Zarejestrowana' : 'Brak danych'
       }}</span>
-    </div>
-    <div>
-      <strong>Wymaga reakcji</strong><span>{{ attention(workspace.activeProblems?.length) }}</span>
-    </div>
+    </div> }
+    @if (workspace.activeProblems?.length) { <div>
+      <strong>Wymaga reakcji</strong><span>{{ attention(workspace.activeProblems.length) }}</span>
+    </div> }
   </section>`,
 })
 export class ParticipantSummaryStripComponent {
@@ -142,6 +140,28 @@ export class ParticipantSummaryStripComponent {
   protected goals = goalsSummary;
   protected realization = realizationSummary;
   protected attention = attentionSummary;
+}
+
+@Component({
+  selector: 'app-participant-operational-focus',
+  standalone: true,
+  imports: [MatButtonModule, DatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: './specialist-participant-workspace.page.scss',
+  template: `<section class="operational-focus" aria-labelledby="operational-focus-title">
+    <p class="focus-kicker">Bieżący priorytet</p>
+    <h2 id="operational-focus-title">{{ focus?.title || 'Brak pilnych działań' }}</h2>
+    <p>{{ focus?.explanation || 'Nie ma obecnie spraw wymagających reakcji.' }}</p>
+    @if (focus?.relevantAt) { <p class="focus-time"><time>{{ focus.relevantAt | date: 'medium' : '' : 'pl' }}</time></p> }
+    @if (focus?.primaryAction) { <button mat-flat-button type="button" (click)="requested.emit(focus!)">{{ actionLabel(focus!.primaryAction) }}</button> }
+  </section>`,
+})
+export class ParticipantOperationalFocusComponent {
+  @Input() focus?: OperationalFocusView;
+  @Output() requested = new EventEmitter<OperationalFocusView>();
+  protected actionLabel(action?: string): string {
+    return ({ OPEN_ATTENTION_ITEMS: 'Otwórz sprawę', OPEN_HISTORY: 'Otwórz historię', OPEN_PLAN: 'Otwórz plan', SCHEDULE_APPOINTMENT: 'Zaplanuj spotkanie' })[action ?? ''] ?? 'Otwórz';
+  }
 }
 
 @Component({
@@ -1117,6 +1137,7 @@ export class ParticipantGoalsComponent {
   imports: [
     ParticipantWorkspaceHeaderComponent,
     ParticipantSummaryStripComponent,
+    ParticipantOperationalFocusComponent,
     ParticipantGoalsComponent,
     ParticipantDocumentationComponent,
     ParticipantAccessPanelComponent,
@@ -1135,7 +1156,9 @@ export class ParticipantGoalsComponent {
     [attr.aria-busy]="state() === 'loading'"
   >
     <p class="sr-only" aria-live="polite">{{ announcement() }}</p>
-    @if (participantId() && actingContext()) { <app-participant-access-panel [participantId]="participantId()" [role]="actingContext()!" /> }
+    @if (participantId() && actingContext()) {
+      <details class="participant-access" [open]="accessNeedsAction()"><summary>Dostęp uczestnika</summary><app-participant-access-panel [participantId]="participantId()" [role]="actingContext()!" /></details>
+    }
     @if (state() === 'loading') {
       <section class="state-card" role="status">
         <h1>Wczytywanie kartoteki…</h1>
@@ -1154,55 +1177,32 @@ export class ParticipantGoalsComponent {
         [accessStatusAvailable]="accessStatusAvailable()"
         [actions]="safeActions()"
         (requested)="perform($event)"
-      /><app-participant-summary-strip [workspace]="data" /><app-participant-goals
-        [participantId]="participantId()"
-        [role]="actingContext()"
-        [selectedGoalId]="goalId()"
-        (changed)="reload()"
       />
-      <section class="workspace-planning-link" aria-label="Plan treningowy">
-        <a [routerLink]="['/specialist/clients', participantId(), 'plans']">Plany</a>
-        <a [routerLink]="['/specialist/clients', participantId(), 'plans', 'new']">Utwórz plan treningowy</a>
-        @if (data.activePlan; as activePlan) {
-          @if (activePlan.planId && activePlan.activeRevisionId) {
-            <a [routerLink]="['/specialist/clients', participantId(), 'plans', activePlan.planId, 'revisions', activePlan.activeRevisionId]">Otwórz aktywny plan</a>
-          }
-        }
-      </section>
-      <app-participant-documentation
-        [participantId]="participantId()"
-        [role]="actingContext()"
-        [panelType]="recordPanelType()"
-        [panelId]="recordPanelId()"
-        [panelMode]="recordPanelMode()"
-        (opened)="openRecord($event)"
-        (closed)="closeRecord()"
-        (changed)="reload()"
-      />
+      <app-participant-operational-focus [focus]="focus(data)" (requested)="performFocus($event)" />
+      <app-participant-summary-strip [workspace]="data" />
+      <nav class="workspace-sections" aria-label="Sekcje kartoteki">
+        <button type="button" [attr.aria-pressed]="section() === 'plan'" (click)="openSection('plan')">Plan</button>
+        <button type="button" [attr.aria-pressed]="section() === 'documentation'" (click)="openSection('documentation')">Dokumentacja</button>
+        <button type="button" [attr.aria-pressed]="section() === 'history'" (click)="openSection('history')">Historia</button>
+      </nav>
+      @if (section() === 'plan') {
+        <section class="workspace-disclosure" aria-labelledby="plan-title">
+          <h2 id="plan-title">Plan</h2>
+          <section class="workspace-planning-link" aria-label="Plan treningowy">
+            <a [routerLink]="['/specialist/clients', participantId(), 'plans']">Plany</a>
+            <a [routerLink]="['/specialist/clients', participantId(), 'plans', 'new']">Utwórz plan treningowy</a>
+            @if (data.activePlan?.planId && data.activePlan.activeRevisionId) { <a [routerLink]="['/specialist/clients', participantId(), 'plans', data.activePlan.planId, 'revisions', data.activePlan.activeRevisionId]">Otwórz aktywny plan</a> }
+          </section>
+          <app-participant-goals [participantId]="participantId()" [role]="actingContext()" [selectedGoalId]="goalId()" (changed)="reload()" />
+        </section>
+      } @else if (section() === 'documentation') {
+        <section class="workspace-disclosure" aria-label="Dokumentacja uczestnika">
+          <app-participant-documentation [participantId]="participantId()" [role]="actingContext()" [panelType]="recordPanelType()" [panelId]="recordPanelId()" [panelMode]="recordPanelMode()" (opened)="openRecord($event)" (closed)="closeRecord()" (changed)="reload()" />
+        </section>
+      } @else if (section() === 'history') {
       <section class="workspace-content">
         <section class="workspace-timeline" aria-labelledby="workspace-overview-title">
           <h2 id="workspace-overview-title">Historia współpracy</h2>
-          @if (hasAttention(data)) {
-            <section class="attention-alerts" aria-labelledby="attention-title">
-              <h3 id="attention-title">Wymaga uwagi</h3>
-              @for (item of data.attentionItems ?? []; track item.id) {
-                <article role="alert">
-                  <strong>{{ item.title || 'Wymaga sprawdzenia' }}</strong>
-                  @if (item.neutralReason) {
-                    <p>{{ item.neutralReason }}</p>
-                  }
-                </article>
-              }
-              @for (problem of data.activeProblems ?? []; track problem.problemId) {
-                <article role="alert">
-                  <strong>Aktywny problem</strong>
-                  @if (problem.shortDescription) {
-                    <p>{{ problem.shortDescription }}</p>
-                  }
-                </article>
-              }
-            </section>
-          }
           <app-patient-timeline-filters
             [range]="range()"
             [selected]="types()"
@@ -1235,6 +1235,7 @@ export class ParticipantGoalsComponent {
           />
         }
       </section>
+      }
       @if (scheduling()) {
         <app-schedule-appointment-dialog
           [saving]="savingAppointment()"
@@ -1268,6 +1269,7 @@ export class SpecialistParticipantWorkspacePage {
   protected readonly announcement = signal('');
   protected readonly accessStatus = signal<string | undefined>(undefined);
   protected readonly accessStatusAvailable = signal(true);
+  protected readonly accessNeedsAction = computed(() => this.accessStatusAvailable() && !!this.accessStatus() && this.accessStatus() !== 'ACTIVE');
   protected readonly scheduling = signal(false);
   protected readonly savingAppointment = signal(false);
   protected readonly appointmentError = signal(false);
@@ -1279,6 +1281,7 @@ export class SpecialistParticipantWorkspacePage {
   protected readonly recordPanelType = signal<RecordPanelType | null>(null);
   protected readonly recordPanelId = signal<string | null>(null);
   protected readonly recordPanelMode = signal<'view' | 'edit'>('view');
+  protected readonly section = signal<WorkspaceSection | null>(null);
   protected readonly groups = computed(() =>
     groupEvents(this.events(), rangeDates(this.range()).granularity),
   );
@@ -1304,6 +1307,12 @@ export class SpecialistParticipantWorkspacePage {
       this.recordPanelType.set(recordType === 'interview' || recordType === 'note' ? recordType : null);
       this.recordPanelId.set(params.get('recordId'));
       this.recordPanelMode.set(params.get('recordMode') === 'edit' ? 'edit' : 'view');
+      const requestedSection = params.get('section');
+      this.section.set(
+        id ? 'history' : this.goalId() ? 'plan' : this.recordPanelType() ? 'documentation'
+          : requestedSection === 'plan' || requestedSection === 'documentation' || requestedSection === 'history'
+            ? requestedSection : null,
+      );
       const participantId = this.route.snapshot.paramMap.get('participantId');
       if (!participantId) return;
       this.participantId.set(participantId);
@@ -1317,8 +1326,16 @@ export class SpecialistParticipantWorkspacePage {
       }
     });
   }
-  protected hasAttention(data: SpecialistParticipantWorkspaceView) {
-    return !!(data.attentionItems?.length || data.activeProblems?.length);
+  protected focus(data: SpecialistParticipantWorkspaceView): OperationalFocusView | undefined {
+    return data.focus;
+  }
+  protected openSection(section: WorkspaceSection) {
+    const cleared: Record<string, string | null> = section === 'plan'
+      ? { eventId: null, recordType: null, recordId: null, recordMode: null }
+      : section === 'documentation'
+        ? { eventId: null, goalId: null }
+        : { goalId: null, recordType: null, recordId: null, recordMode: null };
+    void this.navigate({ section, ...cleared });
   }
   private async loadActingContext(): Promise<void> {
     const onboarding = await this.api.onboarding.state().catch(() => undefined);
@@ -1382,6 +1399,7 @@ export class SpecialistParticipantWorkspacePage {
     const type = event.category === 'INTERVIEW' ? 'interview' : event.category === 'NOTE' ? 'note' : null;
     void this.navigate({
       eventId: event.eventId ?? null,
+      section: 'history',
       recordType: type,
       recordId: type ? event.detail?.referenceId ?? null : null,
       recordMode: null,
@@ -1389,14 +1407,17 @@ export class SpecialistParticipantWorkspacePage {
     this.focusPanel();
   }
   protected close() {
-    void this.navigate({ eventId: null });
+    const event = this.selected();
+    void this.navigate(event?.category === 'INTERVIEW' || event?.category === 'NOTE'
+      ? { eventId: null, recordType: null, recordId: null, recordMode: null }
+      : { eventId: null });
     queueMicrotask(() => {
       if (this.opener?.isConnected) this.opener.focus();
     });
   }
   protected openRecord(record: { type: RecordPanelType; id: string; mode?: 'view' | 'edit' }) {
     this.opener = document.activeElement as HTMLElement | null;
-    void this.navigate({ recordType: record.type, recordId: record.id, recordMode: record.mode === 'edit' ? 'edit' : null });
+    void this.navigate({ section: 'documentation', recordType: record.type, recordId: record.id, recordMode: record.mode === 'edit' ? 'edit' : null });
     this.focusRecordPanel();
   }
   protected closeRecord() {
@@ -1466,6 +1487,39 @@ export class SpecialistParticipantWorkspacePage {
     if (action === 'SCHEDULE_APPOINTMENT') {
       this.appointmentError.set(false);
       this.scheduling.set(true);
+    } else if (action === 'OPEN_PLAN') this.openSection('plan');
+    else if (action === 'OPEN_HISTORY' || action === 'OPEN_ATTENTION_ITEMS') this.openSection('history');
+  }
+  protected async performFocus(focus: OperationalFocusView): Promise<void> {
+    if (focus.primaryAction === 'OPEN_ATTENTION_ITEMS' && focus.attentionId) {
+      await this.router.navigate(['/specialist-alerts'], { queryParams: { itemId: focus.attentionId } });
+      return;
+    }
+    if (focus.primaryAction === 'OPEN_HISTORY' && focus.appointmentId) {
+      this.section.set('history');
+      await this.navigate({ section: 'history', goalId: null, recordType: null, recordId: null, recordMode: null });
+      await this.openFocusedAppointment(focus.appointmentId);
+      return;
+    }
+    if (focus.primaryAction) this.perform(focus.primaryAction);
+  }
+  private async openFocusedAppointment(appointmentId: string): Promise<void> {
+    try {
+      const appointment = await this.api.appointments.getSpecialistAppointment({ id: appointmentId });
+      this.currentAppointment.set(appointment);
+      this.selected.set({
+        eventId: `appointment:${appointmentId}`,
+        category: 'APPOINTMENT',
+        status: appointment.status,
+        effectiveFrom: appointment.startsAt,
+        title: appointment.type,
+        summary: appointment.shortPurpose,
+        detail: { detailResourceId: appointmentId },
+      });
+      this.selectedOutsideRange.set(true);
+      this.focusPanel();
+    } catch {
+      this.announcement.set('Nie udało się otworzyć wybranego spotkania.');
     }
   }
   protected closeSchedule() {
@@ -1540,6 +1594,7 @@ export class SpecialistParticipantWorkspacePage {
       this.selected.set(null);
       return;
     }
+    this.section.set('history');
     const listed = items.find((event) => event.eventId === eventId);
     if (listed) {
       this.selected.set(listed);
@@ -1596,7 +1651,9 @@ export class SpecialistParticipantWorkspacePage {
   private openRecordForEvent(event: ParticipantTimelineEvent) {
     const type = event.category === 'INTERVIEW' ? 'interview' : event.category === 'NOTE' ? 'note' : null;
     const id = event.detail?.referenceId;
-    if (type && id && !this.recordPanelId()) void this.navigate({ recordType: type, recordId: id, recordMode: null });
+    if (type && id && !this.recordPanelId()) {
+      void this.navigate({ recordType: type, recordId: id, recordMode: null });
+    }
   }
   private focusRecordPanel() {
     queueMicrotask(() => {

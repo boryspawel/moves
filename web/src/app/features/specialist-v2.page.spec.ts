@@ -7,6 +7,7 @@ import { SpecialistAlertsPage } from './specialist-alerts.page';
 
 const api = {
   worklist: { listWorklist: vi.fn().mockResolvedValue([{ id: 'item-id', category: 'PARTICIPANT_ISSUE', priority: 'HIGH', minimalData: 'question', issueText: 'Pomoc' }]), actOnWorklist: vi.fn(), replyToIssue: vi.fn() },
+  onboarding: { state: vi.fn().mockResolvedValue({ profile: { specialistKind: 'TRAINER' } }) },
   planningV2: {}, planWorkflow: {}
 };
 
@@ -30,5 +31,12 @@ describe('specialist V2 screens', () => {
     expect(api.worklist.listWorklist).toHaveBeenCalledWith({ actingContext: 'TRAINER', purpose: 'PERFORMANCE_PLANNING' });
     instance.priority.setValue('LOW'); instance.filter();
     expect(instance.visible()).toEqual([]);
+  });
+
+  it('uses the physiotherapist functional-recovery context for the worklist', async () => {
+    api.onboarding.state.mockResolvedValue({ profile: { specialistKind: 'PHYSIOTHERAPIST' } });
+    await TestBed.configureTestingModule({ imports: [SpecialistAlertsPage], providers: [{ provide: ApiFacade, useValue: api }] }).compileComponents();
+    const fixture = TestBed.createComponent(SpecialistAlertsPage); fixture.detectChanges(); await fixture.whenStable(); for (let i = 0; i < 3; i++) await Promise.resolve(); fixture.detectChanges();
+    expect(api.worklist.listWorklist).toHaveBeenCalledWith({ actingContext: 'PHYSIOTHERAPIST', purpose: 'FUNCTIONAL_RECOVERY' });
   });
 });

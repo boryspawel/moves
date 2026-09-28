@@ -172,6 +172,7 @@ export * from './ObservationPage';
 export * from './ObservationResult';
 export * from './ObservationSnapshot';
 export * from './ObservationView';
+export * from './OperationalFocusView';
 export * from './OperationalTaskView';
 export * from './OutcomeProgress';
 export * from './OutcomeSnapshot';

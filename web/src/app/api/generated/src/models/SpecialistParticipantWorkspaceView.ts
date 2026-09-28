@@ -62,6 +62,13 @@ import {
   AttentionItemViewToJSON,
   AttentionItemViewToJSONTyped,
 } from './AttentionItemView';
+import type { OperationalFocusView } from './OperationalFocusView';
+import {
+  OperationalFocusViewFromJSON,
+  OperationalFocusViewFromJSONTyped,
+  OperationalFocusViewToJSON,
+  OperationalFocusViewToJSONTyped,
+} from './OperationalFocusView';
 import type { AppointmentView } from './AppointmentView';
 import {
   AppointmentViewFromJSON,
@@ -113,6 +120,12 @@ export interface SpecialistParticipantWorkspaceView {
    * @memberof SpecialistParticipantWorkspaceView
    */
   capabilities?: Array<string>;
+  /**
+   *
+   * @type {OperationalFocusView}
+   * @memberof SpecialistParticipantWorkspaceView
+   */
+  focus?: OperationalFocusView;
   /**
    *
    * @type {Date}
@@ -194,6 +207,7 @@ export function SpecialistParticipantWorkspaceViewFromJSONTyped(
         ? undefined
         : (json['attentionItems'] as Array<any>).map(AttentionItemViewFromJSON),
     capabilities: json['capabilities'] == null ? undefined : json['capabilities'],
+    focus: json['focus'] == null ? undefined : OperationalFocusViewFromJSON(json['focus']),
     generatedAt: json['generatedAt'] == null ? undefined : new Date(json['generatedAt']),
     goals: json['goals'] == null ? undefined : (json['goals'] as Array<any>).map(GoalViewFromJSON),
     nextAppointment:
@@ -238,6 +252,7 @@ export function SpecialistParticipantWorkspaceViewToJSONTyped(
         ? undefined
         : (value['attentionItems'] as Array<any>).map(AttentionItemViewToJSON),
     capabilities: value['capabilities'],
+    focus: OperationalFocusViewToJSON(value['focus']),
     generatedAt:
       value['generatedAt'] == null ? value['generatedAt'] : value['generatedAt'].toISOString(),
     goals: value['goals'] == null ? undefined : (value['goals'] as Array<any>).map(GoalViewToJSON),
