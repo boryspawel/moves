@@ -14,6 +14,7 @@ import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.calendar.api.CalendarSpecialistContextPort;
+import com.motionecosystem.calendar.api.AppointmentExecutionStatusPort;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -67,6 +68,36 @@ class AppointmentLifecycleServiceTest {
 
         assertThat(fixture.service.complete("specialist", appointment.id, "complete-key", command).status()).isEqualTo(Appointment.Status.COMPLETED);
         verify(fixture.audit).record("specialist", "APPOINTMENT_COMPLETED", "Appointment", appointment.id);
+    }
+
+    @Test
+    void requires_recorded_linked_execution_before_completion_but_allows_unlinked_and_idempotent_replay() {
+        Fixture fixture = fixture();
+        Appointment unlinked = appointment(fixture.specialistId, fixture.participantId, NOW.minusSeconds(120), NOW.plusSeconds(60));
+        when(fixture.appointments.findById(unlinked.id)).thenReturn(Optional.of(unlinked));
+        when(fixture.appointments.saveAndFlush(unlinked)).thenReturn(unlinked);
+        assertThat(fixture.service.complete("specialist", unlinked.id, "unlinked-complete",
+                new AppointmentService.AppointmentVersionCommand(unlinked.version)).status()).isEqualTo(Appointment.Status.COMPLETED);
+
+        Appointment linked = appointment(fixture.specialistId, fixture.participantId, NOW.minusSeconds(120), NOW.plusSeconds(60));
+        linked.plannedSessionId = UUID.randomUUID();
+        when(fixture.appointments.findById(linked.id)).thenReturn(Optional.of(linked));
+        when(fixture.executionStatus.hasRecordedExecution(linked.plannedSessionId)).thenReturn(false);
+        assertThatThrownBy(() -> fixture.service.complete("specialist", linked.id, "linked-complete",
+                new AppointmentService.AppointmentVersionCommand(linked.version)))
+                .isInstanceOf(ResponseStatusException.class).hasMessageContaining("execution must be recorded");
+
+        when(fixture.executionStatus.hasRecordedExecution(linked.plannedSessionId)).thenReturn(true);
+        when(fixture.appointments.saveAndFlush(linked)).thenReturn(linked);
+        assertThat(fixture.service.complete("specialist", linked.id, "linked-complete",
+                new AppointmentService.AppointmentVersionCommand(linked.version)).status()).isEqualTo(Appointment.Status.COMPLETED);
+        when(fixture.idempotency.findBySpecialistAccountIdAndOperationAndIdempotencyKey(fixture.specialistId,
+                "COMPLETE:" + linked.id, "linked-complete"))
+                .thenReturn(Optional.of(new AppointmentIdempotency(fixture.specialistId, "COMPLETE:" + linked.id,
+                        "linked-complete", linked.id, NOW)));
+        when(fixture.executionStatus.hasRecordedExecution(linked.plannedSessionId)).thenReturn(false);
+        assertThat(fixture.service.complete("specialist", linked.id, "linked-complete",
+                new AppointmentService.AppointmentVersionCommand(linked.version)).status()).isEqualTo(Appointment.Status.COMPLETED);
     }
 
     @Test
@@ -187,11 +218,12 @@ class AppointmentLifecycleServiceTest {
         AppointmentEventRepository events = mock(AppointmentEventRepository.class);
         AppointmentIdempotencyRepository idempotency = mock(AppointmentIdempotencyRepository.class);
         CalendarSpecialistContextPort specialistContext = mock(CalendarSpecialistContextPort.class);
+        AppointmentExecutionStatusPort executionStatus = mock(AppointmentExecutionStatusPort.class);
         RecurringAvailabilityService availability = mock(RecurringAvailabilityService.class);
         AuditRecorder audit = mock(AuditRecorder.class);
-        return new Fixture(specialistId, UUID.randomUUID(), appointments, events, idempotency, specialistContext, availability, audit,
+        return new Fixture(specialistId, UUID.randomUUID(), appointments, events, idempotency, specialistContext, availability, executionStatus, audit,
                 new AppointmentService(appointments, events, idempotency, accounts, specialistContext, availability,
-                        audit, Clock.fixed(NOW, ZoneOffset.UTC)));
+                        (subject, participantId, plannedSessionId) -> { }, executionStatus, audit, Clock.fixed(NOW, ZoneOffset.UTC)));
     }
 
     private static Appointment appointment(UUID specialist, UUID participant, Instant startsAt, Instant endsAt) {
@@ -207,5 +239,6 @@ class AppointmentLifecycleServiceTest {
 
     private record Fixture(UUID specialistId, UUID participantId, AppointmentRepository appointments, AppointmentEventRepository events,
                            AppointmentIdempotencyRepository idempotency, CalendarSpecialistContextPort relationships,
-                           RecurringAvailabilityService availability, AuditRecorder audit, AppointmentService service) { }
+                           RecurringAvailabilityService availability, AppointmentExecutionStatusPort executionStatus,
+                           AuditRecorder audit, AppointmentService service) { }
 }

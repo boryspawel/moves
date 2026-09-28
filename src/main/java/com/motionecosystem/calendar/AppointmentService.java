@@ -4,6 +4,7 @@ import com.motionecosystem.calendar.api.SpecialistAppointmentQueryPort;
 import com.motionecosystem.calendar.api.SpecialistOverdueAppointmentQueryPort;
 import com.motionecosystem.calendar.api.CalendarSpecialistContextPort;
 import com.motionecosystem.calendar.api.AppointmentPlannedSessionValidationPort;
+import com.motionecosystem.calendar.api.AppointmentExecutionStatusPort;
 import com.motionecosystem.availability.RecurringAvailabilityService;
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
@@ -20,7 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
-public class AppointmentService implements SpecialistAppointmentQueryPort, SpecialistOverdueAppointmentQueryPort {
+public class AppointmentService implements SpecialistAppointmentQueryPort, SpecialistOverdueAppointmentQueryPort,
+        com.motionecosystem.calendar.api.SpecialistAppointmentExecutionContextPort {
     private static final int OVERDUE_OUTCOME_LIMIT = 20;
     private final AppointmentRepository appointments;
     private final AppointmentEventRepository events;
@@ -29,6 +31,7 @@ public class AppointmentService implements SpecialistAppointmentQueryPort, Speci
     private final CalendarSpecialistContextPort specialistContext;
     private final RecurringAvailabilityService availability;
     private final AppointmentPlannedSessionValidationPort appointmentSessions;
+    private final AppointmentExecutionStatusPort executionStatus;
     private final AuditRecorder audit;
     private final Clock clock;
     private final AppointmentLifecyclePolicy lifecycle = new AppointmentLifecyclePolicy();
@@ -37,7 +40,7 @@ public class AppointmentService implements SpecialistAppointmentQueryPort, Speci
     AppointmentService(AppointmentRepository appointments, AppointmentEventRepository events,
                        AppointmentIdempotencyRepository idempotency, CurrentAccountService accounts,
                        CalendarSpecialistContextPort specialistContext, RecurringAvailabilityService availability,
-                       AppointmentPlannedSessionValidationPort appointmentSessions, AuditRecorder audit, Clock clock) {
+                       AppointmentPlannedSessionValidationPort appointmentSessions, AppointmentExecutionStatusPort executionStatus, AuditRecorder audit, Clock clock) {
         this.appointments = appointments;
         this.events = events;
         this.idempotency = idempotency;
@@ -45,6 +48,7 @@ public class AppointmentService implements SpecialistAppointmentQueryPort, Speci
         this.specialistContext = specialistContext;
         this.availability = availability;
         this.appointmentSessions = appointmentSessions;
+        this.executionStatus = executionStatus;
         this.audit = audit;
         this.clock = clock;
     }
@@ -52,9 +56,17 @@ public class AppointmentService implements SpecialistAppointmentQueryPort, Speci
     AppointmentService(AppointmentRepository appointments, AppointmentEventRepository events,
                        AppointmentIdempotencyRepository idempotency, CurrentAccountService accounts,
                        CalendarSpecialistContextPort specialistContext, RecurringAvailabilityService availability,
+                       AppointmentPlannedSessionValidationPort appointmentSessions, AuditRecorder audit, Clock clock) {
+        this(appointments, events, idempotency, accounts, specialistContext, availability, appointmentSessions,
+                plannedSessionId -> false, audit, clock);
+    }
+
+    AppointmentService(AppointmentRepository appointments, AppointmentEventRepository events,
+                       AppointmentIdempotencyRepository idempotency, CurrentAccountService accounts,
+                       CalendarSpecialistContextPort specialistContext, RecurringAvailabilityService availability,
                        AuditRecorder audit, Clock clock) {
         this(appointments, events, idempotency, accounts, specialistContext, availability,
-                (subject, participantId, plannedSessionId) -> { }, audit, clock);
+                (subject, participantId, plannedSessionId) -> { }, plannedSessionId -> false, audit, clock);
     }
 
     @Transactional
@@ -132,6 +144,43 @@ public class AppointmentService implements SpecialistAppointmentQueryPort, Speci
     }
 
     @Override
+    @Transactional
+    public com.motionecosystem.calendar.api.SpecialistAppointmentExecutionContextPort.AppointmentExecutionContext readExecutionContext(String subject, UUID id) {
+        UUID specialist = specialist(subject);
+        Appointment appointment = appointments.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "appointment not found"));
+        if (!specialist.equals(appointment.specialistAccountId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "appointment not found");
+        specialistContext.requireActiveRelationship(specialist, appointment.participantId);
+        if (appointment.plannedSessionId == null) {
+            throw conflict("appointment is not ready for execution");
+        }
+        return new com.motionecosystem.calendar.api.SpecialistAppointmentExecutionContextPort.AppointmentExecutionContext(
+                appointment.id, specialist, appointment.participantId, appointment.plannedSessionId, appointment.status.name());
+    }
+
+    @Override @Transactional(readOnly = true)
+    public com.motionecosystem.calendar.api.SpecialistAppointmentExecutionContextPort.CloseoutAppointmentContext readCloseoutContext(String subject, UUID id) {
+        UUID specialist = specialist(subject); Appointment appointment = owned(specialist, id);
+        specialistContext.requireActiveRelationship(specialist, appointment.participantId);
+        return new com.motionecosystem.calendar.api.SpecialistAppointmentExecutionContextPort.CloseoutAppointmentContext(
+                appointment.id, specialist, appointment.participantId, appointment.plannedSessionId, appointment.status.name(),
+                appointment.version, appointment.startsAt, appointment.endsAt, appointment.shortPurpose);
+    }
+
+    @Override
+    @Transactional
+    public com.motionecosystem.calendar.api.SpecialistAppointmentExecutionContextPort.AppointmentExecutionContext lockWritableExecutionContext(String subject, UUID id) {
+        UUID specialist = specialist(subject);
+        Appointment appointment = appointments.lockById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "appointment not found"));
+        if (!specialist.equals(appointment.specialistAccountId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "appointment not found");
+        specialistContext.requireActiveRelationship(specialist, appointment.participantId);
+        if (appointment.status != Appointment.Status.IN_PROGRESS || appointment.plannedSessionId == null) throw conflict("appointment is not ready for execution");
+        return new com.motionecosystem.calendar.api.SpecialistAppointmentExecutionContextPort.AppointmentExecutionContext(
+                appointment.id, specialist, appointment.participantId, appointment.plannedSessionId, appointment.status.name());
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<OverdueAppointment> overdueOutcomeAppointments(UUID specialistAccountId, Set<UUID> activeParticipantIds, Instant now) {
         if (specialistAccountId == null || activeParticipantIds == null || activeParticipantIds.isEmpty() || now == null) return List.of();
@@ -173,6 +222,10 @@ public class AppointmentService implements SpecialistAppointmentQueryPort, Speci
             Appointment appointment = owned(specialist, id); version(appointment, command == null ? null : command.version());
             specialistContext.requireActiveRelationship(specialist, appointment.participantId);
             Instant now = clock.instant(); requireAllowed(action, appointment, now);
+            if (action == AppointmentLifecyclePolicy.Action.COMPLETE && appointment.plannedSessionId != null
+                    && !executionStatus.hasRecordedExecution(appointment.plannedSessionId)) {
+                throw conflict("linked session execution must be recorded before completing appointment");
+            }
             Appointment.Status fromStatus = appointment.status;
             switch (action) {
                 case CANCEL -> appointment.cancel(now);

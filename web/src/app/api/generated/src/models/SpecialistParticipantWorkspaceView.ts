@@ -20,6 +20,13 @@ import {
   AdherenceSummaryToJSON,
   AdherenceSummaryToJSONTyped,
 } from './AdherenceSummary';
+import type { RecentMeasurementView } from './RecentMeasurementView';
+import {
+  RecentMeasurementViewFromJSON,
+  RecentMeasurementViewFromJSONTyped,
+  RecentMeasurementViewToJSON,
+  RecentMeasurementViewToJSONTyped,
+} from './RecentMeasurementView';
 import type { RelationshipView } from './RelationshipView';
 import {
   RelationshipViewFromJSON,
@@ -158,6 +165,12 @@ export interface SpecialistParticipantWorkspaceView {
   quickActions?: Array<string>;
   /**
    *
+   * @type {Array<RecentMeasurementView>}
+   * @memberof SpecialistParticipantWorkspaceView
+   */
+  recentMeasurements?: Array<RecentMeasurementView>;
+  /**
+   *
    * @type {RecentProgressView}
    * @memberof SpecialistParticipantWorkspaceView
    */
@@ -217,6 +230,10 @@ export function SpecialistParticipantWorkspaceViewFromJSONTyped(
     participant:
       json['participant'] == null ? undefined : ParticipantHeaderFromJSON(json['participant']),
     quickActions: json['quickActions'] == null ? undefined : json['quickActions'],
+    recentMeasurements:
+      json['recentMeasurements'] == null
+        ? undefined
+        : (json['recentMeasurements'] as Array<any>).map(RecentMeasurementViewFromJSON),
     recentProgress:
       json['recentProgress'] == null
         ? undefined
@@ -259,6 +276,10 @@ export function SpecialistParticipantWorkspaceViewToJSONTyped(
     nextAppointment: ParticipantWorkspaceAppointmentViewToJSON(value['nextAppointment']),
     participant: ParticipantHeaderToJSON(value['participant']),
     quickActions: value['quickActions'],
+    recentMeasurements:
+      value['recentMeasurements'] == null
+        ? undefined
+        : (value['recentMeasurements'] as Array<any>).map(RecentMeasurementViewToJSON),
     recentProgress: RecentProgressViewToJSON(value['recentProgress']),
     relationship: RelationshipViewToJSON(value['relationship']),
   };

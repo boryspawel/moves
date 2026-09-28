@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
-public class ParticipantGoalService implements ParticipantGoalQueryPort {
+public class ParticipantGoalService implements ParticipantGoalQueryPort, com.motionecosystem.participantgoals.api.MeasurementGoalProjectionPort {
     private final ParticipantGoalRepository goals;
     private final GoalOutcomeRepository outcomes;
     private final GoalIdempotencyRepository idempotency;
@@ -355,6 +355,7 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort {
     public record ParticipantGoalDetail(UUID id, UUID participantId, String category, String title, String description, int priority, LocalDate targetDate, String status, List<OwnOutcomeView> outcomes, long version, Instant createdAt, Instant updatedAt) { }
     private ObservationView observationView(GoalObservation item) { return new ObservationView(item.id, item.goalId, item.outcomeId, item.participantId, item.value, item.unit, item.measurementMethod, item.measuredAt, item.note, item.evidenceSource, item.recordedAt); }
     private ObservationSnapshot observationSnapshot(GoalObservation item) { return new ObservationSnapshot(item.id, item.goalId, item.outcomeId, item.participantId, item.value, item.unit, item.measurementMethod, item.measuredAt, item.recordedAt); }
+    @Override @Transactional public void project(UUID measurementId, UUID specialistId, UUID participantId, String metricCode, BigDecimal value, String unit, String method, Instant measuredAt, Instant recordedAt) { for (ParticipantGoal goal : goals.findByParticipantIdAndSpecialistAccountIdAndStatus(participantId, specialistId, ParticipantGoal.Status.ACTIVE)) for (GoalOutcome outcome : outcomes.findByGoalIdOrderByPositionAsc(goal.id)) if (Objects.equals(metricCode,outcome.metricCode) && Objects.equals(unit,outcome.unit) && !observations.existsByOutcomeIdAndSourceMeasurementId(outcome.id,measurementId)) observations.save(new GoalObservation(goal.id,outcome.id,participantId,value,unit,method,measuredAt,specialistId,recordedAt,measurementId)); }
     private record Cursor(Instant measuredAt, Instant recordedAt, UUID id) {
         boolean before(GoalObservation item) { int measured = item.measuredAt.compareTo(measuredAt); if (measured != 0) return measured < 0; int recorded = item.recordedAt.compareTo(recordedAt); if (recorded != 0) return recorded < 0; return item.id.compareTo(id) < 0; }
         static String of(GoalObservation item) { return java.util.Base64.getUrlEncoder().withoutPadding().encodeToString((item.measuredAt + "|" + item.recordedAt + "|" + item.id).getBytes(java.nio.charset.StandardCharsets.UTF_8)); }

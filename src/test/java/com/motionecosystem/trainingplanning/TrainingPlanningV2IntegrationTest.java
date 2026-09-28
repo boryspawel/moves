@@ -22,11 +22,13 @@ import java.util.concurrent.TimeUnit;
 import com.motionecosystem.application.MotionEcosystemApplication;
 import com.motionecosystem.application.workspace.SpecialistParticipantReadService;
 import com.motionecosystem.application.workspace.SpecialistClientService;
+import com.motionecosystem.application.workspace.SpecialistAppointmentExecutionService;
 import com.motionecosystem.availability.RecurringAvailabilityService;
 import com.motionecosystem.calendar.Appointment;
 import com.motionecosystem.calendar.AppointmentService;
 import com.motionecosystem.adherence.TodayAgendaService;
 import com.motionecosystem.trainingexecution.SessionExecutionService;
+import com.motionecosystem.trainingexecution.SessionExecutionPersistence;
 import com.motionecosystem.trainingexecution.SessionExecutionAttemptService;
 import com.motionecosystem.consent.ConsentGrantService;
 import com.motionecosystem.consent.api.ConsentDecisionPort;
@@ -97,6 +99,8 @@ class TrainingPlanningV2IntegrationTest {
     @Autowired TransactionTemplate transactions;
     @Autowired AppointmentService appointments;
     @Autowired SessionExecutionService executions;
+    @Autowired SpecialistAppointmentExecutionService specialistExecution;
+    @Autowired SessionExecutionPersistence executionPersistence;
     @Autowired SessionExecutionAttemptService executionAttempts;
     @Autowired RecurringAvailabilityService availability;
     @Autowired Clock clock;
@@ -578,6 +582,101 @@ class TrainingPlanningV2IntegrationTest {
 
         transactions.executeWithoutResult(status -> AppointmentSessionFixtureFactory.setStatus(entityManager, sessionId, SessionStatus.COMPLETED));
         assertStatus(HttpStatus.CONFLICT, () -> planning.requireLinkable("planning-specialist", canonicalParticipantId, sessionId));
+    }
+
+    @Test
+    void specialistRecordsOnlyTheLinkedInProgressAppointmentSessionWithDurableProvenance() {
+        UUID participantAccountId = account("specialist-execution-participant-account", "PARTICIPANT");
+        UUID canonicalParticipantId = UUID.randomUUID();
+        participantRecord(canonicalParticipantId, participantAccountId, "UTC");
+        relationship(specialistId, canonicalParticipantId);
+        UUID template = consents.publishTemplate("SPECIALIST_EXECUTION", 1, "urn:test:specialist-execution", "EXPLICIT_CONSENT").id();
+        consents.grant("specialist-execution-participant-account", new ConsentGrantService.GrantCommand(specialistId,
+                ConsentDecisionPort.Purpose.PERFORMANCE_PLANNING, template,
+                Set.of(ConsentDecisionPort.DataScope.PLAN), null, null));
+        availability.replace(specialistId, Arrays.stream(DayOfWeek.values())
+                .map(day -> new RecurringAvailabilityService.Slot(day, LocalTime.of(8, 0), LocalTime.of(22, 0), "UTC")).toList());
+
+        Instant now = clock.instant();
+        Instant startsAt = now.minusSeconds(10 * 60);
+        LocalDate scheduled = startsAt.atZone(java.time.ZoneOffset.UTC).toLocalDate();
+        EditorView editor = planning.createDraft("planning-specialist", new CreateDraftCommand(canonicalParticipantId,
+                "Specialist execution plan", "Operational recording", PlanMode.SPECIALIST, "Execution phase",
+                scheduled, scheduled.plusDays(7), new ActingContext(ProfessionalRole.TRAINER)));
+        UUID revisionId = editor.revision().revisionId();
+        editor = planning.addGoal("planning-specialist", revisionId,
+                new AddGoalCommand(version(editor), canonicalGoal(canonicalParticipantId)));
+        editor = planning.addCycle("planning-specialist", revisionId, cycle(version(editor), scheduled, scheduled.plusDays(7)));
+        UUID cycleId = editor.revision().cycles().getFirst().id();
+        editor = planning.addMicrocycle("planning-specialist", revisionId, new AddMicrocycleCommand(version(editor), cycleId,
+                1, "Execution week", scheduled, scheduled.plusDays(6), "Execution phase", "Record the appointment"));
+        UUID microcycleId = editor.revision().cycles().getFirst().microcycles().getFirst().id();
+        editor = planning.addSession("planning-specialist", revisionId, new AddSessionCommand(version(editor), microcycleId,
+                "Linked execution session", scheduled, null, null, 45, exerciseSetVersionId));
+        var plannedSession = editor.revision().cycles().getFirst().microcycles().getFirst().sessions().getFirst();
+        UUID sessionId = plannedSession.id();
+        UUID prescriptionId = plannedSession.prescriptions().getFirst().id();
+        int prescriptionPosition = plannedSession.prescriptions().getFirst().position();
+        assertThat(planning.validateStructurally("planning-specialist", revisionId, new ValidateCommand(version(editor))).result())
+                .isEqualTo(TrainingPlanningModel.ValidationResult.PASS);
+        workflow.validate("planning-specialist", revisionId,
+                new ValidateWorkflowCommand(version(editor), new ActingContext(ProfessionalRole.TRAINER)));
+        workflow.activate("planning-specialist", revisionId, "specialist-execution-activation",
+                new ActivateWorkflowCommand(new ActingContext(ProfessionalRole.TRAINER)));
+        transactions.executeWithoutResult(status -> AppointmentSessionFixtureFactory.setStatus(entityManager, sessionId, SessionStatus.ASSIGNED));
+
+        var createdAppointment = appointments.create("planning-specialist", "specialist-execution-appointment",
+                new AppointmentService.CreateCommand(canonicalParticipantId, startsAt, startsAt.plusSeconds(45 * 60), Appointment.Type.TRAINING,
+                        Appointment.LocationMode.IN_PERSON, null, "Record execution", sessionId));
+        assertStatus(HttpStatus.CONFLICT, () -> executions.declare("specialist-execution-participant-account", sessionId,
+                "appointment-bound-participant", new SessionExecutionService.DeclareExecutionCommand(true, List.of(), 0, 1, null, null, null, "DECLARED")));
+        assertStatus(HttpStatus.CONFLICT, () -> specialistExecution.record("planning-specialist", createdAppointment.appointmentId(), "before-start",
+                new SessionExecutionService.DeclareExecutionCommand(true, List.of(), 0, 1, null, null, null, "DECLARED")));
+        var appointment = appointments.start("planning-specialist", createdAppointment.appointmentId(), "specialist-execution-start",
+                new AppointmentService.AppointmentVersionCommand(createdAppointment.version()));
+
+        var context = specialistExecution.context("planning-specialist", appointment.appointmentId());
+        assertThat(context.participantId()).isEqualTo(canonicalParticipantId).isNotEqualTo(participantAccountId);
+        assertThat(context.participantName()).isEqualTo("Planning participant");
+        assertThat(context.plannedSessionId()).isEqualTo(sessionId);
+        assertThat(context.recordingAllowed()).isTrue();
+        assertThat(context.prescriptions()).extracting(SpecialistAppointmentExecutionService.SpecialistExecutionPrescriptionView::position,
+                SpecialistAppointmentExecutionService.SpecialistExecutionPrescriptionView::exerciseName)
+                .containsExactly(org.assertj.core.groups.Tuple.tuple(prescriptionPosition, "Planning squat"));
+        assertThat(timeline.workspace("planning-specialist", canonicalParticipantId).focus())
+                .extracting(SpecialistParticipantReadService.OperationalFocusView::kind,
+                        SpecialistParticipantReadService.OperationalFocusView::primaryAction)
+                .containsExactly(SpecialistParticipantReadService.FocusKind.IN_PROGRESS_APPOINTMENT, "RECORD_SESSION_EXECUTION");
+        assertStatus(HttpStatus.NOT_FOUND, () -> specialistExecution.context("foreign-planning-specialist", appointment.appointmentId()));
+
+        var command = new SessionExecutionService.DeclareExecutionCommand(true, List.of(
+                new SessionExecutionService.ResultCommand(prescriptionId, 3, 8, null, null, null, null, null, null,
+                        null, null, null, "BILATERAL", false, false, "DECLARED", null)),
+                4, 6, 8, "Recorded by specialist", 7, "DECLARED");
+        var recorded = specialistExecution.record("planning-specialist", appointment.appointmentId(), "specialist-execution-record", command);
+        assertThat(recorded).extracting(SessionExecutionService.ExecutionView::plannedSessionId,
+                SessionExecutionService.ExecutionView::participantId, SessionExecutionService.ExecutionView::outcome,
+                SessionExecutionService.ExecutionView::painLevel, SessionExecutionService.ExecutionView::difficultyLevel)
+                .containsExactly(sessionId, canonicalParticipantId, "COMPLETED", 4, 6);
+        assertThat(recorded.results()).singleElement().extracting(SessionExecutionService.ResultView::exercisePrescriptionId,
+                SessionExecutionService.ResultView::actualSets, SessionExecutionService.ResultView::actualRepetitions,
+                SessionExecutionService.ResultView::modified, SessionExecutionService.ResultView::skipped)
+                .containsExactly(prescriptionId, 3, 8, false, false);
+        var persisted = executionPersistence.findByPlannedSessionId(sessionId).orElseThrow().execution();
+        assertThat(persisted.recorderAccountId()).isEqualTo(specialistId).isNotEqualTo(canonicalParticipantId);
+        assertThat(persisted.recordingSource()).isEqualTo("SPECIALIST");
+        assertThat(appointments.detail("planning-specialist", appointment.appointmentId()).status()).isEqualTo(Appointment.Status.IN_PROGRESS);
+        assertThat(timeline.workspace("planning-specialist", canonicalParticipantId).focus().kind())
+                .isEqualTo(SpecialistParticipantReadService.FocusKind.IN_PROGRESS_APPOINTMENT);
+        var recordedContext = specialistExecution.context("planning-specialist", appointment.appointmentId());
+        assertThat(recordedContext.recordingAllowed()).isFalse();
+        assertThat(recordedContext.recordedExecution())
+                .extracting(SpecialistAppointmentExecutionService.SpecialistExecutionSummary::executionId)
+                .isEqualTo(recorded.id());
+
+        assertThat(specialistExecution.record("planning-specialist", appointment.appointmentId(), "specialist-execution-record", command).id())
+                .isEqualTo(recorded.id());
+        assertStatus(HttpStatus.CONFLICT, () -> specialistExecution.record("planning-specialist", appointment.appointmentId(), "specialist-execution-duplicate", command));
     }
 
     @Test

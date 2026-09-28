@@ -30,6 +30,12 @@ export interface Measurement {
    * @type {string}
    * @memberof Measurement
    */
+  note?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Measurement
+   */
   unit?: string;
   /**
    *
@@ -56,6 +62,7 @@ export function MeasurementFromJSONTyped(json: any, ignoreDiscriminator: boolean
   }
   return {
     metricCode: json['metricCode'] == null ? undefined : json['metricCode'],
+    note: json['note'] == null ? undefined : json['note'],
     unit: json['unit'] == null ? undefined : json['unit'],
     value: json['value'] == null ? undefined : json['value'],
   };
@@ -75,6 +82,7 @@ export function MeasurementToJSONTyped(
 
   return {
     metricCode: value['metricCode'],
+    note: value['note'],
     unit: value['unit'],
     value: value['value'],
   };

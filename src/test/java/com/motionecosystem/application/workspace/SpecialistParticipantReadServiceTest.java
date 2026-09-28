@@ -52,6 +52,7 @@ class SpecialistParticipantReadServiceTest {
         PlanRevisionQueryPort revisions = mock(PlanRevisionQueryPort.class);
         AppointmentSessionLinkPort linkedSessions = mock(AppointmentSessionLinkPort.class);
         ParticipantExecutionHistoryQueryPort executions = mock(ParticipantExecutionHistoryQueryPort.class);
+        SpecialistAppointmentExecutionService appointmentExecution = mock(SpecialistAppointmentExecutionService.class);
         AuditRecorder audit = mock(AuditRecorder.class);
         var decision = new SpecialistWorkspacePort.AuthorizationDecision(SpecialistWorkspacePort.WorkspaceRole.TRAINER,
                 SpecialistWorkspacePort.WorkspacePurpose.PERFORMANCE_PLANNING, Set.of());
@@ -73,7 +74,8 @@ class SpecialistParticipantReadServiceTest {
         when(linkedSessions.findAuthorizedContext("specialist", participantId, sessionId)).thenReturn(Optional.of(
                 new AppointmentSessionLinkPort.AppointmentSessionContext(sessionId, "Linked session", planId, revisionId)));
         SpecialistParticipantReadService service = new SpecialistParticipantReadService(accounts, workspace, participants, contexts,
-                appointments, appointmentEvents, revisions, linkedSessions, executions, null, null, null, audit, Clock.fixed(now, ZoneOffset.UTC));
+                appointments, appointmentEvents, revisions, linkedSessions, executions, null, null, null, audit, Clock.fixed(now, ZoneOffset.UTC),
+                null, appointmentExecution);
 
         var view = service.workspace("specialist", participantId);
 
@@ -94,6 +96,20 @@ class SpecialistParticipantReadServiceTest {
                 SpecialistParticipantReadService.ParticipantWorkspaceAppointmentView::revisionId)
                 .containsExactly(sessionId, null, null, null);
         verify(linkedSessions, times(2)).findAuthorizedContext("specialist", participantId, sessionId);
+
+        var inProgress = new SpecialistAppointmentQueryPort.AppointmentSummary(UUID.randomUUID(), now.minusSeconds(600), now.plusSeconds(600),
+                "TRAINING", "IN_PROGRESS", "Trwająca sesja", sessionId, List.of("COMPLETE"), 4L, now, now);
+        when(appointments.findForParticipant(any(), any(), any(), any(), anyInt())).thenReturn(List.of(inProgress));
+        when(appointmentExecution.isExecutionRecorded("specialist", inProgress.appointmentId())).thenReturn(false);
+        assertThat(service.workspace("specialist", participantId).focus())
+                .extracting(SpecialistParticipantReadService.OperationalFocusView::primaryAction,
+                        SpecialistParticipantReadService.OperationalFocusView::navigationTarget)
+                .containsExactly("RECORD_SESSION_EXECUTION", "APPOINTMENT_EXECUTION");
+        when(appointmentExecution.isExecutionRecorded("specialist", inProgress.appointmentId())).thenReturn(true);
+        assertThat(service.workspace("specialist", participantId).focus())
+                .extracting(SpecialistParticipantReadService.OperationalFocusView::primaryAction,
+                        SpecialistParticipantReadService.OperationalFocusView::navigationTarget)
+                .containsExactly("CONTINUE_CLOSEOUT", "APPOINTMENT_CLOSEOUT");
     }
 
     @Test
@@ -159,7 +175,7 @@ class SpecialistParticipantReadServiceTest {
                         SpecialistParticipantReadService.OperationalFocusView::appointmentId,
                         SpecialistParticipantReadService.OperationalFocusView::primaryAction)
                 .containsExactly(SpecialistParticipantReadService.FocusKind.IN_PROGRESS_APPOINTMENT,
-                        currentInProgress.appointmentId(), null);
+                        currentInProgress.appointmentId(), "CONTINUE_CLOSEOUT");
         UUID attentionId = UUID.randomUUID();
         when(specialistWorkspace.listParticipantWorklist(any(), any(), any(), any())).thenReturn(List.of(
                 new SpecialistWorkspacePort.WorklistItem(attentionId, participantId, "ESCALATING_SYMPTOMS", "HIGH",

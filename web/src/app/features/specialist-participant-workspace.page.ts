@@ -23,10 +23,12 @@ import type { AppointmentView } from '../api/generated/src/models/AppointmentVie
 import type { ParticipantWorkspaceAppointmentView } from '../api/generated/src/models/ParticipantWorkspaceAppointmentView';
 import type { ParticipantGoalView } from '../api/generated/src/models/ParticipantGoalView';
 import type { PresetView } from '../api/generated/src/models/PresetView';
+import type { ParticipantMeasurementPresetView } from '../api/generated/src/models/ParticipantMeasurementPresetView';
 import type { CreateFromPresetRequestPresetIdEnum, CreateFromPresetRequestTargetComparatorEnum } from '../api/generated/src/models/CreateFromPresetRequest';
 import { ParticipantDocumentationComponent, type RecordPanelType } from './participant-documentation.component';
 import { ParticipantAccessPanelComponent } from './participant-access-panel.component';
 import { GoalOutcomeProgressComponent } from './goal-outcome-progress.component';
+import { ParticipantMeasurementDialogComponent } from './participant-measurement-dialog.component';
 import {
   groupEvents,
   rangeDates,
@@ -52,7 +54,7 @@ import {
   statusLabel,
 } from './specialist-participant-workspace.presentation';
 
-const actionLabels: Record<string, string> = { SCHEDULE_APPOINTMENT: 'Zaplanuj spotkanie' };
+const actionLabels: Record<string, string> = { SCHEDULE_APPOINTMENT: 'Zaplanuj spotkanie', ADD_MEASUREMENT: 'Dodaj pomiar' };
 const label = (value: string | undefined, labels: Record<string, string>) =>
   value ? (labels[value] ?? value.replace(/_/g, ' ').toLocaleLowerCase('pl-PL')) : 'Brak danych';
 type WorkspaceSection = 'plan' | 'documentation' | 'history';
@@ -162,7 +164,7 @@ export class ParticipantOperationalFocusComponent {
   @Input() busy = false;
   @Output() requested = new EventEmitter<OperationalFocusView>();
   protected actionLabel(action?: string): string {
-    return ({ OPEN_ATTENTION_ITEMS: 'Otwórz sprawę', OPEN_HISTORY: 'Otwórz historię', OPEN_PLAN: 'Otwórz plan', SCHEDULE_APPOINTMENT: 'Zaplanuj spotkanie', START_APPOINTMENT: 'Rozpocznij spotkanie' })[action ?? ''] ?? 'Otwórz';
+    return ({ OPEN_ATTENTION_ITEMS: 'Otwórz sprawę', OPEN_HISTORY: 'Otwórz historię', OPEN_PLAN: 'Otwórz plan', SCHEDULE_APPOINTMENT: 'Zaplanuj spotkanie', START_APPOINTMENT: 'Rozpocznij spotkanie', RECORD_SESSION_EXECUTION: 'Zapisz realizację sesji', CONTINUE_CLOSEOUT: 'Zakończ spotkanie' })[action ?? ''] ?? 'Otwórz';
   }
 }
 
@@ -231,7 +233,7 @@ export class PatientTimelineFiltersComponent {
     { key: '12m' as const, label: '12 mies.' },
   ];
   protected categoryLabel = (type: string) =>
-    ({ APPOINTMENT: 'Spotkania', SESSION: 'Planowane sesje', EXECUTION: 'Wykonania', INTERVIEW: 'Wywiady', NOTE: 'Notatki' })[type] ??
+    ({ APPOINTMENT: 'Spotkania', SESSION: 'Planowane sesje', EXECUTION: 'Wykonania', MEASUREMENT: 'Pomiary', INTERVIEW: 'Wywiady', NOTE: 'Notatki' })[type] ??
     type;
   protected toggle(type: TimelineCategory) {
     this.selectedChange.emit(
@@ -354,6 +356,13 @@ export class PatientTimelineListViewComponent {
     @if (description(event); as description) {
       <p>{{ description }}</p>
     }
+    @if (event.category === 'MEASUREMENT' && event.measurement; as measurement) {
+      <section aria-labelledby="measurement-detail-title">
+        <h3 id="measurement-detail-title">{{ measurementTitle(event) }}</h3>
+        <p><strong>{{ measurement.value }} {{ measurement.unit }}</strong></p>
+        <dl><dt>Zmierzono</dt><dd>{{ time(event) }}</dd><dt>Zapisano</dt><dd>{{ recordedTime(event.recordedAt) }}</dd><dt>Zapisano przez</dt><dd>specjalistę</dd>@if (measurement.note) { <dt>Notatka</dt><dd>{{ measurement.note }}</dd> }</dl>
+      </section>
+    }
     <dl>
       @if (appointmentType(event); as type) {
         <dt>Rodzaj spotkania</dt>
@@ -426,8 +435,10 @@ export class PatientTimelineEventPanelComponent {
   protected goalPerspective = (value?: string) => goalPerspective[value ?? ''] ?? 'Brak danych';
   protected goalStatus = (value?: string) => goalStatus[value ?? ''] ?? 'Brak danych';
   protected location = appointmentLocation;
+  protected measurementTitle = humanEventTitle;
   protected pastScheduled = isPastScheduled;
   protected purpose = appointmentPurpose;
+  protected recordedTime = (value?: Date) => value ? new Intl.DateTimeFormat('pl-PL', { dateStyle: 'medium', timeStyle: 'short' }).format(value) : 'Brak danych';
   protected status = statusLabel;
   protected time = eventTimeLabel;
   protected title = humanEventTitle;
@@ -1148,6 +1159,7 @@ export class ParticipantGoalsComponent {
     PatientTimelineListViewComponent,
     PatientTimelineEventPanelComponent,
     ScheduleAppointmentDialogComponent,
+    ParticipantMeasurementDialogComponent,
     RouterLink,
   ],
   styleUrl: './specialist-participant-workspace.page.scss',
@@ -1191,6 +1203,12 @@ export class ParticipantGoalsComponent {
         </section>
       }
       <app-participant-summary-strip [workspace]="data" />
+      @if (data.recentMeasurements?.length) {
+        <section class="recent-measurements" aria-labelledby="recent-measurements-title">
+          <h2 id="recent-measurements-title">Ostatnie pomiary</h2>
+          <ul>@for (measurement of data.recentMeasurements; track measurement.measurementId) { <li><strong>{{ measurement.label || 'Pomiar' }}</strong><span>{{ measurement.value }} {{ measurement.unit }}</span><time>{{ measurementTime(measurement.measuredAt) }}</time></li> }</ul>
+        </section>
+      }
       <nav class="workspace-sections" aria-label="Sekcje kartoteki">
         <button type="button" [attr.aria-pressed]="section() === 'plan'" (click)="openSection('plan')">Plan</button>
         <button type="button" [attr.aria-pressed]="section() === 'documentation'" (click)="openSection('documentation')">Dokumentacja</button>
@@ -1255,6 +1273,9 @@ export class ParticipantGoalsComponent {
           (submitted)="schedule($event)"
         />
       }
+      @if (measurementDialog()) {
+        <app-participant-measurement-dialog [presets]="measurementPresets()" [loading]="measurementCatalogLoading()" [saving]="savingMeasurement()" [error]="measurementError()" (closed)="closeMeasurement()" (submitted)="recordMeasurement($event)" />
+      }
     }
   </main>`,
 })
@@ -1282,6 +1303,12 @@ export class SpecialistParticipantWorkspacePage {
   protected readonly accessStatusAvailable = signal(true);
   protected readonly accessNeedsAction = computed(() => this.accessStatusAvailable() && !!this.accessStatus() && this.accessStatus() !== 'ACTIVE');
   protected readonly scheduling = signal(false);
+  protected readonly measurementDialog = signal(false);
+  protected readonly measurementCatalogLoading = signal(false);
+  protected readonly measurementPresets = signal<ParticipantMeasurementPresetView[]>([]);
+  protected readonly savingMeasurement = signal(false);
+  protected readonly measurementError = signal(false);
+  private measurementIdempotencyKey: string | undefined;
   protected readonly savingAppointment = signal(false);
   protected readonly appointmentError = signal(false);
   protected readonly currentAppointment = signal<AppointmentView | null>(null);
@@ -1302,6 +1329,7 @@ export class SpecialistParticipantWorkspacePage {
   );
   constructor() {
     this.route.queryParamMap.subscribe((params) => {
+      if (params.get('sessionRecorded') === '1') this.announcement.set('Realizacja sesji została zapisana.');
       const range = params.get('range');
       const view = params.get('view');
       this.range.set(range === '3m' || range === '12m' ? range : '2w');
@@ -1505,10 +1533,56 @@ export class SpecialistParticipantWorkspacePage {
     if (action === 'SCHEDULE_APPOINTMENT') {
       this.appointmentError.set(false);
       this.scheduling.set(true);
+    } else if (action === 'ADD_MEASUREMENT') {
+      void this.openMeasurement();
     } else if (action === 'OPEN_PLAN') this.openSection('plan');
     else if (action === 'OPEN_HISTORY' || action === 'OPEN_ATTENTION_ITEMS') this.openSection('history');
   }
+  protected async openMeasurement(): Promise<void> {
+    const participantId = this.participantId();
+    if (!participantId) return;
+    this.measurementDialog.set(true); this.measurementError.set(false); this.measurementIdempotencyKey = undefined;
+    this.measurementCatalogLoading.set(true);
+    try {
+      this.measurementPresets.set(await this.api.participantMeasurements.participantMeasurementCatalog({ participantId }));
+    } catch {
+      this.measurementError.set(true);
+    } finally {
+      this.measurementCatalogLoading.set(false);
+    }
+  }
+  protected closeMeasurement(): void {
+    if (!this.savingMeasurement()) this.measurementDialog.set(false);
+  }
+  protected async recordMeasurement(command: import('../api/generated/src/models/ParticipantMeasurementCommand').ParticipantMeasurementCommand): Promise<void> {
+    const participantId = this.participantId();
+    if (!participantId || this.savingMeasurement()) return;
+    this.savingMeasurement.set(true); this.measurementError.set(false);
+    this.measurementIdempotencyKey ??= crypto.randomUUID();
+    try {
+      await this.api.participantMeasurements.recordParticipantMeasurement({ participantId, idempotencyKey: this.measurementIdempotencyKey, participantMeasurementCommand: command });
+      this.measurementDialog.set(false); this.announcement.set('Pomiar został zapisany.');
+      await this.load(participantId, this.section() === 'history' ? this.selected()?.eventId ?? null : null);
+    } catch {
+      this.measurementError.set(true);
+    } finally {
+      this.savingMeasurement.set(false);
+    }
+  }
+  protected measurementTime(value?: Date): string {
+    return value ? new Intl.DateTimeFormat('pl-PL', { dateStyle: 'medium', timeStyle: 'short' }).format(value) : '';
+  }
   protected async performFocus(focus: OperationalFocusView): Promise<void> {
+    if (focus.primaryAction === 'CONTINUE_CLOSEOUT' && focus.appointmentId) {
+      await this.router.navigate(['/specialist/clients', this.participantId(), 'appointments', focus.appointmentId, 'closeout']);
+      return;
+    }
+    if (focus.primaryAction === 'RECORD_SESSION_EXECUTION' && focus.appointmentId) {
+      await this.router.navigate([
+        '/specialist/clients', this.participantId(), 'appointments', focus.appointmentId, 'session',
+      ]);
+      return;
+    }
     if (focus.primaryAction === 'START_APPOINTMENT') {
       await this.startFocusedAppointment(focus);
       return;

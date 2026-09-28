@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.motionecosystem.application.MotionEcosystemApplication;
 import com.motionecosystem.application.workspace.SpecialistParticipantReadService;
+import com.motionecosystem.application.workspace.SpecialistParticipantMeasurementApplicationService;
 import com.motionecosystem.availability.RecurringAvailabilityService;
 import com.motionecosystem.calendar.Appointment;
 import com.motionecosystem.calendar.AppointmentService;
@@ -16,6 +17,12 @@ import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.participant.ParticipantProfileService;
 import com.motionecosystem.participant.ParticipantRecord;
+import com.motionecosystem.participant.ParticipantAccessLink;
+import com.motionecosystem.participantmeasurements.ParticipantMeasurementService;
+import com.motionecosystem.participant.api.ParticipantMetricCatalog.PresetId;
+import com.motionecosystem.participantgoals.ParticipantGoalService;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
 import com.motionecosystem.support.PostgresTestConfiguration;
 import com.motionecosystem.trainingexecution.TimelineExecutionAttemptFixture;
 import jakarta.persistence.EntityManager;
@@ -53,6 +60,9 @@ class SpecialistParticipantReadIntegrationTest {
     @Autowired private AppointmentService appointments;
     @Autowired private RecurringAvailabilityService availability;
     @Autowired private SpecialistParticipantReadService reads;
+    @Autowired private SpecialistParticipantMeasurementApplicationService measurementRecording;
+    @Autowired private ParticipantMeasurementService measurements;
+    @Autowired private ParticipantGoalService goals;
     @Autowired private EntityManager entityManager;
     @Autowired private TransactionTemplate transactions;
     @Autowired private WebApplicationContext context;
@@ -70,6 +80,55 @@ class SpecialistParticipantReadIntegrationTest {
         assertThatThrownBy(() -> reads.workspace(unrelated.specialistSubject, active.participantId))
                 .isInstanceOfSatisfying(ResponseStatusException.class,
                         error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN));
+    }
+
+    @Test
+    void persistsOneCanonicalMeasurementOnReplayProjectsGoalAndExposesWorkspaceTimelineFact() {
+        Fixture fixture = canonicalFixture(fixture(true, EnumSet.of(ConsentDecisionPort.DataScope.PLAN)));
+        createWeightGoal(fixture);
+        var command = new ParticipantMeasurementService.ParticipantMeasurementCommand(PresetId.BODY_WEIGHT, new java.math.BigDecimal("75.8"), null,
+                Instant.parse("2030-06-10T10:00:00Z"), "Pomiar kontrolny", null, null, null, null);
+
+        var created = measurementRecording.record(fixture.specialistSubject, fixture.participantId, "weight-measurement", command);
+        var replay = measurementRecording.record(fixture.specialistSubject, fixture.participantId, "weight-measurement", command);
+
+        assertThat(created.participantId()).isEqualTo(fixture.participantId)
+                .isNotEqualTo(accounts.requireActive(fixture.participantSubject).id());
+        assertThat(replay.id()).isEqualTo(created.id());
+        assertThat(entityManager.createQuery("select count(m) from ParticipantMeasurement m", Long.class).getSingleResult()).isEqualTo(1L);
+        assertThat(entityManager.createQuery("select o.sourceMeasurementId from GoalObservation o", UUID.class).getResultList())
+                .containsExactly(created.id());
+        for (int value = 76; value <= 79; value++) {
+            measurementRecording.record(fixture.specialistSubject, fixture.participantId, "weight-" + value,
+                    new ParticipantMeasurementService.ParticipantMeasurementCommand(PresetId.BODY_WEIGHT, new java.math.BigDecimal(value), null,
+                            command.measuredAt().plusSeconds((long) value * 60), null, null, null, null, null));
+        }
+        var history = measurements.list(fixture.specialistSubject, fixture.participantId, 10);
+        assertThat(history)
+                .extracting(ParticipantMeasurementService.ParticipantMeasurementView::value)
+                .usingComparatorForType(java.math.BigDecimal::compareTo, java.math.BigDecimal.class)
+                .containsExactly(new java.math.BigDecimal("79"), new java.math.BigDecimal("78"), new java.math.BigDecimal("77"),
+                        new java.math.BigDecimal("76"), new java.math.BigDecimal("75.8"));
+        assertThat(reads.workspace(fixture.specialistSubject, fixture.participantId).recentMeasurements())
+                .extracting(SpecialistParticipantReadService.RecentMeasurementView::value)
+                .usingComparatorForType(java.math.BigDecimal::compareTo, java.math.BigDecimal.class)
+                .containsExactly(new java.math.BigDecimal("79"), new java.math.BigDecimal("78"), new java.math.BigDecimal("77"));
+        assertThat(reads.workspace(fixture.specialistSubject, fixture.participantId).recentMeasurements()).hasSize(3)
+                .noneMatch(item -> item.measurementId().equals(created.id()));
+        var persistedCreated = history.stream().filter(item -> item.id().equals(created.id())).findFirst().orElseThrow();
+        var event = timeline(fixture, FROM, TO, 10, SpecialistParticipantReadService.Granularity.DETAIL,
+                EnumSet.of(SpecialistParticipantReadService.TimelineType.MEASUREMENT), null).items().stream()
+                .filter(item -> item.eventId().equals("participant-measurement:" + created.id())).findFirst().orElseThrow();
+        assertThat(event).extracting(SpecialistParticipantReadService.ParticipantTimelineEvent::eventId,
+                SpecialistParticipantReadService.ParticipantTimelineEvent::eventType,
+                SpecialistParticipantReadService.ParticipantTimelineEvent::effectiveFrom,
+                SpecialistParticipantReadService.ParticipantTimelineEvent::recordedAt)
+                .containsExactly("participant-measurement:" + created.id(), "MEASUREMENT", command.measuredAt(), persistedCreated.recordedAt());
+        assertThat(reads.timelineEvent(fixture.specialistSubject, fixture.participantId, event.eventId()).measurement().note()).isEqualTo("Pomiar kontrolny");
+        Fixture other = fixture(true, EnumSet.of(ConsentDecisionPort.DataScope.PLAN));
+        assertThatThrownBy(() -> reads.timelineEvent(other.specialistSubject, other.participantId, event.eventId()))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
     }
 
     @Test
@@ -191,6 +250,23 @@ class SpecialistParticipantReadIntegrationTest {
                 new SpecialistParticipantReadService.TimelineQuery(from, to, types, granularity, cursor, limit));
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private void createWeightGoal(Fixture fixture) {
+        try {
+            Class categoryType = Class.forName("com.motionecosystem.participantgoals.ParticipantGoal$Category");
+            Object category = Enum.valueOf(categoryType, "PERFORMANCE");
+            var commandType = ParticipantGoalService.CreateParticipantGoalCommand.class;
+            var constructor = commandType.getDeclaredConstructors()[0];
+            Object command = constructor.newInstance(category, "Masa ciała", null, 50, null,
+                    List.of(new ParticipantGoalService.OutcomeCommand("body-weight", new java.math.BigDecimal("80"),
+                            new java.math.BigDecimal("75"), "kg", "body-weight", com.motionecosystem.participantgoals.TargetComparator.AT_MOST)));
+            goals.create(fixture.specialistSubject, fixture.participantId, new ActingContext(ProfessionalRole.TRAINER), "weight-goal",
+                    (ParticipantGoalService.CreateParticipantGoalCommand) command);
+        } catch (ReflectiveOperationException failure) {
+            throw new AssertionError("Unable to create focused goal fixture", failure);
+        }
+    }
+
     private Fixture fixture(boolean hasRelationship, EnumSet<ConsentDecisionPort.DataScope> scopes) {
         String suffix = UUID.randomUUID().toString();
         String participantSubject = "timeline-participant-" + suffix;
@@ -206,6 +282,32 @@ class SpecialistParticipantReadIntegrationTest {
         if (hasRelationship) relationship(fixture);
         grant(fixture, scopes);
         return fixture;
+    }
+
+    private Fixture canonicalFixture(Fixture accountBacked) {
+        UUID canonicalParticipantId = transactions.execute(status -> {
+            ParticipantRecord record = new ParticipantRecord("Canonical measurement participant", ParticipantRecord.RelationshipContext.CLIENT,
+                    null, null, null, accountBacked.specialistId, Instant.now());
+            entityManager.persist(record);
+            try {
+                var constructor = ParticipantAccessLink.class.getDeclaredConstructor(UUID.class, UUID.class);
+                constructor.setAccessible(true);
+                entityManager.persist(constructor.newInstance(record.id(), accounts.requireActive(accountBacked.participantSubject).id()));
+            } catch (ReflectiveOperationException failure) {
+                throw new AssertionError("Unable to create canonical participant access link", failure);
+            }
+            ParticipantSpecialistRelationship relationship = entityManager.createQuery("""
+                    select relationship from ParticipantSpecialistRelationship relationship
+                    where relationship.specialistAccountId = :specialistId
+                      and relationship.participantAccountId = :participantAccountId
+                    """, ParticipantSpecialistRelationship.class)
+                    .setParameter("specialistId", accountBacked.specialistId)
+                    .setParameter("participantAccountId", accounts.requireActive(accountBacked.participantSubject).id())
+                    .getSingleResult();
+            set(relationship, "participantId", record.id());
+            return record.id();
+        });
+        return new Fixture(accountBacked.participantSubject, accountBacked.specialistSubject, canonicalParticipantId, accountBacked.specialistId);
     }
 
     private UUID account(String subject, ProfileType profile) {

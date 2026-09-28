@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 interface GoalObservationRepository extends JpaRepository<GoalObservation, UUID> {
+    boolean existsByOutcomeIdAndSourceMeasurementId(UUID outcomeId, UUID sourceMeasurementId);
     Optional<GoalObservation> findTopByGoalIdAndOutcomeIdOrderByMeasuredAtDescRecordedAtDescIdDesc(UUID goalId, UUID outcomeId);
     List<GoalObservation> findByGoalIdOrderByMeasuredAtDescRecordedAtDescIdDesc(UUID goalId, Pageable pageable);
     List<GoalObservation> findByGoalIdAndOutcomeIdOrderByMeasuredAtDescRecordedAtDescIdDesc(UUID goalId, UUID outcomeId, Pageable pageable);

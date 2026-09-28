@@ -20,8 +20,10 @@ class GoalObservation {
     @Column(name = "evidence_source", length = 160, updatable = false) String evidenceSource;
     @Column(name = "recorded_by_account_id", nullable = false, updatable = false) UUID recordedByAccountId;
     @Column(name = "recorded_at", nullable = false, updatable = false) Instant recordedAt;
+    @Column(name = "source_measurement_id", updatable = false) UUID sourceMeasurementId;
     protected GoalObservation() { }
     GoalObservation(UUID goalId, UUID outcomeId, UUID participantId, BigDecimal value, String unit, String measurementMethod, Instant measuredAt, String note, String evidenceSource, UUID recordedByAccountId, Instant recordedAt) {
         id = UUID.randomUUID(); this.goalId = goalId; this.outcomeId = outcomeId; this.participantId = participantId; this.value = value; this.unit = unit; this.measurementMethod = measurementMethod; this.measuredAt = measuredAt; this.note = note; this.evidenceSource = evidenceSource; this.recordedByAccountId = recordedByAccountId; this.recordedAt = recordedAt;
     }
+    GoalObservation(UUID goalId, UUID outcomeId, UUID participantId, BigDecimal value, String unit, String method, Instant measuredAt, UUID recorder, Instant recordedAt, UUID sourceMeasurementId) { this(goalId,outcomeId,participantId,value,unit,method,measuredAt,null,"PARTICIPANT_MEASUREMENT",recorder,recordedAt); this.sourceMeasurementId=sourceMeasurementId; }
 }

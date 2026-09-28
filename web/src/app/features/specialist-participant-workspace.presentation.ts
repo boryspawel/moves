@@ -1,7 +1,7 @@
 import type { ParticipantTimelineEvent } from '../api/generated/src/models/ParticipantTimelineEvent';
 import type { Question } from '../api/generated/src/models/Question';
 
-const categoryLabels: Record<string, string> = { APPOINTMENT: 'Spotkanie', SESSION: 'Planowana sesja', EXECUTION: 'Wykonanie', INTERVIEW: 'Wywiad', NOTE: 'Notatka' };
+const categoryLabels: Record<string, string> = { APPOINTMENT: 'Spotkanie', SESSION: 'Planowana sesja', EXECUTION: 'Wykonanie', MEASUREMENT: 'Pomiar', INTERVIEW: 'Wywiad', NOTE: 'Notatka' };
 const typeLabels: Record<string, string> = { TRAINING: 'Trening', PHYSIOTHERAPY: 'Fizjoterapia', ASSESSMENT: 'Ocena', CONSULTATION: 'Konsultacja' };
 const statusLabels: Record<string, string> = { SCHEDULED: 'Zaplanowane', STARTED: 'Rozpoczęte', COMPLETED: 'Ukończone', SKIPPED: 'Pominięte', CANCELLED: 'Odwołane', NO_SHOW: 'Nieobecność' };
 const bodyCircumferenceLabels: Record<string, string> = {
@@ -84,6 +84,7 @@ export function humanEventTitle(event: ParticipantTimelineEvent): string {
     return interviewEventLabels[normalizedType] ?? 'Wywiad';
   }
   if (event.category === 'NOTE') return 'Notatka';
+  if (event.category === 'MEASUREMENT') return safeText(event.title) ?? outcomeMetricLabel(event.measurement?.metricCode);
   if (event.category === 'EXECUTION') return executionTitle(event.plannedExecutionComparison?.performed?.outcome ?? event.status);
   const rawTitle = safeText(event.title);
   const normalizedTitle = typeLabel(rawTitle);
@@ -93,6 +94,7 @@ export function humanEventTitle(event: ParticipantTimelineEvent): string {
 export function eventDescription(event: ParticipantTimelineEvent): string | undefined {
   if (isInterviewEvent(event)) return undefined;
   if (event.category === 'EXECUTION') return executionDescription(event);
+  if (event.category === 'MEASUREMENT' && event.measurement?.value != null) return `${event.measurement.value} ${event.measurement.unit ?? ''}`.trim();
   return safeText(event.summary);
 }
 function executionTitle(outcome?: string): string {

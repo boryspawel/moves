@@ -32,6 +32,8 @@ class SessionExecutionJpaEntity {
     String outcome;
     @Column(name = "stop_reason") String stopReason;
     @Column(name = "attempt_id") UUID attemptId;
+    @Column(name = "recorder_account_id") UUID recorderAccountId;
+    @Column(name = "recording_source") String recordingSource;
 
     protected SessionExecutionJpaEntity() {
     }
@@ -48,6 +50,8 @@ class SessionExecutionJpaEntity {
         outcome = source.outcome();
         stopReason = source.stopReason();
         attemptId = source.attemptId();
+        recorderAccountId = source.recorderAccountId();
+        recordingSource = source.recordingSource();
     }
 
     UUID id() { return id; }
@@ -55,7 +59,8 @@ class SessionExecutionJpaEntity {
 
     ExecutionData data() {
         return new ExecutionData(id, plannedSessionId, participantAccountId,
-                declaredCompletion, idempotencyKey, recordedAt, declarationEventId, projectionStatus, outcome, stopReason, attemptId);
+                declaredCompletion, idempotencyKey, recordedAt, declarationEventId, projectionStatus, outcome, stopReason, attemptId,
+                recorderAccountId, recordingSource);
     }
 }
 

@@ -5,7 +5,11 @@ import static org.mockito.Mockito.when;
 
 import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
+import com.motionecosystem.identityaccess.api.CurrentAccount;
+import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -15,6 +19,35 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class ParticipantDocumentationTimelineTest {
+    @Test
+    void returnsAppointmentSummaryOnlyAfterTheNormalSpecialistActingContextAuthorization() {
+        UUID specialistId = UUID.randomUUID();
+        UUID participantId = UUID.randomUUID();
+        UUID appointmentId = UUID.randomUUID();
+        CurrentAccountService accounts = org.mockito.Mockito.mock(CurrentAccountService.class);
+        ParticipantNoteRepository notes = org.mockito.Mockito.mock(ParticipantNoteRepository.class);
+        SpecialistAuthorizationPort authorization = org.mockito.Mockito.mock(SpecialistAuthorizationPort.class);
+        when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(specialistId, "specialist", ProfileType.SPECIALIST));
+        ParticipantNote note = new ParticipantNote(participantId, specialistId, "APPOINTMENT_SUMMARY", "Podsumowanie spotkania",
+                "Ustalono dalszy plan", appointmentId, Instant.parse("2030-06-10T12:00:00Z"));
+        when(notes.findTopByParticipantIdAndSpecialistIdAndAppointmentIdAndCategoryOrderByCreatedAtDesc(
+                participantId, specialistId, appointmentId, "APPOINTMENT_SUMMARY")).thenReturn(Optional.of(note));
+        ParticipantDocumentationService service = new ParticipantDocumentationService(
+                org.mockito.Mockito.mock(ParticipantInterviewRepository.class), org.mockito.Mockito.mock(InterviewResponseRepository.class), notes,
+                org.mockito.Mockito.mock(ParticipantDocumentationEventRepository.class), org.mockito.Mockito.mock(RecordIdempotencyRepository.class), accounts,
+                authorization, org.mockito.Mockito.mock(AuditRecorder.class), Clock.fixed(Instant.parse("2030-06-10T12:00:00Z"), ZoneOffset.UTC));
+
+        var summary = service.findAppointmentSummary("specialist", participantId, appointmentId, new ActingContext(ProfessionalRole.TRAINER));
+
+        assertThat(summary).hasValueSatisfying(item -> {
+            assertThat(item.title()).isEqualTo("Podsumowanie spotkania");
+            assertThat(item.content()).isEqualTo("Ustalono dalszy plan");
+        });
+        org.mockito.Mockito.verify(authorization).requireCapabilities(org.mockito.ArgumentMatchers.eq(specialistId),
+                org.mockito.ArgumentMatchers.eq(participantId), org.mockito.ArgumentMatchers.eq(new ActingContext(ProfessionalRole.TRAINER)),
+                org.mockito.ArgumentMatchers.anySet(), org.mockito.ArgumentMatchers.any());
+    }
+
     @Test
     void exposesOnlyNeutralTimelineMetadataAndKeepsEventAndRecordIdentifiersDistinct() {
         UUID participantId = UUID.randomUUID();

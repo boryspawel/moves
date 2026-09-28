@@ -42,7 +42,7 @@ public class JpaSessionExecutionAdapter implements SessionExecutionPersistence {
                 """, SessionExecutionJpaEntity.class)
                 .setParameter("plannedSessionId", plannedSessionId)
                 .setMaxResults(1)
-                .getResultStream().findFirst().map(this::aggregate);
+                .getResultList().stream().findFirst().map(this::aggregate);
     }
 
     @Override

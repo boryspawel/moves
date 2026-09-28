@@ -37,6 +37,38 @@ class ParticipantGoalServiceTest {
     private static final Instant NOW = Instant.parse("2030-06-10T12:00:00Z");
 
     @Test
+    void projectsMeasurementOnlyToMatchingActiveGoalsOwnedByTheRecordingSpecialistAndNeverDuplicatesReplay() {
+        Fixture fixture = observationFixture();
+        ParticipantGoal matching = goal(fixture, ParticipantGoal.Category.PERFORMANCE);
+        ParticipantGoal terminal = goal(fixture, ParticipantGoal.Category.PERFORMANCE); terminal.achieve(NOW);
+        ParticipantGoal otherOwner = new ParticipantGoal(fixture.participantId, UUID.randomUUID(), ParticipantGoal.Category.PERFORMANCE,
+                "Other owner", null, 50, null, NOW);
+        GoalOutcome exact = outcomeEntity(matching.id, "body-weight", "kg", "body-weight", TargetComparator.AT_MOST);
+        GoalOutcome wrongUnit = outcomeEntity(matching.id, "body-weight", "lb", "body-weight", TargetComparator.AT_MOST);
+        GoalOutcome nonMatching = outcomeEntity(matching.id, "distance", "km", "gps", TargetComparator.AT_LEAST);
+        when(fixture.goals.findByParticipantIdAndSpecialistAccountIdAndStatus(fixture.participantId, fixture.specialistId, ParticipantGoal.Status.ACTIVE))
+                .thenReturn(List.of(matching));
+        when(fixture.outcomes.findByGoalIdOrderByPositionAsc(matching.id)).thenReturn(List.of(exact, wrongUnit, nonMatching));
+        when(fixture.observations.existsByOutcomeIdAndSourceMeasurementId(any(), any())).thenReturn(false);
+
+        UUID measurementId = UUID.randomUUID();
+        fixture.service.project(measurementId, fixture.specialistId, fixture.participantId, "body-weight", new BigDecimal("75.8"), "kg",
+                "body-weight", NOW, NOW);
+
+        ArgumentCaptor<GoalObservation> projected = ArgumentCaptor.forClass(GoalObservation.class);
+        verify(fixture.observations).save(projected.capture());
+        assertThat(projected.getValue()).extracting(item -> item.goalId, item -> item.outcomeId, item -> item.sourceMeasurementId,
+                item -> item.evidenceSource).containsExactly(matching.id, exact.id, measurementId, "PARTICIPANT_MEASUREMENT");
+        verify(fixture.outcomes, never()).findByGoalIdOrderByPositionAsc(terminal.id);
+        verify(fixture.outcomes, never()).findByGoalIdOrderByPositionAsc(otherOwner.id);
+
+        when(fixture.observations.existsByOutcomeIdAndSourceMeasurementId(exact.id, measurementId)).thenReturn(true);
+        fixture.service.project(measurementId, fixture.specialistId, fixture.participantId, "body-weight", new BigDecimal("75.8"), "kg",
+                "body-weight", NOW, NOW);
+        verify(fixture.observations, org.mockito.Mockito.times(1)).save(any());
+    }
+
+    @Test
     void createsPerformanceGoalWithOrderedUniqueOutcomes() {
         Fixture fixture = fixture();
         List<GoalOutcome> persistedOutcomes = new ArrayList<>();

@@ -2,11 +2,15 @@ package com.motionecosystem.calendar;
 
 import java.time.Instant;
 import java.util.*;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.domain.Pageable;
 
 interface AppointmentRepository extends JpaRepository<Appointment, UUID> {
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select a from Appointment a where a.id = :id")
+    Optional<Appointment> lockById(@Param("id") UUID id);
     boolean existsByParticipantIdAndPlannedSessionId(UUID participantId, UUID plannedSessionId);
     @Query("select a.plannedSessionId from Appointment a where a.participantId = :participant and a.plannedSessionId in :sessionIds")
     List<UUID> findBoundPlannedSessionIds(@Param("participant") UUID participantId, @Param("sessionIds") Set<UUID> sessionIds);

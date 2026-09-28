@@ -14,6 +14,7 @@ import {
   SpecialistParticipantWorkspacePage,
   TimelineEventComponent,
 } from './specialist-participant-workspace.page';
+import { ParticipantMeasurementDialogComponent } from './participant-measurement-dialog.component';
 
 registerLocaleData(localePl);
 
@@ -917,6 +918,7 @@ async function pageFixture(
   const router = { navigate: vi.fn().mockResolvedValue(true) };
   let timelineCalls = 0;
   const api = {
+    participantMeasurements: { participantMeasurementCatalog: vi.fn().mockResolvedValue([]), recordParticipantMeasurement: vi.fn().mockResolvedValue({}) },
     participantWorkspace: {
       workspace: workspaceOverrides.workspace ?? vi.fn().mockResolvedValue({}),
       timeline: vi
@@ -967,6 +969,58 @@ describe('specialist workspace invitation access', () => {
 });
 
 describe('specialist workspace disclosure', () => {
+  it('opens the secondary measurement action and loads its catalog', async () => {
+    const workspace = vi.fn().mockResolvedValue({ quickActions: ['ADD_MEASUREMENT'] });
+    const { fixture, api } = await pageFixture([], [], appointmentApi(), { workspace });
+    const component = fixture.componentInstance as any;
+    api.participantMeasurements.participantMeasurementCatalog.mockResolvedValue([{ id: 'BODY_WEIGHT', label: 'Masa ciała', defaultUnit: 'kg', allowedUnits: ['kg'] }]);
+    await component.perform('ADD_MEASUREMENT');
+    fixture.detectChanges();
+    expect(api.participantMeasurements.participantMeasurementCatalog).toHaveBeenCalledWith({ participantId: 'participant-1' });
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Dodaj pomiar');
+  });
+
+  it('uses catalog requirements, default kilograms, and explicit custom unit', async () => {
+    await TestBed.configureTestingModule({ imports: [ParticipantMeasurementDialogComponent] }).compileComponents();
+    const fixture = TestBed.createComponent(ParticipantMeasurementDialogComponent);
+    fixture.componentInstance.presets = [
+      { id: 'BODY_WEIGHT', label: 'Masa ciała', defaultUnit: 'kg', allowedUnits: ['kg'] },
+      { id: 'BODY_CIRCUMFERENCE', label: 'Obwód ciała', defaultUnit: 'cm', allowedUnits: ['cm'], requiredContextFields: ['BODY_AREA'] },
+      { id: 'CUSTOM', label: 'Własny pomiar', allowedUnits: [], requiredContextFields: ['CUSTOM_LABEL'] },
+    ];
+    fixture.detectChanges(); const component = fixture.componentInstance as any;
+    component.form.controls.presetId.setValue('BODY_WEIGHT'); component.choose();
+    expect(component.form.controls.unit.value).toBe('kg');
+    component.form.controls.presetId.setValue('BODY_CIRCUMFERENCE'); component.choose(); fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Obszar ciała');
+    component.form.controls.presetId.setValue('CUSTOM'); component.choose(); fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Własna nazwa');
+    expect(component.form.controls.unit.value).toBe('');
+  });
+
+  it('posts once with an idempotency key, announces success, and refreshes workspace history', async () => {
+    const workspace = vi.fn().mockResolvedValue({});
+    const { fixture, api } = await pageFixture([], [], appointmentApi(), { workspace });
+    const component = fixture.componentInstance as any;
+    component.participantId.set('participant-1'); component.section.set('history');
+    await component.recordMeasurement({ presetId: 'BODY_WEIGHT', value: 75.8, unit: 'kg', measuredAt: new Date('2026-09-28T12:00:00Z') });
+    expect(api.participantMeasurements.recordParticipantMeasurement).toHaveBeenCalledTimes(1);
+    expect(api.participantMeasurements.recordParticipantMeasurement).toHaveBeenCalledWith(expect.objectContaining({ participantId: 'participant-1', idempotencyKey: expect.any(String), participantMeasurementCommand: expect.objectContaining({ presetId: 'BODY_WEIGHT', value: 75.8, unit: 'kg' }) }));
+    expect(workspace).toHaveBeenCalledTimes(2);
+    expect(component.announcement()).toContain('Pomiar został zapisany');
+  });
+
+  it('renders compact recent measurements with backend labels and supports the measurements History filter', async () => {
+    const { fixture, router } = await pageFixture([], [], appointmentApi());
+    const component = fixture.componentInstance as any;
+    component.workspace.set({ recentMeasurements: [{ measurementId: 'measurement-1', label: 'Masa ciała', value: 75.8, unit: 'kg', measuredAt: new Date('2026-09-28T12:00:00Z') }] });
+    component.state.set('loaded'); fixture.detectChanges();
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Ostatnie pomiary'); expect(text).toContain('Masa ciała'); expect(text).not.toContain('body-weight');
+    component.setTypes(['MEASUREMENT']);
+    expect(router.navigate).toHaveBeenLastCalledWith([], expect.objectContaining({ queryParams: { types: 'MEASUREMENT', eventId: null } }));
+  });
+
   it('keeps details closed by default and follows goal, record, and event query targets', async () => {
     const { fixture, params } = await pageFixture([], [], appointmentApi());
     const component = fixture.componentInstance as any;
@@ -1123,6 +1177,20 @@ describe('specialist workspace disclosure', () => {
     await (fixture.componentInstance as any).performFocus({ primaryAction: 'OPEN_HISTORY', appointmentId: 'appointment-1' });
     expect(api.appointments.getSpecialistAppointment).toHaveBeenCalledWith({ id: 'appointment-1' });
     expect((fixture.componentInstance as any).selected().detail.detailResourceId).toBe('appointment-1');
+  });
+
+  it('navigates the recording focus to the appointment session route', async () => {
+    const { fixture, router } = await pageFixture([], [], appointmentApi());
+    (fixture.componentInstance as any).participantId.set('participant-1');
+    await (fixture.componentInstance as any).performFocus({ primaryAction: 'RECORD_SESSION_EXECUTION', appointmentId: 'appointment-1' });
+    expect(router.navigate).toHaveBeenCalledWith(['/specialist/clients', 'participant-1', 'appointments', 'appointment-1', 'session']);
+  });
+
+  it('navigates the backend closeout focus to its focused appointment route', async () => {
+    const { fixture, router } = await pageFixture([], [], appointmentApi());
+    (fixture.componentInstance as any).participantId.set('participant-1');
+    await (fixture.componentInstance as any).performFocus({ primaryAction: 'CONTINUE_CLOSEOUT', appointmentId: 'appointment-1' });
+    expect(router.navigate).toHaveBeenCalledWith(['/specialist/clients', 'participant-1', 'appointments', 'appointment-1', 'closeout']);
   });
 
   it('does not treat an unavailable access status as an access problem', async () => {

@@ -1,0 +1,5 @@
+CREATE SCHEMA IF NOT EXISTS participant_measurement;
+CREATE TABLE participant_measurement.participant_measurement (id UUID PRIMARY KEY, participant_id UUID NOT NULL, metric_code VARCHAR(180) NOT NULL, value NUMERIC(19,6) NOT NULL, unit VARCHAR(32) NOT NULL, measurement_method VARCHAR(120) NOT NULL, measured_at TIMESTAMPTZ NOT NULL, note VARCHAR(500), recorded_by_account_id UUID NOT NULL, recorded_at TIMESTAMPTZ NOT NULL, source VARCHAR(32) NOT NULL, idempotency_key VARCHAR(120) NOT NULL, CONSTRAINT uq_participant_measurement_idempotency UNIQUE (recorded_by_account_id, participant_id, idempotency_key));
+CREATE INDEX ix_participant_measurement_history ON participant_measurement.participant_measurement (participant_id, measured_at DESC, recorded_at DESC, id DESC);
+ALTER TABLE participant_goals.goal_observation ADD COLUMN source_measurement_id UUID;
+CREATE UNIQUE INDEX uq_goal_observation_source_measurement ON participant_goals.goal_observation(outcome_id, source_measurement_id) WHERE source_measurement_id IS NOT NULL;

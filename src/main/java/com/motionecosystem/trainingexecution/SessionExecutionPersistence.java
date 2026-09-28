@@ -54,7 +54,14 @@ public interface SessionExecutionPersistence {
     record ExecutionData(UUID id, UUID plannedSessionId, UUID participantAccountId,
                          boolean declaredCompletion, String idempotencyKey, Instant recordedAt,
                          UUID declarationEventId, String projectionStatus, String outcome, String stopReason,
-                         UUID attemptId) {
+                         UUID attemptId, UUID recorderAccountId, String recordingSource) {
+        public ExecutionData(UUID id, UUID plannedSessionId, UUID participantAccountId,
+                             boolean declaredCompletion, String idempotencyKey, Instant recordedAt,
+                             UUID declarationEventId, String projectionStatus, String outcome, String stopReason,
+                             UUID attemptId) {
+            this(id, plannedSessionId, participantAccountId, declaredCompletion, idempotencyKey, recordedAt,
+                    declarationEventId, projectionStatus, outcome, stopReason, attemptId, null, "LEGACY_UNKNOWN");
+        }
     }
 
     record ResultData(UUID id, UUID sessionExecutionId, UUID exercisePrescriptionId,

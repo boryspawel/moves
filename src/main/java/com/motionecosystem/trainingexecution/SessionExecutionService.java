@@ -35,7 +35,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
-public class SessionExecutionService implements com.motionecosystem.trainingexecution.api.ExecutionHistoryQueryPort {
+public class SessionExecutionService implements com.motionecosystem.trainingexecution.api.ExecutionHistoryQueryPort,
+        com.motionecosystem.trainingexecution.api.SpecialistSessionExecutionPort {
 
     private final CurrentAccountService accounts;
     private final ParticipantClientPort participants;
@@ -53,30 +54,49 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
     @Transactional
     public ExecutionView declare(String subject, UUID plannedSessionId, String idempotencyKey,
                                  DeclareExecutionCommand command) {
-        return declareInternal(subject, plannedSessionId, idempotencyKey, command, "COMPLETED", null, null, true, null);
+        return declareParticipant(subject, plannedSessionId, idempotencyKey, command, "COMPLETED", null, null, true, null);
     }
 
     @Transactional
     ExecutionView declareAttempt(String subject, UUID plannedSessionId, String idempotencyKey,
                                  DeclareExecutionCommand command, String outcome, String stopReason,
                                  UUID attemptId, List<PrescriptionReference> storedPrescriptions) {
-        return declareInternal(subject, plannedSessionId, idempotencyKey, command, outcome, stopReason,
+        return declareParticipant(subject, plannedSessionId, idempotencyKey, command, outcome, stopReason,
                 attemptId, false, storedPrescriptions);
     }
 
-    private ExecutionView declareInternal(String subject, UUID plannedSessionId, String idempotencyKey,
+    @Override
+    @Transactional
+    public ExecutionView record(String subject, UUID participantId, UUID plannedSessionId, String idempotencyKey,
+                                DeclareExecutionCommand command) {
+        CurrentAccount actor = accounts.requireActive(subject);
+        requireProfile(actor, ProfileType.SPECIALIST, "specialist profile is required");
+        authorization.requireActiveRelationship(actor.id(), participantId);
+        return declareFor(actor, subject, participantId, plannedSessionId, idempotencyKey, command,
+                "COMPLETED", null, null, true, null, false, "SPECIALIST");
+    }
+
+    private ExecutionView declareParticipant(String subject, UUID plannedSessionId, String idempotencyKey,
+                                             DeclareExecutionCommand command, String outcome, String stopReason,
+                                             UUID attemptId, boolean legacyDeclaration,
+                                             List<PrescriptionReference> storedPrescriptions) {
+        CurrentAccount actor = accounts.requireActive(subject);
+        requireProfile(actor, ProfileType.PARTICIPANT, "participant profile is required");
+        return declareFor(actor, subject, participantIdFor(actor), plannedSessionId, idempotencyKey, command,
+                outcome, stopReason, attemptId, legacyDeclaration, storedPrescriptions, true, "PARTICIPANT");
+    }
+
+    private ExecutionView declareFor(CurrentAccount recorder, String subject, UUID participantId, UUID plannedSessionId, String idempotencyKey,
                                           DeclareExecutionCommand command, String outcome, String stopReason,
-                                          UUID attemptId, boolean legacyDeclaration,
-                                          List<PrescriptionReference> storedPrescriptions) {
-        CurrentAccount participant = accounts.requireActive(subject);
-        requireProfile(participant, ProfileType.PARTICIPANT, "participant profile is required");
-        UUID participantId = participantIdFor(participant);
+                                          UUID attemptId, boolean legacyDeclaration, List<PrescriptionReference> storedPrescriptions,
+                                          boolean rejectAppointmentBound, String source) {
         String key = requiredText(idempotencyKey, 120, "Idempotency-Key");
 
         var existing = persistence.findByParticipantAndIdempotencyKey(participantId, key);
         if (existing.isPresent()) {
             ExecutionView result = view(existing.get());
-            if (!result.plannedSessionId().equals(plannedSessionId)) {
+            if (!result.plannedSessionId().equals(plannedSessionId) || !recorder.id().equals(existing.get().execution().recorderAccountId())
+                    || !source.equals(existing.get().execution().recordingSource())) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT,
                         "idempotency key was already used for another session");
             }
@@ -89,25 +109,30 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
         var plannedSession = plannedSessions.lockOwnedSession(plannedSessionId, participantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "assigned session not found"));
-        if (appointmentBindings.isBound(participantId, plannedSessionId)) {
+        if (rejectAppointmentBound && appointmentBindings.isBound(participantId, plannedSessionId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "planned session is bound to an appointment");
         }
 
         existing = persistence.findByParticipantAndIdempotencyKey(participantId, key);
         if (existing.isPresent()) {
             ExecutionView result = view(existing.get());
-            if (!result.plannedSessionId().equals(plannedSessionId)) {
+            if (!result.plannedSessionId().equals(plannedSessionId) || !recorder.id().equals(existing.get().execution().recorderAccountId())
+                    || !source.equals(existing.get().execution().recordingSource())) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT,
                         "idempotency key was already used for another session");
             }
             return result;
         }
+        if (plannedSession.state() != SessionState.ASSIGNED) {
+            if (persistence.findByPlannedSessionId(plannedSessionId).isPresent()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "planned session already has a successful execution");
+            }
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "assigned session not found");
+        }
         if (persistence.findByPlannedSessionId(plannedSessionId).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "planned session already has a successful execution");
-        }
-        if (plannedSession.state() != SessionState.ASSIGNED) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "assigned session not found");
         }
         List<PrescriptionReference> prescribed = storedPrescriptions == null
                 ? plannedSession.prescriptions().stream().map(item -> new PrescriptionReference(item.id(), item.exerciseVersionId())).toList()
@@ -144,7 +169,8 @@ public class SessionExecutionService implements com.motionecosystem.trainingexec
         }
         persistence.save(new ExecutionData(execution.id(), execution.plannedSessionId(),
                         execution.participantAccountId(), execution.declaredCompletion(),
-                        execution.idempotencyKey(), execution.recordedAt(), eventId, "PENDING", outcome, stopReason, attemptId),
+                        execution.idempotencyKey(), execution.recordedAt(), eventId, "PENDING", outcome, stopReason, attemptId,
+                        recorder.id(), source),
                 command.results().stream().map(item -> {
                     validateResultValues(item);
                     PrescriptionReference reference = prescribed.stream()
