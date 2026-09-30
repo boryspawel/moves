@@ -166,6 +166,63 @@ class CatalogAndSafetyIntegrationTest {
     }
 
     @Test
+    void incomplete_metadata_is_a_readable_draft_but_blocks_publication_and_can_be_cleared_on_replace() throws Exception {
+        mvc.perform(post("/api/v1/admin/exercises").with(contentAdmin())
+                        .contentType("application/json").content("{\"version\":" + incompleteVersionCommand() + "}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/api/v1/admin/exercises").with(contentAdmin())
+                        .contentType("application/json").content("{\"canonicalName\":\"No instruction\",\"version\":{}}"))
+                .andExpect(status().isBadRequest());
+
+        String name = "Incomplete classification draft";
+        mvc.perform(post("/api/v1/admin/exercises").with(contentAdmin())
+                        .contentType("application/json").content(createIncompleteExerciseRequest(name)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.stimulusType").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.fatigueProfile").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.technicalLevel").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.environment").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.movementPatterns.length()").value(0));
+        UUID versionId = jdbc.queryForObject("""
+                SELECT version.id FROM exercise_catalog.exercise exercise
+                JOIN exercise_catalog.exercise_version version ON version.exercise_id = exercise.id
+                WHERE exercise.canonical_name = ?
+                """, UUID.class, name);
+
+        mvc.perform(get("/api/v1/admin/exercises/versions/{id}/editor", versionId).with(contentAdmin()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.version.stimulusType").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.version.fatigueProfile").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.version.technicalLevel").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.version.environment").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.version.movementPatterns.length()").value(0));
+        mvc.perform(get("/api/v1/admin/exercises/versions/{id}/capabilities", versionId).with(contentAdmin()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.readiness.unmetRequirements").value(org.hamcrest.Matchers.contains(
+                        "STIMULUS_TYPE_REQUIRED", "FATIGUE_PROFILE_REQUIRED", "TECHNICAL_LEVEL_REQUIRED",
+                        "ENVIRONMENT_REQUIRED", "MOVEMENT_PATTERN_REQUIRED",
+                        "LOAD_CHARACTERISTIC_REQUIRED", "ANATOMY_CONTRIBUTION_REQUIRED")));
+        publish(versionId).andExpect(status().isConflict());
+
+        replaceDraft(versionId, versionCommand());
+        replaceDraft(versionId, incompleteVersionCommand());
+        mvc.perform(get("/api/v1/admin/exercises/versions/{id}/editor", versionId).with(contentAdmin()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.version.stimulusType").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.version.fatigueProfile").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.version.technicalLevel").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.version.environment").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.version.movementPatterns.length()").value(0));
+
+        replaceDraft(versionId, versionCommand());
+        completeAndPublish(versionId, createPublishedAnatomy("INCOMPLETE_DRAFT_TEST", "MUSCLE_GROUP"));
+        mvc.perform(put("/api/v1/admin/exercises/versions/{id}", versionId).with(contentAdmin())
+                        .param("expectedVersion", Long.toString(editorialExpectedVersion(versionId)))
+                        .contentType("application/json").content(incompleteVersionCommand()))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
     void draftEvidenceAndContributionsRequireVersionsAndKeepReferencesSafe() throws Exception {
         UUID anatomy = createPublishedAnatomy("EDITOR_KNEE", "JOINT");
         UUID versionId = createExercise("Editor draft").versionId();
@@ -532,6 +589,17 @@ class CatalogAndSafetyIntegrationTest {
         return "{\"canonicalName\":\"%s\",\"version\":%s}".formatted(name, versionCommand());
     }
 
+    private static String createIncompleteExerciseRequest(String name) {
+        return "{\"canonicalName\":\"%s\",\"version\":%s}".formatted(name, incompleteVersionCommand());
+    }
+
+    private void replaceDraft(UUID versionId, String command) throws Exception {
+        mvc.perform(put("/api/v1/admin/exercises/versions/{id}", versionId).with(contentAdmin())
+                        .param("expectedVersion", Long.toString(editorialExpectedVersion(versionId)))
+                        .contentType("application/json").content(command))
+                .andExpect(status().isOk());
+    }
+
     private static String versionCommand() {
         return """
                 {"instruction":"Perform the movement with controlled tempo and stable posture.",
@@ -540,6 +608,14 @@ class CatalogAndSafetyIntegrationTest {
                  "fatigueProfile":"MODERATE","technicalLevel":"FOUNDATIONAL",
                  "environment":"ANY","requiredEquipment":["band"],
                  "contraindicationTags":["ACUTE_KNEE_PAIN"]}
+                """;
+    }
+
+    private static String incompleteVersionCommand() {
+        return """
+                {"instruction":"Perform the movement with controlled tempo and stable posture.",
+                 "mediaReference":"s3://catalog/exercise.mp4",
+                 "movementPatterns":[],"requiredEquipment":[]}
                 """;
     }
 

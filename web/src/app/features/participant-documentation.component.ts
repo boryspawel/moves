@@ -39,6 +39,7 @@ const SECTION_ORDER = ['Cel wizyty', 'Zdrowie i bezpieczeństwo', 'Ból i urazy'
 export class ParticipantDocumentationComponent {
   private readonly api = inject(ApiFacade); private loadedContext = ''; private loadedPanel = '';
   @Input() participantId = ''; @Input() role?: 'TRAINER' | 'PHYSIOTHERAPIST'; @Input() panelType: RecordPanelType | null = null; @Input() panelId: string | null = null; @Input() panelMode: 'view' | 'edit' = 'view';
+  @Input() set createNoteRequested(value: number) { if (value && this.ready()) this.openNewNote(); }
   @Output() opened = new EventEmitter<{ type: RecordPanelType; id: string; mode?: 'view' | 'edit' }>(); @Output() closed = new EventEmitter<void>(); @Output() changed = new EventEmitter<void>();
   protected readonly interviews = signal<InterviewView[]>([]); protected readonly notes = signal<NoteView[]>([]); protected readonly interview = signal<InterviewView | null>(null); protected readonly note = signal<NoteView | null>(null); protected readonly busy = signal(false); protected readonly panelError = signal(''); protected readonly announcement = signal(''); protected readonly selectedSection = signal(0);
   protected readonly latestInterview = computed(() => this.interviews()[0]); protected readonly latestNote = computed(() => this.notes()[0]); protected readonly ready = computed(() => !!this.participantId && !!this.role);

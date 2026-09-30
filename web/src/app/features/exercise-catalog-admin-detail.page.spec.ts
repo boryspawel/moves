@@ -6,6 +6,21 @@ import { ApiFacade } from '../core/api.facade';
 import { ExerciseCatalogAdminDetailPage } from './exercise-catalog-admin-detail.page';
 
 describe('ExerciseCatalogAdminDetailPage', () => {
+  it('preserves unknown equipment and allows clearing optional editorial metadata', async () => {
+    const catalogAdmin = {
+      getEditorialExerciseEditor: vi.fn().mockResolvedValue({ version: { exerciseId: 'exercise', canonicalName: 'Przysiad', instruction: 'Ruch', movementPatterns: new Set(['SQUAT']), stimulusType: 'STRENGTH', fatigueProfile: 'LOW', technicalLevel: 'ADVANCED', environment: 'GYM', requiredEquipment: new Set(['DUMBBELL', 'CUSTOM_RIG']) }, evidence: [], contributions: [], loadCharacteristics: [] }),
+      listEditorialExerciseVersions: vi.fn().mockResolvedValue([]), getEditorialExerciseCapabilities: vi.fn().mockResolvedValue({ expectedVersion: 2, availableActions: ['EDIT'] }), updateEditorialExerciseContent: vi.fn().mockResolvedValue({}),
+    };
+    await TestBed.configureTestingModule({ imports: [ExerciseCatalogAdminDetailPage, RouterTestingModule], providers: [{ provide: ApiFacade, useValue: { catalogAdmin, anatomyReferenceAdmin: {} } }, { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'version' } } } }] }).compileComponents();
+    const fixture = TestBed.createComponent(ExerciseCatalogAdminDetailPage); fixture.detectChanges(); await new Promise(resolve => setTimeout(resolve)); fixture.detectChanges();
+    const page = fixture.componentInstance;
+    expect(page.equipmentOptions.some(option => option.value === 'CUSTOM_RIG')).toBe(true);
+    page.patterns = []; page.equipment = ['CUSTOM_RIG']; page.stimulus = undefined; page.fatigue = undefined; page.level = undefined; page.environment = undefined;
+    await page.save(page.editor()!);
+    expect(catalogAdmin.updateEditorialExerciseContent.mock.calls[0][0].draftUpdateCommand.version).toMatchObject({ movementPatterns: new Set(), requiredEquipment: new Set(['CUSTOM_RIG']), stimulusType: undefined, fatigueProfile: undefined, technicalLevel: undefined, environment: undefined });
+    expect(fixture.nativeElement.textContent).toContain('Kontrola motoryczna');
+  });
+
   it('uses the current expectedVersion for draft save and direct publication without review actions', async () => {
     const catalogAdmin = {
       getEditorialExerciseEditor: vi.fn().mockResolvedValue({ version: { exerciseId: 'exercise', versionId: 'version', versionNumber: 1, canonicalName: 'Przysiad', instruction: 'Ruch', movementPatterns: new Set(['SQUAT']), stimulusType: 'STRENGTH', fatigueProfile: 'MODERATE', technicalLevel: 'FOUNDATIONAL', environment: 'ANY', requiredEquipment: new Set() }, evidence: [], contributions: [], loadCharacteristics: [] }),

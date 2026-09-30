@@ -24,13 +24,13 @@ export interface VersionCommand {
    * @type {VersionCommandEnvironmentEnum}
    * @memberof VersionCommand
    */
-  environment?: VersionCommandEnvironmentEnum;
+  environment?: VersionCommandEnvironmentEnum | null;
   /**
    *
    * @type {VersionCommandFatigueProfileEnum}
    * @memberof VersionCommand
    */
-  fatigueProfile?: VersionCommandFatigueProfileEnum;
+  fatigueProfile?: VersionCommandFatigueProfileEnum | null;
   /**
    *
    * @type {string}
@@ -60,13 +60,13 @@ export interface VersionCommand {
    * @type {VersionCommandStimulusTypeEnum}
    * @memberof VersionCommand
    */
-  stimulusType?: VersionCommandStimulusTypeEnum;
+  stimulusType?: VersionCommandStimulusTypeEnum | null;
   /**
    *
    * @type {VersionCommandTechnicalLevelEnum}
    * @memberof VersionCommand
    */
-  technicalLevel?: VersionCommandTechnicalLevelEnum;
+  technicalLevel?: VersionCommandTechnicalLevelEnum | null;
 }
 
 /**
@@ -157,16 +157,36 @@ export function VersionCommandFromJSONTyped(
     return json;
   }
   return {
-    environment: json['environment'] == null ? undefined : json['environment'],
-    fatigueProfile: json['fatigueProfile'] == null ? undefined : json['fatigueProfile'],
+    environment:
+      json['environment'] === undefined
+        ? undefined
+        : json['environment'] === null
+          ? null
+          : json['environment'],
+    fatigueProfile:
+      json['fatigueProfile'] === undefined
+        ? undefined
+        : json['fatigueProfile'] === null
+          ? null
+          : json['fatigueProfile'],
     instruction: json['instruction'] == null ? undefined : json['instruction'],
     mediaReference: json['mediaReference'] == null ? undefined : json['mediaReference'],
     movementPatterns:
       json['movementPatterns'] == null ? undefined : new Set(json['movementPatterns']),
     requiredEquipment:
       json['requiredEquipment'] == null ? undefined : new Set(json['requiredEquipment']),
-    stimulusType: json['stimulusType'] == null ? undefined : json['stimulusType'],
-    technicalLevel: json['technicalLevel'] == null ? undefined : json['technicalLevel'],
+    stimulusType:
+      json['stimulusType'] === undefined
+        ? undefined
+        : json['stimulusType'] === null
+          ? null
+          : json['stimulusType'],
+    technicalLevel:
+      json['technicalLevel'] === undefined
+        ? undefined
+        : json['technicalLevel'] === null
+          ? null
+          : json['technicalLevel'],
   };
 }
 

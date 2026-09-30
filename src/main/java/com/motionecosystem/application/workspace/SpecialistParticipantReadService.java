@@ -7,6 +7,8 @@ import com.motionecosystem.adherence.api.AdherenceSummary;
 import com.motionecosystem.adherence.api.AdherenceSummaryQueryPort;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
+import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
 import com.motionecosystem.participant.api.ParticipantContextQueryPort;
 import com.motionecosystem.participant.api.ParticipantClientPort;
 import com.motionecosystem.participant.api.ParticipantMetricCatalog;
@@ -137,12 +139,17 @@ public class SpecialistParticipantReadService {
         ActivePlanView activePlan = revision.map(value -> activePlan(value, now, recentExecutions)).orElse(null);
         List<RecentMeasurementView> recentMeasurements = measurements == null ? List.of()
                 : measurements.recent(participantId, 3).stream().limit(3).map(this::recentMeasurement).toList();
+        ParticipantDocumentationEventQueryPort.DraftInterview draftInterview = recordEvents == null
+                || !access.decision().grantedCapabilities().contains(WorkspaceCapability.MANAGE_PARTICIPANT_RECORDS.name()) ? null
+                : recordEvents.latestDraftInterview(subject, participantId, actingContext(access.decision().role())).orElse(null);
+        OperationalFocusView focus = focus(subject, attention, nextAppointment, draftInterview, now);
         return new SpecialistParticipantWorkspaceView(now, participant,
                 relationship(access.specialistId(), participantId), capabilities(access.decision()),
-                focus(subject, attention, nextAppointment, now), nextAppointment, activePlan,
+                focus, nextAppointment, activePlan,
                 revision.map(value -> goals(value.goals())).orElseGet(List::of),
                 canViewAdherence && adherence != null ? adherence.summarize(participantId, null, null) : AdherenceSummary.noData(), recentProgress(recentExecutions),
-                activeProblems(attention), attention, quickActions(access.decision(), upcoming, revision, attention), recentMeasurements);
+                activeProblems(attention), attention, quickActions(access.decision(), upcoming, revision, attention), recentMeasurements,
+                situation(focus, nextAppointment, activePlan, attention, recentMeasurements));
     }
 
     public AdherenceSummary adherenceSummary(String subject, UUID participantId, LocalDate from, LocalDate to) {
@@ -501,6 +508,9 @@ public class SpecialistParticipantReadService {
     private static int appointmentPriority(SpecialistAppointmentQueryPort.AppointmentSummary item) {
         return "IN_PROGRESS".equals(item.status()) ? 0 : 1;
     }
+    private static ActingContext actingContext(WorkspaceRole role) {
+        return new ActingContext(role == WorkspaceRole.TRAINER ? ProfessionalRole.TRAINER : ProfessionalRole.PHYSIOTHERAPIST);
+    }
     private static ActivePlanView activePlan(PlanRevisionQueryPort.PlanRevisionSnapshot value, Instant now,
                                              List<ParticipantExecutionHistoryQueryPort.ExecutionStart> executions) {
         int sessions = value.cycles().stream().flatMap(cycle -> cycle.microcycles().stream()).mapToInt(item -> item.sessions().size()).sum();
@@ -510,7 +520,7 @@ public class SpecialistParticipantReadService {
                 .min(Comparator.comparing(PlanRevisionQueryPort.SessionSnapshot::scheduledDate)).orElse(null);
         ParticipantExecutionHistoryQueryPort.ExecutionStart last = executions.stream().filter(item -> item.completedAt() != null)
                 .max(Comparator.comparing(ParticipantExecutionHistoryQueryPort.ExecutionStart::completedAt)).orElse(null);
-        return new ActivePlanView(value.planId(), value.revisionId(), null, value.status(), null, value.validFrom(), value.validTo(), sessions,
+        return new ActivePlanView(value.planId(), value.revisionId(), value.planName(), value.status(), null, value.validFrom(), value.validTo(), sessions,
                 next == null ? null : new SessionFactView(next.id(), next.title(), next.scheduledDate().atStartOfDay(ZoneId.of("UTC")).toInstant()),
                 last == null ? null : new ExecutionFactView(last.attemptId(), last.completedAt(), last.state()),
                 List.of("OPEN_ACTIVE_PLAN"));
@@ -534,7 +544,8 @@ public class SpecialistParticipantReadService {
         return attention.stream().map(item -> new ActiveProblemView(item.attentionId(), item.type(), item.priority(), item.status(),
                 item.shortDescription(), item.createdAt(), item.createdAt(), "WORKLIST", item.availableActions())).toList();
     }
-    private OperationalFocusView focus(String subject, List<AttentionItemView> attention, ParticipantWorkspaceAppointmentView appointment, Instant now) {
+    private OperationalFocusView focus(String subject, List<AttentionItemView> attention, ParticipantWorkspaceAppointmentView appointment,
+                                       ParticipantDocumentationEventQueryPort.DraftInterview draftInterview, Instant now) {
         List<AttentionItemView> actionableAttention = attention.stream()
                 .filter(item -> !"SNOOZED".equals(item.status()) || item.dueAt() == null || !item.dueAt().isAfter(now))
                 .toList();
@@ -547,32 +558,37 @@ public class SpecialistParticipantReadService {
             return new OperationalFocusView(FocusKind.IMPORTANT_ATTENTION, "Wymaga uwagi",
                     priorityAttention.shortDescription() == null || priorityAttention.shortDescription().isBlank()
                             ? "Sprawdź sprawę wymagającą reakcji." : priorityAttention.shortDescription(),
-                    "OPEN_ATTENTION_ITEMS", "HISTORY", priorityAttention.attentionId(), null, null, priorityAttention.dueAt());
+                    "OPEN_ATTENTION_ITEMS", "HISTORY", priorityAttention.attentionId(), null, null, null, priorityAttention.dueAt());
         }
         if (appointment != null && "IN_PROGRESS".equals(appointment.status())) {
             if (appointment.plannedSessionId() != null && (appointmentExecution == null
                     || !appointmentExecution.isExecutionRecorded(subject, appointment.appointmentId()))) {
                 return new OperationalFocusView(FocusKind.IN_PROGRESS_APPOINTMENT, "Zapisz realizację sesji",
                         appointment.plannedSessionTitle() == null ? "Zapisz wykonanie sesji podczas trwającego spotkania." : appointment.plannedSessionTitle(),
-                        "RECORD_SESSION_EXECUTION", "APPOINTMENT_EXECUTION", null, appointment.appointmentId(), appointment.planId(), appointment.endsAt());
+                        "RECORD_SESSION_EXECUTION", "APPOINTMENT_EXECUTION", null, appointment.appointmentId(), appointment.planId(), null, appointment.endsAt());
             }
             if (appointment.plannedSessionId() == null || appointmentExecution != null && appointmentExecution.isExecutionRecorded(subject, appointment.appointmentId())) {
                 return new OperationalFocusView(FocusKind.IN_PROGRESS_APPOINTMENT, "Zakończ spotkanie",
                         "Sprawdź opcjonalne pomiary i podsumowanie przed zakończeniem spotkania.",
-                        "CONTINUE_CLOSEOUT", "APPOINTMENT_CLOSEOUT", null, appointment.appointmentId(), appointment.planId(), appointment.endsAt());
+                        "CONTINUE_CLOSEOUT", "APPOINTMENT_CLOSEOUT", null, appointment.appointmentId(), appointment.planId(), null, appointment.endsAt());
             }
             return new OperationalFocusView(FocusKind.IN_PROGRESS_APPOINTMENT, "Trwa spotkanie",
                     appointment.shortPurpose() == null || appointment.shortPurpose().isBlank()
                             ? "Spotkanie z uczestnikiem jest w toku." : appointment.shortPurpose(),
-                    null, null, null, appointment.appointmentId(), null, appointment.endsAt());
+                    null, null, null, appointment.appointmentId(), null, null, appointment.endsAt());
         }
-        if (appointment != null) {
-            boolean canStart = appointment.availableActions().contains("START");
+        if (appointment != null && appointment.availableActions().contains("START")) {
+            boolean canStart = true;
             return new OperationalFocusView(FocusKind.NEXT_APPOINTMENT, "Następne spotkanie",
                     appointment.shortPurpose() == null || appointment.shortPurpose().isBlank()
                             ? "Najbliższe zaplanowane spotkanie." : appointment.shortPurpose(),
                     canStart ? "START_APPOINTMENT" : "OPEN_HISTORY", canStart ? null : "HISTORY",
-                    null, appointment.appointmentId(), null, appointment.startsAt());
+                    null, appointment.appointmentId(), null, null, appointment.startsAt());
+        }
+        if (draftInterview != null) {
+            return new OperationalFocusView(FocusKind.DRAFT_INTERVIEW, "Wywiad wymaga uzupełnienia",
+                    "Kontynuuj rozpoczęty wywiad uczestnika.", "CONTINUE_INTERVIEW", "DOCUMENTATION",
+                    null, null, null, draftInterview.interviewId(), draftInterview.updatedAt());
         }
         AttentionItemView followUp = actionableAttention.stream()
                 .min(Comparator.comparingInt(SpecialistParticipantReadService::attentionPriority)
@@ -582,10 +598,34 @@ public class SpecialistParticipantReadService {
             return new OperationalFocusView(FocusKind.FOLLOW_UP, "Dalszy krok",
                     followUp.shortDescription() == null || followUp.shortDescription().isBlank()
                             ? "Sprawdź sprawę oczekującą na dalsze działanie." : followUp.shortDescription(),
-                    "OPEN_ATTENTION_ITEMS", "HISTORY", followUp.attentionId(), null, null, followUp.dueAt());
+                    "OPEN_ATTENTION_ITEMS", "HISTORY", followUp.attentionId(), null, null, null, followUp.dueAt());
         }
-        return new OperationalFocusView(FocusKind.IDLE, "Brak pilnych działań",
-                "Nie ma obecnie spraw wymagających reakcji.", "SCHEDULE_APPOINTMENT", null, null, null, null, null);
+        return new OperationalFocusView(FocusKind.IDLE, "Brak spraw wymagających działania",
+                "Nie ma obecnie spraw wymagających reakcji.", null, null, null, null, null, null, null);
+    }
+    private static List<SituationalSignalView> situation(OperationalFocusView focus, ParticipantWorkspaceAppointmentView appointment,
+                                                          ActivePlanView activePlan, List<AttentionItemView> attention,
+                                                          List<RecentMeasurementView> measurements) {
+        List<SituationalSignalView> signals = new ArrayList<>();
+        attention.stream().filter(item -> !item.attentionId().equals(focus.attentionId())).findFirst().ifPresent(item -> signals.add(
+                new SituationalSignalView("ATTENTION", "Sprawa do obserwacji", item.shortDescription(), "OPEN_ATTENTION_ITEMS", "HISTORY",
+                        item.attentionId(), null, null)));
+        if (appointment == null) {
+            signals.add(new SituationalSignalView("NO_NEXT_APPOINTMENT", "Brak kolejnego spotkania",
+                    "Nie ma zaplanowanego kolejnego spotkania.", "SCHEDULE_APPOINTMENT", null, null, null, null));
+        } else if (!appointment.appointmentId().equals(focus.appointmentId())) {
+            signals.add(new SituationalSignalView("NEXT_APPOINTMENT", "Następne spotkanie",
+                    appointment.shortPurpose() == null || appointment.shortPurpose().isBlank() ? "Najbliższe zaplanowane spotkanie." : appointment.shortPurpose(),
+                    "OPEN_NEXT_APPOINTMENT", "HISTORY", null, appointment.appointmentId(), null));
+        }
+        if (activePlan != null && !activePlan.planId().equals(focus.planId())) {
+            signals.add(new SituationalSignalView("ACTIVE_PLAN", "Aktywny plan", "Plan jest obecnie aktywny.",
+                    "OPEN_ACTIVE_PLAN", "PLAN", null, null, activePlan.planId()));
+        }
+        measurements.stream().findFirst().ifPresent(item -> signals.add(new SituationalSignalView("RECENT_MEASUREMENT", "Ostatni pomiar",
+                item.label() + ": " + item.value() + (item.unit() == null || item.unit().isBlank() ? "" : " " + item.unit()),
+                null, null, null, null, null)));
+        return signals.stream().limit(4).toList();
     }
     private static int attentionPriority(AttentionItemView item) {
         return switch (item.priority()) { case "HIGH" -> 0; case "MEDIUM" -> 1; default -> 2; };
@@ -594,7 +634,7 @@ public class SpecialistParticipantReadService {
                                              List<SpecialistAppointmentQueryPort.AppointmentSummary> appointments,
                                              Optional<PlanRevisionQueryPort.PlanRevisionSnapshot> revision,
                                              List<AttentionItemView> attention) {
-        List<String> actions = new ArrayList<>(List.of("OPEN_TIMELINE", "SCHEDULE_APPOINTMENT", "ADD_MEASUREMENT"));
+        List<String> actions = new ArrayList<>(List.of("OPEN_TIMELINE", "SCHEDULE_APPOINTMENT", "ADD_MEASUREMENT", "ADD_NOTE", "ADD_GOAL"));
         if (!appointments.isEmpty()) actions.add("OPEN_NEXT_APPOINTMENT");
         if (revision.isPresent()) actions.add("OPEN_ACTIVE_PLAN");
         if (!attention.isEmpty() && decision.grantedCapabilities().contains(WorkspaceCapability.VIEW_ADHERENCE_WORKLIST.name())) actions.add("OPEN_ATTENTION_ITEMS");
@@ -637,21 +677,23 @@ public class SpecialistParticipantReadService {
                                                       List<String> capabilities, OperationalFocusView focus, ParticipantWorkspaceAppointmentView nextAppointment, ActivePlanView activePlan,
                                                       List<GoalView> goals, AdherenceSummary adherenceSummary, RecentProgressView recentProgress,
                                                       List<ActiveProblemView> activeProblems, List<AttentionItemView> attentionItems, List<String> quickActions,
-                                                      List<RecentMeasurementView> recentMeasurements) {
+                                                      List<RecentMeasurementView> recentMeasurements, List<SituationalSignalView> situationalSignals) {
         public SpecialistParticipantWorkspaceView(Instant generatedAt, ParticipantHeader participant, RelationshipView relationship,
                 List<String> capabilities, OperationalFocusView focus, ParticipantWorkspaceAppointmentView nextAppointment, ActivePlanView activePlan,
                 List<GoalView> goals, AdherenceSummary adherenceSummary, RecentProgressView recentProgress,
                 List<ActiveProblemView> activeProblems, List<AttentionItemView> attentionItems, List<String> quickActions) {
             this(generatedAt, participant, relationship, capabilities, focus, nextAppointment, activePlan, goals, adherenceSummary,
-                    recentProgress, activeProblems, attentionItems, quickActions, List.of());
+                    recentProgress, activeProblems, attentionItems, quickActions, List.of(), List.of());
         }
     }
     public record ParticipantHeader(UUID participantId, String displayName, String avatarReference, String contextLabel, String timeZoneId,
                                     List<String> availableActions) { }
     public record RelationshipView(String status, Instant startedAt) { }
-    public enum FocusKind { IMPORTANT_ATTENTION, IN_PROGRESS_APPOINTMENT, NEXT_APPOINTMENT, FOLLOW_UP, IDLE }
+    public enum FocusKind { IMPORTANT_ATTENTION, IN_PROGRESS_APPOINTMENT, NEXT_APPOINTMENT, DRAFT_INTERVIEW, FOLLOW_UP, IDLE }
     public record OperationalFocusView(FocusKind kind, String title, String explanation, String primaryAction,
-                                       String navigationTarget, UUID attentionId, UUID appointmentId, UUID planId, Instant relevantAt) { }
+                                       String navigationTarget, UUID attentionId, UUID appointmentId, UUID planId, UUID interviewId, Instant relevantAt) { }
+    public record SituationalSignalView(String kind, String title, String description, String action, String navigationTarget,
+                                        UUID attentionId, UUID appointmentId, UUID planId) { }
     public record ParticipantWorkspaceAppointmentView(UUID appointmentId, Instant startsAt, Instant endsAt, String type, String status,
                                   String shortPurpose, UUID plannedSessionId, String plannedSessionTitle, UUID planId,
                                   UUID revisionId, List<String> availableActions, long version) { }

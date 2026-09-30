@@ -1,3 +1,10 @@
+:host {
+  display: block;
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+}
+
 .timeline-event button {
   display: grid;
   width: 100%;

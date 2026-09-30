@@ -1,3 +1,10 @@
+:host {
+  display: block;
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+}
+
 .event-panel {
   position: sticky;
   top: var(--space-3);

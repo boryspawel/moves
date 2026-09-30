@@ -30,7 +30,7 @@ export interface ExerciseEditorialVersionView {
    * @type {ExerciseEditorialVersionViewEnvironmentEnum}
    * @memberof ExerciseEditorialVersionView
    */
-  environment?: ExerciseEditorialVersionViewEnvironmentEnum;
+  environment?: ExerciseEditorialVersionViewEnvironmentEnum | null;
   /**
    *
    * @type {string}
@@ -42,7 +42,7 @@ export interface ExerciseEditorialVersionView {
    * @type {ExerciseEditorialVersionViewFatigueProfileEnum}
    * @memberof ExerciseEditorialVersionView
    */
-  fatigueProfile?: ExerciseEditorialVersionViewFatigueProfileEnum;
+  fatigueProfile?: ExerciseEditorialVersionViewFatigueProfileEnum | null;
   /**
    *
    * @type {string}
@@ -102,13 +102,13 @@ export interface ExerciseEditorialVersionView {
    * @type {ExerciseEditorialVersionViewStimulusTypeEnum}
    * @memberof ExerciseEditorialVersionView
    */
-  stimulusType?: ExerciseEditorialVersionViewStimulusTypeEnum;
+  stimulusType?: ExerciseEditorialVersionViewStimulusTypeEnum | null;
   /**
    *
    * @type {ExerciseEditorialVersionViewTechnicalLevelEnum}
    * @memberof ExerciseEditorialVersionView
    */
-  technicalLevel?: ExerciseEditorialVersionViewTechnicalLevelEnum;
+  technicalLevel?: ExerciseEditorialVersionViewTechnicalLevelEnum | null;
   /**
    *
    * @type {string}
@@ -234,9 +234,19 @@ export function ExerciseEditorialVersionViewFromJSONTyped(
   }
   return {
     canonicalName: json['canonicalName'] == null ? undefined : json['canonicalName'],
-    environment: json['environment'] == null ? undefined : json['environment'],
+    environment:
+      json['environment'] === undefined
+        ? undefined
+        : json['environment'] === null
+          ? null
+          : json['environment'],
     exerciseId: json['exerciseId'] == null ? undefined : json['exerciseId'],
-    fatigueProfile: json['fatigueProfile'] == null ? undefined : json['fatigueProfile'],
+    fatigueProfile:
+      json['fatigueProfile'] === undefined
+        ? undefined
+        : json['fatigueProfile'] === null
+          ? null
+          : json['fatigueProfile'],
     instruction: json['instruction'] == null ? undefined : json['instruction'],
     mediaReference: json['mediaReference'] == null ? undefined : json['mediaReference'],
     movementPatterns:
@@ -249,8 +259,18 @@ export function ExerciseEditorialVersionViewFromJSONTyped(
     reviewedAt: json['reviewedAt'] == null ? undefined : new Date(json['reviewedAt']),
     reviewedBySubject: json['reviewedBySubject'] == null ? undefined : json['reviewedBySubject'],
     status: json['status'] == null ? undefined : json['status'],
-    stimulusType: json['stimulusType'] == null ? undefined : json['stimulusType'],
-    technicalLevel: json['technicalLevel'] == null ? undefined : json['technicalLevel'],
+    stimulusType:
+      json['stimulusType'] === undefined
+        ? undefined
+        : json['stimulusType'] === null
+          ? null
+          : json['stimulusType'],
+    technicalLevel:
+      json['technicalLevel'] === undefined
+        ? undefined
+        : json['technicalLevel'] === null
+          ? null
+          : json['technicalLevel'],
     versionId: json['versionId'] == null ? undefined : json['versionId'],
     versionNumber: json['versionNumber'] == null ? undefined : json['versionNumber'],
     withdrawnAt: json['withdrawnAt'] == null ? undefined : new Date(json['withdrawnAt']),

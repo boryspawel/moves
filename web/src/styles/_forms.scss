@@ -33,6 +33,14 @@ button[mat-stroked-button] {
 .app-native-control.ng-invalid.ng-touched { border-color: var(--app-danger); background: var(--app-danger-subtle); }
 .app-native-control:disabled { color: var(--app-text-muted); background: var(--app-surface-subtle); }
 textarea.app-native-control { min-height: 6rem; resize: vertical; }
+.exercise-editor { display: grid; gap: var(--space-5); max-width: var(--app-form-max); }
+.exercise-editor section { display: grid; gap: var(--space-3); }
+.exercise-editor h2 { margin: 0; }
+.editor-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.editor-grid label { display: grid; gap: var(--space-2); }
+.editor-grid .wide { grid-column: 1 / -1; }
+.field-error { grid-column: 1 / -1; margin: calc(-1 * var(--space-2)) 0 0; color: var(--app-danger); }
+@media (max-width: 600px) { .editor-grid { grid-template-columns: minmax(0, 1fr); } }
 .picker {
   display: flex;
   flex-wrap: wrap;

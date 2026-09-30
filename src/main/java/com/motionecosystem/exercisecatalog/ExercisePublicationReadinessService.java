@@ -28,6 +28,10 @@ class ExercisePublicationReadinessService {
     List<String> unmet(ExerciseVersion version) {
         List<String> result = new ArrayList<>();
         if (version.profileSchemaVersion != 2) result.add("PROFILE_SCHEMA_V2_REQUIRED");
+        if (version.stimulusType == null) result.add("STIMULUS_TYPE_REQUIRED");
+        if (version.fatigueProfile == null) result.add("FATIGUE_PROFILE_REQUIRED");
+        if (version.technicalLevel == null) result.add("TECHNICAL_LEVEL_REQUIRED");
+        if (version.environment == null) result.add("ENVIRONMENT_REQUIRED");
         if (version.movementPatterns.isEmpty()) result.add("MOVEMENT_PATTERN_REQUIRED");
         List<ExerciseLoadCharacteristic> characteristics = loadCharacteristics.findByExerciseVersionIdOrderById(version.id);
         List<ExerciseContribution> profile = contributions.findByExerciseVersionIdOrderById(version.id);

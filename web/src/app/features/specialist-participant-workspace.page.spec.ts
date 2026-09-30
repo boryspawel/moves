@@ -26,9 +26,16 @@ describe('SpecialistParticipantWorkspacePage scheduling', () => {
     (fixture.componentInstance as any).state.set('loaded');
     (fixture.componentInstance as any).workspace.set({ quickActions: ['SCHEDULE_APPOINTMENT'] });
     fixture.detectChanges();
-    const action = [...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('button')].find(button => button.textContent?.includes('Zaplanuj spotkanie'));
+    const addAction = [...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('button')]
+      .find((button) => button.textContent?.trim() === '+ Dodaj');
+    expect(addAction).toBeTruthy();
+    addAction!.click();
+    await fixture.whenStable();
+    const action = [...document.querySelectorAll<HTMLButtonElement>('button')]
+      .find((button) => button.textContent?.trim() === 'Spotkanie');
     expect(action).toBeTruthy();
-    action!.click(); fixture.detectChanges();
+    action!.click();
+    fixture.detectChanges();
     const dialog = (fixture.nativeElement as HTMLElement).querySelector('app-schedule-appointment-dialog')!;
     expect(dialog.querySelector('input[formcontrolname="endsAt"]')).toBeNull();
     const start = dialog.querySelector<HTMLInputElement>('input[formcontrolname="startsAt"]')!;
@@ -1021,11 +1028,15 @@ describe('specialist workspace disclosure', () => {
     expect(router.navigate).toHaveBeenLastCalledWith([], expect.objectContaining({ queryParams: { types: 'MEASUREMENT', eventId: null } }));
   });
 
-  it('keeps details closed by default and follows goal, record, and event query targets', async () => {
-    const { fixture, params } = await pageFixture([], [], appointmentApi());
+  it('opens Overview by default and follows goal, record, and event query targets', async () => {
+    const event = appointmentEvent('event-1', 'appointment-1', '2026-07-01T10:00:00Z');
+    const { fixture, params } = await pageFixture([event], [event], appointmentApi());
     const component = fixture.componentInstance as any;
+    await component.load('participant-1', null);
+    fixture.detectChanges();
 
-    expect(component.section()).toBeNull();
+    expect(component.state()).toBe('loaded');
+    expect(component.section()).toBe('overview');
     expect((fixture.nativeElement as HTMLElement).querySelector('.workspace-timeline')).toBeNull();
 
     params.next(convertToParamMap({ goalId: 'goal-1' }));
@@ -1045,7 +1056,7 @@ describe('specialist workspace disclosure', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('.workspace-timeline')).not.toBeNull();
   });
 
-  it('keeps the focus action as the sole primary button while header scheduling stays secondary', async () => {
+  it('keeps the focused action in Overview and provides authorized additions from the menu', async () => {
     const { fixture } = await pageFixture([], [], appointmentApi(), {
       workspace: vi.fn().mockResolvedValue({
         quickActions: ['SCHEDULE_APPOINTMENT'],
@@ -1057,8 +1068,35 @@ describe('specialist workspace disclosure', () => {
 
     const element = fixture.nativeElement as HTMLElement;
     expect(element.querySelector('.operational-focus button[mat-flat-button]')?.textContent).toContain('Zaplanuj spotkanie');
-    expect(element.querySelector('.quick-actions button[mat-flat-button]')).toBeNull();
-    expect(element.querySelector('.quick-actions button[mat-stroked-button]')?.textContent).toContain('Zaplanuj spotkanie');
+    expect(element.querySelector('.header-actions button[mat-flat-button]')?.textContent).toContain('+ Dodaj');
+  });
+
+  it('keeps the focused, contextual, and menu actions distinct', async () => {
+    const { fixture, router } = await pageFixture([], [], appointmentApi(), {
+      workspace: vi.fn().mockResolvedValue({
+        quickActions: ['ADD_NOTE'],
+        focus: { primaryAction: 'CONTINUE_INTERVIEW', title: 'Wywiad wymaga uzupełnienia', interviewId: 'interview-1' },
+        situationalSignals: [{ title: 'Aktywny plan', action: 'OPEN_ACTIVE_PLAN', planId: 'plan-1' }],
+      }),
+    });
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance as any;
+    const performFocus = vi.spyOn(component, 'performFocus');
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('.workspace-now .operational-focus button')?.textContent).toContain('Kontynuuj wywiad');
+    expect(element.querySelector('.workspace-situation button')?.textContent).toContain('Otwórz plan');
+    expect(element.querySelector('.header-actions button[mat-flat-button]')?.textContent).toContain('+ Dodaj');
+
+    (element.querySelector('.workspace-situation button') as HTMLButtonElement).click();
+    await fixture.whenStable();
+
+    expect(performFocus).not.toHaveBeenCalled();
+    expect(router.navigate).toHaveBeenLastCalledWith([], expect.objectContaining({
+      queryParams: { section: 'plan', eventId: null, recordType: null, recordId: null, recordMode: null },
+      queryParamsHandling: 'merge',
+    }));
   });
 
   it('starts only the backend-authorized focused appointment with its current version, then refreshes IN_PROGRESS state', async () => {
@@ -1196,12 +1234,19 @@ describe('specialist workspace disclosure', () => {
   it('does not treat an unavailable access status as an access problem', async () => {
     const { fixture } = await pageFixture([], [], appointmentApi());
     const component = fixture.componentInstance as any;
+    component.state.set('loaded');
+    component.workspace.set({});
     component.accessStatusAvailable.set(false);
     component.accessStatus.set(undefined);
     fixture.detectChanges();
-    expect((fixture.nativeElement as HTMLElement).querySelector<HTMLDetailsElement>('.participant-access')?.open).toBe(false);
+    expect((fixture.nativeElement as HTMLElement).querySelector('.participant-access')).toBeNull();
     component.accessStatusAvailable.set(true);
     component.accessStatus.set('NO_ACCOUNT');
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.participant-access')).toBeNull();
+    [...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('button')]
+      .find((button) => button.textContent?.trim() === 'Dostęp')!
+      .click();
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).querySelector<HTMLDetailsElement>('.participant-access')?.open).toBe(true);
   });

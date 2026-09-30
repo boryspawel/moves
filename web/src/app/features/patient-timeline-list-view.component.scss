@@ -1,3 +1,10 @@
+:host {
+  display: block;
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+}
+
 .timeline-list {
   list-style: none;
   padding: 0;

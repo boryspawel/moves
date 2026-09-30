@@ -23,6 +23,7 @@ import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.EditorialCapability;
 import com.motionecosystem.exercisecatalog.api.ExerciseCatalogQueryPort;
 import com.motionecosystem.exercisecatalog.api.ExerciseDraftReferenceQueryPort;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
@@ -53,6 +54,7 @@ public class CatalogService implements ExerciseCatalogQueryPort {
     private final ExerciseDraftReferenceQueryPort importReferences;
     private final ImportedExerciseAliasRepository aliases;
     private final ExerciseRelationReferenceRepository relations;
+    private final ExercisePublicationReadinessService readiness;
 
     @Transactional
     public ExerciseEditorialVersionView create(String actorSubject, String canonicalName, VersionCommand requested) {
@@ -380,7 +382,7 @@ public class CatalogService implements ExerciseCatalogQueryPort {
     public ExerciseEditorialVersionView publish(String actorSubject, UUID versionId) {
         ExerciseVersion version = lockedVersion(versionId);
         try {
-            validateCompleteProfile(version);
+            requireReadyToPublish(version);
             version.publish(clock.instant());
         } catch (IllegalStateException invalidState) {
             throw conflict(invalidState.getMessage(), invalidState);
@@ -466,8 +468,8 @@ public class CatalogService implements ExerciseCatalogQueryPort {
                 .map(CatalogService::publicEvidenceView).toList();
         return new ExerciseCatalogDetailView(exercise.id, version.id, version.versionNumber, exercise.canonicalName,
                 version.instruction, version.movementPatterns.stream().sorted().map(Enum::name).toList(),
-                version.stimulusType.name(), version.fatigueProfile.name(), version.technicalLevel.name(),
-                version.environment.name(), version.requiredEquipment.stream().sorted().toList(),
+                enumName(version.stimulusType), enumName(version.fatigueProfile), enumName(version.technicalLevel),
+                enumName(version.environment), version.requiredEquipment.stream().sorted().toList(),
                 characteristics, anatomyItems, evidence);
     }
 
@@ -563,6 +565,13 @@ public class CatalogService implements ExerciseCatalogQueryPort {
             }
         }
         validateAllocationBranches(profileContributions);
+    }
+
+    private void requireReadyToPublish(ExerciseVersion version) {
+        List<String> unmet = readiness.unmet(version);
+        if (!unmet.isEmpty()) {
+            throw new IllegalStateException("publication requirements not met: " + String.join(",", unmet));
+        }
     }
 
     private ValidatedContribution validateContribution(UUID versionId, ContributionCommand command) {
@@ -812,15 +821,17 @@ public class CatalogService implements ExerciseCatalogQueryPort {
     }
 
     private static VersionCommand validate(VersionCommand command) {
-        if (command == null || command.stimulusType() == null || command.fatigueProfile() == null
-                || command.technicalLevel() == null || command.environment() == null
-                || command.movementPatterns() == null || command.movementPatterns().isEmpty()) {
-            throw badRequest("all classification fields and at least one movement pattern are required");
+        if (command == null) {
+            throw badRequest("version is required");
         }
         return new VersionCommand(requiredText(command.instruction(), 10_000, "instruction"),
                 optionalText(command.mediaReference(), 2_000, "media reference"),
-                Set.copyOf(command.movementPatterns()), command.stimulusType(), command.fatigueProfile(),
+                command.movementPatterns() == null ? Set.of() : Set.copyOf(command.movementPatterns()), command.stimulusType(), command.fatigueProfile(),
                 command.technicalLevel(), command.environment(), normalizedTags(command.requiredEquipment()));
+    }
+
+    private static String enumName(Enum<?> value) {
+        return value == null ? null : value.name();
     }
 
     private static List<LoadCharacteristicCommand> validateCharacteristics(
@@ -893,9 +904,9 @@ public class CatalogService implements ExerciseCatalogQueryPort {
     }
 
     public record VersionCommand(String instruction, String mediaReference,
-                                 Set<MovementPattern> movementPatterns, StimulusType stimulusType,
-                                 FatigueProfile fatigueProfile, TechnicalLevel technicalLevel,
-                                 ExerciseEnvironment environment, Set<String> requiredEquipment) {
+                                 Set<MovementPattern> movementPatterns, @Schema(nullable = true) StimulusType stimulusType,
+                                 @Schema(nullable = true) FatigueProfile fatigueProfile, @Schema(nullable = true) TechnicalLevel technicalLevel,
+                                 @Schema(nullable = true) ExerciseEnvironment environment, Set<String> requiredEquipment) {
     }
 
     public record DraftUpdateCommand(String canonicalName, VersionCommand version, Long expectedVersion) {}
@@ -939,9 +950,9 @@ public class CatalogService implements ExerciseCatalogQueryPort {
 
     public record ExerciseEditorialVersionView(UUID exerciseId, String canonicalName, UUID versionId, int versionNumber,
                               ExerciseVersionStatus status, Set<MovementPattern> movementPatterns,
-                              String instruction, String mediaReference, StimulusType stimulusType,
-                              FatigueProfile fatigueProfile, TechnicalLevel technicalLevel,
-                              ExerciseEnvironment environment, Set<String> requiredEquipment,
+                              String instruction, String mediaReference, @Schema(nullable = true) StimulusType stimulusType,
+                              @Schema(nullable = true) FatigueProfile fatigueProfile, @Schema(nullable = true) TechnicalLevel technicalLevel,
+                              @Schema(nullable = true) ExerciseEnvironment environment, Set<String> requiredEquipment,
                               int profileSchemaVersion, String reviewedBySubject, Instant reviewedAt,
                               Instant publishedAt, Instant withdrawnAt) {
     }

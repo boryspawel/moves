@@ -38,6 +38,13 @@ const questionPresentation: Record<string, { title: string; section: string; opt
 const interviewStatusLabels: Record<string, string> = { DRAFT: 'Wywiad w trakcie', COMPLETED: 'Wywiad zakończony', SUPERSEDED: 'Zastąpiony nowszym wywiadem' };
 const noteCategoryLabels: Record<string, string> = { GENERAL: 'Notatka ogólna', SESSION: 'Notatka ze spotkania', HEALTH: 'Notatka zdrowotna', OTHER: 'Inna notatka' };
 const noteStatusLabels: Record<string, string> = { DRAFT: 'W trakcie', FINALISED: 'Zakończona', FINALIZED: 'Zakończona', ARCHIVED: 'Zarchiwizowana' };
+const documentationLifecycleSummaryLabels: Record<string, string> = {
+  NOTE_CREATED: 'Dodano notatkę',
+  NOTE_UPDATED: 'Zaktualizowano notatkę',
+  NOTE_FINALSED: 'Zakończono notatkę',
+  NOTE_FINALISED: 'Zakończono notatkę',
+  NOTE_FINALIZED: 'Zakończono notatkę',
+};
 
 export const supportedTimelineCategories = ['APPOINTMENT', 'SESSION', 'EXECUTION', 'INTERVIEW', 'NOTE'] as const;
 export type TimelineCategory = typeof supportedTimelineCategories[number];
@@ -95,6 +102,10 @@ export function eventDescription(event: ParticipantTimelineEvent): string | unde
   if (isInterviewEvent(event)) return undefined;
   if (event.category === 'EXECUTION') return executionDescription(event);
   if (event.category === 'MEASUREMENT' && event.measurement?.value != null) return `${event.measurement.value} ${event.measurement.unit ?? ''}`.trim();
+  if (event.category === 'NOTE') {
+    const lifecycleType = event.eventType?.trim().toUpperCase().replace(/[-\s]/g, '_');
+    return lifecycleType ? documentationLifecycleSummaryLabels[lifecycleType] ?? safeText(event.summary) : safeText(event.summary);
+  }
   return safeText(event.summary);
 }
 function executionTitle(outcome?: string): string {

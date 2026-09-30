@@ -368,7 +368,7 @@ public class JpaTrainingPlanningV2Adapter implements TrainingPlanningV2Persisten
                 SELECT budget FROM PlanLoadBudgetJpaEntity budget
                 WHERE budget.revisionId = :revisionId ORDER BY budget.channel, budget.unit
                 """, PlanLoadBudgetJpaEntity.class).setParameter("revisionId", revisionId).getResultList();
-        return Optional.of(new PlanRevisionSnapshot(revision.id, revision.planId, plan.participantId,
+        return Optional.of(new PlanRevisionSnapshot(revision.id, revision.planId, plan.name, plan.participantId,
                 revision.revisionNumber, revision.basedOnRevisionId, revision.version, revision.status,
                 revision.authorAccountId, revision.authorCapability, revision.createdAt,
                 revision.migrationOrigin, revision.assessmentStatus, revision.phaseIntent,

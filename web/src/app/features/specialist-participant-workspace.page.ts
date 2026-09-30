@@ -12,22 +12,24 @@ import {
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatInputModule } from '@angular/material/input';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApiFacade } from '../core/api.facade';
 import { ResponseError } from '../api/generated/src/runtime';
 import type { SpecialistParticipantWorkspaceView } from '../api/generated/src/models/SpecialistParticipantWorkspaceView';
+import type { SituationalSignalView } from '../api/generated/src/models/SituationalSignalView';
 import type { OperationalFocusView } from '../api/generated/src/models/OperationalFocusView';
 import type { ParticipantTimelineEvent } from '../api/generated/src/models/ParticipantTimelineEvent';
 import type { AppointmentView } from '../api/generated/src/models/AppointmentView';
 import type { ParticipantWorkspaceAppointmentView } from '../api/generated/src/models/ParticipantWorkspaceAppointmentView';
 import type { ParticipantGoalView } from '../api/generated/src/models/ParticipantGoalView';
+import type { ObservationView } from '../api/generated/src/models/ObservationView';
 import type { PresetView } from '../api/generated/src/models/PresetView';
 import type { ParticipantMeasurementPresetView } from '../api/generated/src/models/ParticipantMeasurementPresetView';
 import type { CreateFromPresetRequestPresetIdEnum, CreateFromPresetRequestTargetComparatorEnum } from '../api/generated/src/models/CreateFromPresetRequest';
 import { ParticipantDocumentationComponent, type RecordPanelType } from './participant-documentation.component';
 import { ParticipantAccessPanelComponent } from './participant-access-panel.component';
-import { GoalOutcomeProgressComponent } from './goal-outcome-progress.component';
 import { ParticipantMeasurementDialogComponent } from './participant-measurement-dialog.component';
 import {
   groupEvents,
@@ -54,15 +56,21 @@ import {
   statusLabel,
 } from './specialist-participant-workspace.presentation';
 
-const actionLabels: Record<string, string> = { SCHEDULE_APPOINTMENT: 'Zaplanuj spotkanie', ADD_MEASUREMENT: 'Dodaj pomiar' };
+const actionLabels: Record<string, string> = {
+  SCHEDULE_APPOINTMENT: 'Spotkanie',
+  ADD_MEASUREMENT: 'Pomiar',
+  ADD_NOTE: 'Notatkę',
+  ADD_GOAL: 'Cel',
+};
 const label = (value: string | undefined, labels: Record<string, string>) =>
   value ? (labels[value] ?? value.replace(/_/g, ' ').toLocaleLowerCase('pl-PL')) : 'Brak danych';
-type WorkspaceSection = 'plan' | 'documentation' | 'history';
+type WorkspaceSection = 'overview' | 'plan' | 'documentation' | 'history';
+type SituationalSignal = SituationalSignalView;
 
 @Component({
   selector: 'app-participant-workspace-header',
   standalone: true,
-  imports: [MatButtonModule],
+  imports: [MatButtonModule, MatMenuModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './participant-workspace-header.component.scss',
   template: `<header class="workspace-header">
@@ -80,15 +88,17 @@ type WorkspaceSection = 'plan' | 'documentation' | 'history';
         <p>Brak nadchodzącego spotkania.</p>
       }
     </div>
-    @if (actions.length) {
-      <div class="quick-actions" aria-label="Szybkie działania">
-        @for (action of actions; track action) {
-          <button mat-stroked-button type="button" (click)="requested.emit(action)">
-            {{ actionLabel(action) }}
-          </button>
-        }
-      </div>
-    }
+    <div class="header-actions">
+      <button mat-stroked-button type="button" (click)="accessRequested.emit()">Dostęp</button>
+      @if (actions.length) {
+        <button mat-flat-button type="button" [matMenuTriggerFor]="addMenu">+ Dodaj</button>
+        <mat-menu #addMenu="matMenu">
+          @for (action of actions; track action) {
+            <button mat-menu-item type="button" (click)="requested.emit(action)">{{ actionLabel(action) }}</button>
+          }
+        </mat-menu>
+      }
+    </div>
   </header>`,
 })
 export class ParticipantWorkspaceHeaderComponent {
@@ -97,6 +107,7 @@ export class ParticipantWorkspaceHeaderComponent {
   @Input() accessStatusAvailable = true;
   @Input() actions: string[] = [];
   @Output() requested = new EventEmitter<string>();
+  @Output() accessRequested = new EventEmitter<void>();
   protected actionLabel = (action: string) => actionLabels[action] ?? action;
   protected get nextAppointment() {
     return eventTimeLabel({ effectiveFrom: this.workspace.nextAppointment?.startsAt });
@@ -164,7 +175,38 @@ export class ParticipantOperationalFocusComponent {
   @Input() busy = false;
   @Output() requested = new EventEmitter<OperationalFocusView>();
   protected actionLabel(action?: string): string {
-    return ({ OPEN_ATTENTION_ITEMS: 'Otwórz sprawę', OPEN_HISTORY: 'Otwórz historię', OPEN_PLAN: 'Otwórz plan', SCHEDULE_APPOINTMENT: 'Zaplanuj spotkanie', START_APPOINTMENT: 'Rozpocznij spotkanie', RECORD_SESSION_EXECUTION: 'Zapisz realizację sesji', CONTINUE_CLOSEOUT: 'Zakończ spotkanie' })[action ?? ''] ?? 'Otwórz';
+    return ({ OPEN_ATTENTION_ITEMS: 'Otwórz sprawę', OPEN_HISTORY: 'Otwórz historię', OPEN_PLAN: 'Otwórz plan', SCHEDULE_APPOINTMENT: 'Zaplanuj spotkanie', START_APPOINTMENT: 'Rozpocznij spotkanie', RECORD_SESSION_EXECUTION: 'Zapisz realizację sesji', CONTINUE_CLOSEOUT: 'Zakończ spotkanie', CONTINUE_INTERVIEW: 'Kontynuuj wywiad' })[action ?? ''] ?? 'Otwórz';
+  }
+}
+
+@Component({
+  selector: 'app-participant-situation',
+  standalone: true,
+  imports: [MatButtonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: './specialist-participant-workspace.page.scss',
+  template: `<section class="workspace-situation" aria-labelledby="workspace-situation-title">
+    <h2 id="workspace-situation-title">Sytuacja</h2>
+    @if (signals.length) {
+      <ul>
+        @for (signal of signals; track $index) {
+          <li>
+            <strong>{{ signal.title }}</strong>
+            @if (signal.description) { <span>{{ signal.description }}</span> }
+            @if (signal.action) { <button mat-stroked-button type="button" (click)="requested.emit(signal)">{{ actionLabel(signal.action) }}</button> }
+          </li>
+        }
+      </ul>
+    } @else {
+      <p>Brak dodatkowych informacji wymagających uwagi.</p>
+    }
+  </section>`,
+})
+export class ParticipantSituationComponent {
+  @Input() signals: SituationalSignal[] = [];
+  @Output() requested = new EventEmitter<SituationalSignal>();
+  protected actionLabel(action: string): string {
+    return ({ OPEN_ATTENTION_ITEMS: 'Otwórz sprawę', SCHEDULE_APPOINTMENT: 'Zaplanuj spotkanie', OPEN_NEXT_APPOINTMENT: 'Otwórz spotkanie', OPEN_ACTIVE_PLAN: 'Otwórz plan' })[action] ?? 'Otwórz';
   }
 }
 
@@ -300,6 +342,7 @@ export class TimelinePeriodGroupComponent {
   standalone: true,
   imports: [TimelinePeriodGroupComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: [':host { display: block; box-sizing: border-box; min-width: 0; width: 100%; }'],
   template: `<section aria-label="Chronologiczna oś czasu">
     @for (group of groups; track group.label) {
       <app-timeline-period-group [group]="group" (opened)="opened.emit($event)" />
@@ -564,15 +607,14 @@ const comparator: Record<string, string> = { AT_LEAST: 'co najmniej', AT_MOST: '
 @Component({
   selector: 'app-participant-goals',
   standalone: true,
-  imports: [MatButtonModule, MatInputModule, ReactiveFormsModule, DatePipe, GoalOutcomeProgressComponent],
+  imports: [MatButtonModule, MatInputModule, ReactiveFormsModule, DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './participant-goals.component.scss',
   styles: [`.goal-card.mat-mdc-outlined-button{display:flex;flex-direction:column;align-items:stretch;min-width:0;gap:var(--space-2);text-align:left}.goal-card.mat-mdc-outlined-button .goal-card-title,.goal-card.mat-mdc-outlined-button .goal-card-target,.goal-card.mat-mdc-outlined-button .goal-card-observation{display:block;min-width:0;text-align:left}`],
   template: `<section class="goals-workspace" aria-labelledby="goals-title">
     <div class="goals-heading">
       <div>
-        <h2 id="goals-title">Cele</h2>
-        <p>{{ active().length }} aktywne · {{ completed().length }} zakończone</p>
+        <h2 id="goals-title">CELE</h2>
       </div>
       @if (role) {
         <button mat-flat-button type="button" (click)="openCreate()">Dodaj cel</button>
@@ -584,32 +626,33 @@ const comparator: Record<string, string> = { AT_LEAST: 'co najmniej', AT_MOST: '
       <p role="status">Wczytywanie celów…</p>
     } @else if (state() === 'error') {
       <p role="alert">Nie udało się wczytać celów. Spróbuj ponownie za chwilę.</p>
-    } @else if (!goals().length) {
-      <p>Brak zdefiniowanych celów.</p>
     } @else {
-      <div class="goal-cards">
-        @for (goal of active(); track goal.id) {
-          <button mat-stroked-button type="button" class="goal-card" (click)="open(goal)">
-            <strong class="goal-card-title">{{ goal.title }}</strong>
-            @for (outcome of goal.outcomes ?? []; track outcome.id) {
-              <span class="goal-card-target">Cel: {{ outcome.targetValue }} {{ outcome.unit }}</span>
-              <span class="goal-card-observation">{{ outcome.latestObservation ? 'Ostatni pomiar: ' + outcome.latestObservation.value + ' ' + outcome.unit : 'Brak pomiarów' }}</span>
-            }
-          </button>
-        }
-      </div>
-      @if (completed().length) {
-        <details>
-          <summary>Zakończone cele ({{ completed().length }})</summary>
-          <div class="goal-cards">
-            @for (goal of completed(); track goal.id) {
-              <button mat-stroked-button type="button" class="goal-card" (click)="open(goal)">
-                <strong class="goal-card-title">{{ goal.title }}</strong>
-                @for (outcome of goal.outcomes ?? []; track outcome.id) {
-                  <span class="goal-card-target">Cel: {{ outcome.targetValue }} {{ outcome.unit }}</span>
-                  <span class="goal-card-observation">{{ outcome.latestObservation ? 'Ostatni pomiar: ' + outcome.latestObservation.value + ' ' + outcome.unit : 'Brak pomiarów' }}</span>
+      @if (!active().length) {
+        <p>Brak aktywnych celów.</p>
+      } @else {
+        <div class="goal-list">
+          @for (goal of active(); track goal.id) {
+            <article class="goal-row">
+              <button type="button" class="goal-row-main" (click)="open(goal)">
+                <strong>{{ goal.title }}</strong>
+                @if (primaryOutcome(goal); as outcome) {
+                  <span>{{ outcomeSummary(outcome) }}</span>
+                  <span>{{ outcomeState(outcome) }}</span>
                 }
               </button>
+              @if (missingMeasurementAction(goal); as outcome) {
+                <button mat-stroked-button type="button" (click)="requestMeasurementFor(outcome)">Dodaj pomiar</button>
+              }
+            </article>
+          }
+        </div>
+      }
+      @if (completed().length) {
+        <details class="completed-goals">
+          <summary>Zakończone cele ({{ completed().length }}) <span>Pokaż</span></summary>
+          <div class="goal-list">
+            @for (goal of completed(); track goal.id) {
+              <button type="button" class="goal-row-main completed-goal" (click)="open(goal)"><strong>{{ goal.title }}</strong></button>
             }
           </div>
         </details>
@@ -689,46 +732,40 @@ const comparator: Record<string, string> = { AT_LEAST: 'co najmniej', AT_MOST: '
           <button mat-icon-button class="goal-panel-close" type="button" aria-label="Zamknij szczegóły celu" (click)="close()">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18" /></svg>
           </button>
-          @if (panelMode() === 'view') {
-            <div class="goal-panel-actions" aria-label="Działania dla celu">
-              @if (isMutable(goal) && has('UPDATE')) {
-                <button mat-stroked-button type="button" (click)="panelMode.set('edit')">Edytuj</button>
-              }
-              @if (isMutable(goal) && has('RECORD_OBSERVATION')) {
-                <button mat-flat-button type="button" (click)="panelMode.set('observation')">Dodaj pomiar</button>
-              }
-            </div>
-          }
         </header>
         @if (panelMode() === 'view') {
           <div class="goal-panel-body">
             @if (eventContext) {
               <p class="goal-event-context">Zdarzenie na osi czasu: {{ eventContext }}</p>
             }
-            @if (goal.description) {
-              <p>{{ goal.description }}</p>
+            <section class="goal-panel-section goal-current-state" aria-labelledby="goal-current-title">
+              <h3 id="goal-current-title">Aktualny stan celu</h3>
+              @for (outcome of orderedOutcomes(goal); track outcome.id) {
+                <article class="goal-outcome-state">
+                  @if (orderedOutcomes(goal).length > 1) { <h4>{{ outcomeTitle(goal, outcome) }}</h4> }
+                  @if (outcome.latestObservation) {
+                    <p class="goal-current-value"><strong>{{ outcome.latestObservation.value }} {{ outcome.unit }}</strong><span>aktualnie</span></p>
+                    <p class="goal-value-story">{{ outcome.baseline != null ? outcome.baseline + ' ' + outcome.unit + ' → ' : '' }}{{ outcome.latestObservation.value }} {{ outcome.unit }} → cel {{ targetText(outcome) }}</p>
+                  } @else {
+                    <p class="goal-value-story">Cel {{ targetText(outcome) }}</p>
+                    @if (outcome.baseline != null) { <p>Wartość początkowa: {{ outcome.baseline }} {{ outcome.unit }}</p> }
+                    <p class="goal-no-current">Brak aktualnego pomiaru</p>
+                  }
+                  <p class="goal-progress-copy">{{ progressStory(outcome.progress?.state ?? outcome.progressState) }}</p>
+                  @if (outcome.latestObservation?.measuredAt) { <p class="goal-last-measurement">Ostatni pomiar: {{ outcome.latestObservation?.measuredAt | date: 'd MMM, HH:mm' : '' : 'pl' }}</p> }
+                </article>
+              }
+            </section>
+            @if (isMutable(goal) && has('RECORD_OBSERVATION')) {
+              @if (measurementOutcomes(goal).length) {
+                <section class="goal-primary-action" aria-label="Dodawanie pomiaru">
+                  @if (measurementOutcomes(goal).length > 1) { <label>Wynik<select [value]="measurementOutcomeId()" (change)="chooseMeasurementOutcome($any($event.target).value)">@for (outcome of measurementOutcomes(goal); track outcome.id) { <option [value]="outcome.id">{{ outcomeTitle(goal, outcome) }}</option> }</select></label> }
+                  <button mat-flat-button type="button" (click)="requestMeasurement()">Dodaj pomiar</button>
+                </section>
+              } @else {
+                <details class="goal-legacy-observation"><summary>Dodaj pomiar dla tego celu</summary><button mat-stroked-button type="button" (click)="panelMode.set('observation')">Dodaj pomiar</button></details>
+              }
             }
-            <section class="goal-panel-section" aria-labelledby="goal-definition-title">
-              <h3 id="goal-definition-title">Cel</h3>
-              @for (outcome of goal.outcomes ?? []; track outcome.id) {
-                <dl class="goal-facts">
-                  <dt>Wartość początkowa:</dt><dd>{{ outcome.baseline ?? 'Brak' }}{{ outcome.baseline != null ? ' ' + outcome.unit : '' }}</dd>
-                  <dt>Wartość docelowa:</dt><dd>{{ outcome.targetValue }} {{ outcome.unit }}</dd>
-                  <dt>Porównanie:</dt><dd>{{ comparatorLabel(outcome.targetComparator) }}</dd>
-                </dl>
-              }
-              <dl class="goal-facts"><dt>Termin:</dt><dd>{{ goal.targetDate ? (goal.targetDate | date: 'longDate' : '' : 'pl') : 'Brak' }}</dd></dl>
-            </section>
-            <section class="goal-panel-section" aria-labelledby="goal-progress-title">
-              <h3 id="goal-progress-title">Postęp</h3>
-              @for (outcome of goal.outcomes ?? []; track outcome.id) {
-                <dl class="goal-facts">
-                  <dt>Ostatni pomiar:</dt><dd>{{ outcome.latestObservation ? outcome.latestObservation.value + ' ' + outcome.unit : 'Brak pomiarów' }}</dd>
-                  <dt>Stan:</dt><dd>{{ progressLabel(outcome.progressState) }}</dd>
-                  <dt>Liczba pomiarów:</dt><dd>{{ outcome.observationCount ?? 0 }}</dd>
-                </dl>
-              }
-            </section>
             <section class="goal-panel-section" aria-labelledby="goal-history-title">
               <h3 id="goal-history-title">Historia pomiarów</h3>
               @if (historyLoading()) {
@@ -739,22 +776,17 @@ const comparator: Record<string, string> = { AT_LEAST: 'co najmniej', AT_MOST: '
               } @else if (history().length) {
                 <ol class="goal-observation-history">
                   @for (observation of history(); track observation.id) {
-                    <li><strong>{{ observation.value }} {{ observation.unit }}</strong><span>{{ observation.measuredAt | date: 'short' : '' : 'pl' }}</span>@if (observation.note) { <span>{{ observation.note }}</span> }</li>
+                    <li><strong>{{ observation.value }} {{ observation.unit }}</strong><span>{{ historyOutcomeLabel(goal, observation) }}</span><span>{{ observation.measuredAt | date: 'd MMM, HH:mm' : '' : 'pl' }}</span>@if (observation.note) { <span>{{ observation.note }}</span> }</li>
                   }
                 </ol>
               } @else {
-                <p>Brak pomiarów w wczytanej historii.</p>
+                <p>Brak zapisanych pomiarów.</p>
               }
             </section>
-            <app-goal-outcome-progress [outcomes]="goal.outcomes ?? []" [history]="history()" />
-            <div class="goal-panel-lifecycle-actions">
-              @if (isMutable(goal) && has('ACHIEVE')) {
-                <button mat-stroked-button type="button" [disabled]="mutating()" (click)="confirm.set('ACHIEVE')">Oznacz jako osiągnięty</button>
-              }
-              @if (isMutable(goal) && has('CANCEL')) {
-                <button mat-stroked-button type="button" [disabled]="mutating()" (click)="confirm.set('CANCEL')">Anuluj cel</button>
-              }
-            </div>
+            <details class="goal-secondary-details"><summary>Szczegóły celu</summary>@if (goal.description) { <p>{{ goal.description }}</p> } @if (goal.targetDate) { <p>Termin: {{ goal.targetDate | date: 'longDate' : '' : 'pl' }}</p> }</details>
+            @if (isMutable(goal) && (has('UPDATE') || has('ACHIEVE') || has('CANCEL'))) {
+              <details class="goal-panel-lifecycle-actions"><summary>Działania dotyczące celu</summary><div>@if (has('UPDATE')) { <button mat-stroked-button type="button" (click)="panelMode.set('edit')">Edytuj cel</button> } @if (has('ACHIEVE')) { <button mat-stroked-button type="button" [disabled]="mutating()" (click)="confirm.set('ACHIEVE')">Oznacz jako osiągnięty</button> } @if (has('CANCEL')) { <button mat-stroked-button type="button" [disabled]="mutating()" (click)="confirm.set('CANCEL')">Anuluj cel</button> }</div></details>
+            }
           </div>
         } @else if (panelMode() === 'edit' && isMutable(goal) && has('UPDATE')) {
           <form class="goal-panel-form" [formGroup]="updateForm" (ngSubmit)="update()">
@@ -818,8 +850,11 @@ export class ParticipantGoalsComponent {
   @Input({ required: true }) participantId!: string;
   @Input() role?: 'TRAINER' | 'PHYSIOTHERAPIST';
   @Input() selectedGoalId?: string;
+  @Input() measurementRefresh = 0;
+  @Input() set createGoalRequested(value: number) { if (value && this.participantId && this.role) this.openCreate(); }
   @Input() eventContext?: string;
   @Output() changed = new EventEmitter<void>();
+  @Output() measurementRequested = new EventEmitter<{ presetId?: string; bodyArea?: string }>();
   protected readonly goals = signal<ParticipantGoalView[]>([]);
   protected readonly state = signal<'loading' | 'loaded' | 'error'>('loading');
   protected readonly selected = signal<ParticipantGoalView | null>(null);
@@ -828,9 +863,10 @@ export class ParticipantGoalsComponent {
   protected readonly mutating = signal(false);
   protected readonly formError = signal(false);
   protected readonly confirm = signal<'ACHIEVE' | 'CANCEL' | null>(null);
-  protected readonly history = signal<any[]>([]);
+  protected readonly history = signal<ObservationView[]>([]);
   protected readonly historyLoading = signal(false);
   protected readonly historyError = signal(false);
+  protected readonly measurementOutcomeId = signal('');
   protected readonly createStep = signal<1 | 2>(1);
   protected readonly presets = signal<PresetView[]>([]);
   protected readonly selectedPreset = signal<PresetView | null>(null);
@@ -874,8 +910,34 @@ export class ParticipantGoalsComponent {
   protected hasMeaningfulProgress = (value?: string) => value === 'IN_PROGRESS' || value === 'TARGET_REACHED';
   protected outcomeLabel = outcomeMetricLabel;
   protected comparatorLabel = (value?: string) => comparator[value ?? ''] ?? 'Brak';
+  protected primaryOutcome(goal: ParticipantGoalView) { return goal.outcomes?.[0]; }
+  protected outcomeSummary(outcome: NonNullable<ParticipantGoalView['outcomes']>[number]): string {
+    const target = `cel ${outcome.targetComparator === 'AT_MOST' ? '≤' : '≥'} ${outcome.targetValue ?? '—'} ${outcome.unit ?? ''}`.trim();
+    return outcome.latestObservation && !this.isMissingCurrentMeasurement(outcome)
+      ? `${outcome.latestObservation.value} ${outcome.unit ?? ''} → ${target}`.trim()
+      : target;
+  }
+  protected outcomeState(outcome: NonNullable<ParticipantGoalView['outcomes']>[number]): string {
+    const state = outcome.progress?.state ?? outcome.progressState;
+    if (this.isMissingCurrentMeasurement(outcome)) return 'Brak aktualnego pomiaru';
+    return ({ PROGRESSING: 'Postęp zgodny z celem', MOVING_AWAY: 'Wynik oddala się od celu', UNCHANGED: 'Wynik bez zmiany', TARGET_REACHED: 'Cel osiągnięty', IN_PROGRESS: 'W trakcie realizacji', NOT_COMPARABLE: 'Brak porównania' } as Record<string, string>)[state ?? ''] ?? 'Ostatni pomiar';
+  }
+  private isMissingCurrentMeasurement(outcome: NonNullable<ParticipantGoalView['outcomes']>[number]) {
+    return outcome.progress?.state === 'BASELINE_ONLY' || !outcome.latestObservation;
+  }
+  protected missingMeasurementAction(goal: ParticipantGoalView) {
+    const outcome = this.primaryOutcome(goal);
+    return outcome && this.isMissingCurrentMeasurement(outcome) && this.measurementContext(outcome) && goal.availableActions?.includes('RECORD_OBSERVATION') ? outcome : undefined;
+  }
+  protected measurementContext(outcome: NonNullable<ParticipantGoalView['outcomes']>[number]) {
+    const metric = outcome.metricCode?.trim();
+    if (metric === 'body-weight' && outcome.unit === 'kg') return { presetId: 'BODY_WEIGHT' };
+    const circumference = /^body-circumference:(WAIST|HIPS|CHEST|ARM|THIGH|CALF|NECK|OTHER)$/.exec(metric ?? '');
+    return circumference && outcome.unit === 'cm' ? { presetId: 'BODY_CIRCUMFERENCE', bodyArea: circumference[1].toLocaleLowerCase('en-US') } : undefined;
+  }
   ngOnChanges() {
     void this.refresh();
+    if (this.measurementRefresh && this.selected()) void this.refreshSelectedGoal();
   }
   protected perspectiveLabel() { return this.role === 'TRAINER' ? 'Wynik sportowy' : 'Powrót do funkcji'; }
   private context() {
@@ -989,6 +1051,7 @@ export class ParticipantGoalsComponent {
       });
       if (request !== this.selectionRequest || participantId !== this.participantId || role !== this.role) return;
       this.selected.set(detail);
+      this.measurementOutcomeId.set(this.measurementOutcomes(detail)[0]?.id ?? '');
       this.panelMode.set('view');
       this.confirm.set(null);
       this.updateForm.setValue({
@@ -1014,6 +1077,24 @@ export class ParticipantGoalsComponent {
     this.selected.set(null);
     this.panelMode.set('view');
     this.confirm.set(null);
+  }
+  private async refreshSelectedGoal() {
+    const selected = this.selected();
+    if (!selected?.id || !this.role) return;
+    const request = ++this.selectionRequest;
+    this.historyRequest++;
+    const participantId = this.participantId;
+    const role = this.role;
+    const goalId = selected.id;
+    try {
+      const detail = await this.api.participantGoals.getParticipantGoal({ participantId, goalId, actingContext: role as never });
+      if (request !== this.selectionRequest || participantId !== this.participantId || role !== this.role || goalId !== this.selected()?.id) return;
+      this.selected.set(detail);
+      this.goals.update((goals) => goals.map((goal) => goal.id === detail.id ? detail : goal));
+      void this.loadHistory();
+    } catch {
+      // Keep the current detail visible when a background refresh fails.
+    }
   }
   protected showView() {
     if (!this.mutating()) this.panelMode.set('view');
@@ -1053,6 +1134,47 @@ export class ParticipantGoalsComponent {
         this.historyLoading.set(false);
       }
     }
+  }
+  protected orderedOutcomes(goal: ParticipantGoalView) {
+    return goal.outcomes ?? [];
+  }
+  protected outcomeTitle(goal: ParticipantGoalView, outcome: NonNullable<ParticipantGoalView['outcomes']>[number]) {
+    return this.orderedOutcomes(goal).indexOf(outcome) === 0 ? goal.title : this.outcomeLabel(outcome.metricCode);
+  }
+  protected historyOutcomeLabel(goal: ParticipantGoalView, observation: ObservationView) {
+    const outcome = this.orderedOutcomes(goal).find((item) => item.id === observation.outcomeId);
+    return outcome ? this.outcomeTitle(goal, outcome) : goal.title ?? 'Cel';
+  }
+  protected targetText(outcome: NonNullable<ParticipantGoalView['outcomes']>[number]) {
+    const sign = outcome.targetComparator === 'AT_MOST' ? '≤' : '≥';
+    return `${sign} ${outcome.targetValue ?? '—'} ${outcome.unit ?? ''}`.trim();
+  }
+  protected progressStory(value?: string) {
+    return ({
+      TARGET_REACHED: 'Cel osiągnięty',
+      PROGRESSING: 'Postęp zgodny z celem',
+      IN_PROGRESS: 'W trakcie realizacji',
+      MOVING_AWAY: 'Wynik oddala się od celu',
+      UNCHANGED: 'Wynik bez zmiany',
+      NOT_COMPARABLE: 'Nie można jeszcze ocenić postępu od wartości początkowej.',
+      BASELINE_ONLY: 'Nie można jeszcze ocenić postępu od wartości początkowej.',
+    } as Record<string, string>)[value ?? ''] ?? 'Brak aktualnego pomiaru';
+  }
+  protected measurementOutcomes(goal: ParticipantGoalView) {
+    return this.orderedOutcomes(goal).filter((outcome) => !!this.measurementContext(outcome));
+  }
+  protected chooseMeasurementOutcome(outcomeId: string) {
+    this.measurementOutcomeId.set(outcomeId);
+  }
+  protected requestMeasurement() {
+    const goal = this.selected();
+    const outcome = goal && this.measurementOutcomes(goal).find((item) => item.id === this.measurementOutcomeId());
+    const context = outcome && this.measurementContext(outcome);
+    if (context) this.measurementRequested.emit(context);
+  }
+  protected requestMeasurementFor(outcome: NonNullable<ParticipantGoalView['outcomes']>[number]) {
+    const context = this.measurementContext(outcome);
+    if (context) this.measurementRequested.emit(context);
   }
   protected async update() {
     const goal = this.selected();
@@ -1151,6 +1273,7 @@ export class ParticipantGoalsComponent {
     ParticipantWorkspaceHeaderComponent,
     ParticipantSummaryStripComponent,
     ParticipantOperationalFocusComponent,
+    ParticipantSituationComponent,
     ParticipantGoalsComponent,
     ParticipantDocumentationComponent,
     ParticipantAccessPanelComponent,
@@ -1160,6 +1283,7 @@ export class ParticipantGoalsComponent {
     PatientTimelineEventPanelComponent,
     ScheduleAppointmentDialogComponent,
     ParticipantMeasurementDialogComponent,
+    DatePipe,
     RouterLink,
   ],
   styleUrl: './specialist-participant-workspace.page.scss',
@@ -1170,9 +1294,6 @@ export class ParticipantGoalsComponent {
     [attr.aria-busy]="state() === 'loading'"
   >
     <p class="sr-only" aria-live="polite">{{ announcement() }}</p>
-    @if (participantId() && actingContext()) {
-      <details class="participant-access" [open]="accessNeedsAction()"><summary>Dostęp uczestnika</summary><app-participant-access-panel [participantId]="participantId()" [role]="actingContext()!" /></details>
-    }
     @if (state() === 'loading') {
       <section class="state-card" role="status">
         <h1>Wczytywanie kartoteki…</h1>
@@ -1184,6 +1305,12 @@ export class ParticipantGoalsComponent {
         <p>Spróbuj ponownie za chwilę.</p>
         <button mat-stroked-button type="button" (click)="reload()">Spróbuj ponownie</button>
       </section>
+      @if (participantId() && actingContext()) {
+        <details class="participant-access" open>
+          <summary>Dostęp uczestnika</summary>
+          <app-participant-access-panel [participantId]="participantId()" [role]="actingContext()!" />
+        </details>
+      }
     } @else if (workspace(); as data) {
       <app-participant-workspace-header
         [workspace]="data"
@@ -1191,42 +1318,78 @@ export class ParticipantGoalsComponent {
         [accessStatusAvailable]="accessStatusAvailable()"
         [actions]="safeActions()"
         (requested)="perform($event)"
+        (accessRequested)="accessOpen.set(!accessOpen())"
       />
-      <app-participant-operational-focus [focus]="focus(data)" [busy]="startingAppointment()" (requested)="performFocus($event)" />
-      @if (linkedSessionAppointment(data); as appointment) {
-        <section class="linked-session-context" aria-label="Kontekst spotkania">
-          <strong>Powiązana sesja</strong>
-          <span>{{ appointment.plannedSessionTitle || appointment.plannedSessionId }}</span>
-          @if (appointment.planId && appointment.revisionId) {
-            <a [routerLink]="['/specialist/clients', participantId(), 'plans', appointment.planId, 'revisions', appointment.revisionId]">Otwórz plan</a>
-          }
-        </section>
+      @if (participantId() && actingContext() && accessOpen()) {
+        <details class="participant-access" [open]="accessOpen()">
+          <summary>Dostęp uczestnika</summary>
+          <app-participant-access-panel [participantId]="participantId()" [role]="actingContext()!" />
+        </details>
       }
       <app-participant-summary-strip [workspace]="data" />
-      @if (data.recentMeasurements?.length) {
-        <section class="recent-measurements" aria-labelledby="recent-measurements-title">
-          <h2 id="recent-measurements-title">Ostatnie pomiary</h2>
-          <ul>@for (measurement of data.recentMeasurements; track measurement.measurementId) { <li><strong>{{ measurement.label || 'Pomiar' }}</strong><span>{{ measurement.value }} {{ measurement.unit }}</span><time>{{ measurementTime(measurement.measuredAt) }}</time></li> }</ul>
-        </section>
-      }
       <nav class="workspace-sections" aria-label="Sekcje kartoteki">
+        <button type="button" [attr.aria-pressed]="section() === 'overview'" (click)="openSection('overview')">Przegląd</button>
         <button type="button" [attr.aria-pressed]="section() === 'plan'" (click)="openSection('plan')">Plan</button>
         <button type="button" [attr.aria-pressed]="section() === 'documentation'" (click)="openSection('documentation')">Dokumentacja</button>
         <button type="button" [attr.aria-pressed]="section() === 'history'" (click)="openSection('history')">Historia</button>
       </nav>
-      @if (section() === 'plan') {
-        <section class="workspace-disclosure" aria-labelledby="plan-title">
-          <h2 id="plan-title">Plan</h2>
-          <section class="workspace-planning-link" aria-label="Plan treningowy">
-            <a [routerLink]="['/specialist/clients', participantId(), 'plans']">Plany</a>
-            <a [routerLink]="['/specialist/clients', participantId(), 'plans', 'new']">Utwórz plan treningowy</a>
-            @if (data.activePlan?.planId && data.activePlan.activeRevisionId) { <a [routerLink]="['/specialist/clients', participantId(), 'plans', data.activePlan.planId, 'revisions', data.activePlan.activeRevisionId]">Otwórz aktywny plan</a> }
+      @if (section() === 'overview') {
+        <section class="workspace-overview" aria-label="Przegląd kartoteki">
+          <div class="workspace-now">
+            <app-participant-operational-focus [focus]="focus(data)" [busy]="startingAppointment()" (requested)="performFocus($event)" />
+            @if (linkedSessionAppointment(data); as appointment) {
+              <section class="linked-session-context" aria-label="Kontekst spotkania">
+                <strong>Powiązana sesja</strong>
+                <span>{{ appointment.plannedSessionTitle || appointment.plannedSessionId }}</span>
+                @if (appointment.planId && appointment.revisionId) {
+                  <a [routerLink]="['/specialist/clients', participantId(), 'plans', appointment.planId, 'revisions', appointment.revisionId]">Otwórz plan</a>
+                }
+              </section>
+            }
+            @if (data.recentMeasurements?.length) {
+              <section class="recent-measurements" aria-labelledby="recent-measurements-title">
+                <h2 id="recent-measurements-title">Ostatnie pomiary</h2>
+                <ul>@for (measurement of data.recentMeasurements; track measurement.measurementId) { <li><strong>{{ measurement.label || 'Pomiar' }}</strong><span>{{ measurement.value }} {{ measurement.unit }}</span><time>{{ measurementTime(measurement.measuredAt) }}</time></li> }</ul>
+              </section>
+            }
+          </div>
+          <app-participant-situation [signals]="situationalSignals(data)" (requested)="performSignal($event)" />
+        </section>
+      } @else if (section() === 'plan') {
+        <section class="workspace-plan" aria-label="Plan uczestnika">
+          <section class="training-plan" aria-labelledby="plan-title">
+            <h2 id="plan-title">PLAN TRENINGOWY</h2>
+            @if (data.activePlan; as plan) {
+              @if (plan.planId && plan.activeRevisionId) {
+              <div class="active-plan-summary">
+                <div><h3>{{ plan.name || 'Plan treningowy' }}</h3><p>Aktywny</p></div>
+                @if (plan.nextPlannedSession) { <p><strong>Następna sesja:</strong> {{ plan.nextPlannedSession.title || 'Zaplanowana sesja' }}@if (plan.nextPlannedSession.scheduledAt) { · {{ plan.nextPlannedSession.scheduledAt | date: 'longDate' : '' : 'pl' }} }</p> }
+                @if (plan.activeSessionCount) { <p>{{ plan.activeSessionCount }} zaplanowanych sesji</p> }
+                @if (plan.lastCompletedSession?.completedAt) { <p>Ostatnia ukończona sesja: {{ plan.lastCompletedSession.completedAt | date: 'longDate' : '' : 'pl' }}</p> }
+                <a mat-flat-button [routerLink]="['/specialist/clients', participantId(), 'plans', plan.planId, 'revisions', plan.activeRevisionId]">Otwórz plan</a>
+              </div>
+              } @else {
+                <div class="empty-plan">
+                  <h3>Brak aktywnego planu</h3>
+                  <p>Utwórz plan treningowy, aby uporządkować kolejne sesje.</p>
+                  <a mat-flat-button [routerLink]="['/specialist/clients', participantId(), 'plans', 'new']">Utwórz plan</a>
+                  <a class="quiet-link" [routerLink]="['/specialist/clients', participantId(), 'plans']">Wszystkie plany</a>
+                </div>
+              }
+            } @else {
+              <div class="empty-plan">
+                <h3>Brak aktywnego planu</h3>
+                <p>Utwórz plan treningowy, aby uporządkować kolejne sesje.</p>
+                <a mat-flat-button [routerLink]="['/specialist/clients', participantId(), 'plans', 'new']">Utwórz plan</a>
+                <a class="quiet-link" [routerLink]="['/specialist/clients', participantId(), 'plans']">Wszystkie plany</a>
+              </div>
+            }
           </section>
-          <app-participant-goals [participantId]="participantId()" [role]="actingContext()" [selectedGoalId]="goalId()" (changed)="reload()" />
+          <app-participant-goals [participantId]="participantId()" [role]="actingContext()" [selectedGoalId]="goalId()" [createGoalRequested]="goalCreateRequest()" [measurementRefresh]="measurementRefresh()" (changed)="reload()" (measurementRequested)="openMeasurement($event)" />
         </section>
       } @else if (section() === 'documentation') {
         <section class="workspace-disclosure" aria-label="Dokumentacja uczestnika">
-          <app-participant-documentation [participantId]="participantId()" [role]="actingContext()" [panelType]="recordPanelType()" [panelId]="recordPanelId()" [panelMode]="recordPanelMode()" (opened)="openRecord($event)" (closed)="closeRecord()" (changed)="reload()" />
+          <app-participant-documentation [participantId]="participantId()" [role]="actingContext()" [panelType]="recordPanelType()" [panelId]="recordPanelId()" [panelMode]="recordPanelMode()" [createNoteRequested]="noteCreateRequest()" (opened)="openRecord($event)" (closed)="closeRecord()" (changed)="reload()" />
         </section>
       } @else if (section() === 'history') {
       <section class="workspace-content">
@@ -1274,7 +1437,7 @@ export class ParticipantGoalsComponent {
         />
       }
       @if (measurementDialog()) {
-        <app-participant-measurement-dialog [presets]="measurementPresets()" [loading]="measurementCatalogLoading()" [saving]="savingMeasurement()" [error]="measurementError()" (closed)="closeMeasurement()" (submitted)="recordMeasurement($event)" />
+        <app-participant-measurement-dialog [presets]="measurementPresets()" [requestedPresetId]="measurementRequest()?.presetId" [requestedBodyArea]="measurementRequest()?.bodyArea" [loading]="measurementCatalogLoading()" [saving]="savingMeasurement()" [error]="measurementError()" (closed)="closeMeasurement()" (submitted)="recordMeasurement($event)" />
       }
     }
   </main>`,
@@ -1301,9 +1464,14 @@ export class SpecialistParticipantWorkspacePage {
   protected readonly announcement = signal('');
   protected readonly accessStatus = signal<string | undefined>(undefined);
   protected readonly accessStatusAvailable = signal(true);
+  protected readonly accessOpen = signal(false);
+  protected readonly noteCreateRequest = signal(0);
+  protected readonly goalCreateRequest = signal(0);
   protected readonly accessNeedsAction = computed(() => this.accessStatusAvailable() && !!this.accessStatus() && this.accessStatus() !== 'ACTIVE');
   protected readonly scheduling = signal(false);
   protected readonly measurementDialog = signal(false);
+  protected readonly measurementRequest = signal<{ presetId?: string; bodyArea?: string } | null>(null);
+  protected readonly measurementRefresh = signal(0);
   protected readonly measurementCatalogLoading = signal(false);
   protected readonly measurementPresets = signal<ParticipantMeasurementPresetView[]>([]);
   protected readonly savingMeasurement = signal(false);
@@ -1320,12 +1488,14 @@ export class SpecialistParticipantWorkspacePage {
   protected readonly recordPanelType = signal<RecordPanelType | null>(null);
   protected readonly recordPanelId = signal<string | null>(null);
   protected readonly recordPanelMode = signal<'view' | 'edit'>('view');
-  protected readonly section = signal<WorkspaceSection | null>(null);
+  protected readonly section = signal<WorkspaceSection>('overview');
   protected readonly groups = computed(() =>
     groupEvents(this.events(), rangeDates(this.range()).granularity),
   );
   protected readonly safeActions = computed(() =>
-    (this.workspace()?.quickActions ?? []).filter((action) => !!actionLabels[action]),
+    (this.workspace()?.quickActions ?? []).filter(
+      (action) => !!actionLabels[action],
+    ),
   );
   constructor() {
     this.route.queryParamMap.subscribe((params) => {
@@ -1351,7 +1521,7 @@ export class SpecialistParticipantWorkspacePage {
       this.section.set(
         id ? 'history' : this.goalId() ? 'plan' : this.recordPanelType() ? 'documentation'
           : requestedSection === 'plan' || requestedSection === 'documentation' || requestedSection === 'history'
-            ? requestedSection : null,
+            ? requestedSection : 'overview',
       );
       const participantId = this.route.snapshot.paramMap.get('participantId');
       if (!participantId) return;
@@ -1369,6 +1539,9 @@ export class SpecialistParticipantWorkspacePage {
   protected focus(data: SpecialistParticipantWorkspaceView): OperationalFocusView | undefined {
     return data.focus;
   }
+  protected situationalSignals(data: SpecialistParticipantWorkspaceView): SituationalSignal[] {
+    return (data.situationalSignals ?? []).slice(0, 4);
+  }
   protected linkedSessionAppointment(data: SpecialistParticipantWorkspaceView): ParticipantWorkspaceAppointmentView | undefined {
     const appointment = data.nextAppointment;
     return appointment?.plannedSessionId && appointment.appointmentId === data.focus?.appointmentId
@@ -1376,7 +1549,9 @@ export class SpecialistParticipantWorkspacePage {
       : undefined;
   }
   protected openSection(section: WorkspaceSection) {
-    const cleared: Record<string, string | null> = section === 'plan'
+    const cleared: Record<string, string | null> = section === 'overview'
+      ? { eventId: null, goalId: null, recordType: null, recordId: null, recordMode: null }
+      : section === 'plan'
       ? { eventId: null, recordType: null, recordId: null, recordMode: null }
       : section === 'documentation'
         ? { eventId: null, goalId: null }
@@ -1399,8 +1574,19 @@ export class SpecialistParticipantWorkspacePage {
     const request = ++this.request;
     this.state.set('loading');
     const dates = rangeDates(this.range());
+    const clientRequest = this.api.specialistClients.list1();
+    void clientRequest
+      .then((items) => {
+        if (request === this.request) {
+          this.accessStatus.set(items.find((item) => item.participantId === participantId)?.accessStatus);
+          this.accessStatusAvailable.set(true);
+        }
+      })
+      .catch(() => {
+        if (request === this.request) this.accessStatusAvailable.set(false);
+      });
     try {
-      const [workspace, timeline, clients, onboarding] = await Promise.all([
+      const [workspace, timeline, , onboarding] = await Promise.all([
         this.api.participantWorkspace.workspace({ participantId }),
         this.api.participantWorkspace.timeline({
           participantId,
@@ -1410,14 +1596,11 @@ export class SpecialistParticipantWorkspacePage {
           granularity: dates.granularity,
           limit: 100,
         }),
-        this.api.specialistClients.list1().catch(() => undefined),
+        clientRequest.catch(() => undefined),
         this.api.onboarding.state().catch(() => undefined),
       ]);
       if (request !== this.request) return null;
       const items = sortedEvents(timeline.items ?? []);
-      const client = clients?.find((item) => item.participantId === participantId);
-      this.accessStatus.set(client?.accessStatus);
-      this.accessStatusAvailable.set(clients !== undefined);
       const kind = onboarding?.profile?.specialistKind;
       this.actingContext.set(kind === 'TRAINER' || kind === 'PHYSIOTHERAPIST' ? kind : undefined);
       this.workspace.set(workspace);
@@ -1535,16 +1718,41 @@ export class SpecialistParticipantWorkspacePage {
       this.scheduling.set(true);
     } else if (action === 'ADD_MEASUREMENT') {
       void this.openMeasurement();
+    } else if (action === 'ADD_NOTE') {
+      this.noteCreateRequest.update((request) => request + 1);
+      this.openSection('documentation');
+    } else if (action === 'ADD_GOAL') {
+      this.goalCreateRequest.update((request) => request + 1);
+      this.openSection('plan');
     } else if (action === 'OPEN_PLAN') this.openSection('plan');
     else if (action === 'OPEN_HISTORY' || action === 'OPEN_ATTENTION_ITEMS') this.openSection('history');
   }
-  protected async openMeasurement(): Promise<void> {
+  protected async performSignal(signal: SituationalSignal): Promise<void> {
+    if (signal.action === 'OPEN_ATTENTION_ITEMS' && signal.attentionId) {
+      await this.router.navigate(['/specialist-alerts'], { queryParams: { itemId: signal.attentionId } });
+      return;
+    }
+    if (signal.action === 'OPEN_NEXT_APPOINTMENT' && signal.appointmentId) {
+      this.section.set('history');
+      await this.navigate({ section: 'history', goalId: null, recordType: null, recordId: null, recordMode: null });
+      await this.openFocusedAppointment(signal.appointmentId);
+      return;
+    }
+    if (signal.action === 'OPEN_ACTIVE_PLAN') {
+      this.openSection('plan');
+      return;
+    }
+    if (signal.action) this.perform(signal.action);
+  }
+  protected async openMeasurement(request?: { presetId?: string; bodyArea?: string }): Promise<void> {
     const participantId = this.participantId();
     if (!participantId) return;
+    this.measurementRequest.set(null);
     this.measurementDialog.set(true); this.measurementError.set(false); this.measurementIdempotencyKey = undefined;
     this.measurementCatalogLoading.set(true);
     try {
       this.measurementPresets.set(await this.api.participantMeasurements.participantMeasurementCatalog({ participantId }));
+      this.measurementRequest.set(request ?? null);
     } catch {
       this.measurementError.set(true);
     } finally {
@@ -1562,6 +1770,7 @@ export class SpecialistParticipantWorkspacePage {
     try {
       await this.api.participantMeasurements.recordParticipantMeasurement({ participantId, idempotencyKey: this.measurementIdempotencyKey, participantMeasurementCommand: command });
       this.measurementDialog.set(false); this.announcement.set('Pomiar został zapisany.');
+      this.measurementRefresh.update((value) => value + 1);
       await this.load(participantId, this.section() === 'history' ? this.selected()?.eventId ?? null : null);
     } catch {
       this.measurementError.set(true);
@@ -1573,6 +1782,11 @@ export class SpecialistParticipantWorkspacePage {
     return value ? new Intl.DateTimeFormat('pl-PL', { dateStyle: 'medium', timeStyle: 'short' }).format(value) : '';
   }
   protected async performFocus(focus: OperationalFocusView): Promise<void> {
+    if (focus.primaryAction === 'CONTINUE_INTERVIEW' && focus.interviewId) {
+      await this.navigate({ section: 'documentation', eventId: null, goalId: null, recordType: 'interview', recordId: focus.interviewId, recordMode: 'edit' });
+      this.focusRecordPanel();
+      return;
+    }
     if (focus.primaryAction === 'CONTINUE_CLOSEOUT' && focus.appointmentId) {
       await this.router.navigate(['/specialist/clients', this.participantId(), 'appointments', focus.appointmentId, 'closeout']);
       return;

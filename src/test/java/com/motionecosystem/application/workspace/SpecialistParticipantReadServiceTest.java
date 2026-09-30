@@ -19,6 +19,7 @@ import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.participant.api.ParticipantClientPort;
 import com.motionecosystem.participant.api.ParticipantContextQueryPort;
+import com.motionecosystem.participantdocumentation.api.ParticipantDocumentationEventQueryPort;
 import com.motionecosystem.specialist.api.SpecialistWorkspacePort;
 import com.motionecosystem.trainingexecution.api.ParticipantExecutionHistoryQueryPort;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort;
@@ -55,7 +56,7 @@ class SpecialistParticipantReadServiceTest {
         SpecialistAppointmentExecutionService appointmentExecution = mock(SpecialistAppointmentExecutionService.class);
         AuditRecorder audit = mock(AuditRecorder.class);
         var decision = new SpecialistWorkspacePort.AuthorizationDecision(SpecialistWorkspacePort.WorkspaceRole.TRAINER,
-                SpecialistWorkspacePort.WorkspacePurpose.PERFORMANCE_PLANNING, Set.of());
+                SpecialistWorkspacePort.WorkspacePurpose.PERFORMANCE_PLANNING, Set.of("MANAGE_PARTICIPANT_RECORDS"));
         when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(specialistId, "specialist", ProfileType.SPECIALIST));
         when(workspace.findProfile(specialistId)).thenReturn(Optional.of(new SpecialistWorkspacePort.Profile(specialistId,
                 SpecialistWorkspacePort.WorkspaceRole.TRAINER, "UTC")));
@@ -124,10 +125,11 @@ class SpecialistParticipantReadServiceTest {
         SpecialistAppointmentEventQueryPort appointmentEvents = mock(SpecialistAppointmentEventQueryPort.class);
         PlanRevisionQueryPort revisions = mock(PlanRevisionQueryPort.class);
         ParticipantExecutionHistoryQueryPort executionHistory = mock(ParticipantExecutionHistoryQueryPort.class);
+        ParticipantDocumentationEventQueryPort documentation = mock(ParticipantDocumentationEventQueryPort.class);
         AuditRecorder audit = mock(AuditRecorder.class);
         Clock clock = Clock.fixed(Instant.parse("2030-01-01T00:00:00Z"), ZoneOffset.UTC);
         var decision = new SpecialistWorkspacePort.AuthorizationDecision(SpecialistWorkspacePort.WorkspaceRole.TRAINER,
-                SpecialistWorkspacePort.WorkspacePurpose.PERFORMANCE_PLANNING, Set.of());
+                SpecialistWorkspacePort.WorkspacePurpose.PERFORMANCE_PLANNING, Set.of("MANAGE_PARTICIPANT_RECORDS"));
 
         when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(specialistId, "specialist", ProfileType.SPECIALIST));
         when(specialistWorkspace.findProfile(specialistId)).thenReturn(Optional.of(new SpecialistWorkspacePort.Profile(specialistId,
@@ -157,7 +159,7 @@ class SpecialistParticipantReadServiceTest {
                 new SpecialistWorkspacePort.Relationship("ACTIVE", Instant.parse("2030-01-01T00:00:00Z"))));
 
         var service = new SpecialistParticipantReadService(accounts, specialistWorkspace, participants, contexts, appointments, appointmentEvents,
-                revisions, executionHistory, null, null, audit, clock);
+                revisions, executionHistory, null, documentation, audit, clock);
         var workspace = service.workspace("specialist", participantId);
 
         assertThat(workspace.participant())
@@ -176,6 +178,9 @@ class SpecialistParticipantReadServiceTest {
                         SpecialistParticipantReadService.OperationalFocusView::primaryAction)
                 .containsExactly(SpecialistParticipantReadService.FocusKind.IN_PROGRESS_APPOINTMENT,
                         currentInProgress.appointmentId(), "CONTINUE_CLOSEOUT");
+        assertThat(workspace.situationalSignals()).hasSizeLessThanOrEqualTo(4)
+                .extracting(SpecialistParticipantReadService.SituationalSignalView::kind)
+                .doesNotContain("NEXT_APPOINTMENT");
         UUID attentionId = UUID.randomUUID();
         when(specialistWorkspace.listParticipantWorklist(any(), any(), any(), any())).thenReturn(List.of(
                 new SpecialistWorkspacePort.WorklistItem(attentionId, participantId, "ESCALATING_SYMPTOMS", "HIGH",
@@ -190,8 +195,19 @@ class SpecialistParticipantReadServiceTest {
                 new SpecialistWorkspacePort.WorklistItem(followUpId, participantId, "POST_24H_FOLLOW_UP", "MEDIUM",
                         "Potwierdź dalsze kroki", "OPEN", now.minusSeconds(60), null)));
         when(appointments.findForParticipant(any(), any(), any(), any(), anyInt())).thenReturn(List.of(futureConfirmed));
-        assertThat(service.workspace("specialist", participantId).focus().kind())
-                .isEqualTo(SpecialistParticipantReadService.FocusKind.NEXT_APPOINTMENT);
+        assertThat(service.workspace("specialist", participantId).focus())
+                .extracting(SpecialistParticipantReadService.OperationalFocusView::kind,
+                        SpecialistParticipantReadService.OperationalFocusView::attentionId)
+                .containsExactly(SpecialistParticipantReadService.FocusKind.FOLLOW_UP, followUpId);
+        var startable = new SpecialistAppointmentQueryPort.AppointmentSummary(UUID.randomUUID(), now.plusSeconds(60), now.plusSeconds(3_600),
+                "CONSULTATION", "SCHEDULED", "Rozpocznij spotkanie", null, List.of("START"), 4L, now, now);
+        when(appointments.findForParticipant(any(), any(), any(), any(), anyInt())).thenReturn(List.of(startable));
+        assertThat(service.workspace("specialist", participantId).focus())
+                .extracting(SpecialistParticipantReadService.OperationalFocusView::kind,
+                        SpecialistParticipantReadService.OperationalFocusView::appointmentId,
+                        SpecialistParticipantReadService.OperationalFocusView::primaryAction)
+                .containsExactly(SpecialistParticipantReadService.FocusKind.NEXT_APPOINTMENT,
+                        startable.appointmentId(), "START_APPOINTMENT");
         when(appointments.findForParticipant(any(), any(), any(), any(), anyInt())).thenReturn(List.of());
         assertThat(service.workspace("specialist", participantId).focus())
                 .extracting(SpecialistParticipantReadService.OperationalFocusView::kind,
@@ -210,8 +226,20 @@ class SpecialistParticipantReadServiceTest {
         when(specialistWorkspace.listParticipantWorklist(any(), any(), any(), any())).thenReturn(List.of(
                 new SpecialistWorkspacePort.WorklistItem(followUpId, participantId, "POST_24H_FOLLOW_UP", "MEDIUM",
                         "Potwierdź dalsze kroki", "SNOOZED", now.minusSeconds(60), now.plusSeconds(60))));
-        assertThat(service.workspace("specialist", participantId).focus().kind())
-                .isEqualTo(SpecialistParticipantReadService.FocusKind.IDLE);
+        assertThat(service.workspace("specialist", participantId).focus())
+                .extracting(SpecialistParticipantReadService.OperationalFocusView::kind,
+                        SpecialistParticipantReadService.OperationalFocusView::primaryAction)
+                .containsExactly(SpecialistParticipantReadService.FocusKind.IDLE, null);
+
+        UUID draftInterviewId = UUID.randomUUID();
+        when(documentation.latestDraftInterview(org.mockito.ArgumentMatchers.eq("specialist"), org.mockito.ArgumentMatchers.eq(participantId), any())).thenReturn(Optional.of(
+                new ParticipantDocumentationEventQueryPort.DraftInterview(draftInterviewId, participantId, now.minusSeconds(30))));
+        assertThat(service.workspace("specialist", participantId).focus())
+                .extracting(SpecialistParticipantReadService.OperationalFocusView::kind,
+                        SpecialistParticipantReadService.OperationalFocusView::primaryAction,
+                        SpecialistParticipantReadService.OperationalFocusView::navigationTarget,
+                        SpecialistParticipantReadService.OperationalFocusView::interviewId)
+                .containsExactly(SpecialistParticipantReadService.FocusKind.DRAFT_INTERVIEW, "CONTINUE_INTERVIEW", "DOCUMENTATION", draftInterviewId);
 
         when(appointments.findForParticipant(any(), any(), any(), any(), anyInt())).thenReturn(List.of(
                 appointment(now.plusSeconds(14_400), now.plusSeconds(18_000), "SCHEDULED"), futureConfirmed));

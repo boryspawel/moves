@@ -24,6 +24,20 @@ describe('SpecialistTodayPage', () => {
     expect(link.textContent).toContain('Uzupełnij wynik spotkania');
     expect(link.getAttribute('href')).toContain('/specialist/participants/p/events/e');
   });
+  it('keeps an operational task query parameter and fragment outside the participant path', async () => {
+    await TestBed.configureTestingModule({ imports: [TodayOperationalTasksComponent, RouterTestingModule] }).compileComponents();
+    const fixture = TestBed.createComponent(TodayOperationalTasksComponent);
+    fixture.componentRef.setInput('tasks', [{ title: 'Uzupełnij wynik spotkania', navigationReference: '/specialist/clients/participant-uuid?eventId=appointment-event:event-uuid#result' }]);
+    fixture.detectChanges();
+
+    const href = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>('a')!.getAttribute('href')!;
+    const target = TestBed.inject(Router).parseUrl(href);
+    expect(href).not.toContain('%3F');
+    expect(href).not.toContain('%3D');
+    expect(target.root.children['primary'].segments.map(segment => segment.path)).toEqual(['specialist', 'clients', 'participant-uuid']);
+    expect(target.queryParamMap.get('eventId')).toBe('appointment-event:event-uuid');
+    expect(target.fragment).toBe('result');
+  });
   it('submits an arbitrary, non-grid appointment time for the canonical participant ID', async () => {
     await TestBed.configureTestingModule({ imports: [TodayAppointmentDialogComponent] }).compileComponents();
     const fixture = TestBed.createComponent(TodayAppointmentDialogComponent);

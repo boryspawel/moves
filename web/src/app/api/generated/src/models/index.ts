@@ -274,6 +274,7 @@ export * from './SessionVariantItemSnapshot';
 export * from './SessionVariantSnapshot';
 export * from './SessionView';
 export * from './SetView';
+export * from './SituationalSignalView';
 export * from './Slot';
 export * from './SlotRequest';
 export * from './SlotView';

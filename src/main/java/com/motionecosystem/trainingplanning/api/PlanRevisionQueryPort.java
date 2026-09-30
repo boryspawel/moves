@@ -22,7 +22,7 @@ public interface PlanRevisionQueryPort {
     List<PlanRevisionSnapshot> findRevisions(Collection<UUID> revisionIds);
 
     record PlanRevisionSnapshot(
-            UUID revisionId, UUID planId, UUID participantId, int revisionNumber,
+            UUID revisionId, UUID planId, String planName, UUID participantId, int revisionNumber,
             UUID basedOnRevisionId, long revisionVersion, String status,
             UUID authorAccountId, String authorCapability, Instant createdAt,
             String migrationOrigin, String assessmentStatus,
@@ -32,6 +32,17 @@ public interface PlanRevisionQueryPort {
             goals = List.copyOf(goals);
             cycles = List.copyOf(cycles);
             loadBudgets = List.copyOf(loadBudgets);
+        }
+        /** Compatibility constructor for consumers which predate the plan name. */
+        public PlanRevisionSnapshot(UUID revisionId, UUID planId, UUID participantId, int revisionNumber,
+                UUID basedOnRevisionId, long revisionVersion, String status,
+                UUID authorAccountId, String authorCapability, Instant createdAt,
+                String migrationOrigin, String assessmentStatus, String phaseIntent,
+                LocalDate validFrom, LocalDate validTo, List<GoalSnapshot> goals,
+                List<CycleSnapshot> cycles, List<LoadBudgetSnapshot> loadBudgets) {
+            this(revisionId, planId, null, participantId, revisionNumber, basedOnRevisionId, revisionVersion,
+                    status, authorAccountId, authorCapability, createdAt, migrationOrigin, assessmentStatus,
+                    phaseIntent, validFrom, validTo, goals, cycles, loadBudgets);
         }
     }
 

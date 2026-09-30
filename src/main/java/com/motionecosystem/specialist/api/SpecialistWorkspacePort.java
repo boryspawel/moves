@@ -24,7 +24,7 @@ public interface SpecialistWorkspacePort {
 
     enum WorkspaceRole { TRAINER, PHYSIOTHERAPIST }
     enum WorkspacePurpose { PERFORMANCE_PLANNING, FUNCTIONAL_RECOVERY, CLINICAL_REVIEW }
-    enum WorkspaceCapability { PLAN_PERFORMANCE, PLAN_FUNCTIONAL_RECOVERY, VIEW_ADHERENCE_WORKLIST }
+    enum WorkspaceCapability { PLAN_PERFORMANCE, PLAN_FUNCTIONAL_RECOVERY, VIEW_ADHERENCE_WORKLIST, MANAGE_PARTICIPANT_RECORDS }
     record Profile(UUID specialistId, WorkspaceRole role, String timeZoneId) { }
     record Relationship(String status, Instant activatedAt) { }
     record AuthorizationDecision(WorkspaceRole role, WorkspacePurpose purpose,

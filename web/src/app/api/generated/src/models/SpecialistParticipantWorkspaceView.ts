@@ -83,6 +83,13 @@ import {
   OperationalFocusViewToJSON,
   OperationalFocusViewToJSONTyped,
 } from './OperationalFocusView';
+import type { SituationalSignalView } from './SituationalSignalView';
+import {
+  SituationalSignalViewFromJSON,
+  SituationalSignalViewFromJSONTyped,
+  SituationalSignalViewToJSON,
+  SituationalSignalViewToJSONTyped,
+} from './SituationalSignalView';
 import type { GoalView } from './GoalView';
 import {
   GoalViewFromJSON,
@@ -181,6 +188,12 @@ export interface SpecialistParticipantWorkspaceView {
    * @memberof SpecialistParticipantWorkspaceView
    */
   relationship?: RelationshipView;
+  /**
+   *
+   * @type {Array<SituationalSignalView>}
+   * @memberof SpecialistParticipantWorkspaceView
+   */
+  situationalSignals?: Array<SituationalSignalView>;
 }
 
 /**
@@ -240,6 +253,10 @@ export function SpecialistParticipantWorkspaceViewFromJSONTyped(
         : RecentProgressViewFromJSON(json['recentProgress']),
     relationship:
       json['relationship'] == null ? undefined : RelationshipViewFromJSON(json['relationship']),
+    situationalSignals:
+      json['situationalSignals'] == null
+        ? undefined
+        : (json['situationalSignals'] as Array<any>).map(SituationalSignalViewFromJSON),
   };
 }
 
@@ -282,5 +299,9 @@ export function SpecialistParticipantWorkspaceViewToJSONTyped(
         : (value['recentMeasurements'] as Array<any>).map(RecentMeasurementViewToJSON),
     recentProgress: RecentProgressViewToJSON(value['recentProgress']),
     relationship: RelationshipViewToJSON(value['relationship']),
+    situationalSignals:
+      value['situationalSignals'] == null
+        ? undefined
+        : (value['situationalSignals'] as Array<any>).map(SituationalSignalViewToJSON),
   };
 }

@@ -73,6 +73,12 @@ export interface OperationalFocusView {
    * @memberof OperationalFocusView
    */
   title?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof OperationalFocusView
+   */
+  interviewId?: string;
 }
 
 /**
@@ -82,6 +88,7 @@ export const OperationalFocusViewKindEnum = {
   ImportantAttention: 'IMPORTANT_ATTENTION',
   InProgressAppointment: 'IN_PROGRESS_APPOINTMENT',
   NextAppointment: 'NEXT_APPOINTMENT',
+  DraftInterview: 'DRAFT_INTERVIEW',
   FollowUp: 'FOLLOW_UP',
   Idle: 'IDLE',
 } as const;
@@ -116,6 +123,7 @@ export function OperationalFocusViewFromJSONTyped(
     primaryAction: json['primaryAction'] == null ? undefined : json['primaryAction'],
     relevantAt: json['relevantAt'] == null ? undefined : new Date(json['relevantAt']),
     title: json['title'] == null ? undefined : json['title'],
+    interviewId: json['interviewId'] == null ? undefined : json['interviewId'],
   };
 }
 
@@ -142,5 +150,6 @@ export function OperationalFocusViewToJSONTyped(
     relevantAt:
       value['relevantAt'] == null ? value['relevantAt'] : value['relevantAt'].toISOString(),
     title: value['title'],
+    interviewId: value['interviewId'],
   };
 }

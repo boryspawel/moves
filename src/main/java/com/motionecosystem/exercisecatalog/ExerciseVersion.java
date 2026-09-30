@@ -37,7 +37,7 @@ class ExerciseVersion {
     @Column(name = "media_reference", columnDefinition = "text")
     String mediaReference;
     @Enumerated(EnumType.STRING)
-    @Column(name = "movement_pattern", nullable = false)
+    @Column(name = "movement_pattern")
     MovementPattern movementPattern;
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "exercise_version_movement_pattern", schema = "exercise_catalog",
@@ -46,16 +46,16 @@ class ExerciseVersion {
     @Enumerated(EnumType.STRING)
     Set<MovementPattern> movementPatterns = new LinkedHashSet<>();
     @Enumerated(EnumType.STRING)
-    @Column(name = "stimulus_type", nullable = false)
+    @Column(name = "stimulus_type")
     StimulusType stimulusType;
     @Enumerated(EnumType.STRING)
-    @Column(name = "fatigue_profile", nullable = false)
+    @Column(name = "fatigue_profile")
     FatigueProfile fatigueProfile;
     @Enumerated(EnumType.STRING)
-    @Column(name = "technical_level", nullable = false)
+    @Column(name = "technical_level")
     TechnicalLevel technicalLevel;
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column
     ExerciseEnvironment environment;
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "exercise_version_equipment", schema = "exercise_catalog",
@@ -173,8 +173,9 @@ class ExerciseVersion {
     private void apply(CatalogService.VersionCommand command) {
         instruction = command.instruction();
         mediaReference = command.mediaReference();
-        movementPatterns = new LinkedHashSet<>(command.movementPatterns());
-        movementPattern = movementPatterns.stream().sorted().findFirst().orElseThrow();
+        movementPatterns = command.movementPatterns() == null
+                ? new LinkedHashSet<>() : new LinkedHashSet<>(command.movementPatterns());
+        movementPattern = movementPatterns.stream().sorted().findFirst().orElse(null);
         stimulusType = command.stimulusType();
         fatigueProfile = command.fatigueProfile();
         technicalLevel = command.technicalLevel();
