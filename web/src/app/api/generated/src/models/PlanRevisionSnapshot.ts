@@ -118,6 +118,12 @@ export interface PlanRevisionSnapshot {
    * @type {string}
    * @memberof PlanRevisionSnapshot
    */
+  planName?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PlanRevisionSnapshot
+   */
   revisionId?: string;
   /**
    *
@@ -189,6 +195,7 @@ export function PlanRevisionSnapshotFromJSONTyped(
     participantId: json['participantId'] == null ? undefined : json['participantId'],
     phaseIntent: json['phaseIntent'] == null ? undefined : json['phaseIntent'],
     planId: json['planId'] == null ? undefined : json['planId'],
+    planName: json['planName'] == null ? undefined : json['planName'],
     revisionId: json['revisionId'] == null ? undefined : json['revisionId'],
     revisionNumber: json['revisionNumber'] == null ? undefined : json['revisionNumber'],
     revisionVersion: json['revisionVersion'] == null ? undefined : json['revisionVersion'],
@@ -230,6 +237,7 @@ export function PlanRevisionSnapshotToJSONTyped(
     participantId: value['participantId'],
     phaseIntent: value['phaseIntent'],
     planId: value['planId'],
+    planName: value['planName'],
     revisionId: value['revisionId'],
     revisionNumber: value['revisionNumber'],
     revisionVersion: value['revisionVersion'],

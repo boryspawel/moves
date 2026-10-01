@@ -12,6 +12,7 @@ import com.motionecosystem.calendar.api.SpecialistAppointmentExecutionContextPor
 import com.motionecosystem.participant.api.ParticipantMetricCatalog.PresetId;
 import com.motionecosystem.participantgoals.api.MeasurementGoalProjectionPort;
 import com.motionecosystem.participantmeasurements.ParticipantMeasurementService;
+import com.motionecosystem.participantmeasurements.SpecialistParticipantMeasurementApplicationService;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;

@@ -39,6 +39,12 @@ export interface OperationalFocusView {
   explanation?: string;
   /**
    *
+   * @type {string}
+   * @memberof OperationalFocusView
+   */
+  interviewId?: string;
+  /**
+   *
    * @type {OperationalFocusViewKindEnum}
    * @memberof OperationalFocusView
    */
@@ -73,12 +79,6 @@ export interface OperationalFocusView {
    * @memberof OperationalFocusView
    */
   title?: string;
-  /**
-   *
-   * @type {string}
-   * @memberof OperationalFocusView
-   */
-  interviewId?: string;
 }
 
 /**
@@ -117,13 +117,13 @@ export function OperationalFocusViewFromJSONTyped(
     appointmentId: json['appointmentId'] == null ? undefined : json['appointmentId'],
     attentionId: json['attentionId'] == null ? undefined : json['attentionId'],
     explanation: json['explanation'] == null ? undefined : json['explanation'],
+    interviewId: json['interviewId'] == null ? undefined : json['interviewId'],
     kind: json['kind'] == null ? undefined : json['kind'],
     navigationTarget: json['navigationTarget'] == null ? undefined : json['navigationTarget'],
     planId: json['planId'] == null ? undefined : json['planId'],
     primaryAction: json['primaryAction'] == null ? undefined : json['primaryAction'],
     relevantAt: json['relevantAt'] == null ? undefined : new Date(json['relevantAt']),
     title: json['title'] == null ? undefined : json['title'],
-    interviewId: json['interviewId'] == null ? undefined : json['interviewId'],
   };
 }
 
@@ -143,6 +143,7 @@ export function OperationalFocusViewToJSONTyped(
     appointmentId: value['appointmentId'],
     attentionId: value['attentionId'],
     explanation: value['explanation'],
+    interviewId: value['interviewId'],
     kind: value['kind'],
     navigationTarget: value['navigationTarget'],
     planId: value['planId'],
@@ -150,6 +151,5 @@ export function OperationalFocusViewToJSONTyped(
     relevantAt:
       value['relevantAt'] == null ? value['relevantAt'] : value['relevantAt'].toISOString(),
     title: value['title'],
-    interviewId: value['interviewId'],
   };
 }

@@ -1,8 +1,7 @@
-package com.motionecosystem.application.workspace;
+package com.motionecosystem.participantmeasurements;
 
-import com.motionecosystem.participantgoals.api.MeasurementGoalProjectionPort;
-import com.motionecosystem.participantmeasurements.ParticipantMeasurementService;
 import com.motionecosystem.calendar.api.SpecialistAppointmentExecutionContextPort;
+import com.motionecosystem.participantgoals.api.MeasurementGoalProjectionPort;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +33,7 @@ public class SpecialistParticipantMeasurementApplicationService {
         }
         return result.measurement();
     }
+
     private void validateAppointment(String subject, UUID participantId, UUID appointmentId) {
         if (appointmentId == null) return;
         var appointment = appointments.readCloseoutContext(subject, appointmentId);

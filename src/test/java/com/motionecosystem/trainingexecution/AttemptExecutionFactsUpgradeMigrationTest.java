@@ -36,7 +36,7 @@ class AttemptExecutionFactsUpgradeMigrationTest {
                 assertThat(fixture.query("SELECT participant_account_id FROM analytics.adherence_metric_event WHERE id=:id", ids.linkedMetricId())).isEqualTo(ids.accountId());
                 assertThat(fixture.query("SELECT participant_id FROM analytics.adherence_metric_event WHERE id=:id", ids.linkedMetricId())).isEqualTo(ids.participantId());
                 assertThat(fixture.query("SELECT participant_id FROM analytics.adherence_metric_event WHERE id=:id", ids.unmappedMetricId())).isNull();
-                fixture.tx(() -> fixture.update("INSERT INTO training_execution.session_execution (id, planned_session_id, participant_id, declared_completion, idempotency_key, recorded_at, projection_status, outcome) VALUES (:id,:session,:participant,false,'partial-new',now(),'PENDING','PARTIAL')", "id", UUID.randomUUID(), "session", UUID.randomUUID(), "participant", ids.participantId()));
+                fixture.tx(() -> fixture.update("INSERT INTO training_execution.session_execution (id, planned_session_id, participant_id, declared_completion, idempotency_key, recorded_at, projection_status, outcome, recording_source) VALUES (:id,:session,:participant,false,'partial-new',now(),'PENDING','PARTIAL','LEGACY_UNKNOWN')", "id", UUID.randomUUID(), "session", UUID.randomUUID(), "participant", ids.participantId()));
             }
         }
     }

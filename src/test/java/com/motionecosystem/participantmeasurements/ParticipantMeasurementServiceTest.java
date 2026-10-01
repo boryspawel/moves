@@ -9,8 +9,7 @@ import com.motionecosystem.identityaccess.api.CurrentAccount;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
-import com.motionecosystem.participant.ParticipantRecord;
-import com.motionecosystem.participant.ParticipantRecordRepository;
+import com.motionecosystem.participant.api.ParticipantRecordLockPort;
 import com.motionecosystem.participant.api.ParticipantMetricCatalog.PresetId;
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -40,6 +39,7 @@ class ParticipantMeasurementServiceTest {
                 ParticipantMeasurementService.ParticipantMeasurementView::measurementMethod, ParticipantMeasurementService.ParticipantMeasurementView::source)
                 .containsExactly(fixture.participantId, "body-weight", "kg", "body-weight", "SPECIALIST_MANUAL");
         verify(fixture.authorization).requireActiveRelationship(fixture.specialistId, fixture.participantId);
+        verify(fixture.participants).lockExistingParticipant(fixture.participantId);
     }
 
     @Test
@@ -89,16 +89,15 @@ class ParticipantMeasurementServiceTest {
     }
     private static Fixture fixture() {
         ParticipantMeasurementRepository measurements = mock(ParticipantMeasurementRepository.class);
-        ParticipantRecordRepository participants = mock(ParticipantRecordRepository.class);
+        ParticipantRecordLockPort participants = mock(ParticipantRecordLockPort.class);
         CurrentAccountService accounts = mock(CurrentAccountService.class);
         SpecialistAuthorizationPort authorization = mock(SpecialistAuthorizationPort.class);
         UUID specialist = UUID.randomUUID(); UUID participant = UUID.randomUUID();
         when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(specialist, "specialist", ProfileType.SPECIALIST));
-        when(participants.lockById(any())).thenReturn(Optional.of(mock(ParticipantRecord.class)));
         when(measurements.findByRecordedByAccountIdAndParticipantIdAndIdempotencyKey(any(), any(), any())).thenReturn(Optional.empty());
-        return new Fixture(measurements, authorization, specialist, participant, UUID.randomUUID(),
+        return new Fixture(measurements, participants, authorization, specialist, participant, UUID.randomUUID(),
                 new ParticipantMeasurementService(measurements, participants, accounts, authorization, Clock.fixed(NOW, ZoneOffset.UTC)));
     }
-    private record Fixture(ParticipantMeasurementRepository measurements, SpecialistAuthorizationPort authorization, UUID specialistId,
+    private record Fixture(ParticipantMeasurementRepository measurements, ParticipantRecordLockPort participants, SpecialistAuthorizationPort authorization, UUID specialistId,
                            UUID participantId, UUID otherParticipantId, ParticipantMeasurementService service) { }
 }

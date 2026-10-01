@@ -283,8 +283,8 @@ class GamificationIntegrationTest {
         UUID execution = UUID.randomUUID();
         jdbc.update("""
                 INSERT INTO training_execution.session_execution
-                    (id, planned_session_id, participant_id, declared_completion, idempotency_key, recorded_at)
-                VALUES (?, ?, ?, true, ?, now())
+                    (id, planned_session_id, participant_id, declared_completion, idempotency_key, recorded_at, recording_source)
+                VALUES (?, ?, ?, true, ?, now(), 'LEGACY_UNKNOWN')
                 """, execution, sessionId, participantId, "fixture-" + execution);
         jdbc.update("""
                 INSERT INTO training_execution.pain_difficulty_report

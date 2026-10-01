@@ -217,8 +217,8 @@ class FlywayMigrationIntegrationTest {
         jdbc.update("""
                 INSERT INTO training_execution.session_execution
                     (id, planned_session_id, participant_id, declared_completion,
-                     idempotency_key, recorded_at)
-                VALUES (?, ?, ?, TRUE, ?, now())
+                     idempotency_key, recorded_at, recording_source)
+                VALUES (?, ?, ?, TRUE, ?, now(), 'LEGACY_UNKNOWN')
                 """, UUID.randomUUID(), sessionId, participantIdForSession(sessionId), key);
     }
 
