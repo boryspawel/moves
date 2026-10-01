@@ -181,7 +181,11 @@ describe('ParticipantGoalsComponent', () => {
     component.goals.set([goal]);
     component.state.set('loaded');
     fixture.detectChanges();
-    expect((fixture.nativeElement as HTMLElement).querySelector('.goal-card')?.textContent).toContain('Cel: 5 km');
+    const row = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.goal-row-main')!;
+    expect(row.getAttribute('type')).toBe('button');
+    expect(row.textContent).toContain('Pobiec 5 km');
+    expect(row.textContent).toContain('cel ≥ 5 km');
+    expect(row.textContent).toContain('Brak aktualnego pomiaru');
     expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('BODY_CIRCUMFERENCE:WAIST');
 
     await component.open(goal);
@@ -189,18 +193,20 @@ describe('ParticipantGoalsComponent', () => {
 
     const panel = (fixture.nativeElement as HTMLElement).querySelector('.goal-panel')!;
     expect(panel.getAttribute('role')).toBe('dialog');
+    expect(panel.getAttribute('aria-modal')).toBe('false');
+    expect(panel.getAttribute('tabindex')).toBe('-1');
+    expect(panel.getAttribute('aria-labelledby')).toBe('goal-panel-title');
     expect(panel.querySelector('.goal-panel-header h2')?.textContent).toContain('Pobiec 5 km');
     expect(panel.querySelector('button[aria-label="Zamknij szczegóły celu"]')?.hasAttribute('mat-icon-button')).toBe(true);
     expect(panel.querySelector('button[aria-label="Zamknij szczegóły celu"] svg')).not.toBeNull();
-    expect(panel.querySelectorAll('.goal-panel-section h3')).toHaveLength(3);
+    expect(Array.from(panel.querySelectorAll('.goal-panel-section > h3')).map((heading) => heading.textContent?.trim())).toEqual(['Aktualny stan celu', 'Historia pomiarów']);
     expect(panel.textContent).toContain('Pobiec 5 km');
     expect(panel.textContent).toContain('Aktywny · Wynik sportowy');
-    expect(panel.querySelector('.goal-facts dd')?.textContent).toContain('4 km');
-    expect(panel.textContent).toContain('Wartość docelowa:5 km');
-    expect(panel.textContent).toContain('Porównanie:co najmniej');
-    expect(panel.textContent).toContain('Brak pomiarów w wczytanej historii.');
-    expect(panel.textContent).toContain('Stan:W trakcie');
-    expect(panel.textContent).toContain('Liczba pomiarów:0');
+    expect(panel.textContent).toContain('Wartość początkowa: 4 km');
+    expect(panel.textContent).toContain('Cel ≥ 5 km');
+    expect(panel.textContent).toContain('Brak aktualnego pomiaru');
+    expect(panel.textContent).toContain('W trakcie realizacji');
+    expect(panel.textContent).toContain('Brak zapisanych pomiarów.');
     expect(panel.textContent).not.toContain('BODY_CIRCUMFERENCE:WAIST');
     expect(panel.textContent).not.toContain('42');
     expect(panel.querySelector('input, textarea, form')).toBeNull();
@@ -212,7 +218,7 @@ describe('ParticipantGoalsComponent', () => {
     expect(panel.querySelector('option')?.textContent).toContain('Obwód talii (km)');
   });
 
-  it('renders localized goal-card rows without technical codes and opens the existing panel on click', async () => {
+  it('renders localized semantic goal rows without technical codes and opens the existing panel on click', async () => {
     const goal = {
       id: 'goal-1', category: 'PERFORMANCE', title: 'Pobiec 5 km', status: 'ACTIVE',
       outcomes: [{ id: 'outcome-1', metricCode: 'BODY_CIRCUMFERENCE:WAIST', targetValue: 5, targetComparator: 'AT_LEAST', unit: 'km', progressState: 'NO_DATA' }],
@@ -224,18 +230,17 @@ describe('ParticipantGoalsComponent', () => {
     component.state.set('loaded');
     fixture.detectChanges();
 
-    const card = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.goal-card')!;
-    expect(Array.from(card.querySelectorAll('.goal-card-title, .goal-card-target, .goal-card-observation')).map((element) => element.textContent?.trim())).toEqual(['Pobiec 5 km', 'Cel: 5 km', 'Brak pomiarów']);
-    expect(card.querySelector('.goal-card-title')?.textContent).toContain('Pobiec 5 km');
-    expect(card.querySelector('.goal-card-meta')).toBeNull();
-    expect(card.querySelector('.goal-card-target')?.textContent).toContain('Cel: 5 km');
-    expect(card.querySelector('.goal-card-observation')?.textContent).toContain('Brak pomiarów');
-    expect(card.querySelector('.goal-card-progress')).toBeNull();
-    expect(card.textContent).not.toContain('BODY_CIRCUMFERENCE:WAIST');
-    expect(card.textContent).not.toContain('Aktywny');
-    expect(card.textContent).not.toContain('Wynik sportowy');
+    const row = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.goal-row-main')!;
+    expect(row.getAttribute('type')).toBe('button');
+    expect(Array.from(row.querySelectorAll('strong, span')).map((element) => element.textContent?.trim())).toEqual(['Pobiec 5 km', 'cel ≥ 5 km', 'Brak aktualnego pomiaru']);
+    expect(row.querySelector('strong')?.textContent).toContain('Pobiec 5 km');
+    expect(row.querySelectorAll('span')[0]?.textContent).toContain('cel ≥ 5 km');
+    expect(row.querySelectorAll('span')[1]?.textContent).toContain('Brak aktualnego pomiaru');
+    expect(row.textContent).not.toContain('BODY_CIRCUMFERENCE:WAIST');
+    expect(row.textContent).not.toContain('Aktywny');
+    expect(row.textContent).not.toContain('Wynik sportowy');
 
-    card.click();
+    row.click();
     await fixture.whenStable();
     fixture.detectChanges();
     expect(getParticipantGoal).toHaveBeenCalledWith(expect.objectContaining({ goalId: 'goal-1' }));
@@ -277,7 +282,7 @@ describe('ParticipantGoalsComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Brak pomiarów w wczytanej historii.');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Brak zapisanych pomiarów.');
   });
 
   it('renders a neutral history error instead of an empty state when loading observations fails', async () => {

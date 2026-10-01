@@ -920,7 +920,7 @@ export class ParticipantGoalsComponent {
   protected outcomeState(outcome: NonNullable<ParticipantGoalView['outcomes']>[number]): string {
     const state = outcome.progress?.state ?? outcome.progressState;
     if (this.isMissingCurrentMeasurement(outcome)) return 'Brak aktualnego pomiaru';
-    return ({ PROGRESSING: 'Postęp zgodny z celem', MOVING_AWAY: 'Wynik oddala się od celu', UNCHANGED: 'Wynik bez zmiany', TARGET_REACHED: 'Cel osiągnięty', IN_PROGRESS: 'W trakcie realizacji', NOT_COMPARABLE: 'Brak porównania' } as Record<string, string>)[state ?? ''] ?? 'Ostatni pomiar';
+    return ({ PROGRESSING: 'Postęp zgodny z celem', MOVING_AWAY: 'Wynik oddala się od celu', UNCHANGED: 'Wynik bez zmiany', TARGET_REACHED: 'Wartość docelowa osiągnięta', IN_PROGRESS: 'W trakcie realizacji', NOT_COMPARABLE: 'Brak porównania' } as Record<string, string>)[state ?? ''] ?? 'Ostatni pomiar';
   }
   private isMissingCurrentMeasurement(outcome: NonNullable<ParticipantGoalView['outcomes']>[number]) {
     return outcome.progress?.state === 'BASELINE_ONLY' || !outcome.latestObservation;
@@ -1151,7 +1151,7 @@ export class ParticipantGoalsComponent {
   }
   protected progressStory(value?: string) {
     return ({
-      TARGET_REACHED: 'Cel osiągnięty',
+      TARGET_REACHED: 'Wartość docelowa osiągnięta',
       PROGRESSING: 'Postęp zgodny z celem',
       IN_PROGRESS: 'W trakcie realizacji',
       MOVING_AWAY: 'Wynik oddala się od celu',
