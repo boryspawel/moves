@@ -30,6 +30,8 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: web/package-lock.json
+      - name: Match npm version declared by web/package.json
+        run: npm install --global npm@11.12.1
       - run: npm ci
         working-directory: web
       - run: npm test -- --watch=false
