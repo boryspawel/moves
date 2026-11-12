@@ -149,3 +149,7 @@ Aktualny, potwierdzony stan projektu oraz obowiązkowe kontrole CI opisuje
 # Participant-record test vertical
 
 The account-free specialist-client test vertical and its consent/migration constraints are documented in [docs/test-participant-record-consent-debt.md](docs/test-participant-record-consent-debt.md).
+
+## Moves Mobile — Android (projekt)
+
+Zaakceptowane MVP dla specjalisty, architektura informacji, prototyp dziewięciu ekranów oraz plan wdrożenia: [dokumentacja Moves Mobile](docs/mobile/README.md). Moduł Android nie jest jeszcze wdrożony.
