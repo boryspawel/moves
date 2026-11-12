@@ -16,6 +16,10 @@
 
 M1 wymaga M0; M2 wymaga M1; M3 i M4 można częściowo rozwijać równolegle po M2; M5 wymaga M3 i M4. Dopiero po M5 planować M6.
 
+## Status bramki MOB-004 — 2026-11-12
+
+**NO-GO dla pełnego generowanego klienta Kotlin.** Spike pełnego klienta Kotlin z aktualnego snapshotu OpenAPI nie kompiluje się w trzech wspieranych konfiguracjach OpenAPI Generator 7.24.0, a wynik powtórzono na 7.26.0 z aktualnymi stabilnymi zależnościami. Wspólny problem dotyczy modelu `Dose` (`oneOf` razem z `allOf`): generator tworzy niespójne dziedziczenie sześciu wariantów. Nie zmieniono backendu ani kontraktu. M1 zrealizował ograniczony fundament Android z ręcznie typowanym adapterem czterech odczytów; pełny klient, auth i ekrany biznesowe pozostają poza jego zakresem. Szczegóły, polecenia i warianty dalszej pracy opisuje [MOB-004](06-mob-004-openapi-generator.md).
+
 ## Backlog do wdrożenia
 
 ### M0 — najpierw
@@ -94,3 +98,7 @@ GO tylko jeżeli: UJ-01–UJ-06 działają przy prawdziwym logowaniu; stan spotk
 **Następne czynności M0:** bez zmiany kodu backendu zweryfikować provisioning publicznego klienta Android w Keycloak, poprawne aud/iss, login/GET na emulatorze i generowanie Kotlin ze snapshotu. Wdrożenie pomiarów pozostaje zablokowane niezależnie od wyniku tych prób.
 
 **Raport dowodowy i status bramek:** [05 — M0](05-m0-assessment.md).
+
+## M1 — fundament techniczny
+
+M1 zrealizował ograniczony fundament MOB-010: pojedynczy moduł `android/app` z Compose, Material 3, wariantami `dev`/`prod`, Gradle Wrapper i workflow budującym debug APK. Adapter REST obejmuje cztery odczyty operacyjne, bez ekranów biznesowych, OIDC, danych medycznych lub logiki zgód. MOB-011 oraz pozostałe elementy backlogu M1 pozostają odroczone. Instrukcja builda, wyniki lokalnej walidacji i granice zakresu są w [07 — M1](07-m1-android-build.md).
