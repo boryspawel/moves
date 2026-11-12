@@ -32,6 +32,12 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - name: Match npm version declared by web/package.json
         run: npm install --global npm@11.12.1
+      - name: Regenerate lockfile for diagnosis (temporary)
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+        working-directory: web
+      - name: Show lockfile delta (temporary)
+        run: git diff -- package-lock.json
+        working-directory: web
       - run: npm ci
         working-directory: web
       - run: npm test -- --watch=false
