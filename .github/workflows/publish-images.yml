@@ -20,7 +20,7 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       sha: ${{ steps.source.outputs.sha }}
       api_image: ${{ steps.images.outputs.api_image }}
@@ -44,11 +44,11 @@ jobs:
 
   api:
     needs: prepare
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       digest: ${{ steps.build.outputs.digest }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ needs.prepare.outputs.sha }}
       - uses: docker/login-action@v3
@@ -72,11 +72,11 @@ jobs:
 
   web:
     needs: prepare
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       digest: ${{ steps.build.outputs.digest }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ needs.prepare.outputs.sha }}
       - uses: docker/login-action@v3
@@ -100,7 +100,7 @@ jobs:
 
   summary:
     needs: [prepare, api, web]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:

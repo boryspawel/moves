@@ -6,6 +6,9 @@ target/
 !.env.e2e.example
 node_modules/
 dist/
+.gradle/
+.kotlin/
+.m2/
 test-results/
 playwright-report/
 web/.auth/
