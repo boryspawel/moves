@@ -26,7 +26,7 @@
 | S05 | Spotkanie | status, cel, powiązana sesja, następna czynność | Rozpocznij / kontynuuj |
 | S06 | Realizacja sesji | planowana dawka, fakty wykonania, reakcja po sesji | Zapisz wykonanie |
 | S07 | Dokumentacja | wywiad, notatki, szkice | Kontynuuj / zapisz / finalizuj |
-| S08 | Pomiary | dopuszczony parametr, jednostka, wartość, data | Zapisz pomiar |
+| S08 | Pomiary — **projekt rezerwowy, nieaktywny w MVP** | dopuszczony parametr, jednostka, wartość, data | niedostępne do czasu serwerowej zgody |
 | S09 | Zamknięcie | kompletność, zapis wykonania, pomiary, podsumowanie | Zakończ spotkanie |
 
 ## Przepływ
@@ -43,10 +43,9 @@ flowchart TD
   B --> F
   F --> G[Realizacja S06]
   F --> H[Dokumentacja S07]
-  F --> I[Pomiary S08]
+  %% S08 Pomiary: poza aktywnym MVP do czasu zgody po stronie backendu
   G --> F
   H --> F
-  I --> F
   F --> J[Zamknięcie S09]
   J --> B
   E --> H
@@ -64,7 +63,7 @@ flowchart TD
 | S05 | GET /api/v1/specialist/appointments/{id}; POST /{id}/start |
 | S06 | /api/v1/specialist/appointments/{appointmentId}/execution-context i /execution |
 | S07 | /api/v1/specialist/clients/{participantId}/records/interviews i /notes |
-| S08 | /api/v1/specialist/clients/{participantId}/measurements i /catalog |
+| S08 — wstrzymany | /api/v1/specialist/clients/{participantId}/measurements i /catalog istnieją, ale nie weryfikują odrębnej zgody na zapis pomiarów |
 | S09 | /api/v1/specialist/appointments/{appointmentId}/closeout-context; POST /api/v1/specialist/appointments/{id}/complete |
 
 Każdy kontrakt powyżej należy zestawić z aktualnym web/openapi/openapi.json podczas M0 (włącznie ze strukturą odpowiedzi i nazwami operacji); nie wytwarzać ręcznego klienta na podstawie samej tabeli.
@@ -79,6 +78,10 @@ Każdy kontrakt powyżej należy zestawić z aktualnym web/openapi/openapi.json 
 - Stany: loading, empty, error, forbidden, offline, conflict i success.
 - Powrót do spotkania z zachowanym appointmentId; po restarcie ponowne pobranie aktualnego statusu z backendu.
 - Wykonanie (actual) i planowane dawki (planned snapshot) mają odrębną prezentację.
+
+## Ograniczenie M0
+
+Nie podłączać w aplikacji Android S08 ani innych form wprowadzania biomedycznych pomiarów lub obserwacji, dopóki zgoda nie jest egzekwowana przez backend. Prototyp zawiera symulowany ekran S08 wyłącznie jako materiał projektowy. Bez załączników, uploadów wyników badań i diagnostyki obrazowej.
 
 ## Artefakt UX
 

@@ -1,16 +1,16 @@
 # Moves Mobile — plan wdrożenia v0.1
 
-**Cel:** instalowalna natywna aplikacja Android obsługująca UJ-01…UJ-06, oparta na istniejącym backendzie, z bezpiecznym online-first. **Status:** projekt do realizacji, żadna faza nie jest oznaczona jako zakończona.
+**Cel:** natywna aplikacja Android realizująca UJ-01…UJ-06 w zakresie tekstowych notatek i wizyt, oparta na istniejącym backendzie. **Status:** M0 — analiza statyczna wykonana, bramki runtime nierozwiązane; nie implementowano klienta, zgód ani zabezpieczeń backendu. S08/pomiary biomedyczne wyłączone do czasu rzeczywistej zgody serwerowej.
 
 ## Kamienie milowe i kolejność
 
 | Etap | Zakres | Wynik / bramka odbioru |
 |---|---|---|
-| **M0 — kontrakty i ryzyka** | AS-IS kontraktów, Keycloak Android PKCE/audience, polityka danych/szkiców, spike generatora Kotlin | realne logowanie i autoryzowany GET z emulatora + uzgodniona polityka PHI |
+| **M0 — kontrakty i ryzyka** | **Analiza statyczna API/OIDC/danych wykonana 2026-11-12**, bez implementacji | **częściowo**: brak klienta Android, logowania/emulatora i spike generatora; zob. 05-m0-assessment.md |
 | **M1 — fundament Android** | Kotlin/Compose, design tokens, nawigacja, auth, klient HTTP/OpenAPI, stany błędów | APK, bezpieczny login/logout, podstawowe smoke UI |
 | **M2 — czytanie i organizacja** | S01 Dzień, S02 Uczestnicy, S03 Kartoteka, S04 Sprawy | UJ-01, UJ-02, UJ-06; role, dostęp i klient bez konta |
 | **M3 — spotkanie** | S05, terminy i ich lifecycle, szybkie planowanie, wznowienie, 409/retry | rozpoczęty termin z backendem i poprawne konflikty |
-| **M4 — dokumentacja** | S07 Wywiady/notatki, S08 Pomiary, szkice i finalizacje | UJ-04; immutable finished, kontrolowany stan formularza |
+| **M4 — dokumentacja** | S07 Wywiady i notatki z informacji ustnych; serwerowe szkice/finalizacja; **S08 wstrzymany** | UJ-04 bez pomiarów; immutable finished, bez danych medycznych na dysku telefonu |
 | **M5 — zapis wykonania i closeout** | S06 fakty realizacji, S09 warunki i zakończenie | UJ-03, UJ-05; pełny end-to-end Dzień → Zamknięcie |
 | **M6 — hardening i pilotaż** | MASVS, dostępność, tablety, releasy, obserwowalność bez PHI | dopuszczenie pilota; checklista bezpieczeństwa i UX |
 
@@ -22,7 +22,7 @@ M1 wymaga M0; M2 wymaga M1; M3 i M4 można częściowo rozwijać równolegle po 
 
 - **MOB-001** Audyt mapowania S01–S09 do aktualnego OpenAPI (`web/openapi/openapi.json`), pola `availableActions`, kody błędów, autoryzacja, wersjonowanie, Idempotency-Key.
 - **MOB-002** Publiczny klient Android w Keycloak: App Links/redirect, Authorization Code + PKCE, issuer, audience, role; test odbioru tokenu przez backend bez osłabiania walidacji.
-- **MOB-003** Polityka lokalnych szkiców i cache PHI (TTL, Keystore, brak backupów, wylogowanie, revocation, utrata urządzenia); potwierdzenie decyzji bezpieczeństwa i retencji.
+- **MOB-003** **Ustalenie M0:** bez trwałych lokalnych szkiców/cache PHI oraz bez uploadu dokumentacji badań i skanów. Nie tworzyć klientowego systemu retencji, zgód ani zaszyfrowanej bazy medycznej.
 - **MOB-004** Krótki spike Kotlin OpenAPI generator + HTTP: UUID, Instant, `oneOf`, enum, Problem Details, 409; minimalna poprawka kontraktu wyłącznie jeśli konieczna.
 - **MOB-005** Potwierdzenie warunków produktu: onboarding specjalisty web-only w MVP, granice Spraw z istniejących źródeł, zakres katalogu i planów tylko do odczytu.
 
@@ -45,19 +45,19 @@ M1 wymaga M0; M2 wymaga M1; M3 i M4 można częściowo rozwijać równolegle po 
 
 - **MOB-030** S05: kontekst wizyty, stan lifecycle, rozpoczęcie i powrót do wizyty po przerwaniu.
 - **MOB-031** Dodanie/zmiana terminu, dostępność i konflikty 409; request version + Idempotency-Key.
-- **MOB-032** Nawigacja do dokumentacji/pomiarów/realizacji i closeout bez utraty participantId.
+- **MOB-032** Nawigacja do dokumentacji/realizacji i closeout bez utraty participantId; nie udostępniać S08 pomiarów.
 
 ### M4 — dokumentacja
 
 - **MOB-040** S07: wywiad sekcyjny, zapis szkicu, zakończenie i kolejny wywiad.
 - **MOB-041** Notatki: utwórz, edytuj szkic, finalizuj, archiwizuj tylko według `availableActions`.
-- **MOB-042** S08: katalog pomiarów, walidacja typu/jednostki, zapis i aktualizacja workspace.
+- **MOB-042 — WSTRZYMANE** S08 i inne akcje odczytu/zapisu biomedycznych pomiarów (również przez obserwacje celów). Nie implementować do czasu backendowej kontroli odpowiedniej zgody; nie tworzyć jej w mobile.
 - **MOB-043** Utrata sieci, konflikt wersji, odtworzenie zgodne z polityką M0.
 
 ### M5 — zamknięcie pionu
 
 - **MOB-050** S06: dawka planowana vs faktyczna, zgodnie/zmieniono/pominięto, reakcja po sesji, idempotentny zapis.
-- **MOB-051** S09: executionRequired/executionRecorded, pomiary, podsumowanie, canComplete i zakończenie przez serwer.
+- **MOB-051** S09: executionRequired/executionRecorded, tekstowe podsumowanie, canComplete i zakończenie przez serwer. Istniejący closeout-context przesyła także pomiary: nie utrwalać ani nie prezentować ich w mobile; ryzyko ekspozycji jest zapisane w audycie M0.
 - **MOB-052** E2E UJ-01–UJ-06, testy statusów, podwójnego kliknięcia, restartu i utraty sieci.
 
 ### M6 — produkcja
@@ -91,4 +91,6 @@ M1 wymaga M0; M2 wymaga M1; M3 i M4 można częściowo rozwijać równolegle po 
 
 GO tylko jeżeli: UJ-01–UJ-06 działają przy prawdziwym logowaniu; stan spotkania jest zgodny z serwerem; nie ma duplikacji zapisów; zgody, role i relacje są egzekwowane; PHI nie wydostaje się do logów/backupów; podstawowe ścieżki są dostępne i przetestowane na realnym urządzeniu.
 
-**Następny prompt implementacyjny powinien obejmować wyłącznie MOB-001–MOB-004; nie rozpoczynać ekranów na fikcyjnych DTO przed zamknięciem M0.**
+**Następne czynności M0:** bez zmiany kodu backendu zweryfikować provisioning publicznego klienta Android w Keycloak, poprawne aud/iss, login/GET na emulatorze i generowanie Kotlin ze snapshotu. Wdrożenie pomiarów pozostaje zablokowane niezależnie od wyniku tych prób.
+
+**Raport dowodowy i status bramek:** [05 — M0](05-m0-assessment.md).

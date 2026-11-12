@@ -11,6 +11,14 @@
 - Backend zachowuje własność reguł: plan, snapshot, safety, zgoda, dostęp, status spotkania, wersjonowanie, warunki closeout.
 - Wariant mobilny i tabletowy: nawigacja kontekstowa, TalkBack, dynamic font size, semantyka, touch targets, dark theme, zredukowany ruch.
 
+## Granica danych produktu (decyzja M0)
+
+- Tylko minimalne notatki tekstowe z informacji przekazanych ustnie specjaliście. Bez wyników badań jako dokumentów, załączników, raportów laboratoryjnych, obrazów diagnostycznych i skanów.
+- Pomiary biomedyczne (w szczególności masa/obwody) tylko po potwierdzeniu działania odpowiedniego mechanizmu zgody **na backendzie**. Obecnie wyłączone z mobilnego zakresu odczytu i zapisu, także przez kontekst celów i podsumowanie wizyty.
+- Pole wywiadu typu „consents discussed” nie stanowi prawnie ani technicznie zgody; nie dodawać checkboxu lub własnego grantu w Androidzie.
+- Katalog pomiarów i endpointy zapisujące istnieją na serwerze, ale ich istnienie nie oznacza zgody pacjenta.
+- [Audyt szczegółowy M0](05-m0-assessment.md).
+
 ## OIDC / Keycloak
 
 - Natywny public client: Authorization Code + PKCE przez systemową przeglądarkę / Custom Tabs, nie przez embedded WebView.
@@ -18,14 +26,14 @@
 - Backend OAuth2 Resource Server waliduje issuer i audience — nie wyłączać kontroli JWT, aby uruchomić mobile. Zaprojektować poprawne mapowanie audience i ról w Keycloak.
 - Refresh token, wylogowanie i zmiana konta z bezpiecznym usuwaniem sesji; nie zapisywać tokenów w logach/telemetrii, URL, schowku ani crash reportach.
 - Lokalne odblokowanie biometryczne może chronić UI, ale nie zastępuje backendowej autoryzacji.
-- Każdy odczyt/zapis uczestnika za aktywną relacją, capability, purpose, ActingContext i zgodą (ADR-008). Trener widzi tylko effective safety envelope; clinical rationale pozostaje chronione osobnym kontekstem i zgodą.
+- Respektować **rzeczywiste** reguły backendu; nie deklarować jednolitej kontroli zgody na wszystkie dane. Zakresy zgód są obecnie ograniczone do PLAN/EXECUTION/EFFECTIVE_RESTRICTION/CLINICAL_RATIONALE; notatki i pomiary nie mają odrębnego zakresu. Trener widzi tylko effective safety envelope tam, gdzie backend egzekwuje tę granicę. W mobile nie dodajemy nowego systemu zgód ani kontroli klinicznych.
 
 ## PHI na urządzeniu i utrata sieci
 
 - Strategia **online-first**. Brak domyślnej pełnej repliki kartotek medycznych.
 - Minimalizacja cache, bezpieczna pamięć sesji i polityka jego czyszczenia po 401/403, logout, zmianie konta, utracie relacji/zgody.
 - Serwerowe szkice dokumentacji wykorzystywać w pierwszej kolejności, gdy API je oferuje (wywiad, notatki).
-- Formularze bez serwerowego szkicu (np. jednorazowy zapis wykonania) wymagają jawnej decyzji w M0: bez trwałego szkicu z ostrzeżeniem lub szyfrowany krótkotrwały szkic z Android Keystore, TTL i zasadami czyszczenia. Nie zakładać automatycznie local persistence.
+- W M0 przyjmujemy **brak trwałych lokalnych szkiców medycznych**. Dla formularzy bez serwerowego szkicu (np. jednorazowy zapis wykonania) pokazać ostrzeżenie przed utratą danych; nie projektować automatycznej synchronizacji, zaszyfrowanej lokalnej bazy ani własnych reguł retencji. Ewentualna zmiana wymaga osobnej decyzji.
 - Żadnej kolejki cichych mutacji medycznych po powrocie internetu; po reconnect odświeżyć status, wersję i pozwolić na jawne ponowienie z tym samym kluczem idempotencji.
 - Konflikt 409 nie uruchamia automatycznego overwrite; ponowny odczyt i decyzja użytkownika.
 - Brak PHI w powiadomieniach, logach, analytics, backupie systemowym i podglądzie recent apps zgodnie z przyjętą polityką prywatności.
