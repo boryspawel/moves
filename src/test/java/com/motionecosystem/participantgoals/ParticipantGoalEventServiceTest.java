@@ -77,4 +77,32 @@ class ParticipantGoalEventServiceTest {
                 eq(cursor.eventId()), any(Pageable.class));
         verify(events, never()).timelineWithoutCursor(any(), any(), any(), any());
     }
+
+    @Test
+    void historyCandidateExposesOnlyDerivedObservationMeasurementLinkage() {
+        UUID specialist = UUID.randomUUID(); UUID participant = UUID.randomUUID(); Instant at = Instant.parse("2030-01-15T00:00:00Z");
+        ParticipantGoalRepository goals = mock(ParticipantGoalRepository.class);
+        GoalOutcomeRepository outcomes = mock(GoalOutcomeRepository.class);
+        GoalIdempotencyRepository idempotency = mock(GoalIdempotencyRepository.class);
+        GoalObservationRepository observations = mock(GoalObservationRepository.class);
+        GoalObservationIdempotencyRepository observationIdempotency = mock(GoalObservationIdempotencyRepository.class);
+        ParticipantGoalEventRepository events = mock(ParticipantGoalEventRepository.class);
+        CurrentAccountService accounts = mock(CurrentAccountService.class);
+        when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(specialist, "specialist", ProfileType.SPECIALIST));
+        ParticipantGoal goal = new ParticipantGoal(participant, specialist, ParticipantGoal.Category.PERFORMANCE, "private title", "private body", 50, null, at);
+        GoalOutcome outcome = new GoalOutcome(goal.id, "RANGE", null, java.math.BigDecimal.TEN, "deg", null, TargetComparator.AT_LEAST, 0, at);
+        UUID measurementId = UUID.randomUUID();
+        GoalObservation observation = new GoalObservation(goal.id, outcome.id, participant, java.math.BigDecimal.ONE, "deg", "manual", at, specialist, at, measurementId);
+        ParticipantGoalEvent event = new ParticipantGoalEvent(ParticipantGoalEvent.Type.OBSERVATION_RECORDED, goal, ParticipantGoal.Status.ACTIVE, at, at, observation, outcome, null);
+        when(events.findHistoryCandidates(specialist, participant, at.minusSeconds(1), at.plusSeconds(1))).thenReturn(List.of(event));
+        when(observations.findAllById(any())).thenReturn(List.of(observation));
+        ParticipantGoalService service = new ParticipantGoalService(goals, outcomes, idempotency, observations, observationIdempotency, events,
+                accounts, mock(SpecialistAuthorizationPort.class), null, mock(AuditRecorder.class), Clock.fixed(at, ZoneOffset.UTC));
+
+        var candidate = service.goalHistoryCandidates("specialist", participant,
+                new SpecialistAuthorizationPort.ActingContext(SpecialistAuthorizationPort.ProfessionalRole.TRAINER), at.minusSeconds(1), at.plusSeconds(1));
+
+        assertThat(candidate).singleElement().extracting(item -> item.eventId(), item -> item.goalId(), item -> item.outcomeId(), item -> item.sourceMeasurementId())
+                .containsExactly(event.id, goal.id, outcome.id, measurementId);
+    }
 }

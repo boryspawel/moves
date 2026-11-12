@@ -1,6 +1,8 @@
 package com.motionecosystem.participantdocumentation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.motionecosystem.audit.AuditRecorder;
@@ -10,15 +12,102 @@ import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
+import com.motionecosystem.calendar.api.SpecialistAppointmentHistoryQueryPort;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class ParticipantDocumentationTimelineTest {
+    @Test
+    void documentationCandidatesRetainsAnUnlinkedNoteWhenValidAppointmentsIsEmptyImmutableSet() {
+        UUID specialistId = UUID.randomUUID();
+        UUID participantId = UUID.randomUUID();
+        Instant at = Instant.parse("2030-06-10T12:00:00Z");
+        CurrentAccountService accounts = org.mockito.Mockito.mock(CurrentAccountService.class);
+        ParticipantNoteRepository notes = org.mockito.Mockito.mock(ParticipantNoteRepository.class);
+        ParticipantDocumentationEventRepository events = org.mockito.Mockito.mock(ParticipantDocumentationEventRepository.class);
+        ParticipantNote note = new ParticipantNote(participantId, specialistId, "GENERAL", "title", "body", null, at);
+        ParticipantDocumentationEvent event = new ParticipantDocumentationEvent(note.id, participantId, "NOTE", "CREATED", at, "Note created");
+        when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(specialistId, "specialist", ProfileType.SPECIALIST));
+        when(events.findByParticipantIdAndEffectiveAtGreaterThanEqualAndEffectiveAtLessThanOrderByEffectiveAtDesc(participantId, at.minusSeconds(1), at.plusSeconds(1))).thenReturn(List.of(event));
+        when(notes.findByIdInAndParticipantIdAndSpecialistId(any(), org.mockito.ArgumentMatchers.eq(participantId), org.mockito.ArgumentMatchers.eq(specialistId))).thenReturn(List.of(note));
+        ParticipantDocumentationService service = historyService(accounts, notes, events, org.mockito.Mockito.mock(SpecialistAuthorizationPort.class),
+                org.mockito.Mockito.mock(SpecialistAppointmentHistoryQueryPort.class));
+
+        var candidate = service.documentationCandidates("specialist", participantId, new ActingContext(ProfessionalRole.TRAINER), at.minusSeconds(1), at.plusSeconds(1));
+
+        assertThat(candidate).singleElement().extracting(item -> item.eventId(), item -> item.recordId(), item -> item.appointmentId())
+                .containsExactly(event.id, note.id, null);
+    }
+
+    @Test
+    void documentationByEventIdsRetainsAnUnlinkedNoteWhenValidAppointmentsIsEmptyImmutableSet() {
+        UUID specialistId = UUID.randomUUID();
+        UUID participantId = UUID.randomUUID();
+        Instant at = Instant.parse("2030-06-10T12:00:00Z");
+        CurrentAccountService accounts = org.mockito.Mockito.mock(CurrentAccountService.class);
+        ParticipantNoteRepository notes = org.mockito.Mockito.mock(ParticipantNoteRepository.class);
+        ParticipantDocumentationEventRepository events = org.mockito.Mockito.mock(ParticipantDocumentationEventRepository.class);
+        ParticipantNote note = new ParticipantNote(participantId, specialistId, "GENERAL", "title", "body", null, at);
+        ParticipantDocumentationEvent event = new ParticipantDocumentationEvent(note.id, participantId, "NOTE", "CREATED", at, "Note created");
+        when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(specialistId, "specialist", ProfileType.SPECIALIST));
+        when(events.findByIdInAndParticipantId(Set.of(event.id), participantId)).thenReturn(List.of(event));
+        when(notes.findByIdInAndParticipantIdAndSpecialistId(any(), org.mockito.ArgumentMatchers.eq(participantId), org.mockito.ArgumentMatchers.eq(specialistId))).thenReturn(List.of(note));
+        ParticipantDocumentationService service = historyService(accounts, notes, events, org.mockito.Mockito.mock(SpecialistAuthorizationPort.class),
+                org.mockito.Mockito.mock(SpecialistAppointmentHistoryQueryPort.class));
+
+        var candidate = service.documentationByEventIds("specialist", participantId, new ActingContext(ProfessionalRole.TRAINER), Set.of(event.id));
+
+        assertThat(candidate).singleElement().extracting(item -> item.eventId(), item -> item.recordId(), item -> item.appointmentId())
+                .containsExactly(event.id, note.id, null);
+    }
+
+    @Test
+    void historyCandidateSanitizesAnUnverifiedNoteAppointmentAndDoesNotExposeContent() {
+        UUID specialistId = UUID.randomUUID(); UUID participantId = UUID.randomUUID(); UUID appointmentId = UUID.randomUUID();
+        CurrentAccountService accounts = org.mockito.Mockito.mock(CurrentAccountService.class);
+        ParticipantNoteRepository notes = org.mockito.Mockito.mock(ParticipantNoteRepository.class);
+        ParticipantDocumentationEventRepository events = org.mockito.Mockito.mock(ParticipantDocumentationEventRepository.class);
+        SpecialistAppointmentHistoryQueryPort appointments = org.mockito.Mockito.mock(SpecialistAppointmentHistoryQueryPort.class);
+        SpecialistAuthorizationPort authorization = org.mockito.Mockito.mock(SpecialistAuthorizationPort.class);
+        Instant at = Instant.parse("2030-06-10T12:00:00Z");
+        ParticipantNote note = new ParticipantNote(participantId, specialistId, "APPOINTMENT_SUMMARY", "private title", "private body", appointmentId, at);
+        ParticipantDocumentationEvent event = new ParticipantDocumentationEvent(note.id, participantId, "NOTE", "CREATED", at, "Note created");
+        when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(specialistId, "specialist", ProfileType.SPECIALIST));
+        when(events.findByParticipantIdAndEffectiveAtGreaterThanEqualAndEffectiveAtLessThanOrderByEffectiveAtDesc(participantId, at.minusSeconds(1), at.plusSeconds(1))).thenReturn(List.of(event));
+        when(notes.findByIdInAndParticipantIdAndSpecialistId(any(), org.mockito.ArgumentMatchers.eq(participantId), org.mockito.ArgumentMatchers.eq(specialistId))).thenReturn(List.of(note));
+        when(appointments.appointmentsByIds("specialist", participantId, new ActingContext(ProfessionalRole.TRAINER), Set.of(appointmentId))).thenReturn(List.of());
+        ParticipantDocumentationService service = historyService(accounts, notes, events, authorization, appointments);
+
+        var candidate = service.documentationCandidates("specialist", participantId, new ActingContext(ProfessionalRole.TRAINER), at.minusSeconds(1), at.plusSeconds(1));
+
+        assertThat(candidate).singleElement().extracting(item -> item.recordId(), item -> item.category(), item -> item.status(), item -> item.appointmentId())
+                .containsExactly(note.id, "APPOINTMENT_SUMMARY", "DRAFT", null);
+    }
+
+    @Test
+    void historyCandidateOmitsFactsOnlyForForbiddenAuthorizationAndPropagatesOtherFailures() {
+        UUID participantId = UUID.randomUUID(); UUID specialistId = UUID.randomUUID();
+        CurrentAccountService accounts = org.mockito.Mockito.mock(CurrentAccountService.class);
+        SpecialistAuthorizationPort authorization = org.mockito.Mockito.mock(SpecialistAuthorizationPort.class);
+        when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(specialistId, "specialist", ProfileType.SPECIALIST));
+        org.mockito.Mockito.doThrow(new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN))
+                .when(authorization).requireCapabilities(any(), any(), any(), any(), any());
+        ParticipantDocumentationService service = historyService(accounts, org.mockito.Mockito.mock(ParticipantNoteRepository.class),
+                org.mockito.Mockito.mock(ParticipantDocumentationEventRepository.class), authorization, org.mockito.Mockito.mock(SpecialistAppointmentHistoryQueryPort.class));
+
+        assertThat(service.documentationCandidates("specialist", participantId, new ActingContext(ProfessionalRole.TRAINER), Instant.EPOCH, Instant.EPOCH.plusSeconds(1))).isEmpty();
+        org.mockito.Mockito.doThrow(new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST))
+                .when(authorization).requireCapabilities(any(), any(), any(), any(), any());
+        assertThatThrownBy(() -> service.documentationCandidates("specialist", participantId, new ActingContext(ProfessionalRole.TRAINER), Instant.EPOCH, Instant.EPOCH.plusSeconds(1)))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+                .hasMessageContaining("400 BAD_REQUEST");
+    }
     @Test
     void returnsAppointmentSummaryOnlyAfterTheNormalSpecialistActingContextAuthorization() {
         UUID specialistId = UUID.randomUUID();
@@ -73,6 +162,14 @@ class ParticipantDocumentationTimelineTest {
                 org.mockito.Mockito.mock(RecordIdempotencyRepository.class), org.mockito.Mockito.mock(CurrentAccountService.class),
                 org.mockito.Mockito.mock(SpecialistAuthorizationPort.class),
                 org.mockito.Mockito.mock(AuditRecorder.class), Clock.fixed(Instant.parse("2030-06-10T12:00:00Z"), ZoneOffset.UTC));
+    }
+
+    private static ParticipantDocumentationService historyService(CurrentAccountService accounts, ParticipantNoteRepository notes,
+                                                                   ParticipantDocumentationEventRepository events, SpecialistAuthorizationPort authorization,
+                                                                   SpecialistAppointmentHistoryQueryPort appointments) {
+        return new ParticipantDocumentationService(org.mockito.Mockito.mock(ParticipantInterviewRepository.class),
+                org.mockito.Mockito.mock(InterviewResponseRepository.class), notes, events, org.mockito.Mockito.mock(RecordIdempotencyRepository.class),
+                accounts, authorization, appointments, org.mockito.Mockito.mock(AuditRecorder.class), Clock.systemUTC());
     }
 
     private static void assertNeutralMetadata(com.motionecosystem.participantdocumentation.api.ParticipantDocumentationEventQueryPort.Event event,

@@ -20,6 +20,9 @@ import { ResponseError } from '../api/generated/src/runtime';
 import type { SpecialistParticipantWorkspaceView } from '../api/generated/src/models/SpecialistParticipantWorkspaceView';
 import type { SituationalSignalView } from '../api/generated/src/models/SituationalSignalView';
 import type { OperationalFocusView } from '../api/generated/src/models/OperationalFocusView';
+import type { SpecialistParticipantHistoryItem } from '../api/generated/src/models/SpecialistParticipantHistoryItem';
+import type { SpecialistParticipantHistoryResolution } from '../api/generated/src/models/SpecialistParticipantHistoryResolution';
+import type { SpecialistParticipantHistoryNavigationTarget } from '../api/generated/src/models/SpecialistParticipantHistoryNavigationTarget';
 import type { ParticipantTimelineEvent } from '../api/generated/src/models/ParticipantTimelineEvent';
 import type { AppointmentView } from '../api/generated/src/models/AppointmentView';
 import type { ParticipantWorkspaceAppointmentView } from '../api/generated/src/models/ParticipantWorkspaceAppointmentView';
@@ -31,10 +34,9 @@ import type { CreateFromPresetRequestPresetIdEnum, CreateFromPresetRequestTarget
 import { ParticipantDocumentationComponent, type RecordPanelType } from './participant-documentation.component';
 import { ParticipantAccessPanelComponent } from './participant-access-panel.component';
 import { ParticipantMeasurementDialogComponent } from './participant-measurement-dialog.component';
+import { ParticipantHistoryComponent } from './participant-history.component';
 import {
-  groupEvents,
   rangeDates,
-  sortedEvents,
   timelineCategories,
   type TimelineCategory,
   type WorkspaceRange,
@@ -275,7 +277,7 @@ export class PatientTimelineFiltersComponent {
     { key: '12m' as const, label: '12 mies.' },
   ];
   protected categoryLabel = (type: string) =>
-    ({ APPOINTMENT: 'Spotkania', SESSION: 'Planowane sesje', EXECUTION: 'Wykonania', MEASUREMENT: 'Pomiary', INTERVIEW: 'Wywiady', NOTE: 'Notatki' })[type] ??
+    ({ APPOINTMENT: 'Spotkania', SESSION: 'Planowane sesje', EXECUTION: 'Wykonania', MEASUREMENT: 'Pomiary', INTERVIEW: 'Wywiady', NOTE: 'Notatki', GOAL: 'Cele' })[type] ??
     type;
   protected toggle(type: TimelineCategory) {
     this.selectedChange.emit(
@@ -752,7 +754,7 @@ const comparator: Record<string, string> = { AT_LEAST: 'co najmniej', AT_MOST: '
                     <p class="goal-no-current">Brak aktualnego pomiaru</p>
                   }
                   <p class="goal-progress-copy">{{ progressStory(outcome.progress?.state ?? outcome.progressState) }}</p>
-                  @if (outcome.latestObservation?.measuredAt) { <p class="goal-last-measurement">Ostatni pomiar: {{ outcome.latestObservation?.measuredAt | date: 'd MMM, HH:mm' : '' : 'pl' }}</p> }
+                  @if (outcome.latestObservation?.measuredAt) { <p class="goal-last-measurement">Ostatni pomiar: {{ outcome.latestObservation.measuredAt | date: 'd MMM, HH:mm' : '' : 'pl' }}</p> }
                 </article>
               }
             </section>
@@ -1278,9 +1280,7 @@ export class ParticipantGoalsComponent {
     ParticipantDocumentationComponent,
     ParticipantAccessPanelComponent,
     PatientTimelineFiltersComponent,
-    PatientTimelineComponent,
-    PatientTimelineListViewComponent,
-    PatientTimelineEventPanelComponent,
+    ParticipantHistoryComponent,
     ScheduleAppointmentDialogComponent,
     ParticipantMeasurementDialogComponent,
     DatePipe,
@@ -1404,28 +1404,26 @@ export class ParticipantGoalsComponent {
             (clear)="setTypes([])"
             (viewChange)="setView($event)"
           />
-          @if (view() === 'timeline') {
-            <app-patient-timeline [groups]="groups()" (opened)="open($event)" />
-          } @else {
-            <app-patient-timeline-list-view [events]="events()" (opened)="open($event)" />
-          }
+          @if (historyError()) { <p role="alert">Nie udało się odświeżyć historii. Widoczne są ostatnio wczytane dane.</p> }
+          <app-participant-history
+            [items]="historyItems()"
+            [view]="view()"
+            [selected]="selected()"
+            [outsideRange]="selectedOutsideRange()"
+            [highlightKind]="selectedHighlightKind()"
+            [highlightId]="selectedHighlightId()"
+            [appointmentActions]="currentAppointment()?.availableActions ?? []"
+            [saving]="savingOutcome()"
+            [protectedDocumentationTarget]="selectedNavigationTarget()"
+            (opened)="open($event)"
+            (closed)="close()"
+            (outcome)="recordOutcome($event)"
+            (protectedDocumentationRequested)="openResolvedDocumentation()"
+          />
           @if (nextCursor()) {
             <button class="older" type="button" (click)="older()">Pokaż wcześniejsze</button>
           }
         </section>
-        @if (selected(); as event) {
-          <app-patient-timeline-event-panel
-            [event]="event"
-            [appointment]="currentAppointment()"
-            [goal]="currentGoal()"
-            [goalUnavailable]="currentGoalUnavailable()"
-            [saving]="savingOutcome()"
-            [outsideRange]="selectedOutsideRange()"
-            [participantDisplayName]="data.participant?.displayName"
-            (closed)="close()"
-            (outcome)="recordOutcome($event)"
-          />
-        }
       </section>
       }
       @if (scheduling()) {
@@ -1454,12 +1452,16 @@ export class SpecialistParticipantWorkspacePage {
   protected readonly actingContext = signal<'TRAINER' | 'PHYSIOTHERAPIST' | undefined>(undefined);
   protected readonly state = signal<'loading' | 'loaded' | 'error'>('loading');
   protected readonly workspace = signal<SpecialistParticipantWorkspaceView | null>(null);
-  protected readonly events = signal<ParticipantTimelineEvent[]>([]);
+  protected readonly historyItems = signal<SpecialistParticipantHistoryItem[]>([]);
+  protected readonly historyError = signal(false);
   protected readonly nextCursor = signal<string | undefined>(undefined);
   protected readonly range = signal<WorkspaceRange>('2w');
   protected readonly types = signal<TimelineCategory[]>([]);
   protected readonly view = signal<WorkspaceView>('timeline');
-  protected readonly selected = signal<ParticipantTimelineEvent | null>(null);
+  protected readonly selected = signal<SpecialistParticipantHistoryItem | null>(null);
+  protected readonly selectedHighlightKind = signal<string | undefined>(undefined);
+  protected readonly selectedHighlightId = signal<string | undefined>(undefined);
+  protected readonly selectedNavigationTarget = signal<SpecialistParticipantHistoryNavigationTarget | undefined>(undefined);
   protected readonly goalId = signal<string | undefined>(undefined);
   protected readonly announcement = signal('');
   protected readonly accessStatus = signal<string | undefined>(undefined);
@@ -1480,8 +1482,6 @@ export class SpecialistParticipantWorkspacePage {
   protected readonly savingAppointment = signal(false);
   protected readonly appointmentError = signal(false);
   protected readonly currentAppointment = signal<AppointmentView | null>(null);
-  protected readonly currentGoal = signal<ParticipantGoalView | null>(null);
-  protected readonly currentGoalUnavailable = signal(false);
   protected readonly savingOutcome = signal(false);
   protected readonly startingAppointment = signal(false);
   protected readonly selectedOutsideRange = signal(false);
@@ -1489,9 +1489,6 @@ export class SpecialistParticipantWorkspacePage {
   protected readonly recordPanelId = signal<string | null>(null);
   protected readonly recordPanelMode = signal<'view' | 'edit'>('view');
   protected readonly section = signal<WorkspaceSection>('overview');
-  protected readonly groups = computed(() =>
-    groupEvents(this.events(), rangeDates(this.range()).granularity),
-  );
   protected readonly safeActions = computed(() =>
     (this.workspace()?.quickActions ?? []).filter(
       (action) => !!actionLabels[action],
@@ -1529,7 +1526,7 @@ export class SpecialistParticipantWorkspacePage {
       void this.loadActingContext();
       const context = `${participantId}:${this.range()}:${this.types().join(',')}:${this.view()}`;
       if (this.timelineContext === context && this.state() === 'loaded')
-        void this.resolveSelection(participantId, id, this.events());
+        void this.resolveSelection(participantId, id);
       else {
         this.timelineContext = context;
         void this.load(participantId, id);
@@ -1570,10 +1567,15 @@ export class SpecialistParticipantWorkspacePage {
   private async load(
     participantId: string,
     selectedId: string | null,
-  ): Promise<ParticipantTimelineEvent[] | null> {
+  ): Promise<SpecialistParticipantHistoryItem[] | null> {
     const request = ++this.request;
     this.state.set('loading');
     const dates = rangeDates(this.range());
+    const from = dates.from;
+    if (!from) {
+      this.state.set('error');
+      return null;
+    }
     const clientRequest = this.api.specialistClients.list1();
     void clientRequest
       .then((items) => {
@@ -1586,28 +1588,31 @@ export class SpecialistParticipantWorkspacePage {
         if (request === this.request) this.accessStatusAvailable.set(false);
       });
     try {
-      const [workspace, timeline, , onboarding] = await Promise.all([
+      const onboarding = await this.api.onboarding.state().catch(() => undefined);
+      const actingContext = onboarding?.profile?.specialistKind;
+      if (actingContext !== 'TRAINER' && actingContext !== 'PHYSIOTHERAPIST') throw new Error('Missing acting context');
+      this.actingContext.set(actingContext);
+      const [workspace, history] = await Promise.all([
         this.api.participantWorkspace.workspace({ participantId }),
-        this.api.participantWorkspace.timeline({
+        this.api.participantHistory.getSpecialistParticipantHistory({
           participantId,
-          from: dates.from,
+          actingContext,
+          from,
           to: dates.to,
           types: this.types().join(',') || undefined,
-          granularity: dates.granularity,
           limit: 100,
-        }),
-        clientRequest.catch(() => undefined),
-        this.api.onboarding.state().catch(() => undefined),
+        }).catch(() => undefined),
       ]);
       if (request !== this.request) return null;
-      const items = sortedEvents(timeline.items ?? []);
-      const kind = onboarding?.profile?.specialistKind;
-      this.actingContext.set(kind === 'TRAINER' || kind === 'PHYSIOTHERAPIST' ? kind : undefined);
+      const items = history?.items ?? [];
       this.workspace.set(workspace);
-      this.events.set(items);
-      this.nextCursor.set(timeline.nextCursor);
+      if (history) {
+        this.historyItems.set(items);
+        this.nextCursor.set(history.nextCursor);
+      }
+      this.historyError.set(!history);
       this.state.set('loaded');
-      await this.resolveSelection(participantId, selectedId, items, request);
+      await this.resolveSelection(participantId, selectedId, request);
       return items;
     } catch {
       if (request === this.request) this.state.set('error');
@@ -1623,26 +1628,41 @@ export class SpecialistParticipantWorkspacePage {
   protected setView(view: WorkspaceView) {
     void this.navigate({ view });
   }
-  protected open(event: ParticipantTimelineEvent) {
+  protected open(item: SpecialistParticipantHistoryItem) {
+    if (!item.stableItemId) return;
     this.opener = document.activeElement as HTMLElement | null;
-    const type = event.category === 'INTERVIEW' ? 'interview' : event.category === 'NOTE' ? 'note' : null;
     void this.navigate({
-      eventId: event.eventId ?? null,
+      eventId: item.stableItemId,
       section: 'history',
-      recordType: type,
-      recordId: type ? event.detail?.referenceId ?? null : null,
-      recordMode: null,
     });
     this.focusPanel();
   }
   protected close() {
-    const event = this.selected();
-    void this.navigate(event?.category === 'INTERVIEW' || event?.category === 'NOTE'
-      ? { section: 'history', eventId: null, recordType: null, recordId: null, recordMode: null }
-      : { section: 'history', eventId: null });
+    void this.navigate({ section: 'history', eventId: null, recordType: null, recordId: null, recordMode: null });
     queueMicrotask(() => {
       if (this.opener?.isConnected) this.opener.focus();
     });
+  }
+  protected async recordOutcome(action: 'COMPLETE' | 'MARK_NO_SHOW'): Promise<void> {
+    const selected = this.selected();
+    const appointment = this.currentAppointment();
+    const appointmentId = selected?.encounter?.appointment?.id;
+    if (!selected?.stableItemId || !appointment || !appointmentId || this.savingOutcome()) return;
+    this.savingOutcome.set(true);
+    try {
+      const request = { id: appointmentId, idempotencyKey: crypto.randomUUID(), appointmentVersionCommand: { version: appointment.version } };
+      if (action === 'COMPLETE') await this.api.appointments.complete(request);
+      else await this.api.appointments.noShow(request);
+      const participantId = this.participantId();
+      if (participantId) await this.load(participantId, selected.stableItemId);
+    } catch (error) {
+      if (this.status(error) === 409) {
+        await this.loadCurrentAppointment(selected);
+        this.announcement.set('Bieżące spotkanie zmieniło się i zostało odświeżone.');
+      } else this.announcement.set('Nie udało się zapisać wyniku spotkania. Spróbuj ponownie.');
+    } finally {
+      this.savingOutcome.set(false);
+    }
   }
   protected openRecord(record: { type: RecordPanelType; id: string; mode?: 'view' | 'edit' }) {
     this.opener = document.activeElement as HTMLElement | null;
@@ -1653,62 +1673,30 @@ export class SpecialistParticipantWorkspacePage {
     void this.navigate({ eventId: null, recordType: null, recordId: null, recordMode: null });
     queueMicrotask(() => { if (this.opener?.isConnected) this.opener.focus(); });
   }
-  protected async recordOutcome(action: 'COMPLETE' | 'MARK_NO_SHOW'): Promise<void> {
-    const event = this.selected();
-    const appointment = this.currentAppointment();
-    const appointmentId = this.appointmentId(event);
-    if (!event || !appointment || !appointmentId || this.savingOutcome()) return;
-    this.savingOutcome.set(true);
-    try {
-      const request = {
-        id: appointmentId,
-        idempotencyKey: crypto.randomUUID(),
-        appointmentVersionCommand: { version: appointment.version },
-      };
-      if (action === 'COMPLETE') await this.api.appointments.complete(request);
-      else await this.api.appointments.noShow(request);
-      const participantId = this.route.snapshot.paramMap.get('participantId');
-      const items = participantId ? await this.load(participantId, null) : null;
-      const newest = items?.find((item) => this.appointmentId(item) === appointmentId);
-      if (participantId && newest?.eventId) {
-        await this.navigate({ eventId: newest.eventId });
-        await this.resolveSelection(participantId, newest.eventId, items ?? []);
-      } else {
-        this.close();
-        this.announcement.set('Wynik spotkania zapisano.');
-      }
-    } catch (error) {
-      if (this.status(error) === 409) {
-        await this.loadCurrentAppointment(event);
-        this.announcement.set('Bieżące spotkanie zmieniło się i zostało odświeżone.');
-      } else this.announcement.set('Nie udało się zapisać wyniku spotkania. Spróbuj ponownie.');
-    } finally {
-      this.savingOutcome.set(false);
-    }
-  }
   protected async older(): Promise<void> {
     const participantId = this.route.snapshot.paramMap.get('participantId');
     const cursor = this.nextCursor();
     if (!participantId || !cursor) return;
     const request = ++this.request;
+    const { from, to } = rangeDates(this.range());
+    if (!from) return;
     try {
-      const timeline = await this.api.participantWorkspace.timeline({
+      const history = await this.api.participantHistory.getSpecialistParticipantHistory({
         participantId,
-        ...rangeDates(this.range()),
+        actingContext: this.actingContext()!,
+        from,
+        to,
         types: this.types().join(',') || undefined,
         cursor,
         limit: 100,
       });
       if (request !== this.request) return;
-      const ids = new Set(this.events().map((event) => event.eventId));
-      this.events.update((events) =>
-        sortedEvents([
-          ...events,
-          ...(timeline.items ?? []).filter((event) => !ids.has(event.eventId)),
-        ]),
-      );
-      this.nextCursor.set(timeline.nextCursor);
+      const ids = new Set(this.historyItems().map((item) => item.stableItemId));
+      this.historyItems.update((items) => [...items, ...(history.items ?? []).filter((item) => !ids.has(item.stableItemId))]);
+      this.nextCursor.set(history.nextCursor);
+      this.historyError.set(false);
     } catch {
+      this.historyError.set(true);
       this.announcement.set('Nie udało się pobrać wcześniejszych zdarzeń.');
     }
   }
@@ -1771,7 +1759,7 @@ export class SpecialistParticipantWorkspacePage {
       await this.api.participantMeasurements.recordParticipantMeasurement({ participantId, idempotencyKey: this.measurementIdempotencyKey, participantMeasurementCommand: command });
       this.measurementDialog.set(false); this.announcement.set('Pomiar został zapisany.');
       this.measurementRefresh.update((value) => value + 1);
-      await this.load(participantId, this.section() === 'history' ? this.selected()?.eventId ?? null : null);
+      await this.load(participantId, this.section() === 'history' ? this.selected()?.stableItemId ?? null : null);
     } catch {
       this.measurementError.set(true);
     } finally {
@@ -1848,23 +1836,7 @@ export class SpecialistParticipantWorkspacePage {
     }
   }
   private async openFocusedAppointment(appointmentId: string): Promise<void> {
-    try {
-      const appointment = await this.api.appointments.getSpecialistAppointment({ id: appointmentId });
-      this.currentAppointment.set(appointment);
-      this.selected.set({
-        eventId: `appointment:${appointmentId}`,
-        category: 'APPOINTMENT',
-        status: appointment.status,
-        effectiveFrom: appointment.startsAt,
-        title: appointment.type,
-        summary: appointment.shortPurpose,
-        detail: { detailResourceId: appointmentId },
-      });
-      this.selectedOutsideRange.set(true);
-      this.focusPanel();
-    } catch {
-      this.announcement.set('Nie udało się otworzyć wybranego spotkania.');
-    }
+    await this.navigate({ section: 'history', eventId: `encounter:${appointmentId}` });
   }
   protected closeSchedule() {
     if (!this.savingAppointment()) this.scheduling.set(false);
@@ -1913,50 +1885,38 @@ export class SpecialistParticipantWorkspacePage {
       this.savingAppointment.set(false);
     }
   }
-  private async loadCurrentAppointment(event: ParticipantTimelineEvent): Promise<void> {
-    const appointmentId = this.appointmentId(event);
-    if (event.category !== 'APPOINTMENT' || !appointmentId) return;
-    try {
-      this.currentAppointment.set(
-        await this.api.appointments.getSpecialistAppointment({ id: appointmentId }),
-      );
-    } catch {
-      this.currentAppointment.set(null);
-    }
-  }
   private async resolveSelection(
     participantId: string,
     eventId: string | null,
-    items: ParticipantTimelineEvent[],
     request = this.request,
   ): Promise<void> {
-    this.currentAppointment.set(null);
-    this.currentGoal.set(null);
-    this.currentGoalUnavailable.set(false);
     this.selectedOutsideRange.set(false);
+    this.selectedHighlightKind.set(undefined);
+    this.selectedHighlightId.set(undefined);
+    this.selectedNavigationTarget.set(undefined);
     if (!eventId) {
       this.selected.set(null);
+      this.currentAppointment.set(null);
       return;
     }
     this.section.set('history');
-    const listed = items.find((event) => event.eventId === eventId);
-    if (listed) {
-      this.selected.set(listed);
-      this.openRecordForEvent(listed);
-      void this.loadCurrentAppointment(listed);
-      void this.loadCurrentGoal(listed);
-      return;
-    }
     try {
-      const event = await this.api.participantWorkspace.timelineEvent({ participantId, eventId });
+      const resolution: SpecialistParticipantHistoryResolution = await this.api.participantHistory.resolveSpecialistParticipantHistory({
+        participantId,
+        actingContext: this.actingContext()!,
+        eventId,
+      });
       if (request !== this.request) return;
-      const listEvent = this.events().find((item) => item.eventId === event.eventId);
-      const selected = listEvent ?? event;
+      if (!resolution.item) throw new Error('History resolver returned no item');
+      const listItem = this.historyItems().find((item) => item.stableItemId === resolution.item!.stableItemId);
+      const selected = listItem ?? resolution.item;
       this.selected.set(selected);
-      this.openRecordForEvent(selected);
-      this.selectedOutsideRange.set(!listEvent);
+      this.selectedOutsideRange.set(!listItem);
+      this.selectedHighlightKind.set(resolution.highlightKind);
+      this.selectedHighlightId.set(resolution.highlightId);
+      this.selectedNavigationTarget.set(resolution.navigationTarget);
       void this.loadCurrentAppointment(selected);
-      void this.loadCurrentGoal(selected);
+      if (selected.kind === 'STANDALONE') await this.applyNavigationTarget(resolution);
       this.focusPanel();
     } catch (error) {
       if (request !== this.request) return;
@@ -1970,43 +1930,40 @@ export class SpecialistParticipantWorkspacePage {
       this.announcement.set('Nie udało się otworzyć wybranego zdarzenia.');
     }
   }
-  private async loadCurrentGoal(event: ParticipantTimelineEvent): Promise<void> {
-    const goalId = event.category === 'GOAL' ? event.detail?.referenceId : undefined;
-    const actingContext = this.actingContext();
-    if (!goalId || !actingContext) return;
-    try {
-      this.currentGoal.set(
-        await this.api.participantGoals.getParticipantGoal({
-          participantId: this.participantId(),
-          goalId,
-          actingContext,
-        }),
-      );
-    } catch (error) {
-      if (this.status(error) === 404) this.currentGoalUnavailable.set(true);
+  private async loadCurrentAppointment(item: SpecialistParticipantHistoryItem): Promise<void> {
+    const appointmentId = item.encounter?.appointment?.id;
+    if (!appointmentId) { this.currentAppointment.set(null); return; }
+    try { this.currentAppointment.set(await this.api.appointments.getSpecialistAppointment({ id: appointmentId })); }
+    catch { this.currentAppointment.set(null); }
+  }
+  private async applyNavigationTarget(resolution: SpecialistParticipantHistoryResolution): Promise<void> {
+    const target = resolution.navigationTarget;
+    if (!target?.id || !target.kind) return;
+    if (target.kind === 'GOAL') {
+      await this.navigate({ section: 'plan', eventId: null, goalId: target.id, recordType: null, recordId: null, recordMode: null });
+      return;
+    }
+    await this.navigate({ section: 'documentation', eventId: null, recordType: target.kind === 'DOCUMENTATION_INTERVIEW' ? 'interview' : 'note', recordId: target.id, recordMode: null });
+  }
+  protected openResolvedDocumentation() {
+    const target = this.selectedNavigationTarget();
+    if (target?.kind === 'DOCUMENTATION_NOTE' || target?.kind === 'DOCUMENTATION_INTERVIEW') {
+      void this.applyNavigationTarget({ item: this.selected()!, navigationTarget: target });
     }
   }
   private focusPanel() {
     queueMicrotask(() => {
-      const panel = this.host.nativeElement.querySelector('.event-panel');
+      const panel = this.host.nativeElement.querySelector('.history-detail');
       if (panel instanceof HTMLElement) panel.focus();
+      const child = this.selectedHighlightId() && this.host.nativeElement.querySelector(`[data-history-child-id="${this.selectedHighlightId()}"]`);
+      if (child instanceof HTMLElement) child.focus();
     });
-  }
-  private openRecordForEvent(event: ParticipantTimelineEvent) {
-    const type = event.category === 'INTERVIEW' ? 'interview' : event.category === 'NOTE' ? 'note' : null;
-    const id = event.detail?.referenceId;
-    if (type && id && !this.recordPanelId()) {
-      void this.navigate({ recordType: type, recordId: id, recordMode: null });
-    }
   }
   private focusRecordPanel() {
     queueMicrotask(() => {
       const panel = this.host.nativeElement.querySelector('.record-panel');
       if (panel instanceof HTMLElement) panel.focus();
     });
-  }
-  private appointmentId(event: ParticipantTimelineEvent | null): string | undefined {
-    return event?.detail?.detailResourceId;
   }
   private status(error: unknown): number | undefined {
     return error instanceof ResponseError ? error.response.status : undefined;

@@ -15,6 +15,7 @@ import {
   TimelineEventComponent,
 } from './specialist-participant-workspace.page';
 import { ParticipantMeasurementDialogComponent } from './participant-measurement-dialog.component';
+import { ParticipantHistoryComponent } from './participant-history.component';
 
 registerLocaleData(localePl);
 
@@ -555,306 +556,71 @@ describe('PatientTimelineEventPanelComponent', () => {
   });
 });
 
-describe('SpecialistParticipantWorkspacePage appointment outcomes', () => {
-  it('uses generated complete with the current version and opens the newest refreshed event', async () => {
-    const event = appointmentEvent('event-old', 'appointment-1', '2026-07-01T10:00:00Z');
-    const newest = appointmentEvent('event-new', 'appointment-1', '2026-07-02T10:00:00Z');
-    const complete = vi.fn().mockResolvedValue({});
-    const getSpecialistAppointment = vi
-      .fn()
-      .mockResolvedValue({
-        appointmentId: 'appointment-1',
-        version: 7,
-        availableActions: ['COMPLETE'],
-      });
-    const { fixture, router } = await pageFixture([event], [newest], {
-      complete,
-      getSpecialistAppointment,
-    });
-    (fixture.componentInstance as any).selected.set(event);
-    (fixture.componentInstance as any).currentAppointment.set({
-      appointmentId: 'appointment-1',
-      version: 7,
-      availableActions: ['COMPLETE'],
-    });
-    await (fixture.componentInstance as any).recordOutcome('COMPLETE');
-    expect(complete).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: 'appointment-1',
-        appointmentVersionCommand: { version: 7 },
-        idempotencyKey: expect.any(String),
-      }),
-    );
-    expect(router.navigate).toHaveBeenCalledWith(
-      [],
-      expect.objectContaining({ queryParams: { eventId: 'event-new' } }),
-    );
-    expect((fixture.componentInstance as any).selected()).toBe(newest);
-  });
+describe('SpecialistParticipantWorkspacePage History V2 deep links', () => {
+  const encounter = {
+    kind: 'ENCOUNTER', stableItemId: 'encounter:appointment-1', historyAt: new Date('2026-07-01T10:00:00Z'), matchedKinds: new Set(['APPOINTMENT']),
+    encounter: { appointment: { id: 'appointment-1', type: 'PHYSIOTHERAPY', status: 'COMPLETED', startsAt: new Date('2026-07-01T10:00:00Z') }, lifecycle: [], executions: [], measurements: [], documentation: [] },
+  };
 
-  it('refreshes the current appointment without retrying after a conflict', async () => {
-    const event = appointmentEvent('event-old', 'appointment-1', '2026-07-01T10:00:00Z');
-    const complete = vi
-      .fn()
-      .mockRejectedValue(new ResponseError(new Response(null, { status: 409 })));
-    const getSpecialistAppointment = vi
-      .fn()
-      .mockResolvedValue({ appointmentId: 'appointment-1', version: 8, availableActions: [] });
-    const { fixture } = await pageFixture([event], [event], { complete, getSpecialistAppointment });
-    (fixture.componentInstance as any).selected.set(event);
-    (fixture.componentInstance as any).currentAppointment.set({
-      appointmentId: 'appointment-1',
-      version: 7,
-      availableActions: ['COMPLETE'],
-    });
-    await (fixture.componentInstance as any).recordOutcome('COMPLETE');
-    expect(complete).toHaveBeenCalledTimes(1);
-    expect(getSpecialistAppointment).toHaveBeenCalledWith({ id: 'appointment-1' });
-    expect((fixture.componentInstance as any).currentAppointment().version).toBe(8);
-    expect((fixture.componentInstance as any).announcement()).toContain('zmieniło się');
-  });
-
-  it('keeps History open when an outcome refresh has no replacement event', async () => {
-    const event = appointmentEvent('event-old', 'appointment-1', '2026-07-01T10:00:00Z');
-    const { fixture, router } = await pageFixture([event], [], {
-      complete: vi.fn().mockResolvedValue({}),
-      getSpecialistAppointment: vi.fn(),
-    });
-    (fixture.componentInstance as any).selected.set(event);
-    (fixture.componentInstance as any).currentAppointment.set({
-      appointmentId: 'appointment-1',
-      version: 7,
-      availableActions: ['COMPLETE'],
-    });
-
-    await (fixture.componentInstance as any).recordOutcome('COMPLETE');
-
-    expect(router.navigate).toHaveBeenLastCalledWith(
-      [],
-      expect.objectContaining({
-        queryParams: { section: 'history', eventId: null },
-        queryParamsHandling: 'merge',
-      }),
-    );
-  });
-});
-
-describe('SpecialistParticipantWorkspacePage event deep links', () => {
-  it('opens an in-list event without requesting its context', async () => {
-    const event = appointmentEvent('event-in-list', 'appointment-1', '2026-07-01T10:00:00Z');
-    const { fixture, api } = await pageFixture([event], [event], appointmentApi());
+  it('uses the resolver for an in-page encounter and retains the loaded semantic item', async () => {
+    const { fixture, api } = await pageFixture([encounter], [encounter], appointmentApi());
+    api.participantHistory.resolveSpecialistParticipantHistory.mockResolvedValue({ item: encounter, highlightKind: 'LIFECYCLE', highlightId: 'lifecycle-1' });
     await (fixture.componentInstance as any).load('participant-1', null);
-
-    await (fixture.componentInstance as any).resolveSelection('participant-1', 'event-in-list', [
-      event,
-    ]);
-
-    expect((fixture.componentInstance as any).selected()).toBe(event);
-    expect(api.participantWorkspace.timelineEvent).not.toHaveBeenCalled();
+    await (fixture.componentInstance as any).resolveSelection('participant-1', encounter.stableItemId);
+    expect(api.participantHistory.resolveSpecialistParticipantHistory).toHaveBeenCalledWith(expect.objectContaining({ participantId: 'participant-1', eventId: encounter.stableItemId, actingContext: 'TRAINER' }));
+    expect((fixture.componentInstance as any).selected()).toBe((fixture.componentInstance as any).historyItems()[0]);
+    expect((fixture.componentInstance as any).selectedHighlightKind()).toBe('LIFECYCLE');
   });
 
-  it('opens an out-of-range event from context without adding it to the timeline', async () => {
-    const listed = appointmentEvent('event-listed', 'appointment-1', '2026-07-01T10:00:00Z');
-    const outside = appointmentEvent('event-outside', 'appointment-2', '2025-01-01T10:00:00Z');
-    const { fixture } = await pageFixture([listed], [listed], appointmentApi(), {
-      timelineEvent: vi.fn().mockResolvedValue(outside),
-    });
+  it('resolves an initial History eventId only after authoritative context loading', async () => {
+    const { api } = await pageFixture([encounter], [encounter], appointmentApi(), {
+      historyResolve: vi.fn().mockResolvedValue({ item: encounter }),
+    }, vi.fn(), { eventId: encounter.stableItemId });
+    await vi.waitFor(() => expect(api.participantHistory.resolveSpecialistParticipantHistory).toHaveBeenCalledWith(expect.objectContaining({ eventId: encounter.stableItemId, actingContext: 'TRAINER' })));
+  });
+
+  it('opens an out-of-range resolved documentation target through the protected panel', async () => {
+    const { fixture, api, router } = await pageFixture([], [], appointmentApi());
     await (fixture.componentInstance as any).load('participant-1', null);
-
-    await (fixture.componentInstance as any).resolveSelection('participant-1', 'event-outside', [
-      listed,
-    ]);
-    fixture.detectChanges();
-
-    expect((fixture.componentInstance as any).selected()).toBe(outside);
-    expect((fixture.componentInstance as any).events()).toEqual([listed]);
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain(
-      'Zdarzenie znajduje się poza aktualnie wybranym zakresem historii.',
-    );
+    api.participantHistory.resolveSpecialistParticipantHistory.mockResolvedValue({ item: { kind: 'STANDALONE', stableItemId: 'note-event:history-1', historyAt: new Date(), matchedKinds: ['NOTE'], standalone: { note: { recordId: 'note-1' } } }, highlightKind: 'DOCUMENTATION', highlightId: 'note-1', navigationTarget: { kind: 'DOCUMENTATION_NOTE', id: 'note-1' } });
+    await (fixture.componentInstance as any).resolveSelection('participant-1', 'note-event:history-1');
+    expect((fixture.componentInstance as any).selectedOutsideRange()).toBe(true);
+    expect(router.navigate).toHaveBeenCalledWith([], expect.objectContaining({ queryParams: { section: 'documentation', eventId: null, recordType: 'note', recordId: 'note-1', recordMode: null } }));
   });
 
-  it('clears only an unavailable eventId from the URL with replaceUrl', async () => {
-    const { fixture, router } = await pageFixture([], [], appointmentApi(), {
-      timelineEvent: vi
-        .fn()
-        .mockRejectedValue(new ResponseError(new Response(null, { status: 404 }))),
-    });
-
-    await (fixture.componentInstance as any).resolveSelection('participant-1', 'missing', []);
-
-    expect(router.navigate).toHaveBeenCalledWith(
-      [],
-      expect.objectContaining({
-        queryParams: { eventId: null },
-        queryParamsHandling: 'merge',
-        replaceUrl: true,
-      }),
-    );
-    expect((fixture.componentInstance as any).announcement()).toBe(
-      'Wybrane zdarzenie jest niedostępne.',
-    );
-  });
-
-  it('does not reload the workspace when only eventId changes', async () => {
-    const event = appointmentEvent('event-in-list', 'appointment-1', '2026-07-01T10:00:00Z');
-    const { fixture, api, params } = await pageFixture([event], [event], appointmentApi());
+  it('keeps a linked documentation target in its encounter until the protected action is chosen', async () => {
+    const { fixture, api, router } = await pageFixture([], [], appointmentApi());
     await (fixture.componentInstance as any).load('participant-1', null);
-    const timelineCalls = api.participantWorkspace.timeline.mock.calls.length;
-
-    params.next(convertToParamMap({ eventId: 'event-in-list' }));
-    await fixture.whenStable();
-
-    expect(api.participantWorkspace.timeline).toHaveBeenCalledTimes(timelineCalls);
-    expect((fixture.componentInstance as any).selected()).toBe(event);
-  });
-
-  it('uses the list instance when a previously contextual event enters the current timeline', async () => {
-    const contextual = appointmentEvent('event-shared', 'appointment-1', '2025-01-01T10:00:00Z');
-    const listed = { ...contextual, effectiveFrom: new Date('2026-07-01T10:00:00Z') };
-    const { fixture } = await pageFixture([], [], appointmentApi(), {
-      timelineEvent: vi.fn().mockResolvedValue(contextual),
-    });
-    await (fixture.componentInstance as any).load('participant-1', null);
-    await (fixture.componentInstance as any).resolveSelection('participant-1', 'event-shared', []);
-    (fixture.componentInstance as any).events.set([listed]);
-
-    await (fixture.componentInstance as any).resolveSelection('participant-1', 'event-shared', [
-      listed,
-    ]);
-
-    expect((fixture.componentInstance as any).selected()).toBe(listed);
-    expect((fixture.componentInstance as any).events()).toEqual([listed]);
-  });
-
-  it('closes a direct-link panel without requiring an opener', async () => {
-    const { fixture, router } = await pageFixture([], [], appointmentApi());
-    (fixture.componentInstance as any).opener = null;
-
-    (fixture.componentInstance as any).close();
-    await fixture.whenStable();
-
-    expect(router.navigate).toHaveBeenCalledWith(
-      [],
-      expect.objectContaining({ queryParams: { section: 'history', eventId: null }, queryParamsHandling: 'merge' }),
-    );
-  });
-
-  it('clears the direct-link URL and returns focus to the event opener on close', async () => {
-    const { fixture, router } = await pageFixture([], [], appointmentApi());
-    const opener = document.createElement('button');
-    document.body.append(opener);
-    (fixture.componentInstance as any).opener = opener;
-
-    (fixture.componentInstance as any).close();
-    await fixture.whenStable();
-
-    expect(router.navigate).toHaveBeenCalledWith(
-      [],
-      expect.objectContaining({ queryParams: { section: 'history', eventId: null }, queryParamsHandling: 'merge' }),
-    );
-    expect(document.activeElement).toBe(opener);
-    opener.remove();
-  });
-
-  it('keeps an event deep link in History and restores focus on Escape', async () => {
-    const event = {
-      eventId: 'record-event-1',
-      category: 'INTERVIEW',
-      detail: { referenceId: 'interview-1' },
-    };
-    const { fixture, router, params } = await pageFixture([event], [event], appointmentApi());
-    await (fixture.componentInstance as any).load('participant-1', null);
-    fixture.detectChanges();
-    const opener = document.createElement('button');
-    document.body.append(opener);
-    (fixture.componentInstance as any).opener = opener;
-    params.next(convertToParamMap({
-      eventId: event.eventId,
-      recordType: 'interview',
-      recordId: 'interview-1',
-      range: '2w',
-      view: 'timeline',
-      source: 'history',
-    }));
-    await fixture.whenStable();
-    await (fixture.componentInstance as any).resolveSelection('participant-1', event.eventId, [event]);
-    fixture.detectChanges();
-    router.navigate.mockClear();
-
-    (fixture.nativeElement as HTMLElement).querySelector('.event-panel')!.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'Escape' }),
-    );
-    params.next(convertToParamMap({ section: 'history', range: '2w', view: 'timeline', source: 'history' }));
-    await fixture.whenStable();
-
-    expect(router.navigate).toHaveBeenCalledWith(
-      [],
-      expect.objectContaining({
-        queryParams: { section: 'history', eventId: null, recordType: null, recordId: null, recordMode: null },
-        queryParamsHandling: 'merge',
-      }),
-    );
-    expect((fixture.componentInstance as any).selected()).toBeNull();
-    expect((fixture.componentInstance as any).recordPanelId()).toBeNull();
+    api.participantHistory.resolveSpecialistParticipantHistory.mockResolvedValue({ item: encounter, highlightKind: 'DOCUMENTATION', highlightId: 'note-1', navigationTarget: { kind: 'DOCUMENTATION_NOTE', id: 'note-1' } });
+    await (fixture.componentInstance as any).resolveSelection('participant-1', 'note-event:linked');
     expect((fixture.componentInstance as any).section()).toBe('history');
-    expect(document.activeElement).toBe(opener);
-    opener.remove();
+    expect((fixture.componentInstance as any).selectedNavigationTarget()).toEqual({ kind: 'DOCUMENTATION_NOTE', id: 'note-1' });
+    expect(router.navigate).not.toHaveBeenCalledWith([], expect.objectContaining({ queryParams: expect.objectContaining({ section: 'documentation' }) }));
   });
 
-  it('preserves the historical goal event while loading its current goal snapshot by referenceId', async () => {
-    const event = goalEvent('goal-event-1', 'goal-1');
-    const getParticipantGoal = vi
-      .fn()
-      .mockResolvedValue({
-        id: 'goal-1',
-        title: 'Aktualny cel',
-        status: 'ACTIVE',
-        category: 'PERFORMANCE',
-      });
-    const { fixture, api } = await pageFixture(
-      [event],
-      [event],
-      appointmentApi(),
-      {},
-      getParticipantGoal,
-    );
+  it('opens a resolved goal target in the existing plan detail flow', async () => {
+    const { fixture, api, router } = await pageFixture([], [], appointmentApi());
     await (fixture.componentInstance as any).load('participant-1', null);
-    (fixture.componentInstance as any).actingContext.set('TRAINER');
-
-    await (fixture.componentInstance as any).resolveSelection('participant-1', 'goal-event-1', [
-      event,
-    ]);
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect(api.participantGoals.getParticipantGoal).toHaveBeenCalledWith({
-      participantId: 'participant-1',
-      goalId: 'goal-1',
-      actingContext: 'TRAINER',
-    });
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Aktualne dane celu');
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Aktualny cel');
+    api.participantHistory.resolveSpecialistParticipantHistory.mockResolvedValue({ item: { kind: 'STANDALONE', stableItemId: 'goal-event:1', historyAt: new Date(), matchedKinds: ['GOAL'], standalone: { goal: { goalId: 'goal-1', eventType: 'ACHIEVED' } } }, navigationTarget: { kind: 'GOAL', id: 'goal-1' } });
+    await (fixture.componentInstance as any).resolveSelection('participant-1', 'goal-event:1');
+    expect(router.navigate).toHaveBeenCalledWith([], expect.objectContaining({ queryParams: { section: 'plan', eventId: null, goalId: 'goal-1', recordType: null, recordId: null, recordMode: null } }));
   });
 
-  it('keeps a historical goal event open when its current goal is no longer available', async () => {
-    const event = goalEvent('goal-event-1', 'goal-1');
-    const unavailable = vi
-      .fn()
-      .mockRejectedValue(new ResponseError(new Response(null, { status: 404 })));
-    const { fixture } = await pageFixture([event], [event], appointmentApi(), {}, unavailable);
-    await (fixture.componentInstance as any).load('participant-1', null);
-    (fixture.componentInstance as any).actingContext.set('TRAINER');
+  it('keeps authoritative appointment actions available from the appointment endpoint', async () => {
+    const complete = vi.fn().mockResolvedValue({});
+    const { fixture } = await pageFixture([encounter], [encounter], { complete, getSpecialistAppointment: vi.fn() });
+    const component = fixture.componentInstance as any;
+    component.participantId.set('participant-1');
+    component.selected.set(encounter);
+    component.currentAppointment.set({ appointmentId: 'appointment-1', version: 7, availableActions: ['COMPLETE'] });
+    await component.recordOutcome('COMPLETE');
+    expect(complete).toHaveBeenCalledWith(expect.objectContaining({ id: 'appointment-1', appointmentVersionCommand: { version: 7 }, idempotencyKey: expect.any(String) }));
+  });
 
-    await (fixture.componentInstance as any).resolveSelection('participant-1', 'goal-event-1', [
-      event,
-    ]);
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect((fixture.componentInstance as any).selected()).toBe(event);
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain(
-      'Aktualne dane celu nie są dostępne.',
-    );
+  it('uses the encounter resolver identifier for an operationally focused appointment', async () => {
+    const { fixture, router } = await pageFixture([], [], appointmentApi());
+    await (fixture.componentInstance as any).openFocusedAppointment('appointment-1');
+    expect(router.navigate).toHaveBeenCalledWith([], expect.objectContaining({ queryParams: { section: 'history', eventId: 'encounter:appointment-1' } }));
   });
 });
 
@@ -923,10 +689,11 @@ async function pageFixture(
     complete: ReturnType<typeof vi.fn>;
     getSpecialistAppointment: ReturnType<typeof vi.fn>;
   },
-  workspaceOverrides: { timelineEvent?: ReturnType<typeof vi.fn>; workspace?: ReturnType<typeof vi.fn> } = {},
+  workspaceOverrides: { timelineEvent?: ReturnType<typeof vi.fn>; workspace?: ReturnType<typeof vi.fn>; historyResolve?: ReturnType<typeof vi.fn> } = {},
   getParticipantGoal = vi.fn(),
+  initialQuery: Record<string, string> = {},
 ) {
-  const params = new BehaviorSubject(convertToParamMap({}));
+  const params = new BehaviorSubject(convertToParamMap(initialQuery));
   const router = { navigate: vi.fn().mockResolvedValue(true) };
   let timelineCalls = 0;
   const api = {
@@ -939,6 +706,12 @@ async function pageFixture(
           Promise.resolve({ items: timelineCalls++ ? refreshedItems : initialItems }),
         ),
       timelineEvent: workspaceOverrides.timelineEvent ?? vi.fn(),
+    },
+    participantHistory: {
+      getSpecialistParticipantHistory: vi
+        .fn()
+        .mockImplementation(() => Promise.resolve({ items: timelineCalls++ ? refreshedItems : initialItems })),
+      resolveSpecialistParticipantHistory: workspaceOverrides.historyResolve ?? vi.fn(),
     },
     specialistClients: { list1: vi.fn().mockResolvedValue([]) },
     onboarding: { state: vi.fn().mockResolvedValue({ profile: { specialistKind: 'TRAINER' } }) },
@@ -971,10 +744,33 @@ async function pageFixture(
   return { fixture, router, api, params };
 }
 
+describe('ParticipantHistoryComponent', () => {
+  it('renders one calm encounter summary and keeps supporting facts in detail', async () => {
+    await TestBed.configureTestingModule({ imports: [ParticipantHistoryComponent] }).compileComponents();
+    const fixture = TestBed.createComponent(ParticipantHistoryComponent);
+    fixture.componentInstance.items = [{
+      kind: 'ENCOUNTER', stableItemId: 'encounter:1', historyAt: new Date('2026-09-29T14:00:00Z'), matchedKinds: new Set(['MEASUREMENT']),
+      encounter: {
+        appointment: { type: 'PHYSIOTHERAPY', status: 'COMPLETED', startsAt: new Date('2026-09-29T14:00:00Z') },
+        linkedSession: { kind: 'TRAINING' }, executions: [{ outcome: 'PARTIAL', resultCount: 5 }],
+        measurements: [{ metricCode: 'BODY_WEIGHT', value: 71, unit: 'kg' }], documentation: [{ category: 'NOTE' }], lifecycle: [],
+      },
+    }] as any;
+    fixture.detectChanges();
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Fizjoterapia');
+    expect(text).toContain('Zakończone');
+    expect(text).toContain('Masa ciała 71 kg');
+    expect(text).not.toContain('BODY_WEIGHT');
+    expect(fixture.nativeElement.querySelector('.history-detail')).toBeNull();
+  });
+});
+
 describe('specialist workspace invitation access', () => {
   it('loads invitation status after workspace access fails when specialist onboarding role succeeds', async () => {
     const { fixture, api } = await pageFixture([], [], appointmentApi(), { workspace: vi.fn().mockRejectedValue(new Error('forbidden')) });
-    await Promise.resolve(); fixture.detectChanges();
+    await (fixture.componentInstance as any).load('participant-1', null);
+    fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
     expect(api.participantAccess.readParticipantAccessInvitationStatus).toHaveBeenCalledWith({ participantId: 'participant-1', role: 'TRAINER' });
     expect(fixture.nativeElement.querySelector('app-participant-access-panel')).not.toBeNull();
   });
@@ -985,6 +781,7 @@ describe('specialist workspace disclosure', () => {
     const workspace = vi.fn().mockResolvedValue({ quickActions: ['ADD_MEASUREMENT'] });
     const { fixture, api } = await pageFixture([], [], appointmentApi(), { workspace });
     const component = fixture.componentInstance as any;
+    await component.load('participant-1', null);
     api.participantMeasurements.participantMeasurementCatalog.mockResolvedValue([{ id: 'BODY_WEIGHT', label: 'Masa ciała', defaultUnit: 'kg', allowedUnits: ['kg'] }]);
     await component.perform('ADD_MEASUREMENT');
     fixture.detectChanges();
@@ -1068,6 +865,7 @@ describe('specialist workspace disclosure', () => {
         focus: { primaryAction: 'SCHEDULE_APPOINTMENT', title: 'Zaplanuj spotkanie' },
       }),
     });
+    await (fixture.componentInstance as any).load('participant-1', null);
     await fixture.whenStable();
     fixture.detectChanges();
 
@@ -1084,6 +882,7 @@ describe('specialist workspace disclosure', () => {
         situationalSignals: [{ title: 'Aktywny plan', action: 'OPEN_ACTIVE_PLAN', planId: 'plan-1' }],
       }),
     });
+    await (fixture.componentInstance as any).load('participant-1', null);
     await fixture.whenStable();
     fixture.detectChanges();
 
@@ -1214,12 +1013,9 @@ describe('specialist workspace disclosure', () => {
   });
 
   it('opens the focused appointment by its authoritative identifier', async () => {
-    const appointments = appointmentApi();
-    appointments.getSpecialistAppointment.mockResolvedValue({ id: 'appointment-1', startsAt: new Date('2026-10-01T10:00:00Z'), status: 'CONFIRMED', type: 'CONSULTATION' });
-    const { fixture, api } = await pageFixture([], [], appointments);
+    const { fixture, router } = await pageFixture([], [], appointmentApi());
     await (fixture.componentInstance as any).performFocus({ primaryAction: 'OPEN_HISTORY', appointmentId: 'appointment-1' });
-    expect(api.appointments.getSpecialistAppointment).toHaveBeenCalledWith({ id: 'appointment-1' });
-    expect((fixture.componentInstance as any).selected().detail.detailResourceId).toBe('appointment-1');
+    expect(router.navigate).toHaveBeenCalledWith([], expect.objectContaining({ queryParams: { section: 'history', eventId: 'encounter:appointment-1' } }));
   });
 
   it('navigates the recording focus to the appointment session route', async () => {

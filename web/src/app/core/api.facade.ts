@@ -28,7 +28,7 @@ import {
   ParticipantGoalControllerApi,
   ParticipantDocumentationControllerApi,
   SpecialistPlanFacadeControllerApi, ParticipantExerciseSetControllerApi, ParticipantPlanFacadeControllerApi, PracticalPlanResourceControllerApi, SpecialistAppointmentExecutionControllerApi, SpecialistParticipantMeasurementControllerApi, SpecialistAppointmentCloseoutControllerApi
-  ,ParticipantAccessInvitationControllerApi, ParticipantSelfGoalControllerApi, ParticipantExecutionHistoryControllerApi, AdherenceSummaryControllerApi
+  ,ParticipantAccessInvitationControllerApi, ParticipantSelfGoalControllerApi, ParticipantExecutionHistoryControllerApi, AdherenceSummaryControllerApi, SpecialistParticipantHistoryControllerApi
 } from '../api/generated/src';
 import { Middleware } from '../api/generated/src/runtime';
 import { AuthService } from './auth.service';
@@ -66,6 +66,7 @@ export class ApiFacade {
   readonly reminders: ReminderPreferenceControllerApi;
   /** Read-only bounded client workspace; generated client remains unmodified. */
   readonly participantWorkspace: SpecialistParticipantReadControllerApi;
+  readonly participantHistory: SpecialistParticipantHistoryControllerApi;
   readonly appointments: AppointmentControllerApi;
   readonly specialistToday: SpecialistTodayControllerApi;
   readonly specialistAvailableSlots: SpecialistAvailableSlotsControllerApi;
@@ -113,6 +114,7 @@ export class ApiFacade {
     this.gamification = new GamificationControllerApi(configuration);
     this.reminders = new ReminderPreferenceControllerApi(configuration);
     this.participantWorkspace = new SpecialistParticipantReadControllerApi(configuration);
+    this.participantHistory = new SpecialistParticipantHistoryControllerApi(configuration);
     this.appointments = new AppointmentControllerApi(configuration);
     this.specialistToday = new SpecialistTodayControllerApi(configuration);
     this.specialistAvailableSlots = new SpecialistAvailableSlotsControllerApi(configuration);

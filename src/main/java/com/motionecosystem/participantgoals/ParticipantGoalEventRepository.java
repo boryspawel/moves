@@ -19,4 +19,14 @@ interface ParticipantGoalEventRepository extends JpaRepository<ParticipantGoalEv
             + "order by e.effectiveAt desc, e.recordedAt desc, e.id asc")
     List<ParticipantGoalEvent> timelineAfterCursor(@Param("participant") UUID participant, @Param("from") Instant from, @Param("to") Instant to,
             @Param("effective") Instant effective, @Param("recorded") Instant recorded, @Param("id") UUID id, Pageable page);
+
+    @Query("select e from ParticipantGoalEvent e, ParticipantGoal g where e.goalId = g.id and e.participantId = :participant "
+            + "and g.specialistAccountId = :specialist and e.effectiveAt >= :from and e.effectiveAt < :to "
+            + "order by e.effectiveAt desc, e.recordedAt desc, e.id asc")
+    List<ParticipantGoalEvent> findHistoryCandidates(@Param("specialist") UUID specialist, @Param("participant") UUID participant,
+            @Param("from") Instant from, @Param("to") Instant to);
+    @Query("select e from ParticipantGoalEvent e, ParticipantGoal g where e.goalId = g.id and e.participantId = :participant "
+            + "and g.specialistAccountId = :specialist and e.id in :eventIds")
+    List<ParticipantGoalEvent> findHistoryByEventIds(@Param("specialist") UUID specialist, @Param("participant") UUID participant,
+            @Param("eventIds") Set<UUID> eventIds);
 }

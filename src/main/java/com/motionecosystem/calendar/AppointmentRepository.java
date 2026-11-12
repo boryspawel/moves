@@ -21,6 +21,15 @@ interface AppointmentRepository extends JpaRepository<Appointment, UUID> {
     @Query("select a from Appointment a where a.specialistAccountId = :specialist and a.participantId = :participant and ((a.startsAt < :end and a.endsAt > :start) or a.status = 'IN_PROGRESS') order by a.startsAt, a.endsAt, a.id")
     List<Appointment> findForParticipantIncludingInProgress(@Param("specialist") UUID specialist, @Param("participant") UUID participant,
             @Param("start") Instant start, @Param("end") Instant end);
+    @Query("select a from Appointment a where a.specialistAccountId = :specialist and a.participantId = :participant and a.startsAt >= :start and a.startsAt < :end order by a.startsAt, a.id")
+    List<Appointment> findHistoryCandidates(@Param("specialist") UUID specialist, @Param("participant") UUID participant,
+                                            @Param("start") Instant start, @Param("end") Instant end);
+    @Query("select a from Appointment a where a.specialistAccountId = :specialist and a.participantId = :participant and a.id in :ids order by a.startsAt, a.id")
+    List<Appointment> findHistoryByIds(@Param("specialist") UUID specialist, @Param("participant") UUID participant,
+                                       @Param("ids") Set<UUID> ids);
+    @Query("select a from Appointment a where a.specialistAccountId = :specialist and a.participantId = :participant and a.plannedSessionId in :sessionIds order by a.startsAt, a.id")
+    List<Appointment> findHistoryByPlannedSessionIds(@Param("specialist") UUID specialist, @Param("participant") UUID participant,
+                                                     @Param("sessionIds") Set<UUID> sessionIds);
     @Query("select count(a) > 0 from Appointment a where a.specialistAccountId = :specialist and a.status <> 'CANCELLED' and a.id <> :excluded and a.startsAt < :end and a.endsAt > :start")
     boolean hasActiveOverlap(@Param("specialist") UUID specialist, @Param("start") Instant start, @Param("end") Instant end, @Param("excluded") UUID excluded);
     @Query("select a from Appointment a where a.specialistAccountId = :specialist and a.participantId in :participants and a.endsAt <= :now and a.status in :statuses order by a.endsAt, a.id")

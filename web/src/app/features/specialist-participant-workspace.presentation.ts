@@ -37,7 +37,7 @@ const questionPresentation: Record<string, { title: string; section: string; opt
 };
 const interviewStatusLabels: Record<string, string> = { DRAFT: 'Wywiad w trakcie', COMPLETED: 'Wywiad zakończony', SUPERSEDED: 'Zastąpiony nowszym wywiadem' };
 const noteCategoryLabels: Record<string, string> = { GENERAL: 'Notatka ogólna', SESSION: 'Notatka ze spotkania', HEALTH: 'Notatka zdrowotna', OTHER: 'Inna notatka' };
-const noteStatusLabels: Record<string, string> = { DRAFT: 'W trakcie', FINALISED: 'Zakończona', FINALIZED: 'Zakończona', ARCHIVED: 'Zarchiwizowana' };
+const noteStatusLabels: Record<string, string> = { DRAFT: 'W trakcie', FINAL: 'Finalna', FINALISED: 'Zakończona', FINALIZED: 'Zakończona', ARCHIVED: 'Zarchiwizowana' };
 const documentationLifecycleSummaryLabels: Record<string, string> = {
   NOTE_CREATED: 'Dodano notatkę',
   NOTE_UPDATED: 'Zaktualizowano notatkę',

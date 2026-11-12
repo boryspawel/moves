@@ -2,6 +2,7 @@ package com.motionecosystem.calendar;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
@@ -47,6 +48,29 @@ interface AppointmentEventRepository extends Repository<AppointmentEvent, UUID> 
 
     @Query("select e.id from AppointmentEvent e where e.appointmentId = :appointmentId order by e.recordedAt desc, e.id desc")
     List<UUID> findLatestEventId(@Param("appointmentId") UUID appointmentId, Pageable pageable);
+
+    @Query("""
+            select e.id as eventId, e.appointmentId as appointmentId, cast(e.eventType as string) as eventType,
+                   cast(e.fromStatus as string) as fromStatus, cast(e.toStatus as string) as toStatus,
+                   e.effectiveAt as effectiveAt, e.recordedAt as recordedAt, cast(e.type as string) as appointmentType,
+                   e.shortPurpose as shortPurpose
+            from AppointmentEvent e where e.specialistAccountId = :specialist and e.participantId = :participant
+              and e.appointmentId in :appointmentIds
+            order by e.appointmentId, e.effectiveAt, e.recordedAt, e.id
+            """)
+    List<AppointmentEventProjection> findHistoryByAppointmentIds(@Param("specialist") UUID specialist,
+            @Param("participant") UUID participant, @Param("appointmentIds") Set<UUID> appointmentIds);
+
+    @Query("""
+            select e.id as eventId, e.appointmentId as appointmentId, cast(e.eventType as string) as eventType,
+                   cast(e.fromStatus as string) as fromStatus, cast(e.toStatus as string) as toStatus,
+                   e.effectiveAt as effectiveAt, e.recordedAt as recordedAt, cast(e.type as string) as appointmentType,
+                   e.shortPurpose as shortPurpose
+            from AppointmentEvent e where e.specialistAccountId = :specialist and e.participantId = :participant
+              and e.id in :eventIds order by e.effectiveAt, e.recordedAt, e.id
+            """)
+    List<AppointmentEventProjection> findHistoryByEventIds(@Param("specialist") UUID specialist,
+            @Param("participant") UUID participant, @Param("eventIds") Set<UUID> eventIds);
 
     interface AppointmentEventProjection {
         UUID getEventId();

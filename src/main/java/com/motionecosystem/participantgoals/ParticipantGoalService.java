@@ -4,6 +4,7 @@ import com.motionecosystem.audit.AuditRecorder;
 import com.motionecosystem.identityaccess.api.CurrentAccountService;
 import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.participantgoals.api.ParticipantGoalQueryPort;
+import com.motionecosystem.participantgoals.api.SpecialistParticipantGoalHistoryQueryPort;
 import com.motionecosystem.participant.api.ParticipantClientPort;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.*;
@@ -18,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
-public class ParticipantGoalService implements ParticipantGoalQueryPort, com.motionecosystem.participantgoals.api.MeasurementGoalProjectionPort {
+public class ParticipantGoalService implements ParticipantGoalQueryPort, com.motionecosystem.participantgoals.api.MeasurementGoalProjectionPort, SpecialistParticipantGoalHistoryQueryPort {
     private final ParticipantGoalRepository goals;
     private final GoalOutcomeRepository outcomes;
     private final GoalIdempotencyRepository idempotency;
@@ -223,6 +224,41 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort, com.mot
     }
     @Override @Transactional(readOnly = true)
     public Optional<ParticipantGoalSummary> findById(UUID goalId) { return goals.findById(goalId).map(this::summary); }
+    @Override @Transactional(readOnly = true)
+    public List<GoalHistoryCandidate> goalHistoryCandidates(String subject, UUID participantId, ActingContext context,
+                                                            Instant fromInclusive, Instant toExclusive) {
+        UUID specialist;
+        try { specialist = authorize(subject, participantId, context, null); }
+        catch (ResponseStatusException error) {
+            if (error.getStatusCode().value() == HttpStatus.FORBIDDEN.value()) return List.of();
+            throw error;
+        }
+        if (fromInclusive == null || toExclusive == null || !toExclusive.isAfter(fromInclusive)) throw bad("history range is required");
+        if (events == null) return List.of();
+        List<ParticipantGoalEvent> source = events.findHistoryCandidates(specialist, participantId, fromInclusive, toExclusive).stream()
+                .filter(item -> matches(context.role(), ParticipantGoal.Category.valueOf(item.category))).toList();
+        Map<UUID, GoalObservation> observationById = observations == null ? Map.of() : observations.findAllById(source.stream()
+                .map(item -> item.observationId).filter(Objects::nonNull).collect(java.util.stream.Collectors.toSet())).stream()
+                .collect(java.util.stream.Collectors.toMap(item -> item.id, item -> item));
+        return source.stream().map(item -> {
+            GoalObservation observation = observationById.get(item.observationId);
+            return new GoalHistoryCandidate(item.id, item.goalId, observation == null ? null : observation.outcomeId, item.eventType.name(),
+                    item.toStatus.name(), item.effectiveAt, item.recordedAt, observation == null ? null : observation.sourceMeasurementId);
+        }).toList();
+    }
+    @Override @Transactional(readOnly = true)
+    public List<GoalHistoryCandidate> goalHistoryByEventIds(String subject, UUID participantId, ActingContext context, Set<UUID> eventIds) {
+        UUID specialist;
+        try { specialist = authorize(subject, participantId, context, null); }
+        catch (ResponseStatusException error) { if (error.getStatusCode().value() == HttpStatus.FORBIDDEN.value()) return List.of(); throw error; }
+        if (eventIds == null || eventIds.isEmpty() || events == null) return List.of();
+        List<ParticipantGoalEvent> source = events.findHistoryByEventIds(specialist, participantId, eventIds).stream()
+                .filter(item -> matches(context.role(), ParticipantGoal.Category.valueOf(item.category))).toList();
+        Map<UUID, GoalObservation> observationById = observations == null ? Map.of() : observations.findAllById(source.stream()
+                .map(item -> item.observationId).filter(Objects::nonNull).collect(java.util.stream.Collectors.toSet())).stream()
+                .collect(java.util.stream.Collectors.toMap(item -> item.id, item -> item));
+        return source.stream().map(item -> { GoalObservation observation = observationById.get(item.observationId); return new GoalHistoryCandidate(item.id, item.goalId, observation == null ? null : observation.outcomeId, item.eventType.name(), item.toStatus.name(), item.effectiveAt, item.recordedAt, observation == null ? null : observation.sourceMeasurementId); }).toList();
+    }
     @Override @Transactional(readOnly = true)
     public ObservationHistory findObservationHistory(UUID goalId, UUID outcomeId, Instant measuredBefore, Instant recordedBefore, UUID idBefore, int limit) {
         if (goalId == null || limit < 1 || limit > 100) return new ObservationHistory(List.of(), null);

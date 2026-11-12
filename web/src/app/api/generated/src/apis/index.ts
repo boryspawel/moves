@@ -37,6 +37,7 @@ export * from './SpecialistAppointmentCloseoutControllerApi';
 export * from './SpecialistAppointmentExecutionControllerApi';
 export * from './SpecialistAvailableSlotsControllerApi';
 export * from './SpecialistClientControllerApi';
+export * from './SpecialistParticipantHistoryControllerApi';
 export * from './SpecialistParticipantMeasurementControllerApi';
 export * from './SpecialistParticipantReadControllerApi';
 export * from './SpecialistPlanFacadeControllerApi';
