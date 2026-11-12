@@ -97,7 +97,7 @@ describe('ParticipantDocumentationComponent', () => {
     }), {});
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('Wywiad');
-    expect(text).toContain('Uzupełniony');
+    expect(text).toContain('Ukończony');
     expect(text).toContain('Otwórz');
     expect(text).not.toContain('COMPLETED');
     expect(text).not.toContain('3.08.2026');
