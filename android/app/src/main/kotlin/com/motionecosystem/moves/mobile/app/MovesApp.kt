@@ -10,6 +10,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.motionecosystem.moves.mobile.BuildConfig
 import com.motionecosystem.moves.mobile.api.*
+import com.motionecosystem.moves.mobile.auth.OidcSession
+import com.motionecosystem.moves.mobile.auth.SessionStatus
 import com.motionecosystem.moves.mobile.repository.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,16 +20,77 @@ import kotlinx.coroutines.launch
 
 private enum class Section(val label: String) { TODAY("Dzień"), PARTICIPANTS("Uczestnicy"), CASES("Sprawy") }
 sealed interface ReadinessState { data object Loading : ReadinessState; data class Empty(val message: String) : ReadinessState; data class Error(val message: String) : ReadinessState }
-class ReadinessViewModel(private val tokenProvider: TokenProvider, private val repository: SpecialistRepository) : ViewModel() {
-    private val mutableState = MutableStateFlow<ReadinessState>(ReadinessState.Empty("Logowanie zostanie podłączone w kolejnym etapie."))
+class ReadinessViewModel(private val tokenProvider: TokenProvider, private val repository: SpecialistRepository,
+    private val onUnauthorized: () -> Unit = {}) : ViewModel() {
+    private val mutableState = MutableStateFlow<ReadinessState>(ReadinessState.Empty("Zaloguj się, aby sprawdzić połączenie."))
     val state: StateFlow<ReadinessState> = mutableState.asStateFlow()
-    fun refresh() { val token = tokenProvider.token(); if (token.isNullOrBlank()) { mutableState.value = ReadinessState.Empty("Brak sesji. Logowanie OIDC nie jest jeszcze częścią M1."); return }; viewModelScope.launch { mutableState.value = ReadinessState.Loading; mutableState.value = when (val result = repository.identity()) { is RemoteResult.Success -> ReadinessState.Empty("Połączono jako ${result.value.subject ?: "użytkownik"}. Ekrany biznesowe nie są jeszcze gotowe."); is RemoteResult.Failure -> ReadinessState.Error("Nie można odczytać sesji: ${result.error.javaClass.simpleName}") } } }
+    fun clear() { mutableState.value = ReadinessState.Empty("Brak sesji.") }
+    fun refresh() {
+        if (tokenProvider.token().isNullOrBlank()) { clear(); return }
+        viewModelScope.launch {
+            mutableState.value = ReadinessState.Loading
+            mutableState.value = when (val result = repository.identity()) {
+                is RemoteResult.Success -> ReadinessState.Empty("Połączono jako " + (result.value.subject ?: "użytkownik") + ". Ekrany biznesowe nie są jeszcze gotowe.")
+                is RemoteResult.Failure -> if (result.error is RemoteError.Unauthorized) {
+                    onUnauthorized()
+                    ReadinessState.Empty("Sesja wygasła. Zaloguj się ponownie.")
+                } else ReadinessState.Error("Nie można odczytać sesji: " + result.error.javaClass.simpleName)
+            }
+        }
+    }
 }
-@Composable fun MovesApp() {
-    val api = remember { createMovesApi(BuildConfig.BASE_URL, NoTokenProvider) }
-    val repository = remember { NetworkSpecialistRepository(api, RemoteCall(kotlinx.serialization.json.Json { ignoreUnknownKeys = true })) }
-    val viewModel = remember { ReadinessViewModel(NoTokenProvider, repository) }
-    val state by viewModel.state.collectAsStateWithLifecycle()
+
+@Composable
+fun MovesApp(session: OidcSession, onLogin: () -> Unit, onLogout: () -> Unit) {
+    val api = remember(session) { createMovesApi(BuildConfig.BASE_URL, session) }
+    val repository = remember(api) {
+        NetworkSpecialistRepository(api, RemoteCall(kotlinx.serialization.json.Json { ignoreUnknownKeys = true }))
+    }
+    val viewModel = remember(repository) { ReadinessViewModel(session, repository, session::clear) }
+    val authStatus by session.status.collectAsStateWithLifecycle()
+    val readiness by viewModel.state.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
     var selected by remember { mutableStateOf(Section.TODAY) }
-    MaterialTheme { Scaffold(bottomBar = { NavigationBar { Section.entries.forEach { section -> NavigationBarItem(selected = selected == section, onClick = { selected = section }, icon = { Text(section.label.take(1)) }, label = { Text(section.label) }) } } }) { padding -> Column(Modifier.padding(padding).padding(24.dp)) { Text(selected.label, style = MaterialTheme.typography.headlineMedium); Spacer(Modifier.height(16.dp)); when (state) { ReadinessState.Loading -> CircularProgressIndicator(); is ReadinessState.Empty -> Text((state as ReadinessState.Empty).message); is ReadinessState.Error -> { Text((state as ReadinessState.Error).message); Button(onClick = viewModel::refresh) { Text("Ponów") } } }; Spacer(Modifier.height(16.dp)); if (state !is ReadinessState.Loading) OutlinedButton(onClick = viewModel::refresh) { Text("Sprawdź sesję") } } } }
+    LaunchedEffect(authStatus) {
+        if (authStatus == SessionStatus.SignedIn) {
+            if (session.freshAccessToken() != null) viewModel.refresh() else viewModel.clear()
+        } else viewModel.clear()
+    }
+    MaterialTheme {
+        Scaffold(bottomBar = {
+            NavigationBar {
+                Section.entries.forEach { section ->
+                    NavigationBarItem(selected = selected == section, onClick = { selected = section },
+                        icon = { Text(section.label.take(1)) }, label = { Text(section.label) })
+                }
+            }
+        }) { padding ->
+            Column(Modifier.padding(padding).padding(24.dp)) {
+                Text(selected.label, style = MaterialTheme.typography.headlineMedium)
+                Spacer(Modifier.height(16.dp))
+                when (val status = authStatus) {
+                    SessionStatus.SignedOut -> Button(onClick = onLogin) { Text("Zaloguj przez Keycloak") }
+                    SessionStatus.Authorizing -> CircularProgressIndicator()
+                    SessionStatus.SignedIn -> {
+                        when (val current = readiness) {
+                            ReadinessState.Loading -> CircularProgressIndicator()
+                            is ReadinessState.Empty -> Text(current.message)
+                            is ReadinessState.Error -> Text(current.message)
+                        }
+                        Spacer(Modifier.height(16.dp))
+                        OutlinedButton(onClick = {
+                            scope.launch {
+                                if (session.freshAccessToken() != null) viewModel.refresh() else viewModel.clear()
+                            }
+                        }) { Text("Sprawdź sesję") }
+                        TextButton(onClick = onLogout) { Text("Wyloguj") }
+                    }
+                    is SessionStatus.Failed -> {
+                        Text(status.message)
+                        Button(onClick = onLogin) { Text("Spróbuj ponownie") }
+                    }
+                }
+            }
+        }
+    }
 }

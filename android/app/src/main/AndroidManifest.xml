@@ -1,4 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
     <application android:allowBackup="false" android:label="Moves" android:supportsRtl="true" android:theme="@style/Theme.Moves" android:usesCleartextTraffic="${usesCleartextTraffic}">
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>

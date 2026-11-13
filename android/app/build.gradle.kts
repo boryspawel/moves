@@ -26,11 +26,19 @@ android {
             versionNameSuffix = "-dev"
             buildConfigField("String", "BASE_URL", "\"${providers.gradleProperty("moves.devBaseUrl").getOrElse("http://10.0.2.2:8080/")}\"")
             manifestPlaceholders["usesCleartextTraffic"] = "true"
+            manifestPlaceholders["appAuthRedirectScheme"] = "com.motionecosystem.moves.mobile.dev"
+            buildConfigField("String", "OIDC_ISSUER", "\"${providers.gradleProperty("moves.devOidcIssuer").getOrElse("http://10.0.2.2:8180/realms/motion-local")}\"")
+            buildConfigField("String", "OIDC_CLIENT_ID", "\"motion-android-dev\"")
+            buildConfigField("String", "OIDC_REDIRECT_URI", "\"com.motionecosystem.moves.mobile.dev:/oauth2redirect\"")
         }
         create("prod") {
             dimension = "environment"
             buildConfigField("String", "BASE_URL", "\"${providers.gradleProperty("moves.prodBaseUrl").getOrElse("https://moves-api.example.invalid/")}\"")
             manifestPlaceholders["usesCleartextTraffic"] = "false"
+            manifestPlaceholders["appAuthRedirectScheme"] = "com.motionecosystem.moves.mobile"
+            buildConfigField("String", "OIDC_ISSUER", "\"${providers.gradleProperty("moves.prodOidcIssuer").getOrElse("https://auth.example.invalid/realms/moves")}\"")
+            buildConfigField("String", "OIDC_CLIENT_ID", "\"motion-android\"")
+            buildConfigField("String", "OIDC_REDIRECT_URI", "\"com.motionecosystem.moves.mobile:/oauth2redirect\"")
         }
     }
 }
@@ -47,6 +55,7 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:3.0.0")
     implementation("com.squareup.retrofit2:converter-kotlinx-serialization:3.0.0")
     implementation("com.squareup.okhttp3:okhttp:5.5.1")
+    implementation("net.openid:appauth:0.11.1")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")

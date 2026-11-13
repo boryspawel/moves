@@ -18,17 +18,45 @@
         "name": "default-roles-motion-local",
         "description": "${role_default-roles}",
         "composite": true,
-        "composites": { "realm": ["offline_access", "uma_authorization", "PARTICIPANT"] }
+        "composites": {
+          "realm": [
+            "offline_access",
+            "uma_authorization",
+            "PARTICIPANT"
+          ]
+        }
       },
-      { "name": "offline_access", "description": "${role_offline-access}", "composite": false, "clientRole": false },
-      { "name": "uma_authorization", "description": "${role_uma_authorization}", "composite": false, "clientRole": false },
-      { "name": "PARTICIPANT" },
-      { "name": "SPECIALIST" },
-      { "name": "CONTENT_ADMIN" },
-      { "name": "SYSTEM_ADMIN" }
+      {
+        "name": "offline_access",
+        "description": "${role_offline-access}",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "uma_authorization",
+        "description": "${role_uma_authorization}",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "PARTICIPANT"
+      },
+      {
+        "name": "SPECIALIST"
+      },
+      {
+        "name": "CONTENT_ADMIN"
+      },
+      {
+        "name": "SYSTEM_ADMIN"
+      }
     ]
   },
-  "defaultRoles": ["default-roles-motion-local", "offline_access", "uma_authorization"],
+  "defaultRoles": [
+    "default-roles-motion-local",
+    "offline_access",
+    "uma_authorization"
+  ],
   "clients": [
     {
       "clientId": "motion-web",
@@ -37,10 +65,100 @@
       "publicClient": true,
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
-      "redirectUris": ["http://localhost:4200/*"],
-      "webOrigins": ["http://localhost:4200"],
-      "attributes": { "pkce.code.challenge.method": "S256" },
-      "defaultClientScopes": ["basic", "web-origins", "acr", "roles", "profile", "email", "motion-email-verified"],
+      "redirectUris": [
+        "http://localhost:4200/*"
+      ],
+      "webOrigins": [
+        "http://localhost:4200"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "web-origins",
+        "acr",
+        "roles",
+        "profile",
+        "email",
+        "motion-email-verified"
+      ],
+      "protocolMappers": [
+        {
+          "name": "motion-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "motion-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "motion-android-dev",
+      "name": "Moves Android Dev",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "com.motionecosystem.moves.mobile.dev:/oauth2redirect"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "web-origins",
+        "acr",
+        "roles",
+        "profile",
+        "email",
+        "motion-email-verified"
+      ],
+      "protocolMappers": [
+        {
+          "name": "motion-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "motion-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "motion-android",
+      "name": "Moves Android",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "com.motionecosystem.moves.mobile:/oauth2redirect"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "web-origins",
+        "acr",
+        "roles",
+        "profile",
+        "email",
+        "motion-email-verified"
+      ],
       "protocolMappers": [
         {
           "name": "motion-api-audience",
@@ -82,21 +200,38 @@
     {
       "name": "motion-email-verified",
       "protocol": "openid-connect",
-      "attributes": { "include.in.token.scope": "false", "display.on.consent.screen": "false" },
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "false"
+      },
       "protocolMappers": [
         {
           "name": "email",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-usermodel-property-mapper",
           "consentRequired": false,
-          "config": { "user.attribute": "email", "claim.name": "email", "jsonType.label": "String", "access.token.claim": "true", "id.token.claim": "true", "userinfo.token.claim": "true" }
+          "config": {
+            "user.attribute": "email",
+            "claim.name": "email",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
         },
         {
           "name": "email-verified",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-usermodel-property-mapper",
           "consentRequired": false,
-          "config": { "user.attribute": "emailVerified", "claim.name": "email_verified", "jsonType.label": "boolean", "access.token.claim": "true", "id.token.claim": "true", "userinfo.token.claim": "true" }
+          "config": {
+            "user.attribute": "emailVerified",
+            "claim.name": "email_verified",
+            "jsonType.label": "boolean",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
         }
       ]
     },
@@ -161,7 +296,9 @@
           "temporary": false
         }
       ],
-      "realmRoles": ["PARTICIPANT"]
+      "realmRoles": [
+        "PARTICIPANT"
+      ]
     },
     {
       "id": "8f6e9cc1-1c1e-4f7a-98f4-3c0c3f40ac02",
