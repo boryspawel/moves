@@ -596,11 +596,15 @@ class TrainingPlanningV2IntegrationTest {
         consents.grant("specialist-execution-participant-account", new ConsentGrantService.GrantCommand(specialistId,
                 ConsentDecisionPort.Purpose.PERFORMANCE_PLANNING, template,
                 Set.of(ConsentDecisionPort.DataScope.PLAN), null, null));
-        availability.replace(specialistId, Arrays.stream(DayOfWeek.values())
-                .map(day -> new RecurringAvailabilityService.Slot(day, LocalTime.of(8, 0), LocalTime.of(22, 0), "UTC")).toList());
-
         Instant now = clock.instant();
         Instant startsAt = now.minusSeconds(10 * 60);
+        // The test needs a currently startable appointment; its validity must not
+        // depend on the CI runner's UTC hour or on an interval crossing midnight.
+        int utcStartHour = startsAt.atZone(java.time.ZoneOffset.UTC).getHour();
+        String availabilityZone = utcStartHour < 8 ? "+12:00" : utcStartHour >= 20 ? "-12:00" : "UTC";
+        availability.replace(specialistId, Arrays.stream(DayOfWeek.values())
+                .map(day -> new RecurringAvailabilityService.Slot(day, LocalTime.of(8, 0),
+                        LocalTime.of(22, 0), availabilityZone)).toList());
         LocalDate scheduled = startsAt.atZone(java.time.ZoneOffset.UTC).toLocalDate();
         EditorView editor = planning.createDraft("planning-specialist", new CreateDraftCommand(canonicalParticipantId,
                 "Specialist execution plan", "Operational recording", PlanMode.SPECIALIST, "Execution phase",
