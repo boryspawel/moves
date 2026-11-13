@@ -34,4 +34,17 @@ client_id=$(kcadm get clients -r "$KEYCLOAK_REALM" -q "clientId=$KEYCLOAK_CLIENT
 kcadm create "clients/$client_id/protocol-mappers/models" -r "$KEYCLOAK_REALM" \
   -s name=motion-api-audience -s protocol=openid-connect -s protocolMapper=oidc-audience-mapper \
   -s 'config={"included.custom.audience":"'"$OIDC_AUDIENCE"'","access.token.claim":"true","id.token.claim":"false"}'
-printf 'Realm %s and client %s created. Create named users and assign roles in the Keycloak admin console.\n' "$KEYCLOAK_REALM" "$KEYCLOAK_CLIENT_ID"
+# Public native app; no client secret. Exact redirect and S256 PKCE only.
+kcadm create clients -r "$KEYCLOAK_REALM" \
+  -s clientId=motion-android -s name="Moves Android" -s enabled=true \
+  -s publicClient=true -s standardFlowEnabled=true -s directAccessGrantsEnabled=false \
+  -s serviceAccountsEnabled=false \
+  -s 'redirectUris=["com.motionecosystem.moves.mobile:/oauth2redirect"]' \
+  -s 'webOrigins=[]' -s 'attributes={"pkce.code.challenge.method":"S256"}'
+android_client_id=$(kcadm get clients -r "$KEYCLOAK_REALM" -q clientId=motion-android --fields id --format csv --noquotes | tr -d '\r')
+[[ -n $android_client_id ]] || { printf '%s\n' 'ERROR: Android client could not be resolved' >&2; exit 1; }
+kcadm create "clients/$android_client_id/protocol-mappers/models" -r "$KEYCLOAK_REALM" \
+  -s name=motion-api-audience -s protocol=openid-connect -s protocolMapper=oidc-audience-mapper \
+  -s 'config={"included.custom.audience":"'"$OIDC_AUDIENCE"'","access.token.claim":"true","id.token.claim":"false"}'
+printf 'Realm %s created with web client %s and Android client motion-android.\n' "$KEYCLOAK_REALM" "$KEYCLOAK_CLIENT_ID"
+printf 'Create named users and assign roles in the Keycloak admin console.\n'

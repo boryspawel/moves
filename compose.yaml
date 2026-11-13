@@ -26,7 +26,8 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Set KEYCLOAK_ADMIN_PASSWORD in .env}
       # Tokens must use an issuer that the browser can resolve.
-      KC_HOSTNAME: http://localhost:${KEYCLOAK_HOST_PORT:-8180}
+      # Set KEYCLOAK_PUBLIC_BASE_URL to the host address reachable by Android and the browser.
+      KC_HOSTNAME: ${KEYCLOAK_PUBLIC_BASE_URL:-http://localhost:8180}
       KC_HEALTH_ENABLED: "true"
     ports:
       - "${KEYCLOAK_HOST_PORT:-8180}:8080"
@@ -59,7 +60,7 @@ services:
       DB_USER: ${POSTGRES_USER:-motion}
       DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       # Issuer remains public; JWK retrieval stays inside the Compose network.
-      OIDC_ISSUER_URI: http://localhost:${KEYCLOAK_HOST_PORT:-8180}/realms/motion-local
+      OIDC_ISSUER_URI: ${KEYCLOAK_PUBLIC_BASE_URL:-http://localhost:8180}/realms/motion-local
       OIDC_JWK_SET_URI: http://keycloak:8080/realms/motion-local/protocol/openid-connect/certs
       OIDC_AUDIENCE: motion-api
       OIDC_CLIENT_ID: motion-web
