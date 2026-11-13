@@ -43,7 +43,8 @@ class OidcSession private constructor(context: Context, private val settings: Oi
 
     private val service = AuthorizationService(
         context.applicationContext,
-        AppAuthConfiguration.Builder().setConnectionBuilder(connectionBuilder).build()
+        AppAuthConfiguration.Builder().setConnectionBuilder(connectionBuilder)
+            .setSkipIssuerHttpsCheck(settings.allowLocalHttp).build()
     )
     private val mutableStatus = MutableStateFlow<SessionStatus>(SessionStatus.SignedOut)
     val status: StateFlow<SessionStatus> = mutableStatus
