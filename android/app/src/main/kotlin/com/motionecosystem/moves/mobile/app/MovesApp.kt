@@ -20,7 +20,8 @@ import kotlinx.coroutines.launch
 
 private enum class Section(val label: String) { TODAY("Dzień"), PARTICIPANTS("Uczestnicy"), CASES("Sprawy") }
 sealed interface ReadinessState { data object Loading : ReadinessState; data class Empty(val message: String) : ReadinessState; data class Error(val message: String) : ReadinessState }
-class ReadinessViewModel(private val tokenProvider: TokenProvider, private val repository: SpecialistRepository) : ViewModel() {
+class ReadinessViewModel(private val tokenProvider: TokenProvider, private val repository: SpecialistRepository,
+    private val onUnauthorized: () -> Unit = {}) : ViewModel() {
     private val mutableState = MutableStateFlow<ReadinessState>(ReadinessState.Empty("Zaloguj się, aby sprawdzić połączenie."))
     val state: StateFlow<ReadinessState> = mutableState.asStateFlow()
     fun clear() { mutableState.value = ReadinessState.Empty("Brak sesji.") }
@@ -30,7 +31,10 @@ class ReadinessViewModel(private val tokenProvider: TokenProvider, private val r
             mutableState.value = ReadinessState.Loading
             mutableState.value = when (val result = repository.identity()) {
                 is RemoteResult.Success -> ReadinessState.Empty("Połączono jako " + (result.value.subject ?: "użytkownik") + ". Ekrany biznesowe nie są jeszcze gotowe.")
-                is RemoteResult.Failure -> ReadinessState.Error("Nie można odczytać sesji: " + result.error.javaClass.simpleName)
+                is RemoteResult.Failure -> if (result.error is RemoteError.Unauthorized) {
+                    onUnauthorized()
+                    ReadinessState.Empty("Sesja wygasła. Zaloguj się ponownie.")
+                } else ReadinessState.Error("Nie można odczytać sesji: " + result.error.javaClass.simpleName)
             }
         }
     }
@@ -42,7 +46,7 @@ fun MovesApp(session: OidcSession, onLogin: () -> Unit, onLogout: () -> Unit) {
     val repository = remember(api) {
         NetworkSpecialistRepository(api, RemoteCall(kotlinx.serialization.json.Json { ignoreUnknownKeys = true }))
     }
-    val viewModel = remember(repository) { ReadinessViewModel(session, repository) }
+    val viewModel = remember(repository) { ReadinessViewModel(session, repository, session::clear) }
     val authStatus by session.status.collectAsStateWithLifecycle()
     val readiness by viewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
