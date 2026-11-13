@@ -482,8 +482,10 @@ class TrainingPlanningV2IntegrationTest {
         availability.replace(specialistId, Arrays.stream(DayOfWeek.values())
                 .map(day -> new RecurringAvailabilityService.Slot(day, LocalTime.of(8, 0), LocalTime.of(22, 0), "UTC")).toList());
 
-        Instant appointmentNow = clock.instant();
-        Instant startsAt = appointmentNow.plusSeconds(15 * 60);
+        // This test exercises session-link locking, not availability boundaries. Keep the
+        // appointment safely inside the configured 08:00–22:00 UTC window on every CI run.
+        Instant startsAt = clock.instant().atZone(java.time.ZoneOffset.UTC).toLocalDate()
+                .plusDays(1).atTime(10, 0).toInstant(java.time.ZoneOffset.UTC);
         LocalDate scheduled = startsAt.atZone(java.time.ZoneOffset.UTC).toLocalDate();
         EditorView editor = planning.createDraft("planning-specialist", new CreateDraftCommand(canonicalParticipantId,
                 "Appointment plan", "Operational appointment", PlanMode.SPECIALIST, "Appointment phase",
@@ -594,11 +596,15 @@ class TrainingPlanningV2IntegrationTest {
         consents.grant("specialist-execution-participant-account", new ConsentGrantService.GrantCommand(specialistId,
                 ConsentDecisionPort.Purpose.PERFORMANCE_PLANNING, template,
                 Set.of(ConsentDecisionPort.DataScope.PLAN), null, null));
-        availability.replace(specialistId, Arrays.stream(DayOfWeek.values())
-                .map(day -> new RecurringAvailabilityService.Slot(day, LocalTime.of(8, 0), LocalTime.of(22, 0), "UTC")).toList());
-
         Instant now = clock.instant();
         Instant startsAt = now.minusSeconds(10 * 60);
+        // The test needs a currently startable appointment; its validity must not
+        // depend on the CI runner's UTC hour or on an interval crossing midnight.
+        int utcStartHour = startsAt.atZone(java.time.ZoneOffset.UTC).getHour();
+        String availabilityZone = utcStartHour < 8 ? "+12:00" : utcStartHour >= 20 ? "-12:00" : "UTC";
+        availability.replace(specialistId, Arrays.stream(DayOfWeek.values())
+                .map(day -> new RecurringAvailabilityService.Slot(day, LocalTime.of(8, 0),
+                        LocalTime.of(22, 0), availabilityZone)).toList());
         LocalDate scheduled = startsAt.atZone(java.time.ZoneOffset.UTC).toLocalDate();
         EditorView editor = planning.createDraft("planning-specialist", new CreateDraftCommand(canonicalParticipantId,
                 "Specialist execution plan", "Operational recording", PlanMode.SPECIALIST, "Execution phase",
@@ -745,8 +751,13 @@ class TrainingPlanningV2IntegrationTest {
     private static <T> T get(Future<T> future) {
         try {
             return future.get(10, TimeUnit.SECONDS);
-        } catch (Exception failure) {
-            throw new AssertionError("concurrent operation did not complete", failure);
+        } catch (java.util.concurrent.ExecutionException failed) {
+            throw new AssertionError("concurrent operation failed", failed.getCause());
+        } catch (java.util.concurrent.TimeoutException timeout) {
+            throw new AssertionError("concurrent operation timed out", timeout);
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError("concurrent operation was interrupted", interrupted);
         }
     }
 
