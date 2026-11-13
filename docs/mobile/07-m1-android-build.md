@@ -1,6 +1,6 @@
 # M1 — minimalny fundament Android
 
-**Status:** lokalny build, testy jednostkowe i oba debug APK zweryfikowane; workflow CI przeszedł walidację statyczną, ale nie został uruchomiony zdalnie. Dokument nie obejmuje ekranów biznesowych, OIDC ani testów na urządzeniu.
+**Status:** lokalny build i Android APK CI zweryfikowane; MOB-011 dodaje OIDC, ale testów logowania na urządzeniu nie wykonano. Nadal brak ekranów biznesowych.
 
 ## Klient API i MOB-004
 
@@ -54,3 +54,7 @@ Powstały oba APK debug:
 | prod | `android/app/build/outputs/apk/prod/debug/app-prod-debug.apk` | 12 464 836 B | `04b7b62d8960773e7fcae902ab4f5b010bf9c3ace8009641adbc26b153f2809f` |
 
 Zweryfikowano manifest (`minSdk` 26, `targetSdk` 37) i podpis wariantu `devDebug`. `actionlint` 1.7.12, po weryfikacji sumy kontrolnej, zaakceptował `.github/workflows/android.yml`; sprawdzono również składnię YAML i semantykę workflow. Nie uruchomiono workflow w GitHub Actions, ADB, emulatora ani urządzenia. Nieznaczący stderr OkHttp podczas testów nie wpływał na ich wynik.
+
+## Logowanie
+
+Dodano implementację OIDC z AppAuth. Konfiguracja issuer/Keycloak i instrukcja odbioru: [08 — MOB-011](08-m1-oidc-keycloak.md). Historyczne rozmiary i SHA-256 APK powyżej odnoszą się do wersji przed MOB-011.

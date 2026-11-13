@@ -1,6 +1,6 @@
 # Moves Mobile — plan wdrożenia v0.1
 
-**Cel:** natywna aplikacja Android realizująca UJ-01…UJ-06 w zakresie tekstowych notatek i wizyt, oparta na istniejącym backendzie. **Status:** M0 — analiza statyczna wykonana, bramki runtime nierozwiązane; nie implementowano klienta, zgód ani zabezpieczeń backendu. S08/pomiary biomedyczne wyłączone do czasu rzeczywistej zgody serwerowej.
+**Cel:** natywna aplikacja Android realizująca UJ-01…UJ-06 w zakresie tekstowych notatek i wizyt, oparta na istniejącym backendzie. **Status:** M1 — kod OIDC/PKCE i APK gotowe; testy prawdziwego logowania na emulatorze/urządzeniu wymagają odbioru. S08/pomiary biomedyczne wyłączone do czasu rzeczywistej zgody serwerowej.
 
 ## Kamienie milowe i kolejność
 
@@ -101,4 +101,6 @@ GO tylko jeżeli: UJ-01–UJ-06 działają przy prawdziwym logowaniu; stan spotk
 
 ## M1 — fundament techniczny
 
-M1 zrealizował ograniczony fundament MOB-010: pojedynczy moduł `android/app` z Compose, Material 3, wariantami `dev`/`prod`, Gradle Wrapper i workflow budującym debug APK. Adapter REST obejmuje cztery odczyty operacyjne, bez ekranów biznesowych, OIDC, danych medycznych lub logiki zgód. MOB-011 oraz pozostałe elementy backlogu M1 pozostają odroczone. Instrukcja builda, wyniki lokalnej walidacji i granice zakresu są w [07 — M1](07-m1-android-build.md).
+M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provisioning klienta): pojedynczy moduł `android/app` z Compose, Material 3, wariantami `dev`/`prod`, Gradle Wrapper i workflow budującym debug APK. Adapter REST obejmuje cztery odczyty operacyjne; logowanie pozwala na chroniony GET bez ekranów biznesowych, danych medycznych i własnej logiki zgód. MOB-011 oczekuje testów runtime na urządzeniu. Instrukcja builda, wyniki lokalnej walidacji i granice zakresu są w [07 — M1](07-m1-android-build.md).
+
+**MOB-011:** [Konfiguracja Android OIDC/Keycloak i bramki odbiorowe](08-m1-oidc-keycloak.md). M1 nie jest zamknięty przed rzeczywistym testem login/refresh/logout oraz aud/iss/role, 401/403.
