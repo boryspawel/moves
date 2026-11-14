@@ -19,7 +19,9 @@
 ## P0 — działania do rozpoczęcia natychmiast
 
 ### P0-01 — Testy izolacji i wycieków danych biomedycznych [POTW.]
-**Start: teraz; zależności: brak.**
+**Status:** w realizacji — [PR P0-01/P0-02] (uzupełnić po utworzeniu); dwa celowane testy odmowy, bez mnożenia testów. Poniższa mapa wejść PHI stanowi punkt kontrolny dalszej weryfikacji.
+
+**Mapa ścieżek pomiarów:** `SpecialistParticipantMeasurementController` (catalog/list/record) → `ParticipantMeasurementService`; `SpecialistParticipantReadService` (workspace/recent, timeline/measurement, timeline-event/find) → `ParticipantMeasurementQueryPort`; `SpecialistAppointmentCloseoutController` (closeout/forAppointment) → ten sam port; `SpecialistParticipantHistoryService` (timeline, filtry, szczegóły, encounter) → `SpecialistMeasurementHistoryQueryPort`; `SpecialistParticipantMeasurementApplicationService` (zapis po walidacji wizyty) → serwis oraz projekcje `MeasurementGoalProjectionPort`. **Wszystkie odczyty repozytorium pomiarów przechodzą przez `ParticipantMeasurementService`, który wymaga teraz `MANAGE_PARTICIPANT_RECORDS + VIEW_MEASUREMENTS` i scope `MEASUREMENTS` w decyzji zgody.**
 
 - **Problem:** `ParticipantMeasurementService.authorize()` sprawdza aktywną relację, nie decyzję zgody; `ConsentDecisionPort.DataScope` nie ma zakresu pomiarów. Istnieją odczyty pośrednie przez `ParticipantMeasurementQueryPort`.
 - **Zadanie:** dodać macierz testów negatywnych i pozytywnych dla dwóch specjalistów / dwóch uczestników, ról, cofniętej relacji, braku/cofnięcia/wygasłej zgody i `ActingContext`. Objąć `GET/POST /api/v1/specialist/clients/{participantId}/measurements`, `SpecialistParticipantReadService.workspace()/timeline()`, `SpecialistAppointmentCloseoutController`, historię i projekcje celów. Zmapować wszystkie wywołania portu odczytu pomiarów.
@@ -27,7 +29,7 @@
 - **Kod:** `participantmeasurements/*`, `application/workspace/SpecialistParticipantReadService.java`, `application/workspace/SpecialistAppointmentCloseoutController.java`, `participantgoals/*`, `consent/api/ConsentDecisionPort.java`.
 
 ### P0-02 — Fail-closed dla odczytu i zapisu pomiarów bez skutecznej zgody [POTW.]
-**Start: zaraz po P0-01; decyzje dotyczące docelowego grantu nie blokują bezpiecznego odcięcia.**
+**Status:** w realizacji — ograniczone do bieżących ścieżek pomiarów. Prawdziwy grant `MEASUREMENTS` wymaga zatwierdzenia/udzielenia przez uczestnika. Brak grantu oznacza `403` dla listy/zapisu bezpośredniego, a dla osadzonych projekcji pustą listę/zasób. `TEST_DEFAULT` nadal działa wyłącznie w `local/test`; `prod` bez zgody pozostaje zamknięty.
 
 - **Zadanie:** nie udostępniać pomiarów ani nie akceptować nowych zapisów, dopóki backend nie potrafi wykazać właściwej, aktywnej podstawy dostępu dla aktora, uczestnika, celu i zakresu. Zamknąć zarówno endpoint bezpośredni, jak i pośrednie projekcje API; nie zastępować zgody `PLAN`, rolą, aktywną relacją, checkboxem ani `TEST_DEFAULT` w środowisku produkcyjnym. Prawdziwy `MEASUREMENTS`/analogiczny scope i mechanizm dla kartotek bez konta wyodrębnić do P0-05.
 - **Odbiór:** brak PHI w JSON, timeline, closeout, cache i logach przy braku uprawnienia; przypadki izolacji, cofnięcia i wygaśnięcia sprawdzane testami integracyjnymi; poprawne dotychczasowe operacje bez pomiarów działają dalej.
