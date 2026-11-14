@@ -13,6 +13,7 @@ import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ActingContext;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.ProfessionalRole;
 import com.motionecosystem.calendar.api.SpecialistAppointmentHistoryQueryPort;
+import com.motionecosystem.participantdocumentation.api.ParticipantDocumentationEventQueryPort;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -23,6 +24,41 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class ParticipantDocumentationTimelineTest {
+    @Test
+    void timelineOnlyShowsOwnDocumentationAfterScopedAuthorization() {
+        UUID owner = UUID.randomUUID();
+        UUID participantId = UUID.randomUUID();
+        UUID otherOwner = UUID.randomUUID();
+        Instant at = Instant.parse("2030-06-10T12:00:00Z");
+        CurrentAccountService accounts = org.mockito.Mockito.mock(CurrentAccountService.class);
+        ParticipantNoteRepository notes = org.mockito.Mockito.mock(ParticipantNoteRepository.class);
+        ParticipantDocumentationEventRepository events = org.mockito.Mockito.mock(ParticipantDocumentationEventRepository.class);
+        SpecialistAuthorizationPort authorization = org.mockito.Mockito.mock(SpecialistAuthorizationPort.class);
+        ParticipantNote own = new ParticipantNote(participantId, owner, "GENERAL", "mine", "private", null, at);
+        ParticipantNote foreign = new ParticipantNote(participantId, otherOwner, "GENERAL", "other", "private", null, at);
+        ParticipantDocumentationEvent ownEvent = new ParticipantDocumentationEvent(own.id, participantId, "NOTE", "CREATED", at, "Note created");
+        ParticipantDocumentationEvent foreignEvent = new ParticipantDocumentationEvent(foreign.id, participantId, "NOTE", "CREATED", at, "Note created");
+        when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(owner, "specialist", ProfileType.SPECIALIST));
+        when(events.findByParticipantIdAndEffectiveAtGreaterThanEqualAndEffectiveAtLessThanOrderByEffectiveAtDesc(
+                participantId, at.minusSeconds(1), at.plusSeconds(1))).thenReturn(List.of(ownEvent, foreignEvent));
+        when(events.findByIdAndParticipantId(foreignEvent.id, participantId)).thenReturn(Optional.of(foreignEvent));
+        when(notes.findByIdInAndParticipantIdAndSpecialistId(any(), org.mockito.ArgumentMatchers.eq(participantId),
+                org.mockito.ArgumentMatchers.eq(owner))).thenReturn(List.of(own));
+        ParticipantDocumentationService service = historyService(accounts, notes, events, authorization,
+                org.mockito.Mockito.mock(SpecialistAppointmentHistoryQueryPort.class));
+        ActingContext context = new ActingContext(ProfessionalRole.TRAINER);
+
+        assertThat(service.timeline("specialist", participantId, context, at.minusSeconds(1), at.plusSeconds(1)))
+                .extracting(ParticipantDocumentationEventQueryPort.Event::eventId).containsExactly(ownEvent.id);
+        assertThat(service.find("specialist", participantId, context, foreignEvent.id)).isEmpty();
+        org.mockito.Mockito.verify(authorization, org.mockito.Mockito.atLeastOnce()).requireCapabilities(
+                org.mockito.ArgumentMatchers.eq(owner), org.mockito.ArgumentMatchers.eq(participantId),
+                org.mockito.ArgumentMatchers.eq(context),
+                org.mockito.ArgumentMatchers.eq(Set.of(SpecialistAuthorizationPort.Capability.MANAGE_PARTICIPANT_RECORDS,
+                        SpecialistAuthorizationPort.Capability.MANAGE_PARTICIPANT_DOCUMENTATION)),
+                org.mockito.ArgumentMatchers.eq(SpecialistAuthorizationPort.Purpose.PERFORMANCE_PLANNING));
+    }
+
     @Test
     void documentationCandidatesRetainsAnUnlinkedNoteWhenValidAppointmentsIsEmptyImmutableSet() {
         UUID specialistId = UUID.randomUUID();
