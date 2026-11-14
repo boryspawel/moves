@@ -75,11 +75,11 @@ fun MovesApp(session: OidcSession, onLogin: () -> Unit, onLogout: () -> Unit) {
             else -> Column(Modifier.fillMaxSize().padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text("Moves", style = MaterialTheme.typography.headlineMedium)
-                when (status) {
+                when (val currentStatus = status) {
                     SessionStatus.SignedOut -> Button(onClick = onLogin) { Text("Zaloguj przez Keycloak") }
                     SessionStatus.Authorizing -> CircularProgressIndicator()
                     is SessionStatus.Failed -> {
-                        Text(status.message, color = MaterialTheme.colorScheme.error)
+                        Text(currentStatus.message, color = MaterialTheme.colorScheme.error)
                         Button(onClick = onLogin) { Text("Spróbuj ponownie") }
                     }
                     else -> Unit
