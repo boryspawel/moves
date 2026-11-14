@@ -1,6 +1,7 @@
 package com.motionecosystem.architecture;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
@@ -10,9 +11,12 @@ import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchCondition;
+import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.junit.jupiter.api.Test;
 
 class ModuleBoundaryTest {
@@ -180,6 +184,27 @@ class ModuleBoundaryTest {
                 .and().areAssignableTo(JpaRepository.class)
                 .should().notBePublic()
                 .check(productionClasses);
+    }
+
+    private static final ArchRule NO_JDBC_TEMPLATES = noClasses()
+            .should().dependOnClassesThat().haveFullyQualifiedName(JdbcTemplate.class.getName())
+            .orShould().dependOnClassesThat().haveFullyQualifiedName(NamedParameterJdbcTemplate.class.getName());
+
+    @Test
+    void productionClassesNeverDependOnJdbcTemplates() {
+        NO_JDBC_TEMPLATES.check(productionClasses);
+
+        // A deliberately forbidden test fixture verifies that the rule actually fails on both dependencies.
+        JavaClasses forbidden = new ClassFileImporter().importClasses(ForbiddenJdbcTemplateFixture.class);
+        assertThatThrownBy(() -> NO_JDBC_TEMPLATES.check(forbidden))
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining("JdbcTemplate")
+                .hasMessageContaining("NamedParameterJdbcTemplate");
+    }
+
+    private static class ForbiddenJdbcTemplateFixture {
+        private JdbcTemplate template;
+        private NamedParameterJdbcTemplate namedTemplate;
     }
 
     @Test
