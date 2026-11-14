@@ -92,7 +92,8 @@ class ParticipantGoalServiceTest {
         ArgumentCaptor<GoalOutcome> outcomes = ArgumentCaptor.forClass(GoalOutcome.class);
         verify(fixture.outcomes, org.mockito.Mockito.times(2)).save(outcomes.capture());
         assertThat(outcomes.getAllValues()).extracting(outcome -> outcome.position).containsExactly(0, 1);
-        verify(fixture.authorization).requireCapabilities(any(), any(), any(), any(), any());
+        verify(fixture.authorization, org.mockito.Mockito.times(2))
+                .requireCapabilities(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -308,6 +309,29 @@ class ParticipantGoalServiceTest {
                 .containsExactly(ParticipantGoal.Status.ACTIVE, 0L);
         verify(fixture.observations, never()).saveAndFlush(any());
         verify(fixture.observationIdempotency, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void planConsentAloneRedactsProjectedMeasurementsInGoalDetailAndDeniesObservationHistory() {
+        Fixture fixture = observationFixture();
+        ParticipantGoal goal = goal(fixture, ParticipantGoal.Category.PERFORMANCE);
+        GoalOutcome outcome = outcomeEntity(goal.id, "body-weight", "kg", null, TargetComparator.AT_MOST);
+        when(fixture.goals.findByIdAndSpecialistAccountIdAndParticipantId(goal.id, fixture.specialistId, fixture.participantId))
+                .thenReturn(Optional.of(goal));
+        when(fixture.outcomes.findByGoalIdOrderByPositionAsc(goal.id)).thenReturn(List.of(outcome));
+        org.mockito.Mockito.doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "measurement scope is missing"))
+                .when(fixture.authorization).requireCapabilities(eq(fixture.specialistId), eq(fixture.participantId),
+                        eq(trainer()), eq(java.util.Set.of(SpecialistAuthorizationPort.Capability.VIEW_MEASUREMENTS)), any());
+
+        var redacted = fixture.service.detail("specialist", fixture.participantId, goal.id, trainer()).outcomes();
+        assertThat(redacted).singleElement().satisfies(item -> {
+            assertThat(item.latestObservation()).isNull();
+            assertThat(item.observationCount()).isZero();
+            assertThat(item.progress().latestObservation()).isNull();
+        });
+        assertStatus(HttpStatus.FORBIDDEN, () -> fixture.service.observationHistory(
+                "specialist", fixture.participantId, goal.id, trainer(), null, 10, null));
+        verify(fixture.observations, never()).findLatestTwoByGoalIdAndOutcomeIdIn(any(), any());
     }
 
     @Test

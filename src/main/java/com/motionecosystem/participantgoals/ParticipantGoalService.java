@@ -67,8 +67,9 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort, com.mot
     @Transactional
     public ParticipantGoalView create(String subject, UUID participantId, ActingContext context, String key, CreateParticipantGoalCommand command) {
         UUID specialist = authorize(subject, participantId, context, command == null ? null : command.category());
+        boolean showMeasurements = canViewMeasurements(specialist, participantId, context);
         String idempotencyKey = key(key); String operation = "CREATE:" + participantId;
-        return replay(specialist, operation, idempotencyKey).orElseGet(() -> {
+        return replay(specialist, operation, idempotencyKey, showMeasurements).orElseGet(() -> {
             Values values = values(command);
             Instant now = clock.instant();
             ParticipantGoal saved = goals.saveAndFlush(new ParticipantGoal(participantId, specialist, values.category, values.title, values.description, values.priority, values.targetDate, now));
@@ -79,7 +80,7 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort, com.mot
             remember(specialist, operation, idempotencyKey, saved.id, now);
             event(ParticipantGoalEvent.Type.CREATED, saved, null, now, now, null, null, null);
             audit.record(subject, "PARTICIPANT_GOAL_CREATED", "ParticipantGoal", saved.id);
-            return view(saved);
+            return view(saved, showMeasurements);
         });
     }
 
@@ -103,14 +104,16 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort, com.mot
     @Transactional(readOnly = true)
     public List<ParticipantGoalView> list(String subject, UUID participantId, ActingContext context) {
         UUID specialist = authorize(subject, participantId, context, null);
+        boolean showMeasurements = canViewMeasurements(specialist, participantId, context);
         return goals.findForSpecialistParticipant(specialist, participantId).stream()
-                .filter(goal -> matches(context.role(), goal.category)).map(this::view).toList();
+                .filter(goal -> matches(context.role(), goal.category)).map(goal -> view(goal, showMeasurements)).toList();
     }
 
     @Transactional(readOnly = true)
     public ParticipantGoalView detail(String subject, UUID participantId, UUID goalId, ActingContext context) {
         UUID specialist = authorize(subject, participantId, context, null);
-        ParticipantGoal goal = owned(specialist, participantId, goalId); requireRole(context, goal); return view(goal);
+        ParticipantGoal goal = owned(specialist, participantId, goalId); requireRole(context, goal);
+        return view(goal, canViewMeasurements(specialist, participantId, context));
     }
 
     @Transactional(readOnly = true)
@@ -149,7 +152,8 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort, com.mot
     @Transactional
     public ParticipantGoalView update(String subject, UUID participantId, UUID goalId, ActingContext context, String key, UpdateParticipantGoalCommand command) {
         UUID specialist = authorize(subject, participantId, context, null); String operation = "UPDATE:" + goalId;
-        return replay(specialist, operation, key(key)).orElseGet(() -> {
+        boolean showMeasurements = canViewMeasurements(specialist, participantId, context);
+        return replay(specialist, operation, key(key), showMeasurements).orElseGet(() -> {
             ParticipantGoal goal = owned(specialist, participantId, goalId); requireRole(context, goal); version(goal, command == null ? null : command.expectedVersion());
             require(ParticipantGoalLifecyclePolicy.Action.UPDATE, goal);
             Metadata values = metadata(command == null ? null : command.title(), command == null ? null : command.description(), command == null ? null : command.priority(), command == null ? null : command.targetDate());
@@ -157,7 +161,7 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort, com.mot
             goal.update(values.title, values.description, values.priority, values.targetDate, now);
             ParticipantGoal saved = save(goal); remember(specialist, operation, key(key), goalId, now);
             event(ParticipantGoalEvent.Type.UPDATED, saved, ParticipantGoal.Status.ACTIVE, now, now, null, null, null);
-            audit.record(subject, "PARTICIPANT_GOAL_UPDATED", "ParticipantGoal", goalId); return view(saved);
+            audit.record(subject, "PARTICIPANT_GOAL_UPDATED", "ParticipantGoal", goalId); return view(saved, showMeasurements);
         });
     }
 
@@ -167,6 +171,7 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort, com.mot
     @Transactional
     public ObservationResult recordObservation(String subject, UUID participantId, UUID goalId, ActingContext context, String key, ObservationCommand command) {
         UUID specialist = authorize(subject, participantId, context, null); String operation = "OBSERVATION:" + goalId;
+        requireMeasurementAccess(specialist, participantId, context);
         String idempotencyKey = key(key);
         Optional<ObservationResult> replay = observationIdempotency.findBySpecialistAccountIdAndOperationAndIdempotencyKey(specialist, operation, idempotencyKey)
                 .flatMap(item -> observations.findById(item.observationId)).map(item -> new ObservationResult(observationView(item), view(owned(specialist, participantId, goalId))));
@@ -189,6 +194,7 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort, com.mot
     @Transactional(readOnly = true)
     public ObservationPage observationHistory(String subject, UUID participantId, UUID goalId, ActingContext context, UUID outcomeId, int limit, String cursor) {
         UUID specialist = authorize(subject, participantId, context, null); ParticipantGoal goal = owned(specialist, participantId, goalId); requireRole(context, goal);
+        requireMeasurementAccess(specialist, participantId, context);
         if (outcomeId != null) outcomes.findByIdAndGoalId(outcomeId, goalId).orElseThrow(() -> bad("outcome does not belong to goal"));
         if (limit < 1 || limit > 100) throw bad("limit must be from 1 to 100");
         Cursor after = Cursor.parse(cursor);
@@ -201,14 +207,15 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort, com.mot
 
     private ParticipantGoalView status(String subject, UUID participantId, UUID goalId, ActingContext context, String key, ParticipantGoalVersionCommand command, String actionName, ParticipantGoalLifecyclePolicy.Action action) {
         UUID specialist = authorize(subject, participantId, context, null); String operation = actionName + ":" + goalId;
-        return replay(specialist, operation, key(key)).orElseGet(() -> {
+        boolean showMeasurements = canViewMeasurements(specialist, participantId, context);
+        return replay(specialist, operation, key(key), showMeasurements).orElseGet(() -> {
             ParticipantGoal goal = owned(specialist, participantId, goalId); requireRole(context, goal); version(goal, command == null ? null : command.expectedVersion()); require(action, goal);
             ParticipantGoal.Status from = goal.status;
             Instant now = clock.instant(); if (action == ParticipantGoalLifecyclePolicy.Action.ACHIEVE) goal.achieve(now); else goal.cancel(now);
             ParticipantGoal saved = save(goal); remember(specialist, operation, key(key), goalId, now);
             event(action == ParticipantGoalLifecyclePolicy.Action.ACHIEVE ? ParticipantGoalEvent.Type.ACHIEVED : ParticipantGoalEvent.Type.CANCELLED,
                     saved, from, now, now, null, null, null);
-            audit.record(subject, action == ParticipantGoalLifecyclePolicy.Action.ACHIEVE ? "PARTICIPANT_GOAL_ACHIEVED" : "PARTICIPANT_GOAL_CANCELLED", "ParticipantGoal", goalId); return view(saved);
+            audit.record(subject, action == ParticipantGoalLifecyclePolicy.Action.ACHIEVE ? "PARTICIPANT_GOAL_ACHIEVED" : "PARTICIPANT_GOAL_CANCELLED", "ParticipantGoal", goalId); return view(saved, showMeasurements);
         });
     }
 
@@ -235,8 +242,10 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort, com.mot
         }
         if (fromInclusive == null || toExclusive == null || !toExclusive.isAfter(fromInclusive)) throw bad("history range is required");
         if (events == null) return List.of();
+        boolean showMeasurements = canViewMeasurements(specialist, participantId, context);
         List<ParticipantGoalEvent> source = events.findHistoryCandidates(specialist, participantId, fromInclusive, toExclusive).stream()
-                .filter(item -> matches(context.role(), ParticipantGoal.Category.valueOf(item.category))).toList();
+                .filter(item -> matches(context.role(), ParticipantGoal.Category.valueOf(item.category)))
+                .filter(item -> showMeasurements || item.observationId == null).toList();
         Map<UUID, GoalObservation> observationById = observations == null ? Map.of() : observations.findAllById(source.stream()
                 .map(item -> item.observationId).filter(Objects::nonNull).collect(java.util.stream.Collectors.toSet())).stream()
                 .collect(java.util.stream.Collectors.toMap(item -> item.id, item -> item));
@@ -252,15 +261,22 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort, com.mot
         try { specialist = authorize(subject, participantId, context, null); }
         catch (ResponseStatusException error) { if (error.getStatusCode().value() == HttpStatus.FORBIDDEN.value()) return List.of(); throw error; }
         if (eventIds == null || eventIds.isEmpty() || events == null) return List.of();
+        boolean showMeasurements = canViewMeasurements(specialist, participantId, context);
         List<ParticipantGoalEvent> source = events.findHistoryByEventIds(specialist, participantId, eventIds).stream()
-                .filter(item -> matches(context.role(), ParticipantGoal.Category.valueOf(item.category))).toList();
+                .filter(item -> matches(context.role(), ParticipantGoal.Category.valueOf(item.category)))
+                .filter(item -> showMeasurements || item.observationId == null).toList();
         Map<UUID, GoalObservation> observationById = observations == null ? Map.of() : observations.findAllById(source.stream()
                 .map(item -> item.observationId).filter(Objects::nonNull).collect(java.util.stream.Collectors.toSet())).stream()
                 .collect(java.util.stream.Collectors.toMap(item -> item.id, item -> item));
         return source.stream().map(item -> { GoalObservation observation = observationById.get(item.observationId); return new GoalHistoryCandidate(item.id, item.goalId, observation == null ? null : observation.outcomeId, item.eventType.name(), item.toStatus.name(), item.effectiveAt, item.recordedAt, observation == null ? null : observation.sourceMeasurementId); }).toList();
     }
     @Override @Transactional(readOnly = true)
-    public ObservationHistory findObservationHistory(UUID goalId, UUID outcomeId, Instant measuredBefore, Instant recordedBefore, UUID idBefore, int limit) {
+    public ObservationHistory findObservationHistory(String subject, UUID participantId, ActingContext context, UUID goalId,
+                                                      UUID outcomeId, Instant measuredBefore, Instant recordedBefore, UUID idBefore, int limit) {
+        UUID specialist = authorize(subject, participantId, context, null);
+        ParticipantGoal goal = owned(specialist, participantId, goalId);
+        requireRole(context, goal);
+        requireMeasurementAccess(specialist, participantId, context);
         if (goalId == null || limit < 1 || limit > 100) return new ObservationHistory(List.of(), null);
         Cursor after = measuredBefore == null || recordedBefore == null || idBefore == null ? null : new Cursor(measuredBefore, recordedBefore, idBefore);
         List<GoalObservation> result = observationPage(goalId, outcomeId, after, org.springframework.data.domain.PageRequest.of(0, limit + 1));
@@ -300,9 +316,30 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort, com.mot
         return participants.findParticipantIdByPrincipalAccountId(account.id())
                 .orElseThrow(() -> forbidden("an active participant access link is required"));
     }
+    /** Measurement consent is separate from PLAN; deny raw and derived observations on every specialist read path. */
+    private boolean canViewMeasurements(UUID specialist, UUID participant, ActingContext context) {
+        try {
+            requireMeasurementAccess(specialist, participant, context);
+            return true;
+        } catch (ResponseStatusException denied) {
+            if (denied.getStatusCode() == HttpStatus.FORBIDDEN) return false;
+            throw denied;
+        }
+    }
+
+    private void requireMeasurementAccess(UUID specialist, UUID participant, ActingContext context) {
+        authorization.requireCapabilities(specialist, participant, context, Set.of(Capability.VIEW_MEASUREMENTS),
+                context.role() == ProfessionalRole.TRAINER ? Purpose.PERFORMANCE_PLANNING : Purpose.FUNCTIONAL_RECOVERY);
+    }
+
     private static boolean matches(ProfessionalRole role, ParticipantGoal.Category category) { return (category == ParticipantGoal.Category.PERFORMANCE && role == ProfessionalRole.TRAINER) || (category == ParticipantGoal.Category.FUNCTIONAL && role == ProfessionalRole.PHYSIOTHERAPIST); }
     private static void requireRole(ActingContext context, ParticipantGoal goal) { if (!matches(context.role(), goal.category)) throw forbidden("goal category does not match specialist acting context"); }
-    private ParticipantGoalView view(ParticipantGoal goal) { return new ParticipantGoalView(goal.id, goal.participantId, goal.category, goal.title, goal.description, goal.priority, goal.targetDate, goal.status, outcomeViews(goal.id), lifecycle.availableActions(goal), goal.version, goal.createdAt, goal.updatedAt, goal.achievedAt, goal.cancelledAt); }
+    private ParticipantGoalView view(ParticipantGoal goal) { return view(goal, true); }
+    private ParticipantGoalView view(ParticipantGoal goal, boolean showMeasurements) {
+        return new ParticipantGoalView(goal.id, goal.participantId, goal.category, goal.title, goal.description,
+                goal.priority, goal.targetDate, goal.status, outcomeViews(goal.id, showMeasurements),
+                lifecycle.availableActions(goal), goal.version, goal.createdAt, goal.updatedAt, goal.achievedAt, goal.cancelledAt);
+    }
     private ParticipantGoalSummary summary(ParticipantGoal goal) { return new ParticipantGoalSummary(goal.id, goal.participantId, goal.category.name(), goal.title, goal.description, goal.priority, goal.targetDate, goal.status.name(), outcomeViews(goal.id).stream().map(item -> new OutcomeSnapshot(item.metricCode, item.baseline, item.targetValue, item.unit, item.position)).toList(), goal.version, goal.createdAt, goal.updatedAt); }
     private ParticipantGoalDetail ownDetail(ParticipantGoal goal) {
         return new ParticipantGoalDetail(goal.id, goal.participantId, goal.category.name(), goal.title, goal.description, goal.priority,
@@ -310,9 +347,11 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort, com.mot
                 item.baseline, item.targetValue, item.unit, item.targetComparator, item.position, item.progress)).toList(), goal.version,
                 goal.createdAt, goal.updatedAt);
     }
-    private List<OutcomeView> outcomeViews(UUID goalId) {
+    private List<OutcomeView> outcomeViews(UUID goalId) { return outcomeViews(goalId, true); }
+    private List<OutcomeView> outcomeViews(UUID goalId, boolean showMeasurements) {
         List<GoalOutcome> goalOutcomes = outcomes.findByGoalIdOrderByPositionAsc(goalId);
-        if (observations == null || goalOutcomes.isEmpty()) return goalOutcomes.stream().map(item -> outcomeView(item, List.of(), 0)).toList();
+        if (!showMeasurements || observations == null || goalOutcomes.isEmpty())
+            return goalOutcomes.stream().map(item -> outcomeView(item, List.of(), 0)).toList();
         List<UUID> ids = goalOutcomes.stream().map(item -> item.id).toList();
         Map<UUID, List<GoalObservation>> latestTwo = observations.findLatestTwoByGoalIdAndOutcomeIdIn(goalId, ids).stream()
                 .collect(java.util.stream.Collectors.groupingBy(item -> item.outcomeId, LinkedHashMap::new, java.util.stream.Collectors.toList()));
@@ -353,7 +392,10 @@ public class ParticipantGoalService implements ParticipantGoalQueryPort, com.mot
                 .divide(outcome.targetValue.subtract(outcome.baseline), 8, java.math.RoundingMode.HALF_UP).stripTrailingZeros();
     }
     private ParticipantGoal owned(UUID specialist, UUID participant, UUID goalId) { return goals.findByIdAndSpecialistAccountIdAndParticipantId(goalId, specialist, participant).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "participant goal not found")); }
-    private Optional<ParticipantGoalView> replay(UUID specialist, String operation, String key) { return idempotency.findBySpecialistAccountIdAndOperationAndIdempotencyKey(specialist, operation, key).flatMap(item -> goals.findById(item.goalId)).map(this::view); }
+    private Optional<ParticipantGoalView> replay(UUID specialist, String operation, String key, boolean showMeasurements) {
+        return idempotency.findBySpecialistAccountIdAndOperationAndIdempotencyKey(specialist, operation, key)
+                .flatMap(item -> goals.findById(item.goalId)).map(goal -> view(goal, showMeasurements));
+    }
     private void remember(UUID specialist, String operation, String key, UUID goalId, Instant now) { idempotency.saveAndFlush(new GoalIdempotency(specialist, operation, key, goalId, now)); }
     private ParticipantGoal save(ParticipantGoal goal) { try { return goals.saveAndFlush(goal); } catch (ObjectOptimisticLockingFailureException conflict) { throw conflict("participant goal version is stale"); } }
     private void event(ParticipantGoalEvent.Type type, ParticipantGoal goal, ParticipantGoal.Status fromStatus, Instant effectiveAt,
