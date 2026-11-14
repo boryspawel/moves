@@ -1,6 +1,6 @@
 # MOB-011 — Android / OIDC / Keycloak
 
-**Status:** implementacja PKCE, klienta publicznego, odświeżania sesji i logout w kodzie. Logowanie na prawdziwym urządzeniu/emulatorze oraz weryfikacja aud/iss/401/403 **niezrealizowane**.
+**Status:** implementacja PKCE, klienta publicznego, odświeżania sesji i logout w kodzie. Na Motorola Edge 50 Neo potwierdzono login, chroniony GET identity, wylogowanie i ponowny login. Test refresh oraz scenariusze negatywne 401/403 i izolacja ról pozostają otwarte.
 
 ## Implementacja
 
