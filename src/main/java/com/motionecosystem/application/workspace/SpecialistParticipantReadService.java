@@ -138,7 +138,7 @@ public class SpecialistParticipantReadService {
         ParticipantWorkspaceAppointmentView nextAppointment = upcoming.isEmpty() ? null : appointment(subject, participantId, upcoming.getFirst());
         ActivePlanView activePlan = revision.map(value -> activePlan(value, now, recentExecutions)).orElse(null);
         List<RecentMeasurementView> recentMeasurements = measurements == null ? List.of()
-                : measurements.recent(participantId, 3).stream().limit(3).map(this::recentMeasurement).toList();
+                : measurements.recent(subject, participantId, actingContext(access.decision().role()), 3).stream().limit(3).map(this::recentMeasurement).toList();
         ParticipantDocumentationEventQueryPort.DraftInterview draftInterview = recordEvents == null
                 || !access.decision().grantedCapabilities().contains(WorkspaceCapability.MANAGE_PARTICIPANT_RECORDS.name()) ? null
                 : recordEvents.latestDraftInterview(subject, participantId, actingContext(access.decision().role())).orElse(null);
@@ -185,7 +185,7 @@ public class SpecialistParticipantReadService {
                     .forEach(item -> events.add(executionEvent(item)));
         }
         if (normalized.types().contains(TimelineType.MEASUREMENT) && measurements != null) {
-            measurements.timeline(participantId, normalized.from(), normalized.to(), MAX_LIMIT)
+            measurements.timeline(subject, participantId, actingContext(access.decision().role()), normalized.from(), normalized.to(), MAX_LIMIT)
                     .forEach(item -> events.add(measurementEvent(item)));
         }
         List<ParticipantTimelineEvent> aggregatedEvents = aggregate(events, normalized.granularity());
@@ -219,7 +219,7 @@ public class SpecialistParticipantReadService {
             String prefix = publicEventId.startsWith("participant-interview-event:") ? "participant-interview-event:" : "participant-note-event:";
             try { resolved = recordEvents.find(participantId, UUID.fromString(publicEventId.substring(prefix.length()))).map(SpecialistParticipantReadService::recordEvent).orElseThrow(SpecialistParticipantReadService::timelineEventNotFound); } catch (IllegalArgumentException ex) { throw timelineEventNotFound(); }
         } else if (publicEventId != null && publicEventId.startsWith("participant-measurement:") && measurements != null) {
-            try { resolved = measurements.find(participantId, UUID.fromString(publicEventId.substring("participant-measurement:".length())))
+            try { resolved = measurements.find(subject, participantId, actingContext(access.decision().role()), UUID.fromString(publicEventId.substring("participant-measurement:".length())))
                     .map(SpecialistParticipantReadService::measurementEvent).orElseThrow(SpecialistParticipantReadService::timelineEventNotFound); }
             catch (IllegalArgumentException ex) { throw timelineEventNotFound(); }
         } else throw timelineEventNotFound();
