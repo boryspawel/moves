@@ -36,6 +36,8 @@
 ### P0-03 — Jedna transakcja dla zakończenia sesji `/complete` [POTW.]
 **Start: teraz; zależności: brak.**
 
+**Implementacja:** `fix/p0-03-atomic-guided-completion` — orkiestracja w `SessionExecutionAttemptService.completeGuided()`, transakcja wspólna dla deklaracji i statusu próby; jeden test integracyjny sukcesu i ponowienia. **Weryfikacja build/CI pozostaje otwarta; zadanie nie jest jeszcze `DONE`.**
+
 - **Problem:** `SessionExecutionAttemptController.complete()` kolejno wywołuje transakcyjne `SessionExecutionService.declare()` i `SessionExecutionAttemptService.completeAfterFinalDeclaration()`; kontroler nie jest granicą wspólnej transakcji. `/finish` korzysta z jednego przypadku użycia.
 - **Zadanie:** przenieść orkiestrację `/complete` do jednego transakcyjnego serwisu, zapewnić atomowość faktu wykonania, statusu próby, kwalifikacji i audytu oraz spójny replay `Idempotency-Key`. Nie usuwać endpointu przed migracją konsumentów.
 - **Odbiór:** test z wymuszonym błędem drugiego kroku nie pozostawia utrwalonego wyniku bez stanu próby; równoległe i ponowione żądania nie dublują wykonania; nie zmieniają się historyczne snapshoty ani działanie `/finish`.
