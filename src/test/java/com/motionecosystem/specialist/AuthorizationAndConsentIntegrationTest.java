@@ -198,6 +198,25 @@ class AuthorizationAndConsentIntegrationTest {
     }
 
     @Test
+    void measurementCapabilityRequiresItsOwnRevocableConsentScope() {
+        ActingContext context = new ActingContext(ProfessionalRole.TRAINER);
+        Set<Capability> required = Set.of(Capability.MANAGE_PARTICIPANT_RECORDS, Capability.VIEW_MEASUREMENTS);
+        var request = SpecialistAuthorizationPort.Purpose.PERFORMANCE_PLANNING;
+        denied(() -> authorization.requireCapabilities(trainer, participant, context, required, request));
+        grant(trainer, ConsentDecisionPort.Purpose.PERFORMANCE_PLANNING,
+                Set.of(ConsentDecisionPort.DataScope.PLAN), null);
+        denied(() -> authorization.requireCapabilities(trainer, participant, context, required, request));
+
+        var measurementGrant = grant(trainer, ConsentDecisionPort.Purpose.PERFORMANCE_PLANNING,
+                Set.of(ConsentDecisionPort.DataScope.MEASUREMENTS), null);
+        assertThat(authorization.requireCapabilities(trainer, participant, context, required, request).participantId())
+                .isEqualTo(participant);
+
+        consents.revoke("cap-participant", measurementGrant.id());
+        denied(() -> authorization.requireCapabilities(trainer, participant, context, required, request));
+    }
+
+    @Test
     void legalAcknowledgementIsNotConsentAndEndedRelationshipRevokesCapability() {
         jdbc.update("""
                         INSERT INTO consent.legal_acknowledgement
