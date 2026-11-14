@@ -311,6 +311,29 @@ class ParticipantGoalServiceTest {
     }
 
     @Test
+    void planConsentAloneRedactsProjectedMeasurementsInGoalDetailAndDeniesObservationHistory() {
+        Fixture fixture = observationFixture();
+        ParticipantGoal goal = goal(fixture, ParticipantGoal.Category.PERFORMANCE);
+        GoalOutcome outcome = outcomeEntity(goal.id, "body-weight", "kg", null, TargetComparator.AT_MOST);
+        when(fixture.goals.findByIdAndSpecialistAccountIdAndParticipantId(goal.id, fixture.specialistId, fixture.participantId))
+                .thenReturn(Optional.of(goal));
+        when(fixture.outcomes.findByGoalIdOrderByPositionAsc(goal.id)).thenReturn(List.of(outcome));
+        org.mockito.Mockito.doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "measurement scope is missing"))
+                .when(fixture.authorization).requireCapabilities(eq(fixture.specialistId), eq(fixture.participantId),
+                        eq(trainer()), eq(java.util.Set.of(SpecialistAuthorizationPort.Capability.VIEW_MEASUREMENTS)), any());
+
+        var redacted = fixture.service.detail("specialist", fixture.participantId, goal.id, trainer()).outcomes();
+        assertThat(redacted).singleElement().satisfies(item -> {
+            assertThat(item.latestObservation()).isNull();
+            assertThat(item.observationCount()).isZero();
+            assertThat(item.progress().latestObservation()).isNull();
+        });
+        assertStatus(HttpStatus.FORBIDDEN, () -> fixture.service.observationHistory(
+                "specialist", fixture.participantId, goal.id, trainer(), null, 10, null));
+        verify(fixture.observations, never()).findLatestTwoByGoalIdAndOutcomeIdIn(any(), any());
+    }
+
+    @Test
     void reportsComparatorProgressStatesAndProvidesStableOutcomeFilteredHistoryCursor() {
         Fixture fixture = observationFixture();
         ParticipantGoal goal = goal(fixture, ParticipantGoal.Category.PERFORMANCE);
