@@ -92,7 +92,8 @@ class ParticipantGoalServiceTest {
         ArgumentCaptor<GoalOutcome> outcomes = ArgumentCaptor.forClass(GoalOutcome.class);
         verify(fixture.outcomes, org.mockito.Mockito.times(2)).save(outcomes.capture());
         assertThat(outcomes.getAllValues()).extracting(outcome -> outcome.position).containsExactly(0, 1);
-        verify(fixture.authorization).requireCapabilities(any(), any(), any(), any(), any());
+        verify(fixture.authorization, org.mockito.Mockito.times(2))
+                .requireCapabilities(any(), any(), any(), any(), any());
     }
 
     @Test
