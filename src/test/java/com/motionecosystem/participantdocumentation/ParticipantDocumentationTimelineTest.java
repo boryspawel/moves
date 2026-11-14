@@ -176,28 +176,34 @@ class ParticipantDocumentationTimelineTest {
     @Test
     void exposesOnlyNeutralTimelineMetadataAndKeepsEventAndRecordIdentifiersDistinct() {
         UUID participantId = UUID.randomUUID();
-        UUID interviewId = UUID.randomUUID();
+        UUID specialistId = UUID.randomUUID();
+        ParticipantInterview interview = new ParticipantInterview(participantId, specialistId, Instant.parse("2030-06-10T12:00:00Z"));
+        UUID interviewId = interview.id;
         ParticipantDocumentationEvent interviewEvent = new ParticipantDocumentationEvent(interviewId, participantId, "INTERVIEW", "COMPLETED",
                 Instant.parse("2030-06-10T12:00:00Z"), "Interview completed");
         ParticipantDocumentationEventRepository events = org.mockito.Mockito.mock(ParticipantDocumentationEventRepository.class);
         when(events.findByParticipantIdAndEffectiveAtGreaterThanEqualAndEffectiveAtLessThanOrderByEffectiveAtDesc(participantId,
                 Instant.parse("2030-06-10T00:00:00Z"), Instant.parse("2030-06-11T00:00:00Z"))).thenReturn(List.of(interviewEvent));
         when(events.findByIdAndParticipantId(interviewEvent.id, participantId)).thenReturn(Optional.of(interviewEvent));
-        ParticipantDocumentationService service = service(events);
+        CurrentAccountService accounts = org.mockito.Mockito.mock(CurrentAccountService.class);
+        when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(specialistId, "specialist", ProfileType.SPECIALIST));
+        ParticipantInterviewRepository interviews = org.mockito.Mockito.mock(ParticipantInterviewRepository.class);
+        when(interviews.findByIdInAndParticipantIdAndSpecialistId(any(),
+                org.mockito.ArgumentMatchers.eq(participantId), org.mockito.ArgumentMatchers.eq(specialistId)))
+                .thenReturn(List.of(interview));
+        ParticipantDocumentationService service = new ParticipantDocumentationService(interviews,
+                org.mockito.Mockito.mock(InterviewResponseRepository.class), org.mockito.Mockito.mock(ParticipantNoteRepository.class), events,
+                org.mockito.Mockito.mock(RecordIdempotencyRepository.class), accounts,
+                org.mockito.Mockito.mock(SpecialistAuthorizationPort.class), org.mockito.Mockito.mock(AuditRecorder.class),
+                Clock.fixed(Instant.parse("2030-06-10T12:00:00Z"), ZoneOffset.UTC));
 
-        var timeline = service.timeline(participantId, Instant.parse("2030-06-10T00:00:00Z"), Instant.parse("2030-06-11T00:00:00Z"));
-        var detail = service.find(participantId, interviewEvent.id);
+        ActingContext context = new ActingContext(ProfessionalRole.TRAINER);
+        var timeline = service.timeline("specialist", participantId, context,
+                Instant.parse("2030-06-10T00:00:00Z"), Instant.parse("2030-06-11T00:00:00Z"));
+        var detail = service.find("specialist", participantId, context, interviewEvent.id);
 
         assertThat(timeline).singleElement().satisfies(event -> assertNeutralMetadata(event, interviewEvent, interviewId, participantId));
         assertThat(detail).hasValueSatisfying(event -> assertNeutralMetadata(event, interviewEvent, interviewId, participantId));
-    }
-
-    private static ParticipantDocumentationService service(ParticipantDocumentationEventRepository events) {
-        return new ParticipantDocumentationService(org.mockito.Mockito.mock(ParticipantInterviewRepository.class),
-                org.mockito.Mockito.mock(InterviewResponseRepository.class), org.mockito.Mockito.mock(ParticipantNoteRepository.class), events,
-                org.mockito.Mockito.mock(RecordIdempotencyRepository.class), org.mockito.Mockito.mock(CurrentAccountService.class),
-                org.mockito.Mockito.mock(SpecialistAuthorizationPort.class),
-                org.mockito.Mockito.mock(AuditRecorder.class), Clock.fixed(Instant.parse("2030-06-10T12:00:00Z"), ZoneOffset.UTC));
     }
 
     private static ParticipantDocumentationService historyService(CurrentAccountService accounts, ParticipantNoteRepository notes,
