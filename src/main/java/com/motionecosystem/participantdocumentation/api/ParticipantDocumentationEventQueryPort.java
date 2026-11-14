@@ -3,8 +3,8 @@ import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort.Acting
 import java.time.Instant; import java.util.*;
 /** Neutral timeline boundary: sensitive record content and answers never cross it. */
 public interface ParticipantDocumentationEventQueryPort {
-    List<Event> timeline(UUID participantId, Instant from, Instant to);
-    Optional<Event> find(UUID participantId, UUID eventId);
+    List<Event> timeline(String subject, UUID participantId, ActingContext actingContext, Instant from, Instant to);
+    Optional<Event> find(String subject, UUID participantId, ActingContext actingContext, UUID eventId);
     Optional<DraftInterview> latestDraftInterview(String subject, UUID participantId, ActingContext actingContext);
 
     List<DocumentationHistoryCandidate> documentationCandidates(String subject, UUID participantId, ActingContext actingContext,
