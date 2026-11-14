@@ -84,7 +84,8 @@ class SpecialistParticipantReadIntegrationTest {
 
     @Test
     void persistsOneCanonicalMeasurementOnReplayProjectsGoalAndExposesWorkspaceTimelineFact() {
-        Fixture fixture = canonicalFixture(fixture(true, EnumSet.of(ConsentDecisionPort.DataScope.PLAN)));
+        Fixture fixture = canonicalFixture(fixture(true, EnumSet.of(ConsentDecisionPort.DataScope.PLAN,
+                ConsentDecisionPort.DataScope.MEASUREMENTS)));
         createWeightGoal(fixture);
         var command = new ParticipantMeasurementService.ParticipantMeasurementCommand(PresetId.BODY_WEIGHT, new java.math.BigDecimal("75.8"), null,
                 Instant.parse("2030-06-10T10:00:00Z"), "Pomiar kontrolny", null, null, null, null);
