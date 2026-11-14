@@ -238,6 +238,25 @@ public class SessionExecutionAttemptService implements SessionExecutionProgressQ
         return view;
     }
 
+    /**
+     * Retained guided-completion API: declaring the execution and completing its
+     * attempt must commit or roll back as one transaction.
+     */
+    @Transactional
+    public SessionExecutionService.ExecutionView completeGuided(String subject, UUID attemptId, String idempotencyKey,
+                                                                 SessionExecutionService.DeclareExecutionCommand command) {
+        if (command == null || command.techniqueConfidenceLevel() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "techniqueConfidenceLevel is required for guided completion");
+        }
+        validateCompletionResults(subject, attemptId, command);
+        UUID plannedSessionId = plannedSessionForCompletion(subject, attemptId);
+        SessionExecutionService.ExecutionView result =
+                executionService.declare(subject, plannedSessionId, idempotencyKey, command);
+        completeAfterFinalDeclaration(subject, result.participantId(), result.plannedSessionId());
+        return result;
+    }
+
     @Transactional(readOnly = true)
     public void validateCompletionResults(String subject, UUID attemptId,
                                           SessionExecutionService.DeclareExecutionCommand command) {
