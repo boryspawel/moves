@@ -31,7 +31,8 @@ public interface SpecialistAuthorizationPort {
         VIEW_ADHERENCE_WORKLIST,
         RESPOND_TO_PARTICIPANT_ISSUE,
         MANAGE_PARTICIPANT_RECORDS,
-        VIEW_MEASUREMENTS
+        VIEW_MEASUREMENTS,
+        MANAGE_PARTICIPANT_DOCUMENTATION
     }
 
     enum ProfessionalRole {

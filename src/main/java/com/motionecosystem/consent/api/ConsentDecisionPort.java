@@ -16,6 +16,7 @@ public interface ConsentDecisionPort {
         PLAN,
         EXECUTION,
         MEASUREMENTS,
+        DOCUMENTATION,
         EFFECTIVE_RESTRICTION,
         CLINICAL_RATIONALE
     }

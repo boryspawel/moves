@@ -175,7 +175,7 @@ public class SpecialistParticipantReadService {
             goalEvents.timeline(participantId, normalized.from(), normalized.to(), goalEventCursor(cursor), MAX_LIMIT)
                     .forEach(item -> events.add(goalEvent(item)));
         }
-        if (recordEvents != null) recordEvents.timeline(participantId, normalized.from(), normalized.to()).stream()
+        if (recordEvents != null) recordEvents.timeline(subject, participantId, actingContext(access.decision().role()), normalized.from(), normalized.to()).stream()
                 .filter(item -> normalized.types().contains("INTERVIEW".equals(item.recordType()) ? TimelineType.INTERVIEW : TimelineType.NOTE))
                 .forEach(item -> events.add(recordEvent(item)));
         Optional<PlanRevisionQueryPort.PlanRevisionSnapshot> revision = revisions.findActiveRevision(participantId);
@@ -217,7 +217,7 @@ public class SpecialistParticipantReadService {
                     .orElseThrow(SpecialistParticipantReadService::timelineEventNotFound);
         } else if (publicEventId != null && (publicEventId.startsWith("participant-interview-event:") || publicEventId.startsWith("participant-note-event:")) && recordEvents != null) {
             String prefix = publicEventId.startsWith("participant-interview-event:") ? "participant-interview-event:" : "participant-note-event:";
-            try { resolved = recordEvents.find(participantId, UUID.fromString(publicEventId.substring(prefix.length()))).map(SpecialistParticipantReadService::recordEvent).orElseThrow(SpecialistParticipantReadService::timelineEventNotFound); } catch (IllegalArgumentException ex) { throw timelineEventNotFound(); }
+            try { resolved = recordEvents.find(subject, participantId, actingContext(access.decision().role()), UUID.fromString(publicEventId.substring(prefix.length()))).map(SpecialistParticipantReadService::recordEvent).orElseThrow(SpecialistParticipantReadService::timelineEventNotFound); } catch (IllegalArgumentException ex) { throw timelineEventNotFound(); }
         } else if (publicEventId != null && publicEventId.startsWith("participant-measurement:") && measurements != null) {
             try { resolved = measurements.find(subject, participantId, actingContext(access.decision().role()), UUID.fromString(publicEventId.substring("participant-measurement:".length())))
                     .map(SpecialistParticipantReadService::measurementEvent).orElseThrow(SpecialistParticipantReadService::timelineEventNotFound); }
