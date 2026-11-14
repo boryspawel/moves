@@ -64,6 +64,7 @@ export const GrantCommandDataScopesEnum = {
   Plan: 'PLAN',
   Execution: 'EXECUTION',
   Measurements: 'MEASUREMENTS',
+  Documentation: 'DOCUMENTATION',
   EffectiveRestriction: 'EFFECTIVE_RESTRICTION',
   ClinicalRationale: 'CLINICAL_RATIONALE',
 } as const;
