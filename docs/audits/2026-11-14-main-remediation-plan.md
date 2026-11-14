@@ -79,7 +79,7 @@
 - **Dokument:** [ADR-001](../adr/ADR-001-modular-monolith.md).
 
 ### P1-03 — Rozszerzyć reguły ArchUnit / statycznego audytu SQL [POTW.]
-**Etap 1 (mały PR):** globalna reguła ArchUnit blokująca zależności produkcyjnych klas od `JdbcTemplate` i `NamedParameterJdbcTemplate`, z kontrolowanym naruszeniem w fixture testowym (red) i weryfikacją całej produkcji (green). Bez zmian funkcjonalnych, schematu ani kontraktów REST. Pozostałe podpunkty P1-03 — `java.sql`, zależności przez serwisy, SQL cross-schema — nadal do osobnych, małych poprawek.
+**Etap 1 DONE — [PR #10](https://github.com/boryspawel/moves/pull/10), commit `b94aa7a38df4aba10b8c7710966553afae3d0780`, CI backend/frontend/compose-smoke: PASS:** globalna reguła ArchUnit blokująca zależności produkcyjnych klas od `JdbcTemplate` i `NamedParameterJdbcTemplate`, z kontrolowanym naruszeniem w fixture testowym (red) i weryfikacją całej produkcji (green). Bez zmian funkcjonalnych, schematu ani kontraktów REST. Pozostałe podpunkty P1-03 — `java.sql`, zależności przez serwisy, SQL cross-schema — nadal do osobnych, małych poprawek.
 - **Zadanie:** egzekwować zakaz `JdbcTemplate` i `NamedParameterJdbcTemplate` w całym kodzie produkcyjnym; ograniczyć `java.sql`, wykrywać cross-module `JpaRepository` oraz zależności przez konkretne serwisy zamiast portów. Dodatkowy test/analizator źródeł SQL dla odwołań `schema.table`, których ArchUnit nie widzi. Rozróżnić dozwolony native JPA SQL we własnym module od niedozwolonego bezpośredniego dostępu między modułami.
 - **Odbiór:** architektoniczny test red dla kontrolowanego przykładu naruszenia i green po naprawie, bez fałszywej deklaracji, że samo ArchUnit kontroluje tekst SQL.
 
