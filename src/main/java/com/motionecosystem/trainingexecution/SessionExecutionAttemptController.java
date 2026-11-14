@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 class SessionExecutionAttemptController {
     private final SessionExecutionAttemptService attempts;
-    private final SessionExecutionService executions;
 
     @PostMapping
     @PreAuthorize("hasRole('PARTICIPANT')")
@@ -91,15 +90,7 @@ class SessionExecutionAttemptController {
     SessionExecutionService.ExecutionView complete(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID attemptId,
             @RequestHeader("Idempotency-Key") String idempotencyKey,
             @RequestBody SessionExecutionService.DeclareExecutionCommand command) {
-        if (command == null || command.techniqueConfidenceLevel() == null) {
-            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST,
-                    "techniqueConfidenceLevel is required for guided completion");
-        }
-        attempts.validateCompletionResults(jwt.getSubject(), attemptId, command);
-        var result = executions.declare(jwt.getSubject(), attempts.plannedSessionForCompletion(jwt.getSubject(), attemptId),
-                idempotencyKey, command);
-        attempts.completeAfterFinalDeclaration(jwt.getSubject(), result.participantId(), result.plannedSessionId());
-        return result;
+        return attempts.completeGuided(jwt.getSubject(), attemptId, idempotencyKey, command);
     }
 
     record StartAttemptCommand(UUID plannedSessionId, UUID planRevisionId, String selectedVariantType) { }

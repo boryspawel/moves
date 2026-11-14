@@ -341,6 +341,32 @@ class TrainingPlanningExecutionIntegrationTest {
     }
 
     @Test
+    void legacyGuidedCompletionCommitsAttemptAndExecutionTogetherAndReplays() throws Exception {
+        P4Fixture fixture = p4Fixture();
+        UUID attemptId = startP4Attempt(fixture, "guided-start");
+        String command = """
+                {"declaredCompletion":true,"painLevel":0,"difficultyLevel":4,"techniqueConfidenceLevel":5,
+                 "results":[{"exercisePrescriptionId":"%s","actualRepetitions":10}]}
+                """.formatted(fixture.prescriptionId());
+
+        for (int retry = 0; retry < 2; retry++) {
+            mvc.perform(post("/api/v1/participant/session-attempts/{attemptId}/complete", attemptId)
+                            .with(role(p4Subject, "PARTICIPANT"))
+                            .header("Idempotency-Key", "guided-complete")
+                            .contentType("application/json").content(command))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.declaredCompletion").value(true));
+        }
+
+        assertThat(jdbc.queryForObject(
+                "SELECT status FROM training_execution.session_execution_attempt WHERE id = ?", String.class, attemptId))
+                .isEqualTo("COMPLETED");
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM training_execution.session_execution WHERE planned_session_id = ?",
+                Long.class, fixture.sessionId())).isEqualTo(1L);
+    }
+
+    @Test
     void completeRequiresFactsAndSeparatesCompletedFromSkippedTerminalOutcomes() throws Exception {
         P4Fixture missing = p4Fixture();
         UUID missingAttempt = startP4Attempt(missing, "missing-start");
