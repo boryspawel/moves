@@ -30,7 +30,8 @@ public interface SpecialistAuthorizationPort {
         OVERRIDE_CLINICAL_BLOCK,
         VIEW_ADHERENCE_WORKLIST,
         RESPOND_TO_PARTICIPANT_ISSUE,
-        MANAGE_PARTICIPANT_RECORDS
+        MANAGE_PARTICIPANT_RECORDS,
+        VIEW_MEASUREMENTS
     }
 
     enum ProfessionalRole {
