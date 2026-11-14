@@ -85,6 +85,7 @@ export type GrantViewPurposeEnum = (typeof GrantViewPurposeEnum)[keyof typeof Gr
 export const GrantViewScopesEnum = {
   Plan: 'PLAN',
   Execution: 'EXECUTION',
+  Measurements: 'MEASUREMENTS',
   EffectiveRestriction: 'EFFECTIVE_RESTRICTION',
   ClinicalRationale: 'CLINICAL_RATIONALE',
 } as const;
