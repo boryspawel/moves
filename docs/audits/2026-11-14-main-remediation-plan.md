@@ -54,7 +54,8 @@
 - **Zależność:** wyniki mapy P0-01; wdrażać łącznie z P0-02, jeśli API współdzieli projekcję.
 
 ### P0-05 — Docelowe scope'y i egzekwowanie zgody na pomiary/dokumentację [POTW. + DECYZJA]
-**Start: analiza techniczna teraz; pełne udostępnienie dopiero po ustaleniu podstawy dostępu.**
+**Etap techniczny: wdrożony w PR P0-05-DOC (uzupełnić numerem PR).** Oddzielny scope `DOCUMENTATION` i capability `MANAGE_PARTICIPANT_DOCUMENTATION` wymagane wraz z `MANAGE_PARTICIPANT_RECORDS`; istniejąca autoryzacja nadal egzekwuje rolę, relację, recipient, purpose, termin i cofnięcie grantu. Chronione są notatki i wywiady (zapis/odczyt), pośrednie timeline/detail oraz draft interview i podsumowanie wizyty. Zdarzenia dokumentacji są dodatkowo ograniczone do rekordów należących do danego specjalisty. Bez scope: endpointy dokumentacji odrzucają, złożone widoki redagują sekcję. Dodano **2 testy celowane**.
+**Nadal otwarte P0-05:** legalny proces grantu dla kartotek bez konta i przedstawicieli, polityka retencji, rozdzielenie pochodnych wartości obserwacji celów i ich zakresu. Nie przyjęto domniemanej zgody ani nowych terminów retencji.
 
 - **Problem:** `SpecialistAuthorizationService.requireCapabilities()` nie mapuje `MANAGE_PARTICIPANT_RECORDS` na żaden `DataScope`; notatki/wywiady mogą być dopuszczane przez samą capability, a pomiary przez relację. `ConsentGrantService` jest powiązany z kontem uczestnika.
 - **Zadanie:** zdefiniować zakresy dla pomiarów i dokumentacji, model grantu/odwołania/ważności oraz kartotek bez konta, z uwzględnieniem przedstawiciela ustawowego; scentralizować enforcement przed odczytem i zapisem. Zapewnić fail-closed dla braku, cofnięcia, wygaśnięcia i niewłaściwego purpose; nie utożsamiać odpowiedzi wywiadu z grantem.
