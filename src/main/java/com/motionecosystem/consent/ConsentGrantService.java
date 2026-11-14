@@ -86,7 +86,7 @@ public class ConsentGrantService implements ConsentDecisionPort {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, noRollbackFor = ResponseStatusException.class)
     public ConsentDecision requireAccess(
             UUID actor, UUID participant, Set<DataScope> scopes, Purpose purpose) {
         if (actor == null

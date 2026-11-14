@@ -11,6 +11,7 @@ import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.identityaccess.api.SpecialistAuthorizationPort;
 import com.motionecosystem.participant.api.ParticipantRecordLockPort;
 import com.motionecosystem.participant.api.ParticipantMetricCatalog.PresetId;
+import com.motionecosystem.specialist.api.SpecialistWorkspacePort;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -38,7 +39,9 @@ class ParticipantMeasurementServiceTest {
                 ParticipantMeasurementService.ParticipantMeasurementView::metricCode, ParticipantMeasurementService.ParticipantMeasurementView::unit,
                 ParticipantMeasurementService.ParticipantMeasurementView::measurementMethod, ParticipantMeasurementService.ParticipantMeasurementView::source)
                 .containsExactly(fixture.participantId, "body-weight", "kg", "body-weight", "SPECIALIST_MANUAL");
-        verify(fixture.authorization).requireActiveRelationship(fixture.specialistId, fixture.participantId);
+        verify(fixture.authorization).requireCapabilities(eq(fixture.specialistId), eq(fixture.participantId), any(),
+                eq(java.util.Set.of(SpecialistAuthorizationPort.Capability.MANAGE_PARTICIPANT_RECORDS,
+                        SpecialistAuthorizationPort.Capability.VIEW_MEASUREMENTS)), any());
         verify(fixture.participants).lockExistingParticipant(fixture.participantId);
     }
 
@@ -69,10 +72,27 @@ class ParticipantMeasurementServiceTest {
         assertBad(() -> fixture.service.record("specialist", fixture.participantId, "custom",
                 new ParticipantMeasurementService.ParticipantMeasurementCommand(PresetId.CUSTOM, BigDecimal.ONE, null, NOW, null, null, null, null, null)));
         doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "active specialist relationship is required"))
-                .when(fixture.authorization).requireActiveRelationship(fixture.specialistId, fixture.otherParticipantId);
+                .when(fixture.authorization).requireCapabilities(eq(fixture.specialistId), eq(fixture.otherParticipantId), any(), any(), any());
         assertThatThrownBy(() -> fixture.service.record("specialist", fixture.otherParticipantId, "foreign", command(PresetId.BODY_WEIGHT, null, null)))
                 .isInstanceOfSatisfying(ResponseStatusException.class, error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN));
         verify(fixture.measurements, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void refusesMeasurementReadAndWriteWhenScopedAccessIsDenied() {
+        Fixture fixture = fixture();
+        doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "measurement consent required"))
+                .when(fixture.authorization).requireCapabilities(eq(fixture.specialistId), eq(fixture.participantId),
+                        any(), any(), any());
+
+        assertThatThrownBy(() -> fixture.service.list("specialist", fixture.participantId, 10))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN));
+        assertThatThrownBy(() -> fixture.service.record("specialist", fixture.participantId, "denied",
+                command(PresetId.BODY_WEIGHT, null, null)))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN));
+        verifyNoInteractions(fixture.measurements);
     }
 
     private static ParticipantMeasurement captured(Fixture fixture) {
@@ -94,9 +114,12 @@ class ParticipantMeasurementServiceTest {
         SpecialistAuthorizationPort authorization = mock(SpecialistAuthorizationPort.class);
         UUID specialist = UUID.randomUUID(); UUID participant = UUID.randomUUID();
         when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(specialist, "specialist", ProfileType.SPECIALIST));
+        SpecialistWorkspacePort specialists = mock(SpecialistWorkspacePort.class);
+        when(specialists.findProfile(specialist)).thenReturn(Optional.of(
+                new SpecialistWorkspacePort.Profile(specialist, SpecialistWorkspacePort.WorkspaceRole.TRAINER, "UTC")));
         when(measurements.findByRecordedByAccountIdAndParticipantIdAndIdempotencyKey(any(), any(), any())).thenReturn(Optional.empty());
         return new Fixture(measurements, participants, authorization, specialist, participant, UUID.randomUUID(),
-                new ParticipantMeasurementService(measurements, participants, accounts, authorization, Clock.fixed(NOW, ZoneOffset.UTC)));
+                new ParticipantMeasurementService(measurements, participants, accounts, authorization, specialists, Clock.fixed(NOW, ZoneOffset.UTC)));
     }
     private record Fixture(ParticipantMeasurementRepository measurements, ParticipantRecordLockPort participants, SpecialistAuthorizationPort authorization, UUID specialistId,
                            UUID participantId, UUID otherParticipantId, ParticipantMeasurementService service) { }

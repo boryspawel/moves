@@ -67,7 +67,8 @@ class SpecialistAuthorizationService implements SpecialistAuthorizationPort {
                         Capability.ACKNOWLEDGE_PERFORMANCE_WARNING,
                         Capability.VIEW_ADHERENCE_WORKLIST,
                         Capability.RESPOND_TO_PARTICIPANT_ISSUE,
-                        Capability.MANAGE_PARTICIPANT_RECORDS)
+                        Capability.MANAGE_PARTICIPANT_RECORDS,
+                        Capability.VIEW_MEASUREMENTS)
                 : EnumSet.of(
                         Capability.PLAN_FUNCTIONAL_RECOVERY,
                         Capability.SHARE_EXERCISE_SETS,
@@ -77,7 +78,8 @@ class SpecialistAuthorizationService implements SpecialistAuthorizationPort {
                         Capability.OVERRIDE_CLINICAL_BLOCK,
                         Capability.VIEW_ADHERENCE_WORKLIST,
                         Capability.RESPOND_TO_PARTICIPANT_ISSUE,
-                        Capability.MANAGE_PARTICIPANT_RECORDS);
+                        Capability.MANAGE_PARTICIPANT_RECORDS,
+                        Capability.VIEW_MEASUREMENTS);
         if (!granted.containsAll(required)) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN, "required domain capability is missing");
@@ -100,6 +102,9 @@ class SpecialistAuthorizationService implements SpecialistAuthorizationPort {
         if (required.stream().anyMatch(value -> value == Capability.VIEW_ADHERENCE_WORKLIST
                 || value == Capability.RESPOND_TO_PARTICIPANT_ISSUE)) {
             dataScopes.add(ConsentDecisionPort.DataScope.EXECUTION);
+        }
+        if (required.contains(Capability.VIEW_MEASUREMENTS)) {
+            dataScopes.add(ConsentDecisionPort.DataScope.MEASUREMENTS);
         }
         if (!dataScopes.isEmpty()) {
             // Consent is still account-keyed; resolve the explicit access link at this legacy boundary.

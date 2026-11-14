@@ -15,6 +15,7 @@ public interface ConsentDecisionPort {
     enum DataScope {
         PLAN,
         EXECUTION,
+        MEASUREMENTS,
         EFFECTIVE_RESTRICTION,
         CLINICAL_RATIONALE
     }

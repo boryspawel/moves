@@ -38,7 +38,7 @@ class SpecialistAppointmentCloseoutController {
         String name=participants.find(appointment.participantId()).map(ParticipantClientPort.ClientRecord::displayName).orElse("Uczestnik");
         return new CloseoutContext(appointment.appointmentId(),appointment.participantId(),name,appointment.status(),appointment.version(),appointment.startsAt(),appointment.endsAt(),appointment.shortPurpose(),required,recorded,
                 execution==null?null:new ExecutionSummary(execution.execution().id(),execution.execution().outcome(),execution.execution().recordedAt()),
-                measurements.forAppointment(appointment.participantId(),appointment.appointmentId(),50).stream().map(item->new MeasurementFact(item.id(),item.metricCode(),item.value(),item.unit(),item.measuredAt())).toList(),
+                measurements.forAppointment(jwt.getSubject(),appointment.participantId(),new ActingContext(actingContext),appointment.appointmentId(),50).stream().map(item->new MeasurementFact(item.id(),item.metricCode(),item.value(),item.unit(),item.measuredAt())).toList(),
                 summaries.findAppointmentSummary(jwt.getSubject(),appointment.participantId(),appointment.appointmentId(),new ActingContext(actingContext)).map(item->new SummaryNote(item.noteId(),item.title(),item.content(),item.recordedAt())).orElse(null),
                 "IN_PROGRESS".equals(appointment.status())&&(!required||recorded));
     }
