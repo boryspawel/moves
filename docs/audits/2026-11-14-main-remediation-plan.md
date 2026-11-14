@@ -79,6 +79,7 @@
 - **Dokument:** [ADR-001](../adr/ADR-001-modular-monolith.md).
 
 ### P1-03 — Rozszerzyć reguły ArchUnit / statycznego audytu SQL [POTW.]
+**Etap 1 (mały PR):** globalna reguła ArchUnit blokująca zależności produkcyjnych klas od `JdbcTemplate` i `NamedParameterJdbcTemplate`, z kontrolowanym naruszeniem w fixture testowym (red) i weryfikacją całej produkcji (green). Bez zmian funkcjonalnych, schematu ani kontraktów REST. Pozostałe podpunkty P1-03 — `java.sql`, zależności przez serwisy, SQL cross-schema — nadal do osobnych, małych poprawek.
 - **Zadanie:** egzekwować zakaz `JdbcTemplate` i `NamedParameterJdbcTemplate` w całym kodzie produkcyjnym; ograniczyć `java.sql`, wykrywać cross-module `JpaRepository` oraz zależności przez konkretne serwisy zamiast portów. Dodatkowy test/analizator źródeł SQL dla odwołań `schema.table`, których ArchUnit nie widzi. Rozróżnić dozwolony native JPA SQL we własnym module od niedozwolonego bezpośredniego dostępu między modułami.
 - **Odbiór:** architektoniczny test red dla kontrolowanego przykładu naruszenia i green po naprawie, bez fałszywej deklaracji, że samo ArchUnit kontroluje tekst SQL.
 
@@ -111,6 +112,7 @@
 - **Odbiór:** tabela `data owner / klasyfikacja / trigger / okres / mechanizm usuwania / audyt / backup`; luki mają osobne zadania. Nie wprowadzać arbitralnych terminów bez zatwierdzonej polityki.
 
 ### P1-10 — Zabezpieczenia środowiskowe obejść testowych [POTW.]
+**Status: JAWNY DŁUG TECHNOLOGICZNY — świadomie odłożony w bieżącej fazie higieny.** Nie usuwamy zadania z backlogu ani nie uznajemy go za zweryfikowane; testowe obejścia dostępu muszą pozostać wyłączone w produkcji.
 - **Zadanie:** potwierdzić i przetestować fail-closed `TestDefaultConsentSafetyConfiguration`, `TestDefaultConsentOverrideAdapter`, `LocalTestProfessionalScopeOverride` dla `prod`, `local`, `test`, kombinacji profili i wyłączenia flag. Przejrzeć deployment flags, logi oraz możliwość błędnej konfiguracji.
 - **Odbiór:** fail-fast produkcyjnego startu dla włączonych override; minimalne testy konfiguracji i opis ścieżki wycofania testowych wyjątków.
 
