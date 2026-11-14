@@ -172,7 +172,7 @@ public class SpecialistParticipantReadService {
                     .forEach(item -> events.add(appointmentEvent(item)));
         }
         if (normalized.types().contains(TimelineType.GOAL) && goalEvents != null) {
-            goalEvents.timeline(participantId, normalized.from(), normalized.to(), goalEventCursor(cursor), MAX_LIMIT)
+            goalEvents.timeline(subject, participantId, actingContext(access.decision().role()), normalized.from(), normalized.to(), goalEventCursor(cursor), MAX_LIMIT)
                     .forEach(item -> events.add(goalEvent(item)));
         }
         if (recordEvents != null) recordEvents.timeline(subject, participantId, actingContext(access.decision().role()), normalized.from(), normalized.to()).stream()
@@ -213,7 +213,7 @@ public class SpecialistParticipantReadService {
             resolved = appointmentEvent(event);
         } else if (publicEventId != null && publicEventId.startsWith("participant-goal-event:") && goalEvents != null) {
             UUID eventId = goalEventId(publicEventId);
-            resolved = goalEvents.findByParticipantId(participantId, eventId).map(SpecialistParticipantReadService::goalEvent)
+            resolved = goalEvents.findByParticipantId(subject, participantId, actingContext(access.decision().role()), eventId).map(SpecialistParticipantReadService::goalEvent)
                     .orElseThrow(SpecialistParticipantReadService::timelineEventNotFound);
         } else if (publicEventId != null && (publicEventId.startsWith("participant-interview-event:") || publicEventId.startsWith("participant-note-event:")) && recordEvents != null) {
             String prefix = publicEventId.startsWith("participant-interview-event:") ? "participant-interview-event:" : "participant-note-event:";
