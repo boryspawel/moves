@@ -1,6 +1,6 @@
 # Moves Mobile — plan wdrożenia v0.1
 
-**Cel:** natywna aplikacja Android realizująca UJ-01…UJ-06 w zakresie tekstowych notatek i wizyt, oparta na istniejącym backendzie. **Status:** M1 — kod OIDC/PKCE i APK gotowe; testy prawdziwego logowania na emulatorze/urządzeniu wymagają odbioru. S08/pomiary biomedyczne wyłączone do czasu rzeczywistej zgody serwerowej.
+**Cel:** natywna aplikacja Android realizująca UJ-01…UJ-06 w zakresie tekstowych notatek i wizyt, oparta na istniejącym backendzie. **Status:** M1 — OIDC/PKCE uruchomione na Motorola Edge 50 Neo (login, chroniony GET identity, logout i ponowne logowanie), MOB-012/013 zaimplementowane w gałęzi mobilnej; nadal wymagane testy refresh, 401/403, role i pełna weryfikacja na urządzeniu. S08/pomiary biomedyczne wyłączone do czasu rzeczywistej zgody serwerowej.
 
 ## Kamienie milowe i kolejność
 
@@ -103,4 +103,6 @@ GO tylko jeżeli: UJ-01–UJ-06 działają przy prawdziwym logowaniu; stan spotk
 
 M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provisioning klienta): pojedynczy moduł `android/app` z Compose, Material 3, wariantami `dev`/`prod`, Gradle Wrapper i workflow budującym debug APK. Adapter REST obejmuje cztery odczyty operacyjne; logowanie pozwala na chroniony GET bez ekranów biznesowych, danych medycznych i własnej logiki zgód. MOB-011 oczekuje testów runtime na urządzeniu. Instrukcja builda, wyniki lokalnej walidacji i granice zakresu są w [07 — M1](07-m1-android-build.md).
 
-**MOB-011:** [Konfiguracja Android OIDC/Keycloak i bramki odbiorowe](08-m1-oidc-keycloak.md). M1 nie jest zamknięty przed rzeczywistym testem login/refresh/logout oraz aud/iss/role, 401/403.
+**MOB-011:** [Konfiguracja Android OIDC/Keycloak i bramki odbiorowe](08-m1-oidc-keycloak.md). Fizyczny telefon: login → GET identity → logout → ponowny login potwierdzone ręcznie. Nie przetestowano refresh oraz negatywnych 401/403 i pełnego zestawu uprawnień.
+
+**MOB-012/013:** Repozytorium Kotlin obejmuje cztery odczyty GET, mapowanie 401/403/409/offline/HTTP i pojedynczy retry tylko na 502/503/504 oraz błąd sieci. Navigation Compose udostępnia trzy główne sekcje z odczytami, jawny wybór actingContext/purpose dla worklist, przejścia do nietrwałego kontekstu uczestnika/spotkania i stany loading/empty/error. Szczegółowe ekrany i mutacje nadal pozostają w M2/M3. Brak trwałego PHI; 401 wylogowuje, 403 czyści odczytane projekcje. Odbiór nowego UI na Motoroli pozostaje do wykonania.

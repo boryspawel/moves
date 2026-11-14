@@ -1,6 +1,6 @@
 # M1 — minimalny fundament Android
 
-**Status:** lokalny build i Android APK CI zweryfikowane; MOB-011 dodaje OIDC, ale testów logowania na urządzeniu nie wykonano. Nadal brak ekranów biznesowych.
+**Status:** build i APK CI zweryfikowane; użytkownik potwierdził na Motorola Edge 50 Neo logowanie, odczyt identity, wylogowanie i ponowne logowanie. Implementacja MOB-012/013: shell nawigacji i odczyty API; pełne ekrany biznesowe nadal w M2.
 
 ## Klient API i MOB-004
 
@@ -58,3 +58,11 @@ Zweryfikowano manifest (`minSdk` 26, `targetSdk` 37) i podpis wariantu `devDebug
 ## Logowanie
 
 Dodano implementację OIDC z AppAuth. Konfiguracja issuer/Keycloak i instrukcja odbioru: [08 — MOB-011](08-m1-oidc-keycloak.md). Historyczne rozmiary i SHA-256 APK powyżej odnoszą się do wersji przed MOB-011.
+
+## MOB-012/013 — wstępna nawigacja i odczyty (2026-11-14)
+
+Navigation Compose: Dzień (terminy/liczniki), Uczestnicy (aktywne relacje) i Sprawy (neutralna lista bez treści klinicznych). Wejście z listy otwiera kontekst uczestnika/spotkania tylko w RAM; szczegóły w M2/M3. Sprawy wymagają jawnego wyboru roli (TRAINER lub PHYSIOTHERAPIST); purpose jest mapowany odpowiednio na PERFORMANCE_PLANNING lub FUNCTIONAL_RECOVERY, bez domyślnego poszerzenia dostępu.
+
+Każdy odczyt poprzedza próba uzyskania świeżego tokenu. 401 czyści sesję; 403 czyści wszystkie projekcje w RAM bez udawania wylogowania. Loading, pusta lista, brak połączenia, odmowa dostępu i błąd mają osobne widoki i akcję ponowienia. Repozytorium powtarza jedynie bezpieczny GET raz po krótkiej zwłoce przy błędzie sieci lub HTTP 502/503/504; mutacje pozostają wyłączone. Aplikacja blokuje podgląd recent apps (FLAG_SECURE). Żadnych pomiarów biomedycznych, danych medycznych w logach czy zapisu do dysku.
+
+Zbuduj nowy dev APK i zainstaluj przez `adb install -r`. Dla fizycznego telefonu i portów `adb reverse` można użyć `-Pmoves.devBaseUrl=http://127.0.0.1:8080/` i `-Pmoves.devOidcIssuer=http://localhost:8180/realms/motion-local` przy identycznym issuer Keycloak/backend. Sprawdź trzy sekcje, wybór kontekstu, nawigację wstecz, odświeżenie, logout; negatywne testy auth i refresh pozostają otwarte.

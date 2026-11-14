@@ -1,6 +1,6 @@
 # Moves Mobile — aplikacja Android dla specjalisty
 
-**Status:** M1 — fundament Android/APK i kod OIDC gotowe; prawdziwe logowanie na urządzeniu niepotwierdzone, ekrany biznesowe poza zakresem. **Data:** 2026-11-12.
+**Status:** M1 — Android/OIDC na fizycznym telefonie potwierdzone dla login, identity, logout i ponownego login; MOB-012/013 implementują odczyty i nawigację, pełne ekrany biznesowe nadal w M2. **Data:** 2026-11-14.
 
 ## Dokumentacja i prototyp
 
