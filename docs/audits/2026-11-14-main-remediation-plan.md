@@ -19,7 +19,7 @@
 ## P0 — działania do rozpoczęcia natychmiast
 
 ### P0-01 — Testy izolacji i wycieków danych biomedycznych [POTW.]
-**Status:** w realizacji — [PR P0-01/P0-02] (uzupełnić po utworzeniu); dwa celowane testy odmowy, bez mnożenia testów. Poniższa mapa wejść PHI stanowi punkt kontrolny dalszej weryfikacji.
+**Wdrożono (2026-11-14):** [PR #7](https://github.com/boryspawel/moves/pull/7) scalony do `main` (`fc772f8fbb4622949261042f20d69eb079508bac`). Mapa ścieżek pomiarów oraz 3 celowane testy (odmowa API, redakcja odczytów, prawdziwy grant i cofnięcie). Pełna macierz izolacji aktorów i przegląd pochodnych zdarzeń celów pozostają do P0-05; zgodnie z decyzją ograniczono liczbę nowych testów.
 
 **Mapa ścieżek pomiarów:** `SpecialistParticipantMeasurementController` (catalog/list/record) → `ParticipantMeasurementService`; `SpecialistParticipantReadService` (workspace/recent, timeline/measurement, timeline-event/find) → `ParticipantMeasurementQueryPort`; `SpecialistAppointmentCloseoutController` (closeout/forAppointment) → ten sam port; `SpecialistParticipantHistoryService` (timeline, filtry, szczegóły, encounter) → `SpecialistMeasurementHistoryQueryPort`; `SpecialistParticipantMeasurementApplicationService` (zapis po walidacji wizyty) → serwis oraz projekcje `MeasurementGoalProjectionPort`. **Wszystkie odczyty repozytorium pomiarów przechodzą przez `ParticipantMeasurementService`, który wymaga teraz `MANAGE_PARTICIPANT_RECORDS + VIEW_MEASUREMENTS` i scope `MEASUREMENTS` w decyzji zgody.**
 
@@ -29,7 +29,7 @@
 - **Kod:** `participantmeasurements/*`, `application/workspace/SpecialistParticipantReadService.java`, `application/workspace/SpecialistAppointmentCloseoutController.java`, `participantgoals/*`, `consent/api/ConsentDecisionPort.java`.
 
 ### P0-02 — Fail-closed dla odczytu i zapisu pomiarów bez skutecznej zgody [POTW.]
-**Status:** w realizacji — ograniczone do bieżących ścieżek pomiarów. Prawdziwy grant `MEASUREMENTS` wymaga zatwierdzenia/udzielenia przez uczestnika. Brak grantu oznacza `403` dla listy/zapisu bezpośredniego, a dla osadzonych projekcji pustą listę/zasób. `TEST_DEFAULT` nadal działa wyłącznie w `local/test`; `prod` bez zgody pozostaje zamknięty.
+**Wdrożono dla bieżących ścieżek pomiarów:** [PR #7](https://github.com/boryspawel/moves/pull/7), CI frontend i compose-smoke PASS, backend PASS przy ponownym uruchomieniu. Bez rzeczywistego grantu `MEASUREMENTS`: `403` dla odczytu/zapisu bezpośredniego, pusta projekcja odczytu pośredniego. `PLAN` nie zastępuje `MEASUREMENTS`; `TEST_DEFAULT` nadal wyłącznie w `local/test`. Pełny proces udzielania zgody kartotekom bez konta pozostaje P0-05.
 
 - **Zadanie:** nie udostępniać pomiarów ani nie akceptować nowych zapisów, dopóki backend nie potrafi wykazać właściwej, aktywnej podstawy dostępu dla aktora, uczestnika, celu i zakresu. Zamknąć zarówno endpoint bezpośredni, jak i pośrednie projekcje API; nie zastępować zgody `PLAN`, rolą, aktywną relacją, checkboxem ani `TEST_DEFAULT` w środowisku produkcyjnym. Prawdziwy `MEASUREMENTS`/analogiczny scope i mechanizm dla kartotek bez konta wyodrębnić do P0-05.
 - **Odbiór:** brak PHI w JSON, timeline, closeout, cache i logach przy braku uprawnienia; przypadki izolacji, cofnięcia i wygaśnięcia sprawdzane testami integracyjnymi; poprawne dotychczasowe operacje bez pomiarów działają dalej.
@@ -46,7 +46,7 @@
 - **Kod:** `trainingexecution/SessionExecutionAttemptController.java`, `SessionExecutionAttemptService.java`, `SessionExecutionService.java`; testy integracyjne wykonania.
 
 ### P0-04 — Usunąć bezpośrednie ujawnianie PHI przez złożone widoki [POTW.]
-**Start: teraz; wykonać równolegle z P0-02.**
+**Częściowo zrealizowano:** [PR #7](https://github.com/boryspawel/moves/pull/7) — workspace, timeline, event detail, closeout i history wczytują pomiary wyłącznie przez autoryzowany port. Pozostaje osobny przegląd pochodnych obserwacji celów (P0-05).
 
 - **Problem:** `SpecialistAppointmentCloseoutController` zwraca `measurements.forAppointment(...)` po walidacji kontekstu wizyty, ale bez wyspecjalizowanego rozstrzygnięcia zgody dla pomiarów. `SpecialistParticipantReadService` dołącza `measurements.recent(...)` do kartoteki.
 - **Zadanie:** wprowadzić autoryzowany/redagowany port projekcji lub jawny gate na poziomie orkiestracji; nie wystawiać niechronionych metod `recent/timeline/forAppointment/find` jako wygodnych skrótów do chronionych widoków. Zwracane DTO i OpenAPI nie mogą obchodzić odrębnych uprawnień sekcji.
@@ -60,6 +60,8 @@
 - **Zadanie:** zdefiniować zakresy dla pomiarów i dokumentacji, model grantu/odwołania/ważności oraz kartotek bez konta, z uwzględnieniem przedstawiciela ustawowego; scentralizować enforcement przed odczytem i zapisem. Zapewnić fail-closed dla braku, cofnięcia, wygaśnięcia i niewłaściwego purpose; nie utożsamiać odpowiedzi wywiadu z grantem.
 - **Odbiór:** reguły ustalone w ADR, testy macierzy aktor–rola–relacja–purpose–scope i przypadki odebrania uprawnień w toku sesji; produkcja nie opiera się na testowym override. Osobne zadanie retencji dla tych danych należy wygenerować na podstawie zatwierdzonej polityki, nie zgadywać terminów.
 - **Zależności:** P0-01/02, decyzja w pytaniach na końcu.
+
+**Uwaga walidacyjna:** pierwsze uruchomienie CI PR #7: niepowiązany tematycznie `FlywayMigrationIntegrationTest` zastał 69 zamiast 62 struktur anatomii; ponowny przebieg tego samego backendu bez zmian kodu — PASS. Podejrzenie niestabilnej izolacji danych testowych włączyć do P1-01; nie tworzyć w tym zadaniu dodatkowej baterii testów.
 
 ## P1 — architektura, kontrakty, jakość implementacji
 
