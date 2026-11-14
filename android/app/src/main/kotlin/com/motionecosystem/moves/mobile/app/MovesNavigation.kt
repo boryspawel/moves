@@ -111,8 +111,9 @@ fun MovesNavigation(viewModel: OperationalViewModel, readiness: ReadinessState, 
 private fun TodaySection(viewModel: OperationalViewModel, onAppointment: (java.util.UUID?, java.util.UUID) -> Unit) {
     val state by viewModel.today.collectAsStateWithLifecycle()
     LaunchedEffect(viewModel) { if (viewModel.today.value == ReadState.Idle) viewModel.loadToday() }
-    SectionHeading("Dzień", viewModel::loadToday)
-    ReadPanel(state, viewModel::loadToday, { it.appointments.isNullOrEmpty() && it.attentionItems.isNullOrEmpty() && it.operationalTasks.isNullOrEmpty() }) { today ->
+    Column {
+        SectionHeading("Dzień", viewModel::loadToday)
+        ReadPanel(state, viewModel::loadToday, { it.appointments.isNullOrEmpty() && it.attentionItems.isNullOrEmpty() && it.operationalTasks.isNullOrEmpty() }) { today ->
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("${today.localDate ?: ""} • ${today.timeZoneId ?: ""}", style = MaterialTheme.typography.bodyMedium)
@@ -133,6 +134,7 @@ private fun TodaySection(viewModel: OperationalViewModel, onAppointment: (java.u
             Text("Sprawy wymagające uwagi: ${today.attentionItems.orEmpty().size}")
             Text("Zadania operacyjne: ${today.operationalTasks.orEmpty().size}")
         }
+        }
     }
 }
 
@@ -140,8 +142,9 @@ private fun TodaySection(viewModel: OperationalViewModel, onAppointment: (java.u
 private fun ParticipantsSection(viewModel: OperationalViewModel, onParticipant: (java.util.UUID) -> Unit) {
     val state by viewModel.participants.collectAsStateWithLifecycle()
     LaunchedEffect(viewModel) { if (viewModel.participants.value == ReadState.Idle) viewModel.loadParticipants() }
-    SectionHeading("Uczestnicy", viewModel::loadParticipants)
-    ReadPanel(state, viewModel::loadParticipants, { it.isEmpty() }) { participants ->
+    Column {
+        SectionHeading("Uczestnicy", viewModel::loadParticipants)
+        ReadPanel(state, viewModel::loadParticipants, { it.isEmpty() }) { participants ->
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
             participants.forEach { participant ->
@@ -150,6 +153,7 @@ private fun ParticipantsSection(viewModel: OperationalViewModel, onParticipant: 
                     onClick = { onParticipant(id) }, modifier = Modifier.fillMaxWidth()
                 ) { Text(participant.label ?: "Uczestnik") }
             }
+        }
         }
     }
 }
