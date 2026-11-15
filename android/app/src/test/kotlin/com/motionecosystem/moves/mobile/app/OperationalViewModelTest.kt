@@ -231,6 +231,93 @@ class OperationalViewModelTest {
         } finally { Dispatchers.resetMain() }
     }
 
+    @Test fun startRetryAfterUncertainResponseUsesSameKeyAndNeverAutoRepeats() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = StubRepository()
+            val id = UUID.randomUUID()
+            val participant = UUID.randomUUID()
+            repository.appointmentValue = AppointmentView(
+                appointmentId = id, participantId = participant, status = AppointmentStatus.SCHEDULED,
+                version = 7, availableActions = listOf("START")
+            )
+            repository.startResults.add(RemoteResult.Failure(RemoteError.Network(java.io.IOException("lost response"))))
+            repository.startResults.add(RemoteResult.Success(repository.appointmentValue!!.copy(
+                status = AppointmentStatus.IN_PROGRESS, version = 8, availableActions = listOf("COMPLETE")
+            )))
+            val vm = OperationalViewModel(repository, { "token" }, {})
+            vm.selectAppointment(participant, id)
+            vm.loadAppointment(id)
+            advanceUntilIdle()
+            vm.startAppointment(id)
+            vm.startAppointment(id) // second click while saving is ignored
+            advanceUntilIdle()
+            assertEquals(AppointmentStartState.UNCERTAIN, vm.appointmentStart.value)
+            assertEquals(1, repository.startRequests.size)
+            vm.startAppointment(id)
+            advanceUntilIdle()
+            assertEquals(2, repository.startRequests.size)
+            assertEquals(repository.startRequests[0], repository.startRequests[1])
+            assertEquals(7L, repository.startRequests[0].second)
+            assertEquals(AppointmentStatus.IN_PROGRESS, (vm.appointment.value as ReadState.Ready).value.status)
+            assertEquals(AppointmentStartState.IDLE, vm.appointmentStart.value)
+        } finally { Dispatchers.resetMain() }
+    }
+
+    @Test fun appointmentConflictReloadsServerStateAndNewVersion() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = StubRepository()
+            val id = UUID.randomUUID()
+            val participant = UUID.randomUUID()
+            repository.appointmentValue = AppointmentView(id, participantId = participant,
+                status = AppointmentStatus.SCHEDULED, version = 2, availableActions = listOf("START"))
+            repository.startResults.add(RemoteResult.Failure(RemoteError.Conflict))
+            val vm = OperationalViewModel(repository, { "token" }, {})
+            vm.selectAppointment(participant, id)
+            vm.loadAppointment(id)
+            advanceUntilIdle()
+            repository.appointmentValue = repository.appointmentValue!!.copy(version = 3)
+            vm.startAppointment(id)
+            advanceUntilIdle()
+            assertEquals(listOf(2L), repository.startRequests.map { it.second })
+            assertEquals(3L, (vm.appointment.value as ReadState.Ready).value.version)
+            assertEquals(AppointmentStartState.CONFLICT, vm.appointmentStart.value)
+        } finally { Dispatchers.resetMain() }
+    }
+
+    @Test fun changingAppointmentOrRevokingAccessDropsLateDetailsAndMutation() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = StubRepository()
+            val participant = UUID.randomUUID()
+            val first = UUID.randomUUID()
+            val second = UUID.randomUUID()
+            val pending = CompletableDeferred<RemoteResult<AppointmentView>>()
+            repository.pendingAppointment = pending
+            val vm = OperationalViewModel(repository, { "token" }, {})
+            vm.selectAppointment(participant, first)
+            vm.loadAppointment(first)
+            runCurrent()
+            repository.pendingAppointment = null
+            repository.appointmentValue = AppointmentView(second, participantId = participant,
+                status = AppointmentStatus.CONFIRMED, version = 1)
+            vm.selectAppointment(participant, second)
+            vm.loadAppointment(second)
+            runCurrent()
+            pending.complete(RemoteResult.Success(AppointmentView(first, participantId = participant,
+                status = AppointmentStatus.IN_PROGRESS)))
+            advanceUntilIdle()
+            assertEquals(second, (vm.appointment.value as ReadState.Ready).value.appointmentId)
+            repository.appointmentValue = repository.appointmentValue!!.copy(participantId = UUID.randomUUID())
+            vm.loadAppointment(second)
+            advanceUntilIdle()
+            assertEquals(ReadState.Forbidden, vm.professionalContext.value)
+            assertEquals(ReadState.Forbidden, vm.appointment.value)
+            assertNull(vm.selection.value)
+        } finally { Dispatchers.resetMain() }
+    }
+
     private class StubRepository : SpecialistRepository {
         var onboardingResult: RemoteResult<MobileOnboardingState> = RemoteResult.Success(
             MobileOnboardingState(stage = "READY", profileType = "SPECIALIST",
@@ -243,6 +330,16 @@ class OperationalViewModelTest {
         var participantResult: RemoteResult<List<ActiveParticipantView>> = RemoteResult.Success(emptyList())
         var pendingToday: CompletableDeferred<RemoteResult<TodayView>>? = null
         val pendingDates = mutableMapOf<java.time.LocalDate, CompletableDeferred<RemoteResult<TodayView>>>()
+        var appointmentValue: AppointmentView? = null
+        var pendingAppointment: CompletableDeferred<RemoteResult<AppointmentView>>? = null
+        val startResults = ArrayDeque<RemoteResult<AppointmentView>>()
+        val startRequests = mutableListOf<Triple<UUID, Long, String>>()
+        override suspend fun appointment(id: UUID): RemoteResult<AppointmentView> =
+            pendingAppointment?.await() ?: RemoteResult.Success(appointmentValue ?: AppointmentView(appointmentId = id))
+        override suspend fun startAppointment(id: UUID, version: Long, key: String): RemoteResult<AppointmentView> {
+            startRequests += Triple(id, version, key)
+            return startResults.removeFirstOrNull() ?: RemoteResult.Failure(RemoteError.Conflict)
+        }
         override suspend fun workspace(participantId: java.util.UUID): RemoteResult<WorkspaceView> =
             pendingWorkspaces[participantId]?.await() ?: RemoteResult.Success(
                 WorkspaceView(participant = WorkspaceParticipant(participantId = participantId))

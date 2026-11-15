@@ -1,6 +1,6 @@
 # Moves Mobile — plan wdrożenia v0.1
 
-**Cel:** natywna aplikacja Android realizująca UJ-01…UJ-06 w zakresie tekstowych notatek i wizyt, oparta na istniejącym backendzie. **Status:** M2 rozpoczęte — M1 fundament i MOB-012/013 w main; MOB-020 S01 Dzień implementowany 2026-11-15. OIDC login/GET/logout/ponowny login zweryfikowane na Motoroli. Do zamknięcia M1 pozostają scenariusze refresh, 401/403, role oraz odbiór nowych ekranów na urządzeniu. S08/pomiary biomedyczne wyłączone do czasu rzeczywistej zgody serwerowej.
+**Cel:** natywna aplikacja Android realizująca UJ-01…UJ-06 w zakresie tekstowych notatek i wizyt, oparta na istniejącym backendzie. **Status:** M2 (S01/S02/S03/MOB-024) zaimplementowane, S04 odroczony; M3 rozpoczęty: MOB-030 (S05) — kod, wąskie testy i CI. OIDC login/GET/logout/ponowny login zweryfikowane na Motoroli. Pozostają odbiór M2/M3 na urządzeniu oraz weryfikacja refresh, 401/403 i ról. S08/pomiary biomedyczne wyłączone do czasu serwerowej zgody.
 
 ## Kamienie milowe i kolejność
 
@@ -47,7 +47,7 @@ M1 wymaga M0; M2 wymaga M1; M3 i M4 można częściowo rozwijać równolegle po 
 
 ### M3 — cykl spotkania
 
-- **MOB-030** S05: kontekst wizyty, stan lifecycle, rozpoczęcie i powrót do wizyty po przerwaniu.
+- **MOB-030 (kod wykonany)** S05: autoryzowany kontekst wizyty, serwerowy stan lifecycle, rozpoczęcie z wersją i idempotencją, ponowne otwarcie wizyty w toku.
 - **MOB-031** Dodanie/zmiana terminu, dostępność i konflikty 409; request version + Idempotency-Key.
 - **MOB-032** Nawigacja do dokumentacji/realizacji i closeout bez utraty participantId; nie udostępniać S08 pomiarów.
 
@@ -130,7 +130,7 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 - Timeline jest paginowany kursorem (`limit=20`, `granularity=DETAIL`). Pierwsza strona używa serwerowego okna 14 dni, kolejne zachowują identyczne `from`/`to` z pierwszej odpowiedzi. Starsze zdarzenia mogą być pobierane tylko w granicach tego samego okna; poszerzanie zakresu historii nie jest częścią MOB-022. Zdarzenia są odróżniane po `eventId`; błędy kolejnych stron nie usuwają dotychczasowych wpisów.
 - Lista `types` świadomie zawiera tylko `APPOINTMENT,SESSION,EXECUTION,GOAL,INTERVIEW,NOTE`; nie żąda `MEASUREMENT`. Projekcja Androida nie dekoduje ani nie prezentuje pól `recentMeasurements`, wartości pomiarowych celów, `measurement`, `problem`, szczegółów klinicznych zdarzeń ani swobodnego `summary`. W historii pokazuje tylko neutralny typ, datę i status; cele są tekstowe.
 - **Ograniczenie backendu:** dotychczasowy zbiorczy endpoint workspace nadal przesyła pola pomiarowe i może je obliczać serwerowo, a zdarzenia celu mogą mieć wartości obserwacji. Android ignoruje je przy deserializacji, ale ich eliminacja z payloadu sieciowego wymaga serwerowej projekcji/egzekwowania osobnej zgody przed aktywacją S08. MOB-022 nie stanowi zgody na ich wyświetlanie lub składowanie.
-- Dane są wyłącznie w RAM; wylogowanie, utrata dostępu (403) i przełączenie uczestnika usuwają poprzednią projekcję, a spóźnione odpowiedzi są ignorowane. `401` unieważnia sesję. Kontekst wizyty pozostaje placeholderem do M3.
+- Dane są wyłącznie w RAM; wylogowanie, utrata dostępu (403) i przełączenie uczestnika usuwają poprzednią projekcję, a spóźnione odpowiedzi są ignorowane. `401` unieważnia sesję. Kontekst wizyty dostępny w S05 od MOB-030.
 - Walidacja: wąskie testy dekodowania dopuszczonych pól, parametrów i kursora HTTP, izolacji użytkowników i ponownej strony. Odbiór rzeczywistego urządzenia, polityki zgód i retry 401/403 pozostaje otwarty.
 
 ## MOB-024 — weryfikacja dostępu i roli (2026-11-15)
@@ -140,3 +140,11 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 - `401`: wylogowanie; `403` lub nieaktywny/niekompletny profil: ekran odmowy bez danych; brak sieci: brak dostępu do dawnych rekordów i przycisk ponowienia. Backend pozostaje źródłem praw dla relacji i zgody — samo GET onboarding nie jest dowodem ważnej zgody konkretnego uczestnika; przy otwarciu S03 serwer ponownie egzekwuje dostęp.
 - Po odroczeniu MOB-023 usunięto niefunkcjonalną trzecią zakładkę S04, pozostawiając neutralne sygnały i zadania w S01.
 - Walidacja: kontrakt GET onboarding i dwa wąskie testy ViewModel (zmiana roli/spóźniona odpowiedź oraz 403). Bramka rzeczywistego cofnięcia relacji i zgody, telefon/foreground, refresh token i role nadal do odbioru na Motoroli; brak push/pollingu aktywnej sesji.
+
+## MOB-030 — S05 Spotkanie (2026-11-15)
+
+- S05 korzysta z istniejących `GET /api/v1/specialist/appointments/{id}` i `POST /api/v1/specialist/appointments/{id}/start`. Po otwarciu terminu z S01 lub S03 ponownie pobiera rekord: zweryfikowane `appointmentId`, `participantId`, `status`, `version`, `availableActions`, godziny, typ, cel i znacznik powiązanej sesji. Nie przenosi uprawnień przez identyfikator ani przez stan `Today`.
+- Rozpoczęcie dostępne wyłącznie przy `START` w `availableActions` oraz aktualnej wersji, a nie na podstawie zegara telefonu; backend decyduje o 30-minutowym oknie startu i o relacji z uczestnikiem. Jeden POST na kliknięcie, bez automatycznych retry. Niepewny wynik (sieć, 5xx, błąd dekodowania) wymaga ręcznego ponowienia z **tym samym** `Idempotency-Key` i wersją. `409` powoduje pobranie aktualnego stanu i decyzję o dalszej akcji na podstawie nowego `availableActions`. `401` wylogowuje, `403` usuwa wszystkie projekcje.
+- S01 wskazuje wizytę `IN_PROGRESS` zwróconą przez Today i umożliwia jej ponowne otwarcie również po restarcie aplikacji/logowaniu. S05 nie zapisuje PHI ani sesji na dysku; w razie restartu odtwarza stan wyłącznie przez nowe GET. Powrót nie kończy wizyty. Z S03 można wejść do następnego spotkania; po powrocie ponownie pobierana jest kartoteka.
+- W tym zadaniu **nie** implementowano tworzenia/zmiany terminów (MOB-031), realizacji sesji (MOB-050), dokumentacji (MOB-040), kończenia wizyty (MOB-051) ani pomiarów S08. Na S05 wyświetlany jest stan tych etapów jako informacja, bez pozornie aktywnych przycisków.
+- Weryfikacja: test kontraktu GET/POST nagłówków i `version`, test manualnego retry z tym samym kluczem, re-fetch przy 409, izolacji odpowiedzi różnych spotkań oraz reguły wyświetlania START. Fizyczna Motorola: potwierdzić start w dopuszczonym oknie, powrót do wizyty, logout/403, utratę sieci przed i po POST. Pełny Maven/Playwright poza zakresem zmiany Android.

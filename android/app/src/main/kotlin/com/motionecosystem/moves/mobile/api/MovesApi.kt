@@ -34,5 +34,15 @@ interface MovesApi {
         @Query("to") to: String? = null
     ): Response<TimelinePage>
 
+    @GET("api/v1/specialist/appointments/{id}")
+    suspend fun appointment(@Path("id") id: java.util.UUID): Response<AppointmentView>
+
+    @POST("api/v1/specialist/appointments/{id}/start")
+    suspend fun startAppointment(
+        @Path("id") id: java.util.UUID,
+        @Header("Idempotency-Key") key: String,
+        @Body command: AppointmentVersionCommand
+    ): Response<AppointmentView>
+
     @GET("api/v1/specialist/worklist") suspend fun worklist(@Query("actingContext") actingContext: ActingContext, @Query("purpose") purpose: WorklistPurpose): Response<List<WorklistItemView>>
 }

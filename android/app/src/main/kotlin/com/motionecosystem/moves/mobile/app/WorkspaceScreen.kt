@@ -50,6 +50,7 @@ internal fun WorkspaceScreen(
     onRefresh: () -> Unit,
     onRetryTimeline: () -> Unit,
     onMoreTimeline: () -> Unit,
+    onOpenAppointment: (java.util.UUID) -> Unit,
     onBack: () -> Unit
 ) {
     Column(Modifier.fillMaxSize()) {
@@ -85,6 +86,11 @@ internal fun WorkspaceScreen(
                             data.nextAppointment?.let { appointment ->
                                 Text("Następne spotkanie: ${localDateTime(appointment.startsAt, zone)}")
                                 appointment.status?.let { Text("Status: $it") }
+                                appointment.appointmentId?.let { appointmentId ->
+                                    TextButton(onClick = { onOpenAppointment(appointmentId) }) {
+                                        Text("Otwórz spotkanie")
+                                    }
+                                }
                             }
                         }
                     }

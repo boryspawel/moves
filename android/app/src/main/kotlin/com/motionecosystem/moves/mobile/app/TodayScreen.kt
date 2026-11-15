@@ -109,7 +109,8 @@ internal fun TodayScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant) }
 
                 today.currentAppointment?.let { item ->
-                    Text("Bieżące spotkanie", style = MaterialTheme.typography.titleMedium)
+                    Text(if (item.status == AppointmentStatus.IN_PROGRESS) "Spotkanie w toku — wróć do wizyty"
+                        else "Bieżące spotkanie", style = MaterialTheme.typography.titleMedium)
                     AppointmentCard(item, today.timeZoneId, onAppointment)
                 }
                 today.nextAppointment?.let { item ->
@@ -176,7 +177,8 @@ private fun AppointmentCard(
             }
             appointment.appointmentId?.let { id ->
                 TextButton(onClick = { onOpen(appointment.participantId, id) }) {
-                    Text("Otwórz spotkanie")
+                    Text(if (appointment.status == AppointmentStatus.IN_PROGRESS) "Wróć do spotkania"
+                        else "Otwórz spotkanie")
                 }
             }
         }
