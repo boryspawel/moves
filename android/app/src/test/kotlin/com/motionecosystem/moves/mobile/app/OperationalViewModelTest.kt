@@ -187,6 +187,30 @@ class OperationalViewModelTest {
         } finally { Dispatchers.resetMain() }
     }
 
+    @Test fun participantRevocationBlocksOldWorkspaceButKeepsOidcSession() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = StubRepository()
+            var invalidated = false
+            val vm = OperationalViewModel(repository, { "token" }, { invalidated = true })
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            val participantId = UUID.randomUUID()
+            vm.selectParticipant(participantId)
+            vm.loadWorkspace(participantId)
+            advanceUntilIdle()
+            assertTrue(vm.workspace.value is ReadState.Ready)
+            repository.pendingWorkspaces[participantId] = CompletableDeferred(RemoteResult.Failure(RemoteError.Forbidden))
+            vm.loadWorkspace(participantId)
+            advanceUntilIdle()
+            assertEquals(ReadState.Forbidden, vm.professionalContext.value)
+            assertEquals(ReadState.Forbidden, vm.workspace.value)
+            assertNull(vm.selection.value)
+            assertEquals(ReadState.Idle, vm.timeline.value)
+            assertFalse(invalidated)
+        } finally { Dispatchers.resetMain() }
+    }
+
     @Test fun revokedOrUnavailableProfileNeverRevealsOldDataAndDoesNotLogOutOn403() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {
