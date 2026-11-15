@@ -7,7 +7,7 @@
 ### Nawigacja
 
 - Dolny pasek: **Dzień**, **Uczestnicy**. Ekran S04 „Sprawy” odroczony — brak uzasadnienia dla trzeciej głównej zakładki; sygnały i zadania pozostają na Dniu.
-- Kartoteka otwierana z Dnia, Uczestników lub Spraw, zawsze z zachowaniem participantId.
+- Kartoteka otwierana z Dnia lub Uczestników, zawsze z zachowaniem participantId; z następnego terminu kartoteki można przejść do S05.
 - **Spotkanie** nie jest czwartą zakładką: pełnoekranowy kontekst pracy, dostępny z terminu/kartoteki i możliwy do wznowienia.
 - Realizacja, dokumentacja i pomiary mogą być wykonywane w dowolnej kolejności; brak sztywnego kreatora.
 - Krótkie akcje jako bottom sheets/dialogi, długie formularze (np. wywiad) jako osobne strony.

@@ -17,6 +17,7 @@ private enum class Tab(val route: String, val title: String) {
     DAY("day", "Dzień"), PARTICIPANTS("participants", "Uczestnicy")
 }
 private const val CONTEXT_ROUTE = "context"
+private const val APPOINTMENT_ROUTE = "appointment"
 
 @Composable
 fun MovesNavigation(viewModel: OperationalViewModel, readiness: ReadinessState, actingContext: ActingContext, onLogout: () -> Unit) {
@@ -71,7 +72,7 @@ fun MovesNavigation(viewModel: OperationalViewModel, readiness: ReadinessState, 
                     viewModel = viewModel,
                     onAppointment = { participantId, appointmentId ->
                         viewModel.selectAppointment(participantId, appointmentId)
-                        navigation.navigate(CONTEXT_ROUTE)
+                        navigation.navigate(APPOINTMENT_ROUTE)
                     }
                 )
             }
@@ -87,20 +88,37 @@ fun MovesNavigation(viewModel: OperationalViewModel, readiness: ReadinessState, 
                     is ContextSelection.Participant -> ParticipantWorkspaceSection(
                         viewModel = viewModel,
                         participantId = selected.participantId,
-                        onBack = { navigation.popBackStack() }
+                        onBack = { navigation.popBackStack() },
+                        onAppointment = { appointmentId ->
+                            viewModel.selectAppointment(selected.participantId, appointmentId)
+                            navigation.navigate(APPOINTMENT_ROUTE)
+                        }
                     )
-                    is ContextSelection.Appointment -> Column(
-                        Modifier.fillMaxSize().padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Text("Spotkanie", style = MaterialTheme.typography.headlineMedium)
-                        Text("Szczegóły i rozpoczęcie spotkania pojawią się w M3.")
+                    else -> Column(Modifier.padding(20.dp)) {
+                        Text("Brak dostępu do kartoteki albo zakończona sesja.")
                         OutlinedButton(onClick = { navigation.popBackStack() }) { Text("Wróć") }
                     }
-                    null -> Column(Modifier.padding(20.dp)) {
-                        Text("Brak dostępu do kontekstu albo zakończona sesja.")
+                }
+            }
+            composable(APPOINTMENT_ROUTE) {
+                val selection by viewModel.selection.collectAsStateWithLifecycle()
+                val selected = selection as? ContextSelection.Appointment
+                if (selected == null) {
+                    Column(Modifier.padding(20.dp)) {
+                        Text("Wybierz spotkanie z agendy.")
                         OutlinedButton(onClick = { navigation.popBackStack() }) { Text("Wróć") }
                     }
+                } else {
+                    AppointmentSection(
+                        viewModel = viewModel,
+                        appointmentId = selected.appointmentId,
+                        onBack = {
+                            if (navigation.previousBackStackEntry?.destination?.route == CONTEXT_ROUTE) {
+                                selected.participantId?.let(viewModel::selectParticipant)
+                            }
+                            navigation.popBackStack()
+                        }
+                    )
                 }
             }
         }
@@ -108,10 +126,40 @@ fun MovesNavigation(viewModel: OperationalViewModel, readiness: ReadinessState, 
 }
 
 @Composable
+private fun AppointmentSection(
+    viewModel: OperationalViewModel,
+    appointmentId: java.util.UUID,
+    onBack: () -> Unit
+) {
+    val appointment by viewModel.appointment.collectAsStateWithLifecycle()
+    val startState by viewModel.appointmentStart.collectAsStateWithLifecycle()
+    val today by viewModel.today.collectAsStateWithLifecycle()
+    val clients by viewModel.clients.collectAsStateWithLifecycle()
+    LaunchedEffect(appointmentId) { viewModel.loadAppointment(appointmentId) }
+    val detail = (appointment as? ReadState.Ready)?.value
+    val participantId = detail?.participantId
+    val todayView = (today as? ReadState.Ready)?.value
+    val label = todayView?.appointments.orEmpty()
+        .firstOrNull { it.appointmentId == appointmentId }?.participantLabel
+        ?: (clients as? ReadState.Ready)?.value.orEmpty()
+            .firstOrNull { it.participantId == participantId }?.displayName
+    AppointmentScreen(
+        state = appointment,
+        startState = startState,
+        participantLabel = label,
+        timeZoneId = todayView?.timeZoneId,
+        onRefresh = { viewModel.loadAppointment(appointmentId) },
+        onStart = { viewModel.startAppointment(appointmentId) },
+        onBack = onBack
+    )
+}
+
+@Composable
 private fun ParticipantWorkspaceSection(
     viewModel: OperationalViewModel,
     participantId: java.util.UUID,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onAppointment: (java.util.UUID) -> Unit
 ) {
     val workspace by viewModel.workspace.collectAsStateWithLifecycle()
     val timeline by viewModel.timeline.collectAsStateWithLifecycle()
@@ -129,6 +177,7 @@ private fun ParticipantWorkspaceSection(
         onRefresh = { viewModel.loadWorkspace(participantId) },
         onRetryTimeline = { viewModel.loadTimeline(participantId) },
         onMoreTimeline = { viewModel.loadMoreTimeline(participantId) },
+        onOpenAppointment = onAppointment,
         onBack = onBack
     )
 }
@@ -140,7 +189,7 @@ private fun TodaySection(
 ) {
     val state by viewModel.today.collectAsStateWithLifecycle()
     val requestedDate by viewModel.requestedDate.collectAsStateWithLifecycle()
-    LaunchedEffect(viewModel) { if (viewModel.today.value == ReadState.Idle) viewModel.loadToday() }
+    LaunchedEffect(viewModel) { viewModel.loadToday() }
     TodayScreen(state, requestedDate, viewModel::chooseDate, viewModel::loadToday, onAppointment)
 }
 
