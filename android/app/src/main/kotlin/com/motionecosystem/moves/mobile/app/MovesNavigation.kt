@@ -87,27 +87,54 @@ fun MovesNavigation(viewModel: OperationalViewModel, readiness: ReadinessState, 
             }
             composable(CONTEXT_ROUTE) {
                 val selection by viewModel.selection.collectAsStateWithLifecycle()
-                Column(Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text(
-                        when (selection) {
-                            is ContextSelection.Appointment -> "Spotkanie"
-                            is ContextSelection.Participant -> "Kartoteka uczestnika"
-                            null -> "Brak kontekstu"
-                        },
-                        style = MaterialTheme.typography.headlineMedium
+                when (val selected = selection) {
+                    is ContextSelection.Participant -> ParticipantWorkspaceSection(
+                        viewModel = viewModel,
+                        participantId = selected.participantId,
+                        onBack = { navigation.popBackStack() }
                     )
-                    Text(
-                        when (selection) {
-                            is ContextSelection.Appointment -> "Szczegóły i rozpoczęcie spotkania pojawią się w M3."
-                            is ContextSelection.Participant -> "Szczegóły kartoteki i historia pojawią się w M2."
-                            null -> "Wybierz element ponownie z listy."
-                        }
-                    )
-                    OutlinedButton(onClick = { navigation.popBackStack() }) { Text("Wróć") }
+                    is ContextSelection.Appointment -> Column(
+                        Modifier.fillMaxSize().padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Text("Spotkanie", style = MaterialTheme.typography.headlineMedium)
+                        Text("Szczegóły i rozpoczęcie spotkania pojawią się w M3.")
+                        OutlinedButton(onClick = { navigation.popBackStack() }) { Text("Wróć") }
+                    }
+                    null -> Column(Modifier.padding(20.dp)) {
+                        Text("Brak dostępu do kontekstu albo zakończona sesja.")
+                        OutlinedButton(onClick = { navigation.popBackStack() }) { Text("Wróć") }
+                    }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun ParticipantWorkspaceSection(
+    viewModel: OperationalViewModel,
+    participantId: java.util.UUID,
+    onBack: () -> Unit
+) {
+    val workspace by viewModel.workspace.collectAsStateWithLifecycle()
+    val timeline by viewModel.timeline.collectAsStateWithLifecycle()
+    LaunchedEffect(participantId) {
+        if (viewModel.workspace.value == ReadState.Idle) viewModel.loadWorkspace(participantId)
+    }
+    LaunchedEffect(participantId, workspace) {
+        if (workspace is ReadState.Ready && viewModel.timeline.value == ReadState.Idle) {
+            viewModel.loadTimeline(participantId)
+        }
+    }
+    WorkspaceScreen(
+        workspace = workspace,
+        timeline = timeline,
+        onRefresh = { viewModel.loadWorkspace(participantId) },
+        onRetryTimeline = { viewModel.loadTimeline(participantId) },
+        onMoreTimeline = { viewModel.loadMoreTimeline(participantId) },
+        onBack = onBack
+    )
 }
 
 @Composable
