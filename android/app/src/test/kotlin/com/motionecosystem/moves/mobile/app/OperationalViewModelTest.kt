@@ -74,10 +74,41 @@ class OperationalViewModelTest {
         } finally { Dispatchers.resetMain() }
     }
 
+    @Test fun creatingClientUsesOnePostPerAttemptAndPreservesKeyForExplicitRetry() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = StubRepository()
+            val vm = OperationalViewModel(repository, { "access-token" }, {})
+            val requestKey = UUID.randomUUID().toString()
+            val command = ClientCommand(displayName = "Nowy uczestnik")
+            vm.createClient(command, requestKey) {}
+            advanceUntilIdle()
+            assertTrue(vm.createClientState.value is CreateClientState.Failed)
+            assertEquals(listOf(requestKey), repository.creationKeys)
+            val id = UUID.randomUUID()
+            repository.createResult = RemoteResult.Success(
+                ClientView(participantId = id, displayName = command.displayName, accessStatus = "NO_ACCOUNT")
+            )
+            var opened: UUID? = null
+            vm.createClient(command, requestKey) { opened = it }
+            advanceUntilIdle()
+            assertEquals(listOf(requestKey, requestKey), repository.creationKeys)
+            assertEquals(id, opened)
+            assertEquals("NO_ACCOUNT", (vm.clients.value as ReadState.Ready).value.single().accessStatus)
+        } finally { Dispatchers.resetMain() }
+    }
+
     private class StubRepository : SpecialistRepository {
         var participantResult: RemoteResult<List<ActiveParticipantView>> = RemoteResult.Success(emptyList())
         var pendingToday: CompletableDeferred<RemoteResult<TodayView>>? = null
         val pendingDates = mutableMapOf<java.time.LocalDate, CompletableDeferred<RemoteResult<TodayView>>>()
+        override suspend fun clients(): RemoteResult<List<ClientView>> = RemoteResult.Success(emptyList())
+        var createResult: RemoteResult<ClientView> = RemoteResult.Failure(RemoteError.Conflict)
+        val creationKeys = mutableListOf<String>()
+        override suspend fun createClient(command: ClientCommand, idempotencyKey: String): RemoteResult<ClientView> {
+            creationKeys += idempotencyKey
+            return createResult
+        }
         override suspend fun identity(): RemoteResult<IdentityResponse> = RemoteResult.Success(IdentityResponse())
         override suspend fun today(date: java.time.LocalDate?): RemoteResult<TodayView> =
             date?.let { pendingDates[it]?.await() } ?: pendingToday?.await() ?: RemoteResult.Success(TodayView())

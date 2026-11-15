@@ -60,6 +60,9 @@ class ReadinessViewModelTest {
     private class RecordingRepository : SpecialistRepository {
         var identityCalls = 0
         var result: RemoteResult<IdentityResponse> = RemoteResult.Success(IdentityResponse())
+        override suspend fun clients(): RemoteResult<List<ClientView>> = RemoteResult.Success(emptyList())
+        override suspend fun createClient(command: ClientCommand, idempotencyKey: String): RemoteResult<ClientView> =
+            RemoteResult.Failure(RemoteError.Conflict)
         override suspend fun identity(): RemoteResult<IdentityResponse> { identityCalls++; return result }
         override suspend fun today(date: java.time.LocalDate?): RemoteResult<TodayView> = RemoteResult.Success(TodayView())
         override suspend fun participants(): RemoteResult<List<ActiveParticipantView>> = RemoteResult.Success(emptyList())

@@ -36,6 +36,24 @@ class MovesApiTest {
         assertEquals(null, Json.decodeFromString(ActiveParticipantView.serializer(), "{}" ).label)
     }
 
+    @Test fun specialistClientCreationSendsOneIdempotentPostAndReadsAccountFreeRecord() = runBlocking {
+        val id = UUID.randomUUID()
+        server.enqueue(MockResponse.Builder()
+            .body("{\\"participantId\\":\\"$id\\",\\"displayName\\":\\"Anna\\",\\"accessStatus\\":\\"NO_ACCOUNT\\",\\"availableActions\\":[\\"OPEN_WORKSPACE\\"]}")
+            .addHeader("Content-Type", "application/json").build())
+        val api = createMovesApi(server.url("/").toString(), TokenProvider { "access" })
+        val key = UUID.randomUUID().toString()
+        val command = ClientCommand(displayName = "Anna", relationshipContext = ClientRelationship.PATIENT)
+        val result = api.createClient(key, command)
+        assertEquals(id, result.body()?.participantId)
+        assertEquals("NO_ACCOUNT", result.body()?.accessStatus)
+        val request = server.takeRequest()
+        assertEquals("POST", request.method)
+        assertEquals("/api/v1/specialist/clients", request.url.encodedPath)
+        assertEquals(key, request.headers["Idempotency-Key"])
+        assertTrue(request.body.utf8().contains("\\"displayName\\":\\"Anna\\""))
+    }
+
     @Test fun todayDateIsSentAsLocalDateWithoutClientTimeZoneConversion() = runBlocking {
         server.enqueue(MockResponse.Builder()
             .body("{\"localDate\":\"2026-11-16\",\"timeZoneId\":\"Europe/Warsaw\"}")
