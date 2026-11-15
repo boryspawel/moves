@@ -94,7 +94,7 @@ internal fun ParticipantsScreen(
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            items(visible, key = { it.participantId?.toString() ?: it.displayName.orEmpty() }) { client ->
+                            items(visible) { client ->
                                 ClientRow(client, onOpen)
                             }
                         }
