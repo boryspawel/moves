@@ -91,6 +91,40 @@ class MovesApiTest {
         assertTrue(request.body?.utf8()?.contains("Anna") == true)
     }
 
+    @Test fun calendarPostAndPutHaveScopedIdempotencyAndOptimisticVersion() = runBlocking {
+        val participant = UUID.randomUUID()
+        val appointment = UUID.randomUUID()
+        val start = OffsetDateTime.parse("2026-11-18T09:00:00Z")
+        val end = start.plusMinutes(50)
+        val command = AppointmentSaveCommand(participant, start, end, AppointmentType.CONSULTATION,
+            AppointmentLocationMode.REMOTE, shortPurpose = "Kontrola")
+        server.enqueue(MockResponse.Builder().body(
+            """{"appointmentId":"$appointment","participantId":"$participant","status":"SCHEDULED","version":0}"""
+        ).addHeader("Content-Type", "application/json").build())
+        server.enqueue(MockResponse.Builder().body(
+            """{"appointmentId":"$appointment","participantId":"$participant","status":"SCHEDULED","version":1}"""
+        ).addHeader("Content-Type", "application/json").build())
+        val api = createMovesApi(server.url("/").toString(), TokenProvider { "access" })
+        val key1 = UUID.randomUUID().toString()
+        assertEquals(appointment, api.createAppointment(key1, command).body()?.appointmentId)
+        val post = server.takeRequest()
+        assertEquals("POST", post.method)
+        assertEquals("/api/v1/specialist/appointments", post.url.encodedPath)
+        assertEquals(key1, post.headers["Idempotency-Key"])
+        assertEquals("Bearer access", post.headers["Authorization"])
+        val body1 = post.body!!.utf8()
+        assertTrue(body1.contains("\"participantId\":\"$participant\""))
+        assertTrue(body1.contains("\"startsAt\":\"2026-11-18T09:00:00Z\""))
+        assertFalse(body1.contains("\"version\""))
+        val key2 = UUID.randomUUID().toString()
+        assertEquals(1L, api.updateAppointment(appointment, key2, command.copy(version = 0)).body()?.version)
+        val put = server.takeRequest()
+        assertEquals("PUT", put.method)
+        assertEquals("/api/v1/specialist/appointments/$appointment", put.url.encodedPath)
+        assertEquals(key2, put.headers["Idempotency-Key"])
+        assertTrue(put.body!!.utf8().contains("\"version\":0"))
+    }
+
     @Test fun appointmentDetailAndStartUseVersionedBearerContractAndOnePost() = runBlocking {
         val id = UUID.randomUUID()
         val participantId = UUID.randomUUID()

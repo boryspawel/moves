@@ -318,6 +318,93 @@ class OperationalViewModelTest {
         } finally { Dispatchers.resetMain() }
     }
 
+    @Test fun scheduleCreateUncertainResultRequiresManualRetryWithIdenticalKey() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = StubRepository()
+            val participantId = UUID.randomUUID()
+            val start = java.time.OffsetDateTime.parse("2026-11-19T09:00:00Z")
+            val slot = BookableSlotView(start, start.plusMinutes(50))
+            repository.scheduleToday = TodayView(localDate = java.time.LocalDate.parse("2026-11-19"),
+                timeZoneId = "Europe/Warsaw", bookableSlots = listOf(slot))
+            repository.clientResult = RemoteResult.Success(listOf(
+                ClientView(participantId = participantId, displayName = "P.",
+                    availableActions = listOf("SCHEDULE_APPOINTMENT"))))
+            val createdId = UUID.randomUUID()
+            repository.createAppointmentResults.add(RemoteResult.Failure(RemoteError.Network(java.io.IOException("lost"))))
+            repository.createAppointmentResults.add(RemoteResult.Success(
+                AppointmentView(appointmentId = createdId, participantId = participantId,
+                    status = AppointmentStatus.SCHEDULED, version = 0)))
+            val vm = OperationalViewModel(repository, { "token" }, {})
+            vm.openNewSchedule(participantId)
+            advanceUntilIdle()
+            val draft = AppointmentSaveCommand(participantId, slot.startsAt!!, slot.endsAt!!,
+                AppointmentType.CONSULTATION, AppointmentLocationMode.REMOTE)
+            vm.saveSchedule(draft)
+            vm.saveSchedule(draft) // second press during in-flight save is ignored
+            advanceUntilIdle()
+            assertEquals(ScheduleSaveState.Uncertain, vm.scheduleSave.value)
+            assertEquals(1, repository.createAppointmentCalls.size)
+            vm.saveSchedule(draft)
+            advanceUntilIdle()
+            assertEquals(2, repository.createAppointmentCalls.size)
+            assertEquals(repository.createAppointmentCalls[0], repository.createAppointmentCalls[1])
+            assertEquals(createdId, (vm.scheduleSave.value as ScheduleSaveState.Saved).appointment.appointmentId)
+        } finally { Dispatchers.resetMain() }
+    }
+
+    @Test fun scheduleEditConflictRefreshesAuthorizedAppointmentAndDoesNotAutoRetry() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = StubRepository()
+            val participantId = UUID.randomUUID()
+            val appointmentId = UUID.randomUUID()
+            val start = java.time.OffsetDateTime.parse("2026-11-20T10:00:00Z")
+            repository.scheduleToday = TodayView(localDate = java.time.LocalDate.parse("2026-11-20"),
+                bookableSlots = listOf(BookableSlotView(start, start.plusMinutes(50))))
+            repository.appointmentValue = AppointmentView(appointmentId, participantId = participantId,
+                startsAt = start, endsAt = start.plusMinutes(50), version = 3,
+                status = AppointmentStatus.SCHEDULED, availableActions = listOf("UPDATE"))
+            repository.updateAppointmentResults.add(RemoteResult.Failure(RemoteError.Conflict))
+            val vm = OperationalViewModel(repository, { "token" }, {})
+            vm.selectAppointment(participantId, appointmentId)
+            vm.loadAppointment(appointmentId)
+            advanceUntilIdle()
+            assertTrue(vm.openEditSchedule())
+            advanceUntilIdle()
+            repository.appointmentValue = repository.appointmentValue!!.copy(version = 4)
+            val draft = AppointmentSaveCommand(participantId, start, start.plusMinutes(50),
+                AppointmentType.CONSULTATION, AppointmentLocationMode.REMOTE)
+            vm.saveSchedule(draft)
+            advanceUntilIdle()
+            assertEquals(ScheduleSaveState.Conflict, vm.scheduleSave.value)
+            assertEquals(1, repository.updateAppointmentCalls.size)
+            assertEquals(3L, repository.updateAppointmentCalls.single().second.version)
+            assertEquals(4L, (vm.appointment.value as ReadState.Ready).value.version)
+        } finally { Dispatchers.resetMain() }
+    }
+
+    @Test fun obsoleteScheduleResponseCannotReplaceSelectedDate() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repo = StubRepository()
+            val first = java.time.LocalDate.parse("2026-11-20")
+            val second = first.plusDays(1)
+            val delayed = CompletableDeferred<RemoteResult<TodayView>>()
+            repo.pendingDates[first] = delayed
+            val vm = OperationalViewModel(repo, { "token" }, {})
+            vm.openNewSchedule()
+            advanceUntilIdle()
+            vm.scheduleDate(first)
+            runCurrent()
+            vm.scheduleDate(second)
+            advanceUntilIdle()
+            delayed.complete(RemoteResult.Success(TodayView(localDate = first)))
+            advanceUntilIdle()
+            assertEquals(second, (vm.scheduleDay.value as ReadState.Ready).value.localDate)
+        } finally { Dispatchers.resetMain() }
+    }
+
     private class StubRepository : SpecialistRepository {
         var onboardingResult: RemoteResult<MobileOnboardingState> = RemoteResult.Success(
             MobileOnboardingState(stage = "READY", profileType = "SPECIALIST",
@@ -340,6 +427,19 @@ class OperationalViewModelTest {
             startRequests += Triple(id, version, key)
             return startResults.removeFirstOrNull() ?: RemoteResult.Failure(RemoteError.Conflict)
         }
+        var scheduleToday: TodayView = TodayView()
+        val createAppointmentResults = ArrayDeque<RemoteResult<AppointmentView>>()
+        val updateAppointmentResults = ArrayDeque<RemoteResult<AppointmentView>>()
+        val createAppointmentCalls = mutableListOf<Pair<AppointmentSaveCommand, String>>()
+        val updateAppointmentCalls = mutableListOf<Triple<UUID, AppointmentSaveCommand, String>>()
+        override suspend fun createAppointment(command: AppointmentSaveCommand, key: String): RemoteResult<AppointmentView> {
+            createAppointmentCalls += command to key
+            return createAppointmentResults.removeFirstOrNull() ?: RemoteResult.Failure(RemoteError.Conflict)
+        }
+        override suspend fun updateAppointment(id: UUID, command: AppointmentSaveCommand, key: String): RemoteResult<AppointmentView> {
+            updateAppointmentCalls += Triple(id, command, key)
+            return updateAppointmentResults.removeFirstOrNull() ?: RemoteResult.Failure(RemoteError.Conflict)
+        }
         override suspend fun workspace(participantId: java.util.UUID): RemoteResult<WorkspaceView> =
             pendingWorkspaces[participantId]?.await() ?: RemoteResult.Success(
                 WorkspaceView(participant = WorkspaceParticipant(participantId = participantId))
@@ -348,7 +448,8 @@ class OperationalViewModelTest {
             timelineRequests += Triple(cursor, from, to)
             return timelineResults[cursor] ?: RemoteResult.Success(TimelinePage())
         }
-        override suspend fun clients(): RemoteResult<List<ClientView>> = RemoteResult.Success(emptyList())
+        var clientResult: RemoteResult<List<ClientView>> = RemoteResult.Success(emptyList())
+        override suspend fun clients(): RemoteResult<List<ClientView>> = clientResult
         var createResult: RemoteResult<ClientView> = RemoteResult.Failure(RemoteError.Conflict)
         val creationKeys = mutableListOf<String>()
         override suspend fun createClient(command: ClientCommand, idempotencyKey: String): RemoteResult<ClientView> {
@@ -357,7 +458,10 @@ class OperationalViewModelTest {
         }
         override suspend fun identity(): RemoteResult<IdentityResponse> = RemoteResult.Success(IdentityResponse())
         override suspend fun today(date: java.time.LocalDate?): RemoteResult<TodayView> =
-            date?.let { pendingDates[it]?.await() } ?: pendingToday?.await() ?: RemoteResult.Success(TodayView())
+            date?.let { pendingDates[it]?.await() } ?: pendingToday?.await() ?: RemoteResult.Success(
+                if (scheduleToday.localDate != null && date != null) scheduleToday.copy(localDate = date)
+                else scheduleToday
+            )
         override suspend fun participants() = participantResult
         override suspend fun worklist(context: ActingContext, purpose: WorklistPurpose):
             RemoteResult<List<WorklistItemView>> = RemoteResult.Success(emptyList())
