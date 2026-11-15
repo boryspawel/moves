@@ -40,7 +40,7 @@ M1 wymaga M0; M2 wymaga M1; M3 i M4 można częściowo rozwijać równolegle po 
 ### M2 — fundament biznesowy
 
 - **MOB-020 (kod wykonany)** S01: Today, agenda, aktualne/przyszłe terminy i minimalne sprawy; odbiór na fizycznym telefonie pozostaje otwarty.
-- **MOB-021** S02: lista/szukaj/dodaj kartotekę; klient bez konta.
+- **MOB-021 (kod wykonany)** S02: lista aktywnych kartotek, wyszukiwanie lokalne i formularz dodania kartoteki bez konta; test urządzenia i warunki produkcyjnej zgody pozostają otwarte.
 - **MOB-022** S03: workspace, cele, aktywny plan i paginowany timeline.
 - **MOB-023** S04: bezpieczne projekcje Today/worklist; mapowanie webowych navigationReference na znane cele mobilne.
 - **MOB-024** Obsługa cofnięcia relacji/zgody i przełączania kontekstu zawodowego.
@@ -114,3 +114,12 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 **Bezpieczeństwo:** brak zapisu danych na dysk, lokalnych pomiarów, mutacji i nowych endpointów. Brak treści medycznych z `neutralReason` oraz zewnętrznych `navigationReference` na liście; kategorie sygnałów są zredukowane do neutralnych etykiet. Zwroty API przeterminowane po zmianie daty lub wylogowaniu nie mogą nadpisać aktualnego stanu.
 
 **Weryfikacja:** wąskie testy API daty, kolejności terminów według Instant, formatowania godzin w strefie specjalisty przy DST oraz wyścigu odpowiedzi przy szybkiej zmianie daty. CI Android buduje APK. Na urządzeniu sprawdzić daty, strefę czasu, nawigację do terminu, brak wpisów, błędy API i logout. **MOB-021 i M3 nie są częścią tego zadania.**
+
+## MOB-021 — S02 Uczestnicy (2026-11-15)
+
+- Lista S02 pobiera `GET /api/v1/specialist/clients`: rzeczywiste nazwy kartotek, kontekst relacji, status dostępu, najbliższy termin i `availableActions`. Dotychczasowa lista `GET /specialist/participants` pozostaje osobnym, ograniczonym wyborem aktywnych relacji; jej etykiety `Uczestnik N` nie nadają się do wyszukiwania kartotek.
+- Wyszukiwanie lokalne po nazwie, bez nowego endpointu; nowa kartoteka: nazwa (1–80 znaków), opcjonalnie relacja (CLIENT/PATIENT/ATHLETE), e-mail i telefon. Brak wymagania konta uczestnika i danych biomedycznych. Po sukcesie przejście do kontekstu `participantId` (szczegóły S03 pozostają w MOB-022).
+- `POST /api/v1/specialist/clients` wymaga `Idempotency-Key` UUID. W niezmienionym formularzu ten sam klucz służy do świadomego ponowienia po niepewnej odpowiedzi; zmiana danych generuje nowy klucz. Brak automatycznych retry POST i równoległych wysłań. 401 wylogowuje, 403 usuwa projekcje, 409 przedstawia komunikat o konflikcie, bez obchodzenia serwera.
+- **Ograniczenie backendu:** `SpecialistClientService.create` wymaga zweryfikowanego profilu specjalisty oraz `moves.test-default-consent.enabled=true`. W Compose lokalnym ta funkcja jest włączona do testów; produkcyjne utworzenie uczestnika bez konta jest nadal zablokowane przez backend (409) do czasu odrębnej decyzji o prawidłowych mechanizmach zgód. Android nie implementuje własnej zgody ani nie włącza flag w backendzie.
+- Dane listy i formularza są wyłącznie w RAM; nie trafiają do trwałego storage, loggera ani backupu. M0/S08 pomiary biomedyczne pozostają zablokowane.
+- Weryfikacja: test klienta POST i nagłówka idempotencji, test obsługi jednego zapisu na próbę i świadomego ponowienia. Przed odbiorem na Motoroli: utworzenie kartoteki bez konta, wyszukiwanie, otwarcie kontekstu i zachowanie przy 403/409.

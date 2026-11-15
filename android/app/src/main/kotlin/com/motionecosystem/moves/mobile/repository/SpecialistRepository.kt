@@ -10,6 +10,9 @@ interface SpecialistRepository {
     suspend fun identity(): RemoteResult<IdentityResponse>
     suspend fun today(date: LocalDate? = null): RemoteResult<TodayView>
     suspend fun participants(): RemoteResult<List<ActiveParticipantView>>
+    suspend fun clients(): RemoteResult<List<ClientView>>
+    /** Mutations must never be auto-retried; the caller preserves the UUID key for explicit retries. */
+    suspend fun createClient(command: ClientCommand, idempotencyKey: String): RemoteResult<ClientView>
     suspend fun worklist(context: ActingContext, purpose: WorklistPurpose): RemoteResult<List<WorklistItemView>>
 }
 
@@ -17,6 +20,9 @@ class NetworkSpecialistRepository(private val api: MovesApi, private val calls: 
     override suspend fun identity() = read { api.currentIdentity() }
     override suspend fun today(date: LocalDate?) = read { api.today(date?.toString()) }
     override suspend fun participants() = read { api.activeParticipants() }
+    override suspend fun clients() = read { api.clients() }
+    override suspend fun createClient(command: ClientCommand, idempotencyKey: String): RemoteResult<ClientView> =
+        withContext(Dispatchers.IO) { calls.execute { api.createClient(idempotencyKey, command) } }
     override suspend fun worklist(context: ActingContext, purpose: WorklistPurpose) =
         read { api.worklist(context, purpose) }
 

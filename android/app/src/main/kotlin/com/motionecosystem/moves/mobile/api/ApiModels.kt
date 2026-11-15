@@ -45,3 +45,34 @@ object OffsetDateTimeSerializer : KSerializer<OffsetDateTime> {
 @Serializable data class VisibleRange(@Serializable(with = OffsetDateTimeSerializer::class) val startsAt: OffsetDateTime? = null, @Serializable(with = OffsetDateTimeSerializer::class) val endsAt: OffsetDateTime? = null, val recommendedStepMinutes: Int? = null)
 @Serializable data class TodayView(val appointments: List<AppointmentView>? = null, val attentionItems: List<AttentionItemView>? = null, val availabilityWindows: List<AvailabilityWindowView>? = null, val bookableSlots: List<BookableSlotView>? = null, val counts: Counts? = null, val currentAppointment: AppointmentView? = null, @Serializable(with = OffsetDateTimeSerializer::class) val generatedAt: OffsetDateTime? = null, @Serializable(with = LocalDateSerializer::class) val localDate: LocalDate? = null, val nextAppointment: AppointmentView? = null, val operationalTasks: List<OperationalTaskView>? = null, val timeZoneId: String? = null, val visibleRange: VisibleRange? = null)
 @Serializable data class ProblemDetails(@Serializable(with = UuidSerializer::class) val problemId: UUID? = null, val status: String? = null, val summary: String? = null, val type: String? = null)
+
+/** The specialist-owned participant record, which may have no participant account. */
+@Serializable enum class ClientRelationship { CLIENT, PATIENT, ATHLETE }
+@Serializable enum class ClientRecordStatus { ACTIVE, ARCHIVED }
+
+@Serializable
+data class ClientCommand(
+    val displayName: String,
+    val relationshipContext: ClientRelationship? = null,
+    val email: String? = null,
+    val phone: String? = null,
+    val timeZoneId: String? = null
+)
+
+@Serializable
+data class ClientAppointment(
+    @Serializable(with = OffsetDateTimeSerializer::class) val startsAt: OffsetDateTime? = null,
+    val type: String? = null,
+    val status: String? = null
+)
+
+@Serializable
+data class ClientView(
+    @Serializable(with = UuidSerializer::class) val participantId: UUID? = null,
+    val displayName: String? = null,
+    val relationshipContext: ClientRelationship? = null,
+    val recordStatus: ClientRecordStatus? = null,
+    val accessStatus: String? = null,
+    val nextAppointment: ClientAppointment? = null,
+    val availableActions: List<String>? = null
+)

@@ -124,22 +124,18 @@ private fun TodaySection(
 
 @Composable
 private fun ParticipantsSection(viewModel: OperationalViewModel, onParticipant: (java.util.UUID) -> Unit) {
-    val state by viewModel.participants.collectAsStateWithLifecycle()
-    LaunchedEffect(viewModel) { if (viewModel.participants.value == ReadState.Idle) viewModel.loadParticipants() }
-    Column {
-        SectionHeading("Uczestnicy", viewModel::loadParticipants)
-        ReadPanel(state, viewModel::loadParticipants, { it.isEmpty() }) { participants ->
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            participants.forEach { participant ->
-                val id = participant.participantId
-                if (id != null) OutlinedButton(
-                    onClick = { onParticipant(id) }, modifier = Modifier.fillMaxWidth()
-                ) { Text(participant.label ?: "Uczestnik") }
-            }
-        }
-        }
-    }
+    val clients by viewModel.clients.collectAsStateWithLifecycle()
+    val createState by viewModel.createClientState.collectAsStateWithLifecycle()
+    LaunchedEffect(viewModel) { if (viewModel.clients.value == ReadState.Idle) viewModel.loadClients() }
+    ParticipantsScreen(
+        state = clients,
+        creation = createState,
+        onRefresh = viewModel::loadClients,
+        onCreate = { command, key, onCreated -> viewModel.createClient(command, key, onCreated) },
+        onCancel = viewModel::resetClientForm,
+        onOpen = onParticipant,
+        onResetCreate = viewModel::resetClientForm
+    )
 }
 
 @Composable

@@ -56,3 +56,7 @@
 - https://developer.android.com/design/ui/mobile/guides/layout-and-content/adapt-layout
 - https://www.rfc-editor.org/rfc/rfc8252
 - https://mas.owasp.org/MASVS/
+
+## Ograniczenie MOB-021 — kartoteki bez konta
+
+S02 korzysta z istniejącego POST kartotek i klucza idempotencji. Serwer pozwala tworzyć je tylko po weryfikacji specjalisty i w środowisku z włączonym test-default-consent; jest to **testowe obejście**, a nie rzeczywista zgoda pacjenta. Nie udostępniać tworzenia kartotek w produkcji przez modyfikowanie flag lub automatyczne przyznawanie zgód. Formularz mobilny nie przechowuje kontaktów na dysku i nie zawiera klinicznych pomiarów.
