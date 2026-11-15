@@ -106,7 +106,10 @@ fun MovesNavigation(viewModel: OperationalViewModel, readiness: ReadinessState, 
                             val participant = verifiedDocumentationParticipant(
                                 viewModel.selection.value, viewModel.appointment.value, viewModel.workspace.value
                             )
-                            if (participant == selected.participantId) navigation.navigate(VisitStage.DOCUMENTATION.route)
+                            if (participant == selected.participantId) {
+                                viewModel.prepareParticipantDocumentationStage()
+                                navigation.navigate(VisitStage.DOCUMENTATION.route)
+                            }
                         }
                     )
                     else -> Column(Modifier.padding(20.dp)) {
@@ -134,6 +137,7 @@ fun MovesNavigation(viewModel: OperationalViewModel, readiness: ReadinessState, 
                             val visit = verifiedVisit(viewModel.selection.value, viewModel.appointment.value)
                             if (visit != null && canOpenVisitStage(stage, visit) &&
                                 viewModel.appointmentStart.value != AppointmentStartState.SAVING) {
+                                viewModel.prepareVisitStage()
                                 navigation.navigate(stage.route) { launchSingleTop = true }
                             }
                         },

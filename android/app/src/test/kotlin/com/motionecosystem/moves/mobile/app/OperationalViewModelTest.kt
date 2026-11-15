@@ -406,6 +406,35 @@ class OperationalViewModelTest {
         } finally { Dispatchers.resetMain() }
     }
 
+    @Test fun enteringVisitStageDropsPreviousReadWithoutChangingIdentifiers() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = StubRepository()
+            val participantId = UUID.randomUUID()
+            val appointmentId = UUID.randomUUID()
+            repository.appointmentValue = AppointmentView(appointmentId, participantId = participantId,
+                status = AppointmentStatus.IN_PROGRESS, plannedSessionId = UUID.randomUUID())
+            val vm = OperationalViewModel(repository, { "token" }, {})
+            vm.selectAppointment(participantId, appointmentId)
+            vm.loadAppointment(appointmentId)
+            advanceUntilIdle()
+            assertNotNull(verifiedVisit(vm.selection.value, vm.appointment.value))
+            vm.prepareVisitStage()
+            assertEquals(ReadState.Idle, vm.appointment.value)
+            assertEquals(ContextSelection.Appointment(participantId, appointmentId), vm.selection.value)
+            vm.loadAppointment(appointmentId)
+            advanceUntilIdle()
+            assertEquals(participantId, verifiedVisit(vm.selection.value, vm.appointment.value)?.participantId)
+
+            vm.selectParticipant(participantId)
+            vm.loadWorkspace(participantId)
+            advanceUntilIdle()
+            vm.prepareParticipantDocumentationStage()
+            assertEquals(ReadState.Idle, vm.workspace.value)
+            assertEquals(ContextSelection.Participant(participantId), vm.selection.value)
+        } finally { Dispatchers.resetMain() }
+    }
+
     @Test fun visitStageRecheckDeniesAccessAndClearsSelectionAfterRevocation() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {
