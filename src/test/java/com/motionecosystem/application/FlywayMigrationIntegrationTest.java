@@ -56,8 +56,6 @@ class FlywayMigrationIntegrationTest {
                 WHERE table_schema = 'anatomy_reference'
                   AND table_name IN ('anatomical_structure', 'anatomical_structure_relation', 'hierarchy_guard')
                 """, Integer.class);
-        Integer taxonomyRows = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM anatomy_reference.anatomical_structure", Integer.class);
         Integer controlledTaxonomyRows = jdbc.queryForObject("""
                 SELECT COUNT(*) FROM anatomy_reference.anatomical_structure
                 WHERE status = 'PUBLISHED'
@@ -70,7 +68,7 @@ class FlywayMigrationIntegrationTest {
         assertThat(applied).isEqualTo(1);
         assertThat(starterTaxonomySeedApplied).isEqualTo(1);
         assertThat(tables).isEqualTo(3);
-        assertThat(taxonomyRows).isEqualTo(62);
+        // Other tests may add anatomy fixtures to the shared database; the controlled migration seed is immutable.
         assertThat(controlledTaxonomyRows).isEqualTo(62);
         assertThat(guardRows).isEqualTo(1);
     }
