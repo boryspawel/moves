@@ -2,6 +2,7 @@ package com.motionecosystem.moves.mobile.api
 
 import retrofit2.Response
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 import retrofit2.http.POST
 import retrofit2.http.Body
@@ -17,6 +18,20 @@ interface MovesApi {
         @Header("Idempotency-Key") idempotencyKey: String,
         @Body command: ClientCommand
     ): Response<ClientView>
+
+    @GET("api/v1/specialist/participants/{participantId}/workspace")
+    suspend fun workspace(@Path("participantId") participantId: java.util.UUID): Response<WorkspaceView>
+
+    @GET("api/v1/specialist/participants/{participantId}/timeline")
+    suspend fun timeline(
+        @Path("participantId") participantId: java.util.UUID,
+        @Query("types") types: String = MOBILE_TIMELINE_TYPES,
+        @Query("granularity") granularity: String = "DETAIL",
+        @Query("limit") limit: Int = 20,
+        @Query("cursor") cursor: String? = null,
+        @Query("from") from: String? = null,
+        @Query("to") to: String? = null
+    ): Response<TimelinePage>
 
     @GET("api/v1/specialist/worklist") suspend fun worklist(@Query("actingContext") actingContext: ActingContext, @Query("purpose") purpose: WorklistPurpose): Response<List<WorklistItemView>>
 }
