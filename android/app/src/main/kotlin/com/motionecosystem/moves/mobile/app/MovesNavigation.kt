@@ -182,7 +182,7 @@ private fun ScheduleSection(
     ScheduleScreen(
         target = target, scheduleDay = day, requestedDate = chosenDate, clients = clients,
         appointment = appointment, saveState = save,
-        onChooseDate = viewModel::scheduleDate,
+        onChooseDate = viewModel::chooseScheduleDate,
         onRefresh = viewModel::loadScheduleDay,
         onSave = viewModel::saveSchedule,
         onBack = onBack

@@ -257,7 +257,7 @@ class OperationalViewModel(
         return true
     }
 
-    fun scheduleDate(date: LocalDate?) {
+    fun chooseScheduleDate(date: LocalDate?) {
         if (mutableScheduleTarget.value == null || mutableScheduleSave.value == ScheduleSaveState.Saving) return
         mutableScheduleDate.value = date
         pendingSchedule = null
