@@ -17,6 +17,9 @@ interface SpecialistRepository {
     suspend fun workspace(participantId: java.util.UUID): RemoteResult<WorkspaceView>
     suspend fun timeline(participantId: java.util.UUID, cursor: String? = null, from: String? = null, to: String? = null): RemoteResult<TimelinePage>
     suspend fun appointment(id: java.util.UUID): RemoteResult<AppointmentView>
+    /** Calendar writes are single-shot; retry is explicitly initiated by the caller with the original key. */
+    suspend fun createAppointment(command: AppointmentSaveCommand, key: String): RemoteResult<AppointmentView>
+    suspend fun updateAppointment(id: java.util.UUID, command: AppointmentSaveCommand, key: String): RemoteResult<AppointmentView>
     /** No automatic retries: a failed POST may have been committed remotely. */
     suspend fun startAppointment(id: java.util.UUID, version: Long, key: String): RemoteResult<AppointmentView>
     suspend fun worklist(context: ActingContext, purpose: WorklistPurpose): RemoteResult<List<WorklistItemView>>
@@ -34,6 +37,10 @@ class NetworkSpecialistRepository(private val api: MovesApi, private val calls: 
     override suspend fun timeline(participantId: java.util.UUID, cursor: String?, from: String?, to: String?) =
         read { api.timeline(participantId, cursor = cursor, from = from, to = to) }
     override suspend fun appointment(id: java.util.UUID) = read { api.appointment(id) }
+    override suspend fun createAppointment(command: AppointmentSaveCommand, key: String): RemoteResult<AppointmentView> =
+        withContext(Dispatchers.IO) { calls.execute { api.createAppointment(key, command) } }
+    override suspend fun updateAppointment(id: java.util.UUID, command: AppointmentSaveCommand, key: String): RemoteResult<AppointmentView> =
+        withContext(Dispatchers.IO) { calls.execute { api.updateAppointment(id, key, command) } }
     override suspend fun startAppointment(id: java.util.UUID, version: Long, key: String): RemoteResult<AppointmentView> =
         withContext(Dispatchers.IO) { calls.execute { api.startAppointment(id, key, AppointmentVersionCommand(version)) } }
     override suspend fun worklist(context: ActingContext, purpose: WorklistPurpose) =

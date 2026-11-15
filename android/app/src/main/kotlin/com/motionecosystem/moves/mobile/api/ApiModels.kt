@@ -34,6 +34,20 @@ object OffsetDateTimeSerializer : KSerializer<OffsetDateTime> {
 @Serializable data class ReplyView(@Serializable(with = UuidSerializer::class) val id: UUID? = null, @Serializable(with = OffsetDateTimeSerializer::class) val createdAt: OffsetDateTime? = null, val shortText: String? = null)
 @Serializable data class WorklistItemView(@Serializable(with = UuidSerializer::class) val id: UUID? = null, @Serializable(with = UuidSerializer::class) val participantId: UUID? = null, @Serializable(with = UuidSerializer::class) val planRevisionId: UUID? = null, @Serializable(with = OffsetDateTimeSerializer::class) val createdAt: OffsetDateTime? = null, @Serializable(with = OffsetDateTimeSerializer::class) val snoozedUntil: OffsetDateTime? = null, val category: String? = null, val issueText: String? = null, val minimalData: String? = null, val policyVersion: String? = null, val priority: String? = null, val reasonCode: String? = null, val replies: List<ReplyView>? = null, val status: String? = null)
 @Serializable data class AppointmentView(@Serializable(with = UuidSerializer::class) val appointmentId: UUID? = null, @Serializable(with = UuidSerializer::class) val participantId: UUID? = null, @Serializable(with = UuidSerializer::class) val plannedSessionId: UUID? = null, val participantLabel: String? = null, @Serializable(with = OffsetDateTimeSerializer::class) val startsAt: OffsetDateTime? = null, @Serializable(with = OffsetDateTimeSerializer::class) val endsAt: OffsetDateTime? = null, val availableActions: List<String>? = null, val isCurrent: Boolean? = null, val isNext: Boolean? = null, val location: String? = null, val locationMode: AppointmentLocationMode? = null, val shortPurpose: String? = null, val status: AppointmentStatus? = null, val type: AppointmentType? = null, val version: Long? = null)
+/** Required fields of both calendar create and update. Omitted version is valid only on POST. */
+@Serializable
+data class AppointmentSaveCommand(
+    @Serializable(with = UuidSerializer::class) val participantId: UUID,
+    @Serializable(with = OffsetDateTimeSerializer::class) val startsAt: OffsetDateTime,
+    @Serializable(with = OffsetDateTimeSerializer::class) val endsAt: OffsetDateTime,
+    val type: AppointmentType,
+    val locationMode: AppointmentLocationMode,
+    val location: String? = null,
+    val shortPurpose: String? = null,
+    @Serializable(with = UuidSerializer::class) val plannedSessionId: UUID? = null,
+    val version: Long? = null
+)
+
 /** The server checks the optimistic version on each appointment lifecycle mutation. */
 @Serializable data class AppointmentVersionCommand(val version: Long)
 @Serializable enum class AppointmentLocationMode { IN_PERSON, REMOTE, PHONE }

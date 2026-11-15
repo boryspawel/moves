@@ -5,6 +5,7 @@ import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Body
 import retrofit2.http.Header
 
@@ -33,6 +34,19 @@ interface MovesApi {
         @Query("from") from: String? = null,
         @Query("to") to: String? = null
     ): Response<TimelinePage>
+
+    @POST("api/v1/specialist/appointments")
+    suspend fun createAppointment(
+        @Header("Idempotency-Key") key: String,
+        @Body command: AppointmentSaveCommand
+    ): Response<AppointmentView>
+
+    @PUT("api/v1/specialist/appointments/{id}")
+    suspend fun updateAppointment(
+        @Path("id") id: java.util.UUID,
+        @Header("Idempotency-Key") key: String,
+        @Body command: AppointmentSaveCommand
+    ): Response<AppointmentView>
 
     @GET("api/v1/specialist/appointments/{id}")
     suspend fun appointment(@Path("id") id: java.util.UUID): Response<AppointmentView>

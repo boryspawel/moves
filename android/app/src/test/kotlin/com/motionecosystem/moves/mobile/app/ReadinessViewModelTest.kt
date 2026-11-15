@@ -63,6 +63,10 @@ class ReadinessViewModelTest {
         override suspend fun appointment(id: java.util.UUID): RemoteResult<AppointmentView> = RemoteResult.Success(AppointmentView(appointmentId = id))
         override suspend fun startAppointment(id: java.util.UUID, version: Long, key: String): RemoteResult<AppointmentView> =
             RemoteResult.Failure(RemoteError.Conflict)
+        override suspend fun createAppointment(command: AppointmentSaveCommand, key: String): RemoteResult<AppointmentView> =
+            RemoteResult.Failure(RemoteError.Conflict)
+        override suspend fun updateAppointment(id: java.util.UUID, command: AppointmentSaveCommand, key: String): RemoteResult<AppointmentView> =
+            RemoteResult.Failure(RemoteError.Conflict)
         override suspend fun workspace(participantId: java.util.UUID): RemoteResult<WorkspaceView> =
             RemoteResult.Success(WorkspaceView())
         override suspend fun timeline(participantId: java.util.UUID, cursor: String?, from: String?, to: String?): RemoteResult<TimelinePage> =

@@ -47,6 +47,7 @@ internal fun AppointmentScreen(
     timeZoneId: String?,
     onRefresh: () -> Unit,
     onStart: () -> Unit,
+    onEdit: () -> Unit,
     onBack: () -> Unit
 ) {
     Column(Modifier.fillMaxSize()) {
@@ -126,6 +127,11 @@ internal fun AppointmentScreen(
                 } else if (item.status in setOf(AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED)) {
                     Text("Rozpoczęcie nie jest obecnie dostępne. Decyzja należy do serwera.",
                         style = MaterialTheme.typography.bodyMedium)
+                }
+                if ("UPDATE" in item.availableActions.orEmpty() && item.version != null) {
+                    OutlinedButton(onClick = onEdit, enabled = startState != AppointmentStartState.SAVING) {
+                        Text("Zmień termin")
+                    }
                 }
                 HorizontalDivider()
                 Text("Przebieg spotkania", style = MaterialTheme.typography.titleLarge)
