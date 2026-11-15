@@ -20,6 +20,19 @@ sealed interface ReadState<out T> {
     data object Error : ReadState<Nothing>
 }
 
+data class TimelineFeed(
+    val items: List<TimelineEvent>,
+    val nextCursor: String?,
+    val from: String?,
+    val to: String?,
+    val loadingMore: Boolean = false,
+    val loadMoreFailed: Boolean = false
+)
+
+/** S08 is not enabled; only the six explicit event categories are permitted in S03. */
+private fun visibleTimelineEvents(items: List<TimelineEvent>): List<TimelineEvent> =
+    items.filterNot { it.category == "MEASUREMENT" || it.eventType == "MEASUREMENT" }
+
 sealed interface CreateClientState {
     data object Idle : CreateClientState
     data object Saving : CreateClientState
@@ -51,13 +64,113 @@ class OperationalViewModel(
     val participants = mutableParticipants.asStateFlow()
     private val mutableWorklist = MutableStateFlow<ReadState<List<WorklistItemView>>>(ReadState.Idle)
     val worklist = mutableWorklist.asStateFlow()
+    private val mutableWorkspace = MutableStateFlow<ReadState<WorkspaceView>>(ReadState.Idle)
+    val workspace = mutableWorkspace.asStateFlow()
+    private val mutableTimeline = MutableStateFlow<ReadState<TimelineFeed>>(ReadState.Idle)
+    val timeline = mutableTimeline.asStateFlow()
+    private var workspaceRequest = 0
+    private var timelineRequest = 0
+
     private val mutableSelection = MutableStateFlow<ContextSelection?>(null)
     val selection = mutableSelection.asStateFlow()
     private var generation = 0
 
-    fun selectParticipant(id: UUID) { mutableSelection.value = ContextSelection.Participant(id) }
+    private fun selectedParticipantId(): UUID? =
+        (mutableSelection.value as? ContextSelection.Participant)?.participantId
+
+    fun selectParticipant(id: UUID) {
+        resetParticipantReads()
+        mutableSelection.value = ContextSelection.Participant(id)
+    }
+
     fun selectAppointment(participantId: UUID?, appointmentId: UUID) {
+        resetParticipantReads()
         mutableSelection.value = ContextSelection.Appointment(participantId, appointmentId)
+    }
+
+    private fun resetParticipantReads() {
+        workspaceRequest++
+        timelineRequest++
+        mutableWorkspace.value = ReadState.Idle
+        mutableTimeline.value = ReadState.Idle
+    }
+
+    fun loadWorkspace(participantId: UUID) {
+        if (selectedParticipantId() != participantId) return
+        val requestId = ++workspaceRequest
+        timelineRequest++
+        mutableTimeline.value = ReadState.Idle
+        read(mutableWorkspace, skipIfLoading = false,
+            isCurrent = { requestId == workspaceRequest && selectedParticipantId() == participantId }) {
+            repository.workspace(participantId)
+        }
+    }
+
+    fun loadTimeline(participantId: UUID) {
+        if (selectedParticipantId() != participantId || mutableWorkspace.value !is ReadState.Ready) return
+        val requestId = ++timelineRequest
+        read(mutableTimeline, skipIfLoading = false,
+            isCurrent = { requestId == timelineRequest && selectedParticipantId() == participantId }) {
+            when (val result = repository.timeline(participantId)) {
+                is RemoteResult.Success -> RemoteResult.Success(
+                    TimelineFeed(
+                        items = visibleTimelineEvents(result.value.items),
+                        nextCursor = result.value.nextCursor,
+                        from = result.value.from?.toString(),
+                        to = result.value.to?.toString()
+                    )
+                )
+                is RemoteResult.Failure -> result
+            }
+        }
+    }
+
+    /** Cursor and first-page time bounds are reused so paging does not shift with the server clock. */
+    fun loadMoreTimeline(participantId: UUID) {
+        if (selectedParticipantId() != participantId) return
+        val feed = (mutableTimeline.value as? ReadState.Ready)?.value ?: return
+        val cursor = feed.nextCursor ?: return
+        if (feed.loadingMore) return
+        val currentGeneration = generation
+        val requestId = timelineRequest
+        mutableTimeline.value = ReadState.Ready(feed.copy(loadingMore = true, loadMoreFailed = false))
+        viewModelScope.launch {
+            if (freshToken().isNullOrBlank()) {
+                if (generation == currentGeneration && requestId == timelineRequest) {
+                    clear()
+                    invalidateSession()
+                }
+                return@launch
+            }
+            val result = repository.timeline(participantId, cursor = cursor, from = feed.from, to = feed.to)
+            if (generation != currentGeneration || requestId != timelineRequest ||
+                selectedParticipantId() != participantId) return@launch
+            mutableTimeline.value = when (result) {
+                is RemoteResult.Success -> {
+                    val known = feed.items.mapNotNull { it.eventId }.toHashSet()
+                    val more = visibleTimelineEvents(result.value.items)
+                        .filter { it.eventId != null && known.add(it.eventId) }
+                    ReadState.Ready(feed.copy(
+                        items = feed.items + more,
+                        nextCursor = result.value.nextCursor?.takeUnless { it == cursor },
+                        loadingMore = false,
+                        loadMoreFailed = false
+                    ))
+                }
+                is RemoteResult.Failure -> when (result.error) {
+                    RemoteError.Unauthorized -> {
+                        clear()
+                        invalidateSession()
+                        ReadState.Idle
+                    }
+                    RemoteError.Forbidden -> {
+                        clear()
+                        ReadState.Forbidden
+                    }
+                    else -> ReadState.Ready(feed.copy(loadingMore = false, loadMoreFailed = true))
+                }
+            }
+        }
     }
 
     fun chooseDate(date: LocalDate?) {
@@ -153,6 +266,7 @@ class OperationalViewModel(
         generation++
         todayRequest++
         clientRequest++
+        resetParticipantReads()
         mutableClients.value = ReadState.Idle
         mutableCreateClient.value = CreateClientState.Idle
         mutableRequestedDate.value = null
