@@ -41,7 +41,7 @@ M1 wymaga M0; M2 wymaga M1; M3 i M4 można częściowo rozwijać równolegle po 
 
 - **MOB-020 (kod wykonany)** S01: Today, agenda, aktualne/przyszłe terminy i minimalne sprawy; odbiór na fizycznym telefonie pozostaje otwarty.
 - **MOB-021 (kod wykonany)** S02: lista aktywnych kartotek, wyszukiwanie lokalne i formularz dodania kartoteki bez konta; test urządzenia i warunki produkcyjnej zgody pozostają otwarte.
-- **MOB-022** S03: workspace, cele, aktywny plan i paginowany timeline.
+- **MOB-022 (kod wykonany)** S03: uprawniony odczyt workspace, cele, aktywny plan i paginowany timeline; odbiór na telefonie otwarty.
 - **MOB-023** S04: bezpieczne projekcje Today/worklist; mapowanie webowych navigationReference na znane cele mobilne.
 - **MOB-024** Obsługa cofnięcia relacji/zgody i przełączania kontekstu zawodowego.
 
@@ -123,3 +123,12 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 - **Ograniczenie backendu:** `SpecialistClientService.create` wymaga zweryfikowanego profilu specjalisty oraz `moves.test-default-consent.enabled=true`. W Compose lokalnym ta funkcja jest włączona do testów; produkcyjne utworzenie uczestnika bez konta jest nadal zablokowane przez backend (409) do czasu odrębnej decyzji o prawidłowych mechanizmach zgód. Android nie implementuje własnej zgody ani nie włącza flag w backendzie.
 - Dane listy i formularza są wyłącznie w RAM; nie trafiają do trwałego storage, loggera ani backupu. M0/S08 pomiary biomedyczne pozostają zablokowane.
 - Weryfikacja: test klienta POST i nagłówka idempotencji, test obsługi jednego zapisu na próbę i świadomego ponowienia. Przed odbiorem na Motoroli: utworzenie kartoteki bez konta, wyszukiwanie, otwarcie kontekstu i zachowanie przy 403/409.
+
+## MOB-022 — S03 Kartoteka (2026-11-15)
+
+- Z istniejących `GET /api/v1/specialist/participants/{participantId}/workspace` i `.../timeline` wyświetlane są identyfikacja uczestnika, bieżący kontekst operacyjny, następne spotkanie, status aktywnego planu, tekstowe cele oraz historia. `participantId` jest przenoszony z S02 lub S04; każdy odczyt jest ponownie autoryzowany na backendzie. Brak lokalnego wnioskowania uprawnień i brak nowych mutacji.
+- Timeline jest paginowany kursorem (`limit=20`, `granularity=DETAIL`). Pierwsza strona używa serwerowego okna 14 dni, kolejne zachowują identyczne `from`/`to` z pierwszej odpowiedzi. Starsze zdarzenia mogą być pobierane tylko w granicach tego samego okna; poszerzanie zakresu historii nie jest częścią MOB-022. Zdarzenia są odróżniane po `eventId`; błędy kolejnych stron nie usuwają dotychczasowych wpisów.
+- Lista `types` świadomie zawiera tylko `APPOINTMENT,SESSION,EXECUTION,GOAL,INTERVIEW,NOTE`; nie żąda `MEASUREMENT`. Projekcja Androida nie dekoduje ani nie prezentuje pól `recentMeasurements`, wartości pomiarowych celów, `measurement`, `problem`, szczegółów klinicznych zdarzeń ani swobodnego `summary`. W historii pokazuje tylko neutralny typ, datę i status; cele są tekstowe.
+- **Ograniczenie backendu:** dotychczasowy zbiorczy endpoint workspace nadal przesyła pola pomiarowe i może je obliczać serwerowo, a zdarzenia celu mogą mieć wartości obserwacji. Android ignoruje je przy deserializacji, ale ich eliminacja z payloadu sieciowego wymaga serwerowej projekcji/egzekwowania osobnej zgody przed aktywacją S08. MOB-022 nie stanowi zgody na ich wyświetlanie lub składowanie.
+- Dane są wyłącznie w RAM; wylogowanie, utrata dostępu (403) i przełączenie uczestnika usuwają poprzednią projekcję, a spóźnione odpowiedzi są ignorowane. `401` unieważnia sesję. Kontekst wizyty pozostaje placeholderem do M3.
+- Walidacja: wąskie testy dekodowania dopuszczonych pól, parametrów i kursora HTTP, izolacji użytkowników i ponownej strony. Odbiór rzeczywistego urządzenia, polityki zgód i retry 401/403 pozostaje otwarty.

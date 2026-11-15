@@ -98,10 +98,83 @@ class OperationalViewModelTest {
         } finally { Dispatchers.resetMain() }
     }
 
+    @Test fun participantSwitchDiscardsLateWorkspaceResponse() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val original = UUID.randomUUID()
+            val replacement = UUID.randomUUID()
+            val repository = StubRepository()
+            val slow = CompletableDeferred<RemoteResult<WorkspaceView>>()
+            repository.pendingWorkspaces[original] = slow
+            val vm = OperationalViewModel(repository, { "access-token" }, {})
+            vm.selectParticipant(original)
+            vm.loadWorkspace(original)
+            runCurrent()
+            vm.selectParticipant(replacement)
+            vm.loadWorkspace(replacement)
+            advanceUntilIdle()
+            slow.complete(RemoteResult.Success(WorkspaceView(
+                participant = WorkspaceParticipant(participantId = original, displayName = "stale")
+            )))
+            advanceUntilIdle()
+            assertEquals(replacement, (vm.workspace.value as ReadState.Ready).value.participant?.participantId)
+        } finally { Dispatchers.resetMain() }
+    }
+
+    @Test fun timelinePaginationPreservesBoundsAndOmitsMeasurements() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val id = UUID.randomUUID()
+            val from = java.time.OffsetDateTime.parse("2026-11-01T00:00:00Z")
+            val to = java.time.OffsetDateTime.parse("2026-11-15T00:00:00Z")
+            val repository = StubRepository()
+            repository.timelineResults[null] = RemoteResult.Success(
+                TimelinePage(
+                    items = listOf(
+                        TimelineEvent(eventId = "a", category = "APPOINTMENT"),
+                        TimelineEvent(eventId = "hidden", category = "MEASUREMENT")
+                    ),
+                    nextCursor = "cursor-1", from = from, to = to
+                )
+            )
+            repository.timelineResults["cursor-1"] = RemoteResult.Success(
+                TimelinePage(items = listOf(
+                    TimelineEvent(eventId = "a", category = "APPOINTMENT"),
+                    TimelineEvent(eventId = "b", category = "GOAL")
+                ))
+            )
+            val vm = OperationalViewModel(repository, { "access-token" }, {})
+            vm.selectParticipant(id)
+            vm.loadWorkspace(id)
+            advanceUntilIdle()
+            vm.loadTimeline(id)
+            advanceUntilIdle()
+            vm.loadMoreTimeline(id)
+            advanceUntilIdle()
+            val events = (vm.timeline.value as ReadState.Ready).value.items
+            assertEquals(listOf("a", "b"), events.map { it.eventId })
+            assertEquals(listOf(
+                Triple(null, null, null),
+                Triple("cursor-1", from.toString(), to.toString())
+            ), repository.timelineRequests)
+        } finally { Dispatchers.resetMain() }
+    }
+
     private class StubRepository : SpecialistRepository {
+        val pendingWorkspaces = mutableMapOf<UUID, CompletableDeferred<RemoteResult<WorkspaceView>>>()
+        val timelineResults = mutableMapOf<String?, RemoteResult<TimelinePage>>()
+        val timelineRequests = mutableListOf<Triple<String?, String?, String?>>()
         var participantResult: RemoteResult<List<ActiveParticipantView>> = RemoteResult.Success(emptyList())
         var pendingToday: CompletableDeferred<RemoteResult<TodayView>>? = null
         val pendingDates = mutableMapOf<java.time.LocalDate, CompletableDeferred<RemoteResult<TodayView>>>()
+        override suspend fun workspace(participantId: java.util.UUID): RemoteResult<WorkspaceView> =
+            pendingWorkspaces[participantId]?.await() ?: RemoteResult.Success(
+                WorkspaceView(participant = WorkspaceParticipant(participantId = participantId))
+            )
+        override suspend fun timeline(participantId: java.util.UUID, cursor: String?, from: String?, to: String?): RemoteResult<TimelinePage> {
+            timelineRequests += Triple(cursor, from, to)
+            return timelineResults[cursor] ?: RemoteResult.Success(TimelinePage())
+        }
         override suspend fun clients(): RemoteResult<List<ClientView>> = RemoteResult.Success(emptyList())
         var createResult: RemoteResult<ClientView> = RemoteResult.Failure(RemoteError.Conflict)
         val creationKeys = mutableListOf<String>()
