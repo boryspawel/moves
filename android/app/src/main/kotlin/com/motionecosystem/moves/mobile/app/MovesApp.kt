@@ -92,7 +92,7 @@ fun MovesApp(session: OidcSession, onLogin: () -> Unit, onLogout: () -> Unit) {
                     Text("Moves", style = MaterialTheme.typography.headlineMedium)
                     Text(when (access) {
                         ReadState.Idle, ReadState.Loading -> "Sprawdzanie kontekstu zawodowego i dostępu…"
-                        ReadState.Forbidden -> "Brak uprawnionego, ukończonego profilu specjalisty. Sprawdź profil w aplikacji webowej."
+                        ReadState.Forbidden -> "Serwer odmówił dostępu. Sprawdź profil zawodowy, relację z uczestnikiem lub zgodę."
                         ReadState.Offline -> "Brak połączenia. Ze względów bezpieczeństwa ukryto dane uczestników."
                         else -> "Nie udało się potwierdzić dostępu. Dane uczestników są ukryte."
                     })
