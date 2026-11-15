@@ -390,6 +390,7 @@ class OperationalViewModelTest {
             val repo = StubRepository()
             val first = java.time.LocalDate.parse("2026-11-20")
             val second = first.plusDays(1)
+            repo.scheduleToday = TodayView(localDate = first)
             val delayed = CompletableDeferred<RemoteResult<TodayView>>()
             repo.pendingDates[first] = delayed
             val vm = OperationalViewModel(repo, { "token" }, {})
