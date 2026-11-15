@@ -189,6 +189,7 @@ class OperationalViewModel(
                     }
                     RemoteError.Forbidden -> {
                         clear()
+                        mutableProfessionalContext.value = ReadState.Forbidden
                         ReadState.Forbidden
                     }
                     else -> ReadState.Ready(feed.copy(loadingMore = false, loadMoreFailed = true))
@@ -257,6 +258,7 @@ class OperationalViewModel(
                     }
                     RemoteError.Forbidden -> {
                         clear()
+                        mutableProfessionalContext.value = ReadState.Forbidden
                         mutableCreateClient.value = CreateClientState.Failed("Brak uprawnień do tworzenia kartotek.")
                     }
                     RemoteError.Conflict -> mutableCreateClient.value = CreateClientState.Failed(
@@ -328,6 +330,7 @@ class OperationalViewModel(
                     }
                     RemoteError.Forbidden -> {
                         clear()
+                        mutableProfessionalContext.value = ReadState.Forbidden
                         ReadState.Forbidden
                     }
                     RemoteError.Conflict -> ReadState.Conflict
