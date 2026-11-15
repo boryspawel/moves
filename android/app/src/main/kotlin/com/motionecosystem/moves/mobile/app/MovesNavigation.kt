@@ -191,7 +191,7 @@ private fun SectionHeading(title: String, onRefresh: () -> Unit) {
 }
 
 @Composable
-private fun <T> ReadPanel(
+internal fun <T> ReadPanel(
     state: ReadState<T>, onRetry: () -> Unit, isEmpty: (T) -> Boolean,
     content: @Composable (T) -> Unit
 ) {
