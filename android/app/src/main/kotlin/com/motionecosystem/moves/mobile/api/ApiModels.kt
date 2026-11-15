@@ -76,3 +76,11 @@ data class ClientView(
     val nextAppointment: ClientAppointment? = null,
     val availableActions: List<String>? = null
 )
+
+/** Narrow, read-only projection of the server-owned professional profile. */
+@Serializable data class MobileSpecialistProfile(val specialistKind: ActingContext? = null)
+@Serializable data class MobileOnboardingState(
+    val stage: String? = null,
+    val profileType: String? = null,
+    val profile: MobileSpecialistProfile? = null
+)

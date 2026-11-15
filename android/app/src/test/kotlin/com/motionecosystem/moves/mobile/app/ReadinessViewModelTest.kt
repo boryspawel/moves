@@ -68,6 +68,9 @@ class ReadinessViewModelTest {
         override suspend fun createClient(command: ClientCommand, idempotencyKey: String): RemoteResult<ClientView> =
             RemoteResult.Failure(RemoteError.Conflict)
         override suspend fun identity(): RemoteResult<IdentityResponse> { identityCalls++; return result }
+        override suspend fun onboarding(): RemoteResult<MobileOnboardingState> = RemoteResult.Success(
+            MobileOnboardingState("READY", "SPECIALIST", MobileSpecialistProfile(ActingContext.TRAINER))
+        )
         override suspend fun today(date: java.time.LocalDate?): RemoteResult<TodayView> = RemoteResult.Success(TodayView())
         override suspend fun participants(): RemoteResult<List<ActiveParticipantView>> = RemoteResult.Success(emptyList())
         override suspend fun worklist(context: ActingContext, purpose: WorklistPurpose): RemoteResult<List<WorklistItemView>> = RemoteResult.Success(emptyList())

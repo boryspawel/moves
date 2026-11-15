@@ -73,8 +73,7 @@ internal fun TodayScreen(
     requestedDate: LocalDate?,
     onChooseDate: (LocalDate?) -> Unit,
     onRefresh: () -> Unit,
-    onAppointment: (UUID?, UUID) -> Unit,
-    onCases: () -> Unit
+    onAppointment: (UUID?, UUID) -> Unit
 ) {
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -130,10 +129,7 @@ internal fun TodayScreen(
                 HorizontalDivider()
                 val attentions = today.attentionItems.orEmpty()
                 val tasks = today.operationalTasks.orEmpty()
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Sprawy i zadania", style = MaterialTheme.typography.titleMedium)
-                    TextButton(onClick = onCases) { Text("Otwórz sprawy") }
-                }
+                Text("Sygnały i zadania", style = MaterialTheme.typography.titleMedium)
                 Text("Do sprawdzenia: ${attentions.size} • Zadania: ${tasks.size}",
                     style = MaterialTheme.typography.bodyMedium)
                 if (attentions.isEmpty() && tasks.isEmpty()) Text("Brak bieżących spraw.")

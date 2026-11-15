@@ -1,8 +1,6 @@
 package com.motionecosystem.moves.mobile.app
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -16,12 +14,12 @@ import androidx.navigation.compose.rememberNavController
 import com.motionecosystem.moves.mobile.api.*
 
 private enum class Tab(val route: String, val title: String) {
-    DAY("day", "Dzień"), PARTICIPANTS("participants", "Uczestnicy"), CASES("cases", "Sprawy")
+    DAY("day", "Dzień"), PARTICIPANTS("participants", "Uczestnicy")
 }
 private const val CONTEXT_ROUTE = "context"
 
 @Composable
-fun MovesNavigation(viewModel: OperationalViewModel, readiness: ReadinessState, onLogout: () -> Unit) {
+fun MovesNavigation(viewModel: OperationalViewModel, readiness: ReadinessState, actingContext: ActingContext, onLogout: () -> Unit) {
     val navigation = rememberNavController()
     val route = navigation.currentBackStackEntryAsState().value?.destination?.route
     Scaffold(
@@ -30,6 +28,8 @@ fun MovesNavigation(viewModel: OperationalViewModel, readiness: ReadinessState, 
                 horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
                     Text("Moves", style = MaterialTheme.typography.titleLarge)
+                    Text(if (actingContext == ActingContext.TRAINER) "Trener" else "Fizjoterapeuta",
+                        style = MaterialTheme.typography.labelSmall)
                     when (readiness) {
                         ReadinessState.Loading -> Text("Łączenie…", style = MaterialTheme.typography.labelSmall)
                         is ReadinessState.Error -> Text(readiness.message, color = MaterialTheme.colorScheme.error)
@@ -38,7 +38,10 @@ fun MovesNavigation(viewModel: OperationalViewModel, readiness: ReadinessState, 
                         }
                     }
                 }
-                TextButton(onClick = onLogout) { Text("Wyloguj") }
+                Row {
+                    TextButton(onClick = viewModel::revalidateAccess) { Text("Sprawdź dostęp") }
+                    TextButton(onClick = onLogout) { Text("Wyloguj") }
+                }
             }
         },
         bottomBar = {
@@ -69,18 +72,11 @@ fun MovesNavigation(viewModel: OperationalViewModel, readiness: ReadinessState, 
                     onAppointment = { participantId, appointmentId ->
                         viewModel.selectAppointment(participantId, appointmentId)
                         navigation.navigate(CONTEXT_ROUTE)
-                    },
-                    onCases = { navigation.navigate(Tab.CASES.route) { launchSingleTop = true } }
+                    }
                 )
             }
             composable(Tab.PARTICIPANTS.route) {
                 ParticipantsSection(viewModel) { id ->
-                    viewModel.selectParticipant(id)
-                    navigation.navigate(CONTEXT_ROUTE)
-                }
-            }
-            composable(Tab.CASES.route) {
-                CasesSection(viewModel) { id ->
                     viewModel.selectParticipant(id)
                     navigation.navigate(CONTEXT_ROUTE)
                 }
@@ -140,13 +136,12 @@ private fun ParticipantWorkspaceSection(
 @Composable
 private fun TodaySection(
     viewModel: OperationalViewModel,
-    onAppointment: (java.util.UUID?, java.util.UUID) -> Unit,
-    onCases: () -> Unit
+    onAppointment: (java.util.UUID?, java.util.UUID) -> Unit
 ) {
     val state by viewModel.today.collectAsStateWithLifecycle()
     val requestedDate by viewModel.requestedDate.collectAsStateWithLifecycle()
     LaunchedEffect(viewModel) { if (viewModel.today.value == ReadState.Idle) viewModel.loadToday() }
-    TodayScreen(state, requestedDate, viewModel::chooseDate, viewModel::loadToday, onAppointment, onCases)
+    TodayScreen(state, requestedDate, viewModel::chooseDate, viewModel::loadToday, onAppointment)
 }
 
 @Composable
@@ -163,54 +158,6 @@ private fun ParticipantsSection(viewModel: OperationalViewModel, onParticipant: 
         onOpen = onParticipant,
         onResetCreate = viewModel::resetClientForm
     )
-}
-
-@Composable
-private fun CasesSection(viewModel: OperationalViewModel, onParticipant: (java.util.UUID) -> Unit) {
-    var context by remember { mutableStateOf<ActingContext?>(null) }
-    val state by viewModel.worklist.collectAsStateWithLifecycle()
-    LaunchedEffect(context) {
-        viewModel.clearWorklist()
-        context?.let(viewModel::loadWorklist)
-    }
-    Column {
-        Text("Sprawy", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(16.dp))
-        Text("Kontekst zawodowy", modifier = Modifier.padding(horizontal = 16.dp))
-        Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(selected = context == ActingContext.TRAINER,
-                onClick = { context = ActingContext.TRAINER }, label = { Text("Trener") })
-            FilterChip(selected = context == ActingContext.PHYSIOTHERAPIST,
-                onClick = { context = ActingContext.PHYSIOTHERAPIST }, label = { Text("Fizjoterapeuta") })
-        }
-        if (context == null) Text("Wybierz rolę, w której pracujesz.", modifier = Modifier.padding(16.dp))
-        else {
-            val selected = context!!
-            TextButton(onClick = { viewModel.loadWorklist(selected) }, modifier = Modifier.padding(start = 8.dp)) {
-                Text("Odśwież")
-            }
-            ReadPanel(state, { viewModel.loadWorklist(selected) }, { it.isEmpty() }) { items ->
-                Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items.forEach { item ->
-                        val label = listOfNotNull(item.category, item.priority, item.status).joinToString(" • ")
-                        val id = item.participantId
-                        if (id != null) OutlinedButton(onClick = { onParticipant(id) },
-                            modifier = Modifier.fillMaxWidth()) { Text(label.ifBlank { "Sprawa" }) }
-                        else Text(label.ifBlank { "Sprawa" })
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun SectionHeading(title: String, onRefresh: () -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(title, style = MaterialTheme.typography.headlineMedium)
-        TextButton(onClick = onRefresh) { Text("Odśwież") }
-    }
 }
 
 @Composable

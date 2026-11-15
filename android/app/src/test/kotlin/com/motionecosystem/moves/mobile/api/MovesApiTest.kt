@@ -91,6 +91,19 @@ class MovesApiTest {
         assertTrue(request.body?.utf8()?.contains("Anna") == true)
     }
 
+    @Test fun onboardingReadsActualServerSpecialistKindWithoutAClientRoleOverride() = runBlocking {
+        server.enqueue(MockResponse.Builder().body(
+            """{"stage":"READY","profileType":"SPECIALIST","profile":{"specialistKind":"PHYSIOTHERAPIST"},"availability":[]}"""
+        ).addHeader("Content-Type", "application/json").build())
+        val api = createMovesApi(server.url("/").toString(), TokenProvider { "access-token" })
+        assertEquals(ActingContext.PHYSIOTHERAPIST, api.onboarding().body()?.profile?.specialistKind)
+        val request = server.takeRequest()
+        assertEquals("GET", request.method)
+        assertEquals("/api/v1/onboarding", request.url.encodedPath)
+        assertEquals(null, request.url.query)
+        assertEquals("Bearer access-token", request.headers["Authorization"])
+    }
+
     @Test fun todayDateIsSentAsLocalDateWithoutClientTimeZoneConversion() = runBlocking {
         server.enqueue(MockResponse.Builder()
             .body("{\"localDate\":\"2026-11-16\",\"timeZoneId\":\"Europe/Warsaw\"}")

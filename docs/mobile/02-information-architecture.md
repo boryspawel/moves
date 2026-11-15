@@ -6,7 +6,7 @@
 
 ### Nawigacja
 
-- Dolny pasek: **Dzień**, **Uczestnicy**, **Sprawy**.
+- Dolny pasek: **Dzień**, **Uczestnicy**. Ekran S04 „Sprawy” odroczony — brak uzasadnienia dla trzeciej głównej zakładki; sygnały i zadania pozostają na Dniu.
 - Kartoteka otwierana z Dnia, Uczestników lub Spraw, zawsze z zachowaniem participantId.
 - **Spotkanie** nie jest czwartą zakładką: pełnoekranowy kontekst pracy, dostępny z terminu/kartoteki i możliwy do wznowienia.
 - Realizacja, dokumentacja i pomiary mogą być wykonywane w dowolnej kolejności; brak sztywnego kreatora.
@@ -22,7 +22,7 @@
 | S01 | Dzień | bieżąca/następna wizyta, agenda, zadania | Otwórz / rozpocznij spotkanie |
 | S02 | Uczestnicy | wyszukiwanie, kartoteki, najbliższy termin | Otwórz kartotekę; dodaj nową |
 | S03 | Kartoteka | aktualna sytuacja, cele, plan, timeline | Otwórz spotkanie lub zapisz wpis |
-| S04 | Sprawy | bezpieczne sygnały i operacyjne zaległości | Otwórz uczestnika/termin |
+| S04 — odroczony | Sprawy | sygnały i zaległości pozostają na Dniu S01 | bez osobnej zakładki |
 | S05 | Spotkanie | status, cel, powiązana sesja, następna czynność | Rozpocznij / kontynuuj |
 | S06 | Realizacja sesji | planowana dawka, fakty wykonania, reakcja po sesji | Zapisz wykonanie |
 | S07 | Dokumentacja | wywiad, notatki, szkice | Kontynuuj / zapisz / finalizuj |
@@ -35,10 +35,8 @@
 flowchart TD
   A[Logowanie OIDC] --> B[Dzień S01]
   B <--> C[Uczestnicy S02]
-  B <--> D[Sprawy S04]
   B --> E[Kartoteka S03]
   C --> E
-  D --> E
   E --> F[Spotkanie S05]
   B --> F
   F --> G[Realizacja S06]
@@ -59,7 +57,7 @@ flowchart TD
 | S01 | GET /api/v1/specialist/today |
 | S02 | GET/POST /api/v1/specialist/clients (lista rzeczywistych kartotek, tworzenie lokal/test); GET /api/v1/specialist/participants pozostaje wyłącznie wyborem aktywnych relacji |
 | S03 | GET /api/v1/specialist/participants/{participantId}/workspace i /timeline (bez prezentacji pomiarów; stronicowanie kursorem) |
-| S04 | Today attentionItems i operationalTasks; GET /api/v1/specialist/worklist |
+| S04 — odroczony | Today attentionItems i operationalTasks pozostają w S01; worklist istnieje w backendzie, lecz nie stanowi osobnego ekranu mobile |
 | S05 | GET /api/v1/specialist/appointments/{id}; POST /{id}/start |
 | S06 | /api/v1/specialist/appointments/{appointmentId}/execution-context i /execution |
 | S07 | /api/v1/specialist/clients/{participantId}/records/interviews i /notes |

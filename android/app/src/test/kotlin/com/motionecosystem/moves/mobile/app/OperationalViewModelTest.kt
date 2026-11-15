@@ -160,7 +160,59 @@ class OperationalViewModelTest {
         } finally { Dispatchers.resetMain() }
     }
 
+    @Test fun foregroundRecheckDropsPreviousParticipantAndDiscardsLateResponses() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val id = UUID.randomUUID()
+            val repository = StubRepository()
+            val vm = OperationalViewModel(repository, { "token" }, {})
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            assertEquals(ActingContext.TRAINER, (vm.professionalContext.value as ReadState.Ready).value)
+            val delayed = CompletableDeferred<RemoteResult<WorkspaceView>>()
+            repository.pendingWorkspaces[id] = delayed
+            vm.selectParticipant(id)
+            vm.loadWorkspace(id)
+            runCurrent()
+            repository.onboardingResult = RemoteResult.Success(
+                MobileOnboardingState("READY", "SPECIALIST", MobileSpecialistProfile(ActingContext.PHYSIOTHERAPIST))
+            )
+            vm.revalidateAccess()
+            runCurrent()
+            assertNull(vm.selection.value)
+            delayed.complete(RemoteResult.Success(WorkspaceView(participant = WorkspaceParticipant(id, "old"))))
+            advanceUntilIdle()
+            assertEquals(ReadState.Idle, vm.workspace.value)
+            assertEquals(ActingContext.PHYSIOTHERAPIST, (vm.professionalContext.value as ReadState.Ready).value)
+        } finally { Dispatchers.resetMain() }
+    }
+
+    @Test fun revokedOrUnavailableProfileNeverRevealsOldDataAndDoesNotLogOutOn403() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = StubRepository()
+            var invalidated = false
+            val vm = OperationalViewModel(repository, { "token" }, { invalidated = true })
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            vm.loadToday()
+            advanceUntilIdle()
+            assertTrue(vm.today.value is ReadState.Ready)
+            repository.onboardingResult = RemoteResult.Failure(RemoteError.Forbidden)
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            assertEquals(ReadState.Forbidden, vm.professionalContext.value)
+            assertEquals(ReadState.Idle, vm.today.value)
+            assertFalse(invalidated)
+        } finally { Dispatchers.resetMain() }
+    }
+
     private class StubRepository : SpecialistRepository {
+        var onboardingResult: RemoteResult<MobileOnboardingState> = RemoteResult.Success(
+            MobileOnboardingState(stage = "READY", profileType = "SPECIALIST",
+                profile = MobileSpecialistProfile(specialistKind = ActingContext.TRAINER))
+        )
+        override suspend fun onboarding(): RemoteResult<MobileOnboardingState> = onboardingResult
         val pendingWorkspaces = mutableMapOf<UUID, CompletableDeferred<RemoteResult<WorkspaceView>>>()
         val timelineResults = mutableMapOf<String?, RemoteResult<TimelinePage>>()
         val timelineRequests = mutableListOf<Triple<String?, String?, String?>>()
