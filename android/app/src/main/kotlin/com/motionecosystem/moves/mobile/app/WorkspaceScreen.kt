@@ -157,7 +157,7 @@ internal fun WorkspaceScreen(
                         modifier = Modifier.padding(top = 8.dp))
                 }
                 if (data.goals.isNullOrEmpty()) item { Text("Brak zdefiniowanych celów.") }
-                else items(data.goals) { goal ->
+                else items(data.goals.orEmpty()) { goal ->
                     OutlinedCard(Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(goal.title ?: "Cel", style = MaterialTheme.typography.titleMedium)
