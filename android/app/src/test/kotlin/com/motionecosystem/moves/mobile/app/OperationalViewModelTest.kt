@@ -50,12 +50,37 @@ class OperationalViewModelTest {
         } finally { Dispatchers.resetMain() }
     }
 
+    @Test fun latestChosenDateWinsOverSlowerPreviousResponse() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val firstDay = java.time.LocalDate.of(2026, 11, 15)
+            val secondDay = firstDay.plusDays(1)
+            val first = CompletableDeferred<RemoteResult<TodayView>>()
+            val second = CompletableDeferred<RemoteResult<TodayView>>()
+            val repository = StubRepository()
+            repository.pendingDates[firstDay] = first
+            repository.pendingDates[secondDay] = second
+            val vm = OperationalViewModel(repository, { "access-token" }, {})
+            vm.chooseDate(firstDay)
+            runCurrent()
+            vm.chooseDate(secondDay)
+            runCurrent()
+            second.complete(RemoteResult.Success(TodayView(localDate = secondDay)))
+            advanceUntilIdle()
+            first.complete(RemoteResult.Success(TodayView(localDate = firstDay)))
+            advanceUntilIdle()
+            assertEquals(secondDay, (vm.today.value as ReadState.Ready).value.localDate)
+            assertEquals(secondDay, vm.requestedDate.value)
+        } finally { Dispatchers.resetMain() }
+    }
+
     private class StubRepository : SpecialistRepository {
         var participantResult: RemoteResult<List<ActiveParticipantView>> = RemoteResult.Success(emptyList())
         var pendingToday: CompletableDeferred<RemoteResult<TodayView>>? = null
+        val pendingDates = mutableMapOf<java.time.LocalDate, CompletableDeferred<RemoteResult<TodayView>>>()
         override suspend fun identity(): RemoteResult<IdentityResponse> = RemoteResult.Success(IdentityResponse())
         override suspend fun today(date: java.time.LocalDate?): RemoteResult<TodayView> =
-            pendingToday?.await() ?: RemoteResult.Success(TodayView())
+            date?.let { pendingDates[it]?.await() } ?: pendingToday?.await() ?: RemoteResult.Success(TodayView())
         override suspend fun participants() = participantResult
         override suspend fun worklist(context: ActingContext, purpose: WorklistPurpose):
             RemoteResult<List<WorklistItemView>> = RemoteResult.Success(emptyList())
