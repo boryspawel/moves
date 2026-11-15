@@ -43,7 +43,9 @@ class MovesApiTest {
         val api = createMovesApi(server.url("/").toString())
         val requested = api.today("2026-11-16")
         assertEquals(java.time.LocalDate.of(2026, 11, 16), requested.body()?.localDate)
-        assertEquals("/api/v1/specialist/today?date=2026-11-16", server.takeRequest().path)
+        val request = server.takeRequest()
+        assertEquals("/api/v1/specialist/today", request.url.encodedPath)
+        assertEquals("2026-11-16", request.url.queryParameter("date"))
     }
 
     @Test fun `read request has bearer token and no idempotency header`() = runBlocking {
