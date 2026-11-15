@@ -2,6 +2,8 @@ package com.motionecosystem.moves.mobile.app
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
@@ -37,21 +39,23 @@ internal fun ParticipantsScreen(
     state: ReadState<List<ClientView>>,
     creation: CreateClientState,
     onRefresh: () -> Unit,
-    onCreate: (ClientCommand, String) -> Unit,
+    onCreate: (ClientCommand, String, (UUID) -> Unit) -> Unit,
     onCancel: () -> Unit,
     onOpen: (UUID) -> Unit,
     onResetCreate: () -> Unit
 ) {
     var creating by remember { mutableStateOf(false) }
-    BackHandler(enabled = creating && creation != CreateClientState.Saving) {
-        creating = false
-        onCancel()
+    BackHandler(enabled = creating) {
+        if (creation != CreateClientState.Saving) {
+            creating = false
+            onCancel()
+        }
     }
 
     if (creating) {
         ClientCreateForm(
             state = creation,
-            onSave = { command, key -> onCreate(command, key) },
+            onSave = { command, key -> onCreate(command, key) { id -> creating = false; onOpen(id) } },
             onCancel = { creating = false; onCancel() }
         )
     } else {
@@ -139,7 +143,7 @@ private fun ClientCreateForm(
     val saving = state == CreateClientState.Saving
     val valid = displayName.trim().length in 1..80 && email.length <= 254 && phone.length <= 40
 
-    Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("Nowa kartoteka", style = MaterialTheme.typography.headlineMedium)
         Text("Uczestnik nie musi posiadać konta Moves.",
             style = MaterialTheme.typography.bodyMedium)

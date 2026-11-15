@@ -131,7 +131,7 @@ private fun ParticipantsSection(viewModel: OperationalViewModel, onParticipant: 
         state = clients,
         creation = createState,
         onRefresh = viewModel::loadClients,
-        onCreate = { command, key -> viewModel.createClient(command, key, onParticipant) },
+        onCreate = { command, key, onCreated -> viewModel.createClient(command, key, onCreated) },
         onCancel = viewModel::resetClientForm,
         onOpen = onParticipant,
         onResetCreate = viewModel::resetClientForm
