@@ -126,7 +126,7 @@ class OperationalViewModel(
                         "Serwer odrzucił utworzenie kartoteki (409). Sprawdź weryfikację specjalisty i konfigurację zgód środowiska."
                     )
                     is RemoteError.Network -> mutableCreateClient.value = CreateClientState.Failed(
-                        "Brak odpowiedzi. Kartoteka mogła zostać zapisana. Przed ponowieniem sprawdź listę; zachowano klucz żądania."
+                        "Brak odpowiedzi. Kartoteka mogła zostać zapisana. Ponów bez zmiany formularza — użyjemy tego samego klucza żądania."
                     )
                     is RemoteError.Http -> mutableCreateClient.value = CreateClientState.Failed(
                         if (error.status == 400) "Sprawdź dane formularza." else "Nie udało się dodać kartoteki."
