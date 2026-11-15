@@ -54,7 +54,7 @@ class OperationalViewModelTest {
         var participantResult: RemoteResult<List<ActiveParticipantView>> = RemoteResult.Success(emptyList())
         var pendingToday: CompletableDeferred<RemoteResult<TodayView>>? = null
         override suspend fun identity(): RemoteResult<IdentityResponse> = RemoteResult.Success(IdentityResponse())
-        override suspend fun today(): RemoteResult<TodayView> =
+        override suspend fun today(date: java.time.LocalDate?): RemoteResult<TodayView> =
             pendingToday?.await() ?: RemoteResult.Success(TodayView())
         override suspend fun participants() = participantResult
         override suspend fun worklist(context: ActingContext, purpose: WorklistPurpose):

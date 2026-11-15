@@ -4,17 +4,18 @@ import com.motionecosystem.moves.mobile.api.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import java.time.LocalDate
 
 interface SpecialistRepository {
     suspend fun identity(): RemoteResult<IdentityResponse>
-    suspend fun today(): RemoteResult<TodayView>
+    suspend fun today(date: LocalDate? = null): RemoteResult<TodayView>
     suspend fun participants(): RemoteResult<List<ActiveParticipantView>>
     suspend fun worklist(context: ActingContext, purpose: WorklistPurpose): RemoteResult<List<WorklistItemView>>
 }
 
 class NetworkSpecialistRepository(private val api: MovesApi, private val calls: RemoteCall) : SpecialistRepository {
     override suspend fun identity() = read { api.currentIdentity() }
-    override suspend fun today() = read { api.today() }
+    override suspend fun today(date: LocalDate?) = read { api.today(date?.toString()) }
     override suspend fun participants() = read { api.activeParticipants() }
     override suspend fun worklist(context: ActingContext, purpose: WorklistPurpose) =
         read { api.worklist(context, purpose) }
