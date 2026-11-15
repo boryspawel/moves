@@ -1,6 +1,6 @@
 # Moves Mobile — aplikacja Android dla specjalisty
 
-**Status:** M2 rozpoczęte — MOB-020 implementuje ekran S01 Dzień; M1 login/identity/logout działał na fizycznym telefonie, nowy ekran wymaga odbioru urządzenia. Pozostałe ekrany i mutacje zgodnie z backlogiem. **Data:** 2026-11-15.
+**Status:** M2 w realizacji — MOB-020 (Dzień) i MOB-021 (lista, wyszukiwanie, dodawanie kartotek) w kodzie; odbiór ekranów na Motoroli i produkcyjna ścieżka zgód pozostają otwarte. M1 login/identity/logout zweryfikowano na telefonie. **Data:** 2026-11-15.
 
 ## Dokumentacja i prototyp
 
@@ -13,6 +13,7 @@
 - [07 — M1: fundament Android i build APK](07-m1-android-build.md): konfiguracja CLI/CI, adapter REST i granice zakresu.
 - [08 — MOB-011: OIDC/Keycloak](08-m1-oidc-keycloak.md): PKCE, konfiguracja dev/prod, bramki odbioru.
 - [MOB-020: ekran Dzień](04-implementation-plan.md#mob-020--s01-dzień-2026-11-15): zakres, ograniczenia i walidacja.
+- [MOB-021: Uczestnicy](04-implementation-plan.md): lista, wyszukiwanie i tworzenie kartotek w środowisku lokalnym.
 - [Interaktywny prototyp dziewięciu ekranów](prototype/index.html) — demonstrator HTML z fikcyjnymi danymi, **bez backendu**, nie jest kodem produkcyjnym Androida.
 
 Prototyp jest samowystarczalnym plikiem HTML. Zrzuty PNG z sesji projektowej nie są załączane do repozytorium; komplet dziewięciu ekranów można otwierać przez menu prototypu.
