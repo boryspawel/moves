@@ -38,7 +38,7 @@ class MovesApiTest {
 
     @Test fun todayDateIsSentAsLocalDateWithoutClientTimeZoneConversion() = runBlocking {
         server.enqueue(MockResponse.Builder()
-            .body("{\\"localDate\\":\\"2026-11-16\\",\\"timeZoneId\\":\\"Europe/Warsaw\\"}")
+            .body("{\"localDate\":\"2026-11-16\",\"timeZoneId\":\"Europe/Warsaw\"}")
             .addHeader("Content-Type", "application/json").build())
         val api = createMovesApi(server.url("/").toString())
         val requested = api.today("2026-11-16")
