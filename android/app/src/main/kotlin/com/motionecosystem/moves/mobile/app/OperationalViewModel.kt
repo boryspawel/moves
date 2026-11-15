@@ -39,6 +39,20 @@ sealed interface CreateClientState {
     data class Failed(val message: String) : CreateClientState
 }
 
+sealed interface ScheduleTarget {
+    data class New(val participantId: UUID? = null) : ScheduleTarget
+    data class Edit(val appointmentId: UUID, val participantId: UUID) : ScheduleTarget
+}
+
+sealed interface ScheduleSaveState {
+    data object Idle : ScheduleSaveState
+    data object Saving : ScheduleSaveState
+    data object Uncertain : ScheduleSaveState
+    data object Conflict : ScheduleSaveState
+    data class Failed(val message: String) : ScheduleSaveState
+    data class Saved(val appointment: AppointmentView) : ScheduleSaveState
+}
+
 /** Manual retry after an uncertain START reuses exactly the same request key and version. */
 enum class AppointmentStartState { IDLE, SAVING, UNCERTAIN, CONFLICT, FAILED }
 
@@ -85,6 +99,19 @@ class OperationalViewModel(
     private var pendingStart: PendingStart? = null
     private var appointmentRequest = 0
     private var startRequest = 0
+
+    private val mutableScheduleTarget = MutableStateFlow<ScheduleTarget?>(null)
+    val scheduleTarget = mutableScheduleTarget.asStateFlow()
+    private val mutableScheduleDate = MutableStateFlow<LocalDate?>(null)
+    val scheduleDate = mutableScheduleDate.asStateFlow()
+    private val mutableScheduleDay = MutableStateFlow<ReadState<TodayView>>(ReadState.Idle)
+    val scheduleDay = mutableScheduleDay.asStateFlow()
+    private val mutableScheduleSave = MutableStateFlow<ScheduleSaveState>(ScheduleSaveState.Idle)
+    val scheduleSave = mutableScheduleSave.asStateFlow()
+    private data class PendingSchedule(val target: ScheduleTarget, val command: AppointmentSaveCommand, val key: String)
+    private var pendingSchedule: PendingSchedule? = null
+    private var scheduleRequest = 0
+    private var scheduleSaveRequest = 0
 
     private val mutableSelection = MutableStateFlow<ContextSelection?>(null)
     val selection = mutableSelection.asStateFlow()
@@ -203,6 +230,152 @@ class OperationalViewModel(
                 }
             }
         }
+    }
+
+    /** Only the server-provided bookable slots are selectable. All access control still belongs to the server. */
+    fun openNewSchedule(participantId: UUID? = null) {
+        resetSchedule()
+        mutableScheduleTarget.value = ScheduleTarget.New(participantId)
+        mutableScheduleDate.value = mutableRequestedDate.value
+        loadScheduleDay()
+        if (mutableClients.value == ReadState.Idle) loadClients()
+    }
+
+    fun openEditSchedule(): Boolean {
+        val selection = selectedAppointment() ?: return false
+        val detail = (mutableAppointment.value as? ReadState.Ready)?.value ?: return false
+        if (detail.appointmentId != selection.appointmentId || detail.participantId == null ||
+            (selection.participantId != null && selection.participantId != detail.participantId) ||
+            detail.version == null || "UPDATE" !in detail.availableActions.orEmpty()) return false
+        resetSchedule()
+        mutableScheduleTarget.value = ScheduleTarget.Edit(selection.appointmentId, detail.participantId)
+        val zone = runCatching {
+            java.time.ZoneId.of((mutableToday.value as? ReadState.Ready)?.value?.timeZoneId ?: "UTC")
+        }.getOrDefault(java.time.ZoneOffset.UTC)
+        mutableScheduleDate.value = detail.startsAt?.atZoneSameInstant(zone)?.toLocalDate()
+        loadScheduleDay()
+        return true
+    }
+
+    fun scheduleDate(date: LocalDate?) {
+        if (mutableScheduleTarget.value == null || mutableScheduleSave.value == ScheduleSaveState.Saving) return
+        mutableScheduleDate.value = date
+        pendingSchedule = null
+        mutableScheduleSave.value = ScheduleSaveState.Idle
+        loadScheduleDay()
+    }
+
+    fun loadScheduleDay() {
+        val target = mutableScheduleTarget.value ?: return
+        if (mutableScheduleSave.value == ScheduleSaveState.Saving) return
+        val date = mutableScheduleDate.value
+        val requestId = ++scheduleRequest
+        read(mutableScheduleDay, skipIfLoading = false,
+            isCurrent = { requestId == scheduleRequest && mutableScheduleTarget.value == target }) {
+            repository.today(date)
+        }
+    }
+
+    /** Key is reused only for a byte-equivalent command and resource after an uncertain response. */
+    fun saveSchedule(command: AppointmentSaveCommand) {
+        val target = mutableScheduleTarget.value ?: return
+        if (mutableScheduleSave.value == ScheduleSaveState.Saving || mutableScheduleSave.value is ScheduleSaveState.Saved) return
+        val day = (mutableScheduleDay.value as? ReadState.Ready)?.value ?: return
+        if (!command.endsAt.toInstant().isAfter(command.startsAt.toInstant()) ||
+            day.bookableSlots.orEmpty().none {
+                it.startsAt?.toInstant() == command.startsAt.toInstant() &&
+                    it.endsAt?.toInstant() == command.endsAt.toInstant()
+            }) {
+            mutableScheduleSave.value = ScheduleSaveState.Failed("Wybierz dostępny termin z aktualnej listy.")
+            return
+        }
+        val verified = when (target) {
+            is ScheduleTarget.New -> {
+                val clients = (mutableClients.value as? ReadState.Ready)?.value.orEmpty()
+                val allowed = clients.any {
+                    it.participantId == command.participantId && it.recordStatus != ClientRecordStatus.ARCHIVED &&
+                        "SCHEDULE_APPOINTMENT" in it.availableActions.orEmpty()
+                }
+                if (target.participantId != null && target.participantId != command.participantId || !allowed) null
+                else command.copy(version = null, plannedSessionId = null)
+            }
+            is ScheduleTarget.Edit -> {
+                val detail = (mutableAppointment.value as? ReadState.Ready)?.value
+                if (detail?.appointmentId != target.appointmentId || detail.participantId != target.participantId ||
+                    command.participantId != target.participantId || detail.version == null ||
+                    "UPDATE" !in detail.availableActions.orEmpty()) null
+                else command.copy(version = detail.version, plannedSessionId = detail.plannedSessionId)
+            }
+        }
+        if (verified == null) {
+            mutableScheduleSave.value = ScheduleSaveState.Failed("Brak aktualnych uprawnień lub danych spotkania. Odśwież widok.")
+            return
+        }
+        val operation = pendingSchedule?.takeIf { it.target == target && it.command == verified }
+            ?: PendingSchedule(target, verified, UUID.randomUUID().toString())
+        pendingSchedule = operation
+        val currentGeneration = generation
+        val requestId = ++scheduleSaveRequest
+        scheduleRequest++ // An older slot response must not replace the draft after a write.
+        mutableScheduleSave.value = ScheduleSaveState.Saving
+        viewModelScope.launch {
+            if (freshToken().isNullOrBlank()) {
+                if (generation == currentGeneration && requestId == scheduleSaveRequest) {
+                    clear()
+                    invalidateSession()
+                }
+                return@launch
+            }
+            val result = when (target) {
+                is ScheduleTarget.New -> repository.createAppointment(operation.command, operation.key)
+                is ScheduleTarget.Edit -> repository.updateAppointment(target.appointmentId, operation.command, operation.key)
+            }
+            if (generation != currentGeneration || requestId != scheduleSaveRequest || mutableScheduleTarget.value != target) return@launch
+            when (result) {
+                is RemoteResult.Success -> {
+                    val saved = result.value
+                    val matches = saved.appointmentId != null && saved.participantId == verified.participantId &&
+                        (target !is ScheduleTarget.Edit || saved.appointmentId == target.appointmentId)
+                    if (!matches) {
+                        clear()
+                        mutableProfessionalContext.value = ReadState.Forbidden
+                    } else {
+                        pendingSchedule = null
+                        mutableScheduleSave.value = ScheduleSaveState.Saved(saved)
+                        loadToday()
+                        loadClients()
+                    }
+                }
+                is RemoteResult.Failure -> when (val error = result.error) {
+                    RemoteError.Unauthorized -> { clear(); invalidateSession() }
+                    RemoteError.Forbidden -> { clear(); mutableProfessionalContext.value = ReadState.Forbidden }
+                    RemoteError.Conflict -> {
+                        pendingSchedule = null
+                        mutableScheduleSave.value = ScheduleSaveState.Conflict
+                        loadScheduleDay()
+                        if (target is ScheduleTarget.Edit) loadAppointment(target.appointmentId)
+                    }
+                    is RemoteError.Network, is RemoteError.Serialization ->
+                        mutableScheduleSave.value = ScheduleSaveState.Uncertain
+                    is RemoteError.Http -> {
+                        if (error.status >= 500) mutableScheduleSave.value = ScheduleSaveState.Uncertain
+                        else { pendingSchedule = null; mutableScheduleSave.value = ScheduleSaveState.Failed("Serwer odrzucił termin.") }
+                    }
+                }
+            }
+        }
+    }
+
+    fun closeSchedule() = resetSchedule()
+
+    private fun resetSchedule() {
+        scheduleRequest++
+        scheduleSaveRequest++
+        pendingSchedule = null
+        mutableScheduleTarget.value = null
+        mutableScheduleDate.value = null
+        mutableScheduleDay.value = ReadState.Idle
+        mutableScheduleSave.value = ScheduleSaveState.Idle
     }
 
     private fun selectedParticipantId(): UUID? =
@@ -409,6 +582,7 @@ class OperationalViewModel(
         clientRequest++
         resetParticipantReads()
         resetAppointmentReads()
+        resetSchedule()
         mutableClients.value = ReadState.Idle
         mutableCreateClient.value = CreateClientState.Idle
         mutableRequestedDate.value = null

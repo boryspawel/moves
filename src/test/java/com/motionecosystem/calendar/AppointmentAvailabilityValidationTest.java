@@ -3,6 +3,7 @@ package com.motionecosystem.calendar;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -22,6 +23,33 @@ import org.junit.jupiter.api.Test;
 import org.springframework.web.server.ResponseStatusException;
 
 class AppointmentAvailabilityValidationTest {
+    @Test
+    void rejects_overlap_inside_availability_before_persisting() {
+        UUID specialistId = UUID.randomUUID();
+        UUID participantId = UUID.randomUUID();
+        AppointmentRepository repository = mock(AppointmentRepository.class);
+        CurrentAccountService accounts = mock(CurrentAccountService.class);
+        RecurringAvailabilityService availability = mock(RecurringAvailabilityService.class);
+        CalendarSpecialistContextPort specialistContext = mock(CalendarSpecialistContextPort.class);
+        when(accounts.requireActive("specialist")).thenReturn(new CurrentAccount(specialistId, "specialist", ProfileType.SPECIALIST));
+        when(specialistContext.findSpecialist(specialistId)).thenReturn(Optional.of(
+                new CalendarSpecialistContextPort.SpecialistContext("UTC")));
+        Instant start = Instant.parse("2030-06-10T12:00:00Z");
+        Instant end = start.plusSeconds(3600);
+        when(availability.windows(specialistId, start.atZone(ZoneOffset.UTC).toLocalDate())).thenReturn(List.of(
+                new RecurringAvailabilityService.Window(start.minusSeconds(3600), end.plusSeconds(3600))));
+        when(repository.hasActiveOverlap(eq(specialistId), eq(start), eq(end), org.mockito.ArgumentMatchers.any(UUID.class)))
+                .thenReturn(true);
+        AppointmentService service = new AppointmentService(repository, mock(AppointmentEventRepository.class),
+                mock(AppointmentIdempotencyRepository.class), accounts, specialistContext, availability,
+                mock(AuditRecorder.class), Clock.fixed(Instant.parse("2030-06-01T00:00:00Z"), ZoneOffset.UTC));
+        AppointmentService.CreateCommand command = new AppointmentService.CreateCommand(participantId, start, end,
+                Appointment.Type.CONSULTATION, Appointment.LocationMode.REMOTE, null, null);
+        assertThatThrownBy(() -> service.create("specialist", "create-key", command))
+                .isInstanceOf(ResponseStatusException.class).hasMessageContaining("overlaps");
+        verify(repository, never()).saveAndFlush(org.mockito.ArgumentMatchers.any(Appointment.class));
+    }
+
     @Test
     void rejects_create_and_update_outside_configured_availability_before_collision_checks() {
         UUID specialistId = UUID.randomUUID();

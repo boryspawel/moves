@@ -282,7 +282,7 @@ public class AppointmentService implements SpecialistAppointmentQueryPort, Speci
         return events.findLatestEventId(appointmentId, org.springframework.data.domain.PageRequest.of(0, 1)).stream().findFirst().orElse(null);
     }
     private void conflictIfOverlapping(UUID specialist, Instant start, Instant end, UUID excluded) {
-        if (appointments.hasActiveOverlap(specialist, start, end, excluded)) conflict("appointment overlaps an existing appointment");
+        if (appointments.hasActiveOverlap(specialist, start, end, excluded)) throw conflict("appointment overlaps an existing appointment");
     }
     private void requireWithinAvailability(UUID specialist, Instant start, Instant end) {
         ZoneId zone = specialistContext.findSpecialist(specialist)
