@@ -15,6 +15,8 @@ import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
 import org.springframework.data.jpa.repository.JpaRepository;
+import java.sql.Connection;
+import java.sql.ResultSet;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.junit.jupiter.api.Test;
@@ -205,6 +207,25 @@ class ModuleBoundaryTest {
     private static class ForbiddenJdbcTemplateFixture {
         private JdbcTemplate template;
         private NamedParameterJdbcTemplate namedTemplate;
+    }
+
+    private static final ArchRule NO_DIRECT_JDBC_API = noClasses()
+            .should().dependOnClassesThat().resideInAnyPackage("java.sql..");
+
+    @Test
+    void productionClassesDoNotDependOnRawJavaSqlApi() {
+        NO_DIRECT_JDBC_API.check(productionClasses);
+
+        JavaClasses forbidden = new ClassFileImporter().importClasses(ForbiddenJdbcApiFixture.class);
+        assertThatThrownBy(() -> NO_DIRECT_JDBC_API.check(forbidden))
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining("java.sql.Connection")
+                .hasMessageContaining("java.sql.ResultSet");
+    }
+
+    private static class ForbiddenJdbcApiFixture {
+        private Connection connection;
+        private ResultSet resultSet;
     }
 
     @Test
