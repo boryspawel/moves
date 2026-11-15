@@ -78,7 +78,6 @@ class OperationalViewModel(
     val selection = mutableSelection.asStateFlow()
     private var generation = 0
 
-    private fun selectedParticipantId(): UUID? =
     /** Invalidate all cached data before checking the server profile again (e.g. app resume).
      * S01/S03 use the server profile role; selecting an arbitrary local role is not an access grant.
      */
@@ -100,6 +99,7 @@ class OperationalViewModel(
         }
     }
 
+    private fun selectedParticipantId(): UUID? =
         (mutableSelection.value as? ContextSelection.Participant)?.participantId
 
     fun selectParticipant(id: UUID) {
@@ -282,9 +282,6 @@ class OperationalViewModel(
         }
         repository.worklist(context, purpose)
     }
-
-    /** Switching professional context also invalidates projections from the previous context. */
-    fun clearWorklist() = clear()
 
     fun clear() {
         generation++
