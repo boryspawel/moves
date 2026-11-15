@@ -132,7 +132,7 @@ class OperationalViewModel(
                         if (selectedAppointment()?.participantId == null) {
                             mutableSelection.value = selected.copy(participantId = detail.participantId)
                         }
-                        if (detail.status == AppointmentStatus.IN_PROGRESS) {
+                        if (detail.status !in setOf(AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED)) {
                             pendingStart = null
                             mutableAppointmentStart.value = AppointmentStartState.IDLE
                         }
@@ -174,8 +174,9 @@ class OperationalViewModel(
             when (result) {
                 is RemoteResult.Success -> {
                     val started = result.value
-                    if (started.appointmentId != id || started.participantId != participantId ||
-                        started.status != AppointmentStatus.IN_PROGRESS) {
+                    // An idempotent replay returns the *current* server snapshot, which may
+                    // already be COMPLETED if another client closed the appointment meanwhile.
+                    if (started.appointmentId != id || started.participantId != participantId) {
                         clear()
                         mutableProfessionalContext.value = ReadState.Forbidden
                     } else {
