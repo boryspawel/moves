@@ -5,6 +5,8 @@ import java.time.OffsetDateTime
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import okhttp3.OkHttpClient
@@ -114,7 +116,7 @@ class MovesApiTest {
         assertEquals("Bearer access", post.headers["Authorization"])
         val body1 = post.body!!.utf8()
         assertTrue(body1.contains("\"participantId\":\"$participant\""))
-        assertTrue(body1.contains("\"startsAt\":\"2026-11-18T09:00:00Z\""))
+        assertEquals(start, OffsetDateTime.parse(Json.parseToJsonElement(body1).jsonObject["startsAt"]!!.jsonPrimitive.content))
         assertFalse(body1.contains("\"version\""))
         val key2 = UUID.randomUUID().toString()
         assertEquals(1L, api.updateAppointment(appointment, key2, command.copy(version = 0)).body()?.version)
