@@ -16,6 +16,9 @@ interface SpecialistRepository {
     suspend fun createClient(command: ClientCommand, idempotencyKey: String): RemoteResult<ClientView>
     suspend fun workspace(participantId: java.util.UUID): RemoteResult<WorkspaceView>
     suspend fun timeline(participantId: java.util.UUID, cursor: String? = null, from: String? = null, to: String? = null): RemoteResult<TimelinePage>
+    suspend fun appointment(id: java.util.UUID): RemoteResult<AppointmentView>
+    /** No automatic retries: a failed POST may have been committed remotely. */
+    suspend fun startAppointment(id: java.util.UUID, version: Long, key: String): RemoteResult<AppointmentView>
     suspend fun worklist(context: ActingContext, purpose: WorklistPurpose): RemoteResult<List<WorklistItemView>>
 }
 
@@ -30,6 +33,9 @@ class NetworkSpecialistRepository(private val api: MovesApi, private val calls: 
     override suspend fun workspace(participantId: java.util.UUID) = read { api.workspace(participantId) }
     override suspend fun timeline(participantId: java.util.UUID, cursor: String?, from: String?, to: String?) =
         read { api.timeline(participantId, cursor = cursor, from = from, to = to) }
+    override suspend fun appointment(id: java.util.UUID) = read { api.appointment(id) }
+    override suspend fun startAppointment(id: java.util.UUID, version: Long, key: String): RemoteResult<AppointmentView> =
+        withContext(Dispatchers.IO) { calls.execute { api.startAppointment(id, key, AppointmentVersionCommand(version)) } }
     override suspend fun worklist(context: ActingContext, purpose: WorklistPurpose) =
         read { api.worklist(context, purpose) }
 

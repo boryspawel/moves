@@ -39,6 +39,9 @@ sealed interface CreateClientState {
     data class Failed(val message: String) : CreateClientState
 }
 
+/** Manual retry after an uncertain START reuses exactly the same request key and version. */
+enum class AppointmentStartState { IDLE, SAVING, UNCERTAIN, CONFLICT, FAILED }
+
 sealed interface ContextSelection {
     data class Participant(val participantId: UUID) : ContextSelection
     data class Appointment(val participantId: UUID?, val appointmentId: UUID) : ContextSelection
@@ -74,6 +77,15 @@ class OperationalViewModel(
     private var workspaceRequest = 0
     private var timelineRequest = 0
 
+    private val mutableAppointment = MutableStateFlow<ReadState<AppointmentView>>(ReadState.Idle)
+    val appointment = mutableAppointment.asStateFlow()
+    private val mutableAppointmentStart = MutableStateFlow(AppointmentStartState.IDLE)
+    val appointmentStart = mutableAppointmentStart.asStateFlow()
+    private data class PendingStart(val id: UUID, val participantId: UUID, val version: Long, val key: String)
+    private var pendingStart: PendingStart? = null
+    private var appointmentRequest = 0
+    private var startRequest = 0
+
     private val mutableSelection = MutableStateFlow<ContextSelection?>(null)
     val selection = mutableSelection.asStateFlow()
     private var generation = 0
@@ -99,17 +111,120 @@ class OperationalViewModel(
         }
     }
 
+    private fun selectedAppointment(): ContextSelection.Appointment? =
+        mutableSelection.value as? ContextSelection.Appointment
+
+    /** Re-fetch on every entry and after a 409; never trust the agenda snapshot as a mutation grant. */
+    fun loadAppointment(id: UUID) {
+        val selected = selectedAppointment()?.takeIf { it.appointmentId == id } ?: return
+        if (mutableAppointmentStart.value == AppointmentStartState.SAVING) return
+        val requestId = ++appointmentRequest
+        read(mutableAppointment, skipIfLoading = false,
+            isCurrent = { requestId == appointmentRequest && selectedAppointment()?.appointmentId == id }) {
+            when (val response = repository.appointment(id)) {
+                is RemoteResult.Failure -> response
+                is RemoteResult.Success -> {
+                    val detail = response.value
+                    if (detail.appointmentId != id || detail.participantId == null ||
+                        (selected.participantId != null && selected.participantId != detail.participantId)) {
+                        RemoteResult.Failure(RemoteError.Forbidden)
+                    } else {
+                        if (selectedAppointment()?.participantId == null) {
+                            mutableSelection.value = selected.copy(participantId = detail.participantId)
+                        }
+                        if (detail.status == AppointmentStatus.IN_PROGRESS) {
+                            pendingStart = null
+                            mutableAppointmentStart.value = AppointmentStartState.IDLE
+                        }
+                        RemoteResult.Success(detail)
+                    }
+                }
+            }
+        }
+    }
+
+    /** Single POST per click. On uncertain outcome only an explicit retry sends the same command. */
+    fun startAppointment(id: UUID) {
+        val selected = selectedAppointment()?.takeIf { it.appointmentId == id } ?: return
+        val detail = (mutableAppointment.value as? ReadState.Ready)?.value ?: return
+        val participantId = detail.participantId ?: return
+        val version = detail.version ?: return
+        if (selected.participantId != null && selected.participantId != participantId) return
+        if (detail.appointmentId != id || detail.status !in setOf(AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED)
+            || !detail.availableActions.orEmpty().contains("START") ||
+            mutableAppointmentStart.value == AppointmentStartState.SAVING) return
+        val command = pendingStart?.takeIf {
+            it.id == id && it.participantId == participantId && it.version == version
+        } ?: PendingStart(id, participantId, version, UUID.randomUUID().toString())
+        pendingStart = command
+        val currentGeneration = generation
+        val requestId = ++startRequest
+        appointmentRequest++ // Ignore a GET started before this mutation.
+        mutableAppointmentStart.value = AppointmentStartState.SAVING
+        viewModelScope.launch {
+            if (freshToken().isNullOrBlank()) {
+                if (generation == currentGeneration && startRequest == requestId) {
+                    clear()
+                    invalidateSession()
+                }
+                return@launch
+            }
+            val result = repository.startAppointment(id, command.version, command.key)
+            if (currentGeneration != generation || requestId != startRequest || selectedAppointment()?.appointmentId != id) return@launch
+            when (result) {
+                is RemoteResult.Success -> {
+                    val started = result.value
+                    if (started.appointmentId != id || started.participantId != participantId ||
+                        started.status != AppointmentStatus.IN_PROGRESS) {
+                        clear()
+                        mutableProfessionalContext.value = ReadState.Forbidden
+                    } else {
+                        pendingStart = null
+                        mutableAppointmentStart.value = AppointmentStartState.IDLE
+                        mutableAppointment.value = ReadState.Ready(started)
+                        loadToday()
+                    }
+                }
+                is RemoteResult.Failure -> when (val error = result.error) {
+                    RemoteError.Unauthorized -> { clear(); invalidateSession() }
+                    RemoteError.Forbidden -> { clear(); mutableProfessionalContext.value = ReadState.Forbidden }
+                    RemoteError.Conflict -> {
+                        pendingStart = null
+                        mutableAppointmentStart.value = AppointmentStartState.CONFLICT
+                        loadAppointment(id)
+                    }
+                    is RemoteError.Network, is RemoteError.Serialization ->
+                        mutableAppointmentStart.value = AppointmentStartState.UNCERTAIN
+                    is RemoteError.Http -> {
+                        if (error.status >= 500) mutableAppointmentStart.value = AppointmentStartState.UNCERTAIN
+                        else { pendingStart = null; mutableAppointmentStart.value = AppointmentStartState.FAILED }
+                    }
+                }
+            }
+        }
+    }
+
     private fun selectedParticipantId(): UUID? =
         (mutableSelection.value as? ContextSelection.Participant)?.participantId
 
     fun selectParticipant(id: UUID) {
+        resetAppointmentReads()
         resetParticipantReads()
         mutableSelection.value = ContextSelection.Participant(id)
     }
 
     fun selectAppointment(participantId: UUID?, appointmentId: UUID) {
+        resetAppointmentReads()
         resetParticipantReads()
         mutableSelection.value = ContextSelection.Appointment(participantId, appointmentId)
+    }
+
+    private fun resetAppointmentReads() {
+        appointmentRequest++
+        startRequest++
+        pendingStart = null
+        mutableAppointment.value = ReadState.Idle
+        mutableAppointmentStart.value = AppointmentStartState.IDLE
     }
 
     private fun resetParticipantReads() {
@@ -292,6 +407,7 @@ class OperationalViewModel(
         todayRequest++
         clientRequest++
         resetParticipantReads()
+        resetAppointmentReads()
         mutableClients.value = ReadState.Idle
         mutableCreateClient.value = CreateClientState.Idle
         mutableRequestedDate.value = null

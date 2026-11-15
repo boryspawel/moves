@@ -91,6 +91,33 @@ class MovesApiTest {
         assertTrue(request.body?.utf8()?.contains("Anna") == true)
     }
 
+    @Test fun appointmentDetailAndStartUseVersionedBearerContractAndOnePost() = runBlocking {
+        val id = UUID.randomUUID()
+        val participantId = UUID.randomUUID()
+        val detail = """{"appointmentId":"$id","participantId":"$participantId","status":"SCHEDULED","version":4,"availableActions":["START"],"shortPurpose":"Konsultacja"}"""
+        val started = """{"appointmentId":"$id","participantId":"$participantId","status":"IN_PROGRESS","version":5,"availableActions":["COMPLETE"]}"""
+        server.enqueue(MockResponse.Builder().body(detail).addHeader("Content-Type", "application/json").build())
+        server.enqueue(MockResponse.Builder().body(started).addHeader("Content-Type", "application/json").build())
+        val api = createMovesApi(server.url("/").toString(), TokenProvider { "access-token" })
+        val current = api.appointment(id).body()
+        assertEquals(4L, current?.version)
+        assertEquals("Konsultacja", current?.shortPurpose)
+        val get = server.takeRequest()
+        assertEquals("GET", get.method)
+        assertEquals("/api/v1/specialist/appointments/$id", get.url.encodedPath)
+        assertEquals("Bearer access-token", get.headers["Authorization"])
+        assertEquals(null, get.headers["Idempotency-Key"])
+        val key = UUID.randomUUID().toString()
+        val updated = api.startAppointment(id, key, AppointmentVersionCommand(current!!.version!!)).body()
+        assertEquals(AppointmentStatus.IN_PROGRESS, updated?.status)
+        val post = server.takeRequest()
+        assertEquals("POST", post.method)
+        assertEquals("/api/v1/specialist/appointments/$id/start", post.url.encodedPath)
+        assertEquals("Bearer access-token", post.headers["Authorization"])
+        assertEquals(key, post.headers["Idempotency-Key"])
+        assertEquals("""{"version":4}""", post.body?.utf8())
+    }
+
     @Test fun onboardingReadsActualServerSpecialistKindWithoutAClientRoleOverride() = runBlocking {
         server.enqueue(MockResponse.Builder().body(
             """{"stage":"READY","profileType":"SPECIALIST","profile":{"specialistKind":"PHYSIOTHERAPIST"},"availability":[]}"""
