@@ -101,6 +101,15 @@ fun MovesNavigation(viewModel: OperationalViewModel, readiness: ReadinessState, 
                         onSchedule = {
                             viewModel.openNewSchedule(selected.participantId)
                             navigation.navigate(SCHEDULE_ROUTE)
+                        },
+                        onDocumentation = {
+                            val participant = verifiedDocumentationParticipant(
+                                viewModel.selection.value, viewModel.appointment.value, viewModel.workspace.value
+                            )
+                            if (participant == selected.participantId) {
+                                viewModel.prepareParticipantDocumentationStage()
+                                navigation.navigate(VisitStage.DOCUMENTATION.route)
+                            }
                         }
                     )
                     else -> Column(Modifier.padding(20.dp)) {
@@ -124,6 +133,14 @@ fun MovesNavigation(viewModel: OperationalViewModel, readiness: ReadinessState, 
                         onEdit = {
                             if (viewModel.openEditSchedule()) navigation.navigate(SCHEDULE_ROUTE)
                         },
+                        onStage = { stage ->
+                            val visit = verifiedVisit(viewModel.selection.value, viewModel.appointment.value)
+                            if (visit != null && canOpenVisitStage(stage, visit) &&
+                                viewModel.appointmentStart.value != AppointmentStartState.SAVING) {
+                                viewModel.prepareVisitStage()
+                                navigation.navigate(stage.route) { launchSingleTop = true }
+                            }
+                        },
                         onBack = {
                             if (navigation.previousBackStackEntry?.destination?.route == CONTEXT_ROUTE) {
                                 selected.participantId?.let(viewModel::selectParticipant)
@@ -131,6 +148,11 @@ fun MovesNavigation(viewModel: OperationalViewModel, readiness: ReadinessState, 
                             navigation.popBackStack()
                         }
                     )
+                }
+            }
+            VisitStage.entries.forEach { stage ->
+                composable(stage.route) {
+                    VisitStageSection(viewModel, stage, onBack = { navigation.popBackStack() })
                 }
             }
             composable(SCHEDULE_ROUTE) {
@@ -158,6 +180,39 @@ fun MovesNavigation(viewModel: OperationalViewModel, readiness: ReadinessState, 
             }
         }
     }
+}
+
+@Composable
+private fun VisitStageSection(
+    viewModel: OperationalViewModel,
+    stage: VisitStage,
+    onBack: () -> Unit
+) {
+    val selection by viewModel.selection.collectAsStateWithLifecycle()
+    val appointment by viewModel.appointment.collectAsStateWithLifecycle()
+    val workspace by viewModel.workspace.collectAsStateWithLifecycle()
+    LaunchedEffect(stage, selection) {
+        when (val current = selection) {
+            is ContextSelection.Appointment -> viewModel.loadAppointment(current.appointmentId)
+            is ContextSelection.Participant -> if (stage == VisitStage.DOCUMENTATION) {
+                viewModel.loadWorkspace(current.participantId)
+            }
+            null -> Unit
+        }
+    }
+    val refresh = {
+        when (val current = viewModel.selection.value) {
+            is ContextSelection.Appointment -> viewModel.loadAppointment(current.appointmentId)
+            is ContextSelection.Participant -> if (stage == VisitStage.DOCUMENTATION) {
+                viewModel.loadWorkspace(current.participantId)
+            }
+            null -> Unit
+        }
+    }
+    VisitStageScreen(
+        stage = stage, selection = selection, appointment = appointment, workspace = workspace,
+        onRefresh = refresh, onBack = onBack
+    )
 }
 
 @Composable
@@ -194,6 +249,7 @@ private fun AppointmentSection(
     viewModel: OperationalViewModel,
     appointmentId: java.util.UUID,
     onEdit: () -> Unit,
+    onStage: (VisitStage) -> Unit,
     onBack: () -> Unit
 ) {
     val appointment by viewModel.appointment.collectAsStateWithLifecycle()
@@ -216,6 +272,9 @@ private fun AppointmentSection(
         onRefresh = { viewModel.loadAppointment(appointmentId) },
         onStart = { viewModel.startAppointment(appointmentId) },
         onEdit = onEdit,
+        onExecution = { onStage(VisitStage.EXECUTION) },
+        onDocumentation = { onStage(VisitStage.DOCUMENTATION) },
+        onCloseout = { onStage(VisitStage.CLOSEOUT) },
         onBack = onBack
     )
 }
@@ -226,7 +285,8 @@ private fun ParticipantWorkspaceSection(
     participantId: java.util.UUID,
     onBack: () -> Unit,
     onAppointment: (java.util.UUID) -> Unit,
-    onSchedule: () -> Unit
+    onSchedule: () -> Unit,
+    onDocumentation: () -> Unit
 ) {
     val workspace by viewModel.workspace.collectAsStateWithLifecycle()
     val timeline by viewModel.timeline.collectAsStateWithLifecycle()
@@ -246,6 +306,7 @@ private fun ParticipantWorkspaceSection(
         onMoreTimeline = { viewModel.loadMoreTimeline(participantId) },
         onOpenAppointment = onAppointment,
         onSchedule = onSchedule,
+        onDocumentation = onDocumentation,
         onBack = onBack
     )
 }

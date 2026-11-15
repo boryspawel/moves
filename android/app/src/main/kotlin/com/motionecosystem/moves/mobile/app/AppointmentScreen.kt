@@ -48,6 +48,9 @@ internal fun AppointmentScreen(
     onRefresh: () -> Unit,
     onStart: () -> Unit,
     onEdit: () -> Unit,
+    onExecution: () -> Unit,
+    onDocumentation: () -> Unit,
+    onCloseout: () -> Unit,
     onBack: () -> Unit
 ) {
     Column(Modifier.fillMaxSize()) {
@@ -135,13 +138,38 @@ internal fun AppointmentScreen(
                 }
                 HorizontalDivider()
                 Text("Przebieg spotkania", style = MaterialTheme.typography.titleLarge)
-                Text(
-                    if (item.plannedSessionId != null) "Realizacja powiązanej sesji — kolejny etap."
-                    else "Brak powiązanej sesji do realizacji.",
-                    style = MaterialTheme.typography.bodyMedium
+                val visit = VerifiedVisit(
+                    appointmentId = item.appointmentId ?: return@ReadPanel,
+                    participantId = item.participantId ?: return@ReadPanel,
+                    plannedSessionId = item.plannedSessionId,
+                    status = item.status ?: return@ReadPanel
                 )
-                Text("Dokumentacja i zakończenie spotkania zostaną podłączone w kolejnych etapach.",
-                    style = MaterialTheme.typography.bodyMedium)
+                if (canOpenVisitStage(VisitStage.EXECUTION, visit)) {
+                    OutlinedButton(onClick = onExecution, enabled = startState != AppointmentStartState.SAVING,
+                        modifier = Modifier.fillMaxWidth()) {
+                        Text("Realizacja sesji")
+                    }
+                } else {
+                    Text(if (item.plannedSessionId == null) "Brak powiązanej sesji ćwiczeń."
+                        else "Realizacja dostępna po rozpoczęciu spotkania.",
+                        style = MaterialTheme.typography.bodyMedium)
+                }
+                if (canOpenVisitStage(VisitStage.DOCUMENTATION, visit)) {
+                    OutlinedButton(onClick = onDocumentation,
+                        enabled = startState != AppointmentStartState.SAVING,
+                        modifier = Modifier.fillMaxWidth()) {
+                        Text("Dokumentacja")
+                    }
+                }
+                if (canOpenVisitStage(VisitStage.CLOSEOUT, visit)) {
+                    OutlinedButton(onClick = onCloseout,
+                        enabled = startState != AppointmentStartState.SAVING,
+                        modifier = Modifier.fillMaxWidth()) {
+                        Text("Przejdź do zakończenia")
+                    }
+                }
+                Text("Ekrany realizacji, dokumentacji i zakończenia nie zapisują jeszcze danych.",
+                    style = MaterialTheme.typography.bodySmall)
             }
         }
     }

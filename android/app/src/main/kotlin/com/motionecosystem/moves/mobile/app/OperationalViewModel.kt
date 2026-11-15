@@ -378,6 +378,20 @@ class OperationalViewModel(
         mutableScheduleSave.value = ScheduleSaveState.Idle
     }
 
+    /** Drop authorized snapshots synchronously before pushing a child route.
+     * The destination MUST perform a new GET, and no prior response may paint a frame.
+     */
+    fun prepareVisitStage() {
+        if (selectedAppointment() == null || mutableAppointmentStart.value == AppointmentStartState.SAVING) return
+        appointmentRequest++
+        mutableAppointment.value = ReadState.Idle
+    }
+
+    fun prepareParticipantDocumentationStage() {
+        if (selectedParticipantId() == null) return
+        resetParticipantReads()
+    }
+
     private fun selectedParticipantId(): UUID? =
         (mutableSelection.value as? ContextSelection.Participant)?.participantId
 
