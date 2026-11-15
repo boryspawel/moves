@@ -36,6 +36,42 @@ class MovesApiTest {
         assertEquals(null, Json.decodeFromString(ActiveParticipantView.serializer(), "{}" ).label)
     }
 
+    @Test fun workspaceAndTimelineUseAuthorizedReadRoutesAndExcludeMeasurementTimelineType() = runBlocking {
+        val participantId = UUID.randomUUID()
+        server.enqueue(MockResponse.Builder()
+            .body("""{"participant":{"participantId":"$participantId","displayName":"Anna","timeZoneId":"Europe/Warsaw"},"goals":[{"title":"Cel A","status":"ACTIVE","latestValue":999}],"recentMeasurements":[{"label":"private","value":55}],"activePlan":{"name":"Plan podstawowy","status":"ACTIVE"}}""")
+            .addHeader("Content-Type", "application/json").build())
+        server.enqueue(MockResponse.Builder()
+            .body("""{"items":[{"eventId":"appointment-event:1","category":"APPOINTMENT","effectiveFrom":"2026-11-15T12:00:00Z","summary":"sensitive text"}],"nextCursor":"cursor-2","from":"2026-11-01T00:00:00Z","to":"2026-11-15T20:00:00Z"}""")
+            .addHeader("Content-Type", "application/json").build())
+        val api = createMovesApi(server.url("/").toString(), TokenProvider { "access-token" })
+        val workspace = api.workspace(participantId).body()
+        assertEquals("Anna", workspace?.participant?.displayName)
+        assertEquals("Cel A", workspace?.goals?.single()?.title)
+        assertEquals("Plan podstawowy", workspace?.activePlan?.name)
+        val workspaceRequest = server.takeRequest()
+        assertEquals("/api/v1/specialist/participants/$participantId/workspace", workspaceRequest.url.encodedPath)
+        assertEquals("Bearer access-token", workspaceRequest.headers["Authorization"])
+
+        val history = api.timeline(
+            participantId,
+            cursor = "cursor-1",
+            from = "2026-11-01T00:00:00Z",
+            to = "2026-11-15T20:00:00Z"
+        ).body()
+        assertEquals("cursor-2", history?.nextCursor)
+        assertEquals("APPOINTMENT", history?.items?.single()?.category)
+        val historyRequest = server.takeRequest()
+        assertEquals("/api/v1/specialist/participants/$participantId/timeline", historyRequest.url.encodedPath)
+        assertEquals(MOBILE_TIMELINE_TYPES, historyRequest.url.queryParameter("types"))
+        assertFalse(MOBILE_TIMELINE_TYPES.contains("MEASUREMENT"))
+        assertEquals("DETAIL", historyRequest.url.queryParameter("granularity"))
+        assertEquals("20", historyRequest.url.queryParameter("limit"))
+        assertEquals("cursor-1", historyRequest.url.queryParameter("cursor"))
+        assertEquals("2026-11-01T00:00:00Z", historyRequest.url.queryParameter("from"))
+        assertEquals("2026-11-15T20:00:00Z", historyRequest.url.queryParameter("to"))
+    }
+
     @Test fun specialistClientCreationSendsOneIdempotentPostAndReadsAccountFreeRecord() = runBlocking {
         val id = UUID.randomUUID()
         server.enqueue(MockResponse.Builder()
