@@ -406,6 +406,29 @@ class OperationalViewModelTest {
         } finally { Dispatchers.resetMain() }
     }
 
+    @Test fun visitStageRecheckDeniesAccessAndClearsSelectionAfterRevocation() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = StubRepository()
+            val participant = UUID.randomUUID()
+            val appointment = UUID.randomUUID()
+            repository.appointmentValue = AppointmentView(appointment, participantId = participant,
+                status = AppointmentStatus.IN_PROGRESS, plannedSessionId = UUID.randomUUID())
+            val vm = OperationalViewModel(repository, { "token" }, {})
+            vm.selectAppointment(participant, appointment)
+            vm.loadAppointment(appointment)
+            advanceUntilIdle()
+            assertNotNull(verifiedVisit(vm.selection.value, vm.appointment.value))
+            // Navigating into a visit stage re-fetches the appointment instead of trusting S05's snapshot.
+            repository.pendingAppointment = CompletableDeferred(RemoteResult.Failure(RemoteError.Forbidden))
+            vm.loadAppointment(appointment)
+            advanceUntilIdle()
+            assertNull(vm.selection.value)
+            assertNull(verifiedVisit(vm.selection.value, vm.appointment.value))
+            assertEquals(ReadState.Forbidden, vm.professionalContext.value)
+        } finally { Dispatchers.resetMain() }
+    }
+
     private class StubRepository : SpecialistRepository {
         var onboardingResult: RemoteResult<MobileOnboardingState> = RemoteResult.Success(
             MobileOnboardingState(stage = "READY", profileType = "SPECIALIST",

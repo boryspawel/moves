@@ -49,7 +49,7 @@ M1 wymaga M0; M2 wymaga M1; M3 i M4 można częściowo rozwijać równolegle po 
 
 - **MOB-030 (kod wykonany)** S05: autoryzowany kontekst wizyty, serwerowy stan lifecycle, rozpoczęcie z wersją i idempotencją, ponowne otwarcie wizyty w toku.
 - **MOB-031 (kod wykonany)** Dodanie/zmiana terminu w Androidzie, wolne sloty z Today, optimistic version, Idempotency-Key i obsługa 409.
-- **MOB-032** Nawigacja do dokumentacji/realizacji i closeout bez utraty participantId; nie udostępniać S08 pomiarów.
+- **MOB-032 (kod wykonany)** Kontekstowe przejścia S05 → S06/S07/S09 oraz S03 → S07; ponowna autoryzacja kontekstu, bez utraty participantId. Bez pobierania pomiarów S08.
 
 ### M4 — dokumentacja
 
@@ -156,3 +156,11 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 - Jeden POST/PUT na próbę i brak automatycznych ponowień. Przy niepewnej odpowiedzi świadomy retry niezmienionego payloadu używa tego samego klucza; zmiana formularza generuje nowy klucz. `409`: nie ponawiać automatycznie, pobrać nowe sloty i — dla PUT — ponownie GET szczegółów wraz z wersją. `401`: logout; `403`: wyczyszczenie projekcji i zamknięcie dostępu.
 - Po zapisie odświeżane są Dzień i lista kartotek, a użytkownik przechodzi do S05 nowego/zmienionego terminu. Dane formularza pozostają w RAM. Obsługa anulowania, powiadomień i planowania cyklicznego nie należy do MOB-031.
 - Walidacja: wąskie testy HTTP POST/PUT (nagłówki, payload, version), ViewModel idempotencji, 409 i izolacji asynchronicznej, reguły slotów oraz jeden test backendu z kolizją. Wymagane jeszcze sprawdzenie na Motoroli.
+
+## MOB-032 — nawigacja kontekstowa spotkania (2026-11-15)
+
+- S05 otwiera osobne trasy S06 **Realizacja sesji**, S07 **Dokumentacja** i S09 **Zakończenie**. S03 umożliwia również przejście do S07 bez powiązanej wizyty. Back wraca na dokładnie poprzedni ekran, nie zmienia statusu spotkania ani identyfikatora uczestnika; żadnych UUID nie umieszczono w ścieżkach nawigacji lub tekstach interfejsu.
+- Identyfikatory `appointmentId` i `participantId` są przechowywane wyłącznie w RAM, w `ContextSelection`. Przejście S05 → podstrona nie wywołuje `selectParticipant` ani `selectAppointment`; przed pokazaniem podstrony następuje ponowny, autoryzowany GET wizyty. Przy wejściu z S03 ponownie pobierana jest kartoteka. Identyfikatory wyniku muszą odpowiadać bieżącemu wyborowi, w przeciwnym razie ekran jest ukryty; 401/403 czyści RAM zgodnie z MOB-024.
+- Realizacja wymaga `status=IN_PROGRESS` i powiązanej sesji; zakończenie wymaga `status=IN_PROGRESS`. Dokumentacja z S05 nie otwiera się dla odwołanych lub nieodbytych wizyt. Są to ograniczenia nawigacji, nie zamiennik serwerowych warunków zapisów.
+- S06, S07 i S09 są na tym etapie **tylko nieedytowalnymi powłokami nawigacyjnymi**, jasno oznaczonymi jako oczekujące na odpowiednio MOB-050, MOB-040/041 oraz MOB-051. Nie wykonują operacji zapisujących. **Nie wywołano** `closeout-context`, ponieważ backend przesyła w nim także pomiary; brak jakichkolwiek endpointów S08. Właściwe odczyty dokumentacji/realizacji oraz walidacja `canComplete` pozostają odrębnymi zadaniami.
+- Walidacja: skoncentrowane testy identyfikacji kontekstu, wyłączania nieuprawnionych tras, wejścia z kartoteki oraz ponownego GET i cofnięcia uprawnienia. Odbiór przycisków/back na Motoroli pozostaje otwarty.

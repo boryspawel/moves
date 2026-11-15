@@ -1,6 +1,6 @@
 # Moves Mobile — aplikacja Android dla specjalisty
 
-**Status:** M2 S01/S02/S03 i MOB-024 zaimplementowane; S04 odroczony. M3: MOB-030 Spotkanie i MOB-031 planowanie/zmiana terminu.  Odbiór na Motoroli i serwerowa kontrola odczytu pomiarów pozostają otwarte. **Data:** 2026-11-15.
+**Status:** M2 S01/S02/S03 i MOB-024 zaimplementowane; S04 odroczony. M3: MOB-030 Spotkanie, MOB-031 terminy i MOB-032 kontekstowe trasy S06/S07/S09 (bez zapisów).  Odbiór na Motoroli i serwerowa kontrola odczytu pomiarów pozostają otwarte. **Data:** 2026-11-15.
 
 ## Dokumentacja i prototyp
 
@@ -18,6 +18,7 @@
 - [MOB-024: aktualizacja uprawnień](04-implementation-plan.md): weryfikacja serwerowego profilu po resume, fail-closed na 403/offline i czyszczenie RAM; S04 odroczony.
 - [MOB-030: Spotkanie S05](04-implementation-plan.md#mob-030--s05-spotkanie-2026-11-15): autoryzowany odczyt, idempotentny start i wznowienie wizyty; następne etapy spotkania jeszcze niedostępne.
 - [MOB-031: terminy](04-implementation-plan.md): tworzenie z S01/S03 i zmiana z S05, dostępność i konflikty, idempotencja.
+- [MOB-032: kontekst wizyty](04-implementation-plan.md): S05 → S06/S07/S09 i S03 → S07, ponowne sprawdzanie dostępu; ekrany bez funkcji zapisu.
 - [Interaktywny prototyp dziewięciu ekranów](prototype/index.html) — demonstrator HTML z fikcyjnymi danymi, **bez backendu**, nie jest kodem produkcyjnym Androida.
 
 Prototyp jest samowystarczalnym plikiem HTML. Zrzuty PNG z sesji projektowej nie są załączane do repozytorium; komplet dziewięciu ekranów można otwierać przez menu prototypu.

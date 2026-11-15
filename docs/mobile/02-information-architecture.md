@@ -10,7 +10,7 @@
 - Kartoteka otwierana z Dnia lub Uczestników, zawsze z zachowaniem participantId; z następnego terminu kartoteki można przejść do S05.
 - Tworzenie terminu dostępne z Dnia i kartoteki; zmianę terminu otwiera S05 tylko, gdy backend zwróci `UPDATE` w `availableActions`.
 - **Spotkanie** nie jest czwartą zakładką: pełnoekranowy kontekst pracy, dostępny z terminu/kartoteki i możliwy do wznowienia.
-- Realizacja, dokumentacja i pomiary mogą być wykonywane w dowolnej kolejności; brak sztywnego kreatora.
+- Docelowo realizacja i dokumentacja mogą być wykonywane w dowolnej kolejności; brak sztywnego kreatora. S06/S07/S09 mają w MOB-032 bezpieczne, nieedytowalne trasy; ich funkcje biznesowe powstaną w M4/M5. S08 pomiary pozostaje całkowicie niedostępny.
 - Krótkie akcje jako bottom sheets/dialogi, długie formularze (np. wywiad) jako osobne strony.
 - Back nie kończy spotkania ani nie usuwa szkiców; wyjście z niezapisanym formularzem wymaga świadomej decyzji.
 - Tablet/duży ekran: navigation rail, lista–szczegóły; wspierać rotację i powiększenie.
@@ -75,7 +75,7 @@ Każdy kontrakt powyżej należy zestawić z aktualnym web/openapi/openapi.json 
 - Na kartotece najpierw aktualna sytuacja; historia i szczegółowe dane są rozwijane progresywnie.
 - Brak technicznych UUID w etykietach, brak klinicznej treści w neutralnych alertach/timeline.
 - Stany: loading, empty, error, forbidden, offline, conflict i success.
-- Powrót do spotkania z zachowanym appointmentId; po restarcie ponowne pobranie aktualnego statusu z backendu.
+- Powrót do spotkania z zachowanymi appointmentId i participantId; na wejściu do S06/S07/S09 ponowny autoryzowany GET i weryfikacja obu identyfikatorów. Po restarcie ponowne pobranie aktualnego statusu z backendu.
 - Wykonanie (actual) i planowane dawki (planned snapshot) mają odrębną prezentację.
 
 ## Ograniczenie M0

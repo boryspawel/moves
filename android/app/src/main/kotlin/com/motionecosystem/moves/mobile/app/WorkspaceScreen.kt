@@ -52,6 +52,7 @@ internal fun WorkspaceScreen(
     onMoreTimeline: () -> Unit,
     onOpenAppointment: (java.util.UUID) -> Unit,
     onSchedule: () -> Unit,
+    onDocumentation: () -> Unit,
     onBack: () -> Unit
 ) {
     Column(Modifier.fillMaxSize()) {
@@ -80,8 +81,11 @@ internal fun WorkspaceScreen(
                     }
                 }
                 item {
-                    OutlinedButton(onClick = onSchedule, modifier = Modifier.fillMaxWidth()) {
-                        Text("Umów spotkanie")
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = onSchedule) { Text("Umów spotkanie") }
+                        if (data.participant?.participantId != null) {
+                            OutlinedButton(onClick = onDocumentation) { Text("Dokumentacja") }
+                        }
                     }
                 }
                 item {
