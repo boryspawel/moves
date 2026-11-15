@@ -8,6 +8,7 @@ import java.time.LocalDate
 
 interface SpecialistRepository {
     suspend fun identity(): RemoteResult<IdentityResponse>
+    suspend fun onboarding(): RemoteResult<MobileOnboardingState>
     suspend fun today(date: LocalDate? = null): RemoteResult<TodayView>
     suspend fun participants(): RemoteResult<List<ActiveParticipantView>>
     suspend fun clients(): RemoteResult<List<ClientView>>
@@ -20,6 +21,7 @@ interface SpecialistRepository {
 
 class NetworkSpecialistRepository(private val api: MovesApi, private val calls: RemoteCall) : SpecialistRepository {
     override suspend fun identity() = read { api.currentIdentity() }
+    override suspend fun onboarding() = read { api.onboarding() }
     override suspend fun today(date: LocalDate?) = read { api.today(date?.toString()) }
     override suspend fun participants() = read { api.activeParticipants() }
     override suspend fun clients() = read { api.clients() }

@@ -51,6 +51,9 @@ class OperationalViewModel(
     private val invalidateSession: () -> Unit
 ) : ViewModel() {
     private val mutableToday = MutableStateFlow<ReadState<TodayView>>(ReadState.Idle)
+    private val mutableProfessionalContext = MutableStateFlow<ReadState<ActingContext>>(ReadState.Idle)
+    val professionalContext = mutableProfessionalContext.asStateFlow()
+    private var profileRequest = 0
     val today = mutableToday.asStateFlow()
     private val mutableRequestedDate = MutableStateFlow<LocalDate?>(null)
     val requestedDate = mutableRequestedDate.asStateFlow()
@@ -74,6 +77,27 @@ class OperationalViewModel(
     private val mutableSelection = MutableStateFlow<ContextSelection?>(null)
     val selection = mutableSelection.asStateFlow()
     private var generation = 0
+
+    /** Invalidate all cached data before checking the server profile again (e.g. app resume).
+     * S01/S03 use the server profile role; selecting an arbitrary local role is not an access grant.
+     */
+    fun revalidateAccess() {
+        clear()
+        val requestId = ++profileRequest
+        read(mutableProfessionalContext, skipIfLoading = false,
+            isCurrent = { requestId == profileRequest }) {
+            when (val result = repository.onboarding()) {
+                is RemoteResult.Success -> {
+                    val state = result.value
+                    val kind = state.profile?.specialistKind
+                    if (state.stage == "READY" && state.profileType == "SPECIALIST" && kind != null) {
+                        RemoteResult.Success(kind)
+                    } else RemoteResult.Failure(RemoteError.Forbidden)
+                }
+                is RemoteResult.Failure -> result
+            }
+        }
+    }
 
     private fun selectedParticipantId(): UUID? =
         (mutableSelection.value as? ContextSelection.Participant)?.participantId
@@ -165,6 +189,7 @@ class OperationalViewModel(
                     }
                     RemoteError.Forbidden -> {
                         clear()
+                        mutableProfessionalContext.value = ReadState.Forbidden
                         ReadState.Forbidden
                     }
                     else -> ReadState.Ready(feed.copy(loadingMore = false, loadMoreFailed = true))
@@ -233,6 +258,7 @@ class OperationalViewModel(
                     }
                     RemoteError.Forbidden -> {
                         clear()
+                        mutableProfessionalContext.value = ReadState.Forbidden
                         mutableCreateClient.value = CreateClientState.Failed("Brak uprawnień do tworzenia kartotek.")
                     }
                     RemoteError.Conflict -> mutableCreateClient.value = CreateClientState.Failed(
@@ -259,11 +285,10 @@ class OperationalViewModel(
         repository.worklist(context, purpose)
     }
 
-    /** Switching professional context also invalidates projections from the previous context. */
-    fun clearWorklist() = clear()
-
     fun clear() {
         generation++
+        profileRequest++
+        mutableProfessionalContext.value = ReadState.Idle
         todayRequest++
         clientRequest++
         resetParticipantReads()
@@ -305,6 +330,7 @@ class OperationalViewModel(
                     }
                     RemoteError.Forbidden -> {
                         clear()
+                        mutableProfessionalContext.value = ReadState.Forbidden
                         ReadState.Forbidden
                     }
                     RemoteError.Conflict -> ReadState.Conflict

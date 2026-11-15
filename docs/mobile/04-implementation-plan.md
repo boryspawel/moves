@@ -8,7 +8,7 @@
 |---|---|---|
 | **M0 — kontrakty i ryzyka** | **Analiza statyczna API/OIDC/danych wykonana 2026-11-12**, bez implementacji | **częściowo**: brak klienta Android, logowania/emulatora i spike generatora; zob. 05-m0-assessment.md |
 | **M1 — fundament Android** | Kotlin/Compose, design tokens, nawigacja, auth, klient HTTP/OpenAPI, stany błędów | APK, bezpieczny login/logout, podstawowe smoke UI |
-| **M2 — czytanie i organizacja** | S01 Dzień, S02 Uczestnicy, S03 Kartoteka, S04 Sprawy | UJ-01, UJ-02, UJ-06; role, dostęp i klient bez konta |
+| **M2 — czytanie i organizacja** | S01 Dzień, S02 Uczestnicy, S03 Kartoteka; S04 odroczony | UJ-01, UJ-02, UJ-06; role, dostęp i klient bez konta |
 | **M3 — spotkanie** | S05, terminy i ich lifecycle, szybkie planowanie, wznowienie, 409/retry | rozpoczęty termin z backendem i poprawne konflikty |
 | **M4 — dokumentacja** | S07 Wywiady i notatki z informacji ustnych; serwerowe szkice/finalizacja; **S08 wstrzymany** | UJ-04 bez pomiarów; immutable finished, bez danych medycznych na dysku telefonu |
 | **M5 — zapis wykonania i closeout** | S06 fakty realizacji, S09 warunki i zakończenie | UJ-03, UJ-05; pełny end-to-end Dzień → Zamknięcie |
@@ -42,8 +42,8 @@ M1 wymaga M0; M2 wymaga M1; M3 i M4 można częściowo rozwijać równolegle po 
 - **MOB-020 (kod wykonany)** S01: Today, agenda, aktualne/przyszłe terminy i minimalne sprawy; odbiór na fizycznym telefonie pozostaje otwarty.
 - **MOB-021 (kod wykonany)** S02: lista aktywnych kartotek, wyszukiwanie lokalne i formularz dodania kartoteki bez konta; test urządzenia i warunki produkcyjnej zgody pozostają otwarte.
 - **MOB-022 (kod wykonany)** S03: uprawniony odczyt workspace, cele, aktywny plan i paginowany timeline; odbiór na telefonie otwarty.
-- **MOB-023** S04: bezpieczne projekcje Today/worklist; mapowanie webowych navigationReference na znane cele mobilne.
-- **MOB-024** Obsługa cofnięcia relacji/zgody i przełączania kontekstu zawodowego.
+- **MOB-023 — ODROCZONE decyzją produktową:** odrębny ekran S04 „Sprawy” nie jest uzasadniony; sygnały i zaległości pozostają w Dniu. Bez mapowania navigationReference przed decyzją UX.
+- **MOB-024 (kod wykonany)** Ponowna weryfikacja profilu zawodowego z backendu i usuwanie danych RAM na resume/zmianę kontekstu oraz przy 403. Rola wynika z profilu serwerowego, nie z lokalnego przełącznika.
 
 ### M3 — cykl spotkania
 
@@ -105,11 +105,11 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 
 **MOB-011:** [Konfiguracja Android OIDC/Keycloak i bramki odbiorowe](08-m1-oidc-keycloak.md). Fizyczny telefon: login → GET identity → logout → ponowny login potwierdzone ręcznie. Nie przetestowano refresh oraz negatywnych 401/403 i pełnego zestawu uprawnień.
 
-**MOB-012/013:** Repozytorium Kotlin obejmuje cztery odczyty GET, mapowanie 401/403/409/offline/HTTP i pojedynczy retry tylko na 502/503/504 oraz błąd sieci. Navigation Compose udostępnia trzy główne sekcje z odczytami, jawny wybór actingContext/purpose dla worklist, przejścia do nietrwałego kontekstu uczestnika/spotkania i stany loading/empty/error. Szczegółowe ekrany i mutacje nadal pozostają w M2/M3. Brak trwałego PHI; 401 wylogowuje, 403 czyści odczytane projekcje. Odbiór nowego UI na Motoroli pozostaje do wykonania.
+**MOB-012/013:** Repozytorium Kotlin obejmuje odczyty GET, mapowanie 401/403/409/offline/HTTP i pojedynczy retry tylko na 502/503/504 oraz błąd sieci. Po decyzji o odroczeniu S04 nawigacja główna obejmuje Dzień i Uczestników; kontekst uczestnika/spotkania jest nietrwały. Brak trwałego PHI; 401 wylogowuje, 403 czyści projekcje. Odbiór nowego UI na Motoroli pozostaje do wykonania.
 
 ## MOB-020 — S01 Dzień (2026-11-15)
 
-**Implementacja:** Android S01 korzysta wyłącznie z istniejącego `GET /api/v1/specialist/today` (opcjonalne `date=YYYY-MM-DD`). Prezentuje datę i strefę IANA specjalisty, poprzedni/następny dzień, powrót do dnia serwerowego, bieżące/następne spotkanie, chronologiczny harmonogram, neutralne sygnały i zadania. Otwarcie terminu przechowuje wyłącznie identyfikatory w RAM i prowadzi do istniejącego, jeszcze niezaimplementowanego kontekstu M3. Przejście do Spraw korzysta z istniejącej zakładki S04.
+**Implementacja:** Android S01 korzysta wyłącznie z istniejącego `GET /api/v1/specialist/today` (opcjonalne `date=YYYY-MM-DD`). Prezentuje datę i strefę IANA specjalisty, poprzedni/następny dzień, powrót do dnia serwerowego, bieżące/następne spotkanie, chronologiczny harmonogram, neutralne sygnały i zadania. Otwarcie terminu przechowuje wyłącznie identyfikatory w RAM i prowadzi do istniejącego, jeszcze niezaimplementowanego kontekstu M3. Sygnały i zadania pozostają w Dniu; odrębny ekran S04 został odroczony.
 
 **Bezpieczeństwo:** brak zapisu danych na dysk, lokalnych pomiarów, mutacji i nowych endpointów. Brak treści medycznych z `neutralReason` oraz zewnętrznych `navigationReference` na liście; kategorie sygnałów są zredukowane do neutralnych etykiet. Zwroty API przeterminowane po zmianie daty lub wylogowaniu nie mogą nadpisać aktualnego stanu.
 
@@ -132,3 +132,11 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 - **Ograniczenie backendu:** dotychczasowy zbiorczy endpoint workspace nadal przesyła pola pomiarowe i może je obliczać serwerowo, a zdarzenia celu mogą mieć wartości obserwacji. Android ignoruje je przy deserializacji, ale ich eliminacja z payloadu sieciowego wymaga serwerowej projekcji/egzekwowania osobnej zgody przed aktywacją S08. MOB-022 nie stanowi zgody na ich wyświetlanie lub składowanie.
 - Dane są wyłącznie w RAM; wylogowanie, utrata dostępu (403) i przełączenie uczestnika usuwają poprzednią projekcję, a spóźnione odpowiedzi są ignorowane. `401` unieważnia sesję. Kontekst wizyty pozostaje placeholderem do M3.
 - Walidacja: wąskie testy dekodowania dopuszczonych pól, parametrów i kursora HTTP, izolacji użytkowników i ponownej strony. Odbiór rzeczywistego urządzenia, polityki zgód i retry 401/403 pozostaje otwarty.
+
+## MOB-024 — weryfikacja dostępu i roli (2026-11-15)
+
+- GET `/api/v1/onboarding` potwierdza `stage=READY`, `profileType=SPECIALIST` i `profile.specialistKind`. Dopiero po odpowiedzi serwera dostępne są S01/S02/S03; rzeczywista rola widoczna w pasku aplikacji. Nie przełączamy lokalnie roli na taką, której serwer nie potwierdził: zmiana profilu zawodowego odbywa się w web/onboardingu, a Android wykrywa ją przy ponownym sprawdzeniu.
+- Przy pierwszym logowaniu, powrocie aplikacji na pierwszy plan i jawnym „Sprawdź dostęp” natychmiast usuwane są wszystkie projekcje uczestników, historia i wybrany kontekst spotkania. Odpowiedzi dawnych żądań są ignorowane przez licznik generacji; nowe widoki wymagają świeżej autoryzacji backendu.
+- `401`: wylogowanie; `403` lub nieaktywny/niekompletny profil: ekran odmowy bez danych; brak sieci: brak dostępu do dawnych rekordów i przycisk ponowienia. Backend pozostaje źródłem praw dla relacji i zgody — samo GET onboarding nie jest dowodem ważnej zgody konkretnego uczestnika; przy otwarciu S03 serwer ponownie egzekwuje dostęp.
+- Po odroczeniu MOB-023 usunięto niefunkcjonalną trzecią zakładkę S04, pozostawiając neutralne sygnały i zadania w S01.
+- Walidacja: kontrakt GET onboarding i dwa wąskie testy ViewModel (zmiana roli/spóźniona odpowiedź oraz 403). Bramka rzeczywistego cofnięcia relacji i zgody, telefon/foreground, refresh token i role nadal do odbioru na Motoroli; brak push/pollingu aktywnej sesji.

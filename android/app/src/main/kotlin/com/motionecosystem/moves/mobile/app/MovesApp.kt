@@ -6,6 +6,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.motionecosystem.moves.mobile.BuildConfig
@@ -60,18 +62,46 @@ fun MovesApp(session: OidcSession, onLogin: () -> Unit, onLogout: () -> Unit) {
     val operations = remember(repository) { OperationalViewModel(repository, session::freshAccessToken, session::clear) }
     val status by session.status.collectAsStateWithLifecycle()
     val readinessState by readiness.state.collectAsStateWithLifecycle()
+    val professionalContext by operations.professionalContext.collectAsStateWithLifecycle()
 
     LaunchedEffect(status) {
         if (status == SessionStatus.SignedIn) {
-            if (session.freshAccessToken() != null) readiness.refresh() else readiness.clear()
+            if (session.freshAccessToken() != null) {
+                readiness.refresh()
+                operations.revalidateAccess()
+            } else {
+                readiness.clear()
+                operations.clear()
+            }
         } else {
             readiness.clear()
             operations.clear()
         }
     }
+    // Re-check after returning from background; never reveal stale participant data while offline.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        if (session.status.value == SessionStatus.SignedIn &&
+            operations.professionalContext.value is ReadState.Ready) operations.revalidateAccess()
+    }
     MaterialTheme {
         when (status) {
-            SessionStatus.SignedIn -> MovesNavigation(operations, readinessState, onLogout)
+            SessionStatus.SignedIn -> when (val access = professionalContext) {
+                is ReadState.Ready -> MovesNavigation(operations, readinessState, access.value, onLogout)
+                else -> Column(Modifier.fillMaxSize().padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text("Moves", style = MaterialTheme.typography.headlineMedium)
+                    Text(when (access) {
+                        ReadState.Idle, ReadState.Loading -> "Sprawdzanie kontekstu zawodowego i dostępu…"
+                        ReadState.Forbidden -> "Serwer odmówił dostępu. Sprawdź profil zawodowy, relację z uczestnikiem lub zgodę."
+                        ReadState.Offline -> "Brak połączenia. Ze względów bezpieczeństwa ukryto dane uczestników."
+                        else -> "Nie udało się potwierdzić dostępu. Dane uczestników są ukryte."
+                    })
+                    if (access != ReadState.Loading) {
+                        OutlinedButton(onClick = operations::revalidateAccess) { Text("Sprawdź ponownie") }
+                    }
+                    TextButton(onClick = onLogout) { Text("Wyloguj") }
+                }
+            }
             else -> Column(Modifier.fillMaxSize().padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text("Moves", style = MaterialTheme.typography.headlineMedium)
