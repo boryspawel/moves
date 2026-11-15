@@ -36,6 +36,18 @@ class MovesApiTest {
         assertEquals(null, Json.decodeFromString(ActiveParticipantView.serializer(), "{}" ).label)
     }
 
+    @Test fun todayDateIsSentAsLocalDateWithoutClientTimeZoneConversion() = runBlocking {
+        server.enqueue(MockResponse.Builder()
+            .body("{\"localDate\":\"2026-11-16\",\"timeZoneId\":\"Europe/Warsaw\"}")
+            .addHeader("Content-Type", "application/json").build())
+        val api = createMovesApi(server.url("/").toString())
+        val requested = api.today("2026-11-16")
+        assertEquals(java.time.LocalDate.of(2026, 11, 16), requested.body()?.localDate)
+        val request = server.takeRequest()
+        assertEquals("/api/v1/specialist/today", request.url.encodedPath)
+        assertEquals("2026-11-16", request.url.queryParameter("date"))
+    }
+
     @Test fun `read request has bearer token and no idempotency header`() = runBlocking {
         server.enqueue(MockResponse.Builder().body("{\"subject\":\"specialist\"}").addHeader("Content-Type", "application/json").build())
         val api = createMovesApi(server.url("/").toString(), TokenProvider { "test-token" })

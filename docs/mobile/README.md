@@ -1,6 +1,6 @@
 # Moves Mobile — aplikacja Android dla specjalisty
 
-**Status:** M1 — Android/OIDC na fizycznym telefonie potwierdzone dla login, identity, logout i ponownego login; MOB-012/013 implementują odczyty i nawigację, pełne ekrany biznesowe nadal w M2. **Data:** 2026-11-14.
+**Status:** M2 rozpoczęte — MOB-020 implementuje ekran S01 Dzień; M1 login/identity/logout działał na fizycznym telefonie, nowy ekran wymaga odbioru urządzenia. Pozostałe ekrany i mutacje zgodnie z backlogiem. **Data:** 2026-11-15.
 
 ## Dokumentacja i prototyp
 
@@ -12,6 +12,7 @@
 - [06 — MOB-004: spike generatora Kotlin OpenAPI (2026-11-12)](06-mob-004-openapi-generator.md): pełny generator pozostaje NO-GO z powodu `Dose`; M1 używa małego, ręcznie typowanego adaptera.
 - [07 — M1: fundament Android i build APK](07-m1-android-build.md): konfiguracja CLI/CI, adapter REST i granice zakresu.
 - [08 — MOB-011: OIDC/Keycloak](08-m1-oidc-keycloak.md): PKCE, konfiguracja dev/prod, bramki odbioru.
+- [MOB-020: ekran Dzień](04-implementation-plan.md#mob-020--s01-dzień-2026-11-15): zakres, ograniczenia i walidacja.
 - [Interaktywny prototyp dziewięciu ekranów](prototype/index.html) — demonstrator HTML z fikcyjnymi danymi, **bez backendu**, nie jest kodem produkcyjnym Androida.
 
 Prototyp jest samowystarczalnym plikiem HTML. Zrzuty PNG z sesji projektowej nie są załączane do repozytorium; komplet dziewięciu ekranów można otwierać przez menu prototypu.

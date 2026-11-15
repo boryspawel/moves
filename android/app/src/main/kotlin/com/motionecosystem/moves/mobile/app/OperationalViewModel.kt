@@ -7,6 +7,7 @@ import com.motionecosystem.moves.mobile.repository.SpecialistRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import java.util.UUID
 
 sealed interface ReadState<out T> {
@@ -32,6 +33,9 @@ class OperationalViewModel(
 ) : ViewModel() {
     private val mutableToday = MutableStateFlow<ReadState<TodayView>>(ReadState.Idle)
     val today = mutableToday.asStateFlow()
+    private val mutableRequestedDate = MutableStateFlow<LocalDate?>(null)
+    val requestedDate = mutableRequestedDate.asStateFlow()
+    private var todayRequest = 0
     private val mutableParticipants = MutableStateFlow<ReadState<List<ActiveParticipantView>>>(ReadState.Idle)
     val participants = mutableParticipants.asStateFlow()
     private val mutableWorklist = MutableStateFlow<ReadState<List<WorklistItemView>>>(ReadState.Idle)
@@ -45,7 +49,19 @@ class OperationalViewModel(
         mutableSelection.value = ContextSelection.Appointment(participantId, appointmentId)
     }
 
-    fun loadToday() = read(mutableToday) { repository.today() }
+    fun chooseDate(date: LocalDate?) {
+        mutableRequestedDate.value = date
+        loadToday()
+    }
+
+    /** Replace in-flight day requests; only the newest response may update the screen. */
+    fun loadToday() {
+        val requestId = ++todayRequest
+        val requested = mutableRequestedDate.value
+        read(mutableToday, skipIfLoading = false, isCurrent = { requestId == todayRequest }) {
+            repository.today(requested)
+        }
+    }
     fun loadParticipants() = read(mutableParticipants) { repository.participants() }
     fun loadWorklist(context: ActingContext) = read(mutableWorklist) {
         val purpose = when (context) {
@@ -60,26 +76,33 @@ class OperationalViewModel(
 
     fun clear() {
         generation++
+        todayRequest++
+        mutableRequestedDate.value = null
         mutableToday.value = ReadState.Idle
         mutableParticipants.value = ReadState.Idle
         mutableWorklist.value = ReadState.Idle
         mutableSelection.value = null
     }
 
-    private fun <T> read(target: MutableStateFlow<ReadState<T>>, request: suspend () -> RemoteResult<T>) {
-        if (target.value == ReadState.Loading) return
+    private fun <T> read(
+        target: MutableStateFlow<ReadState<T>>,
+        skipIfLoading: Boolean = true,
+        isCurrent: () -> Boolean = { true },
+        request: suspend () -> RemoteResult<T>
+    ) {
+        if (skipIfLoading && target.value == ReadState.Loading) return
         val currentGeneration = generation
         target.value = ReadState.Loading
         viewModelScope.launch {
             if (freshToken().isNullOrBlank()) {
-                if (currentGeneration == generation) {
+                if (currentGeneration == generation && isCurrent()) {
                     clear()
                     invalidateSession()
                 }
                 return@launch
             }
             val result = request()
-            if (currentGeneration != generation) return@launch
+            if (currentGeneration != generation || !isCurrent()) return@launch
             target.value = when (result) {
                 is RemoteResult.Success -> ReadState.Ready(result.value)
                 is RemoteResult.Failure -> when (result.error) {

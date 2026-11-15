@@ -1,6 +1,6 @@
 # Moves Mobile — plan wdrożenia v0.1
 
-**Cel:** natywna aplikacja Android realizująca UJ-01…UJ-06 w zakresie tekstowych notatek i wizyt, oparta na istniejącym backendzie. **Status:** M1 — OIDC/PKCE uruchomione na Motorola Edge 50 Neo (login, chroniony GET identity, logout i ponowne logowanie), MOB-012/013 zaimplementowane w gałęzi mobilnej; nadal wymagane testy refresh, 401/403, role i pełna weryfikacja na urządzeniu. S08/pomiary biomedyczne wyłączone do czasu rzeczywistej zgody serwerowej.
+**Cel:** natywna aplikacja Android realizująca UJ-01…UJ-06 w zakresie tekstowych notatek i wizyt, oparta na istniejącym backendzie. **Status:** M2 rozpoczęte — M1 fundament i MOB-012/013 w main; MOB-020 S01 Dzień implementowany 2026-11-15. OIDC login/GET/logout/ponowny login zweryfikowane na Motoroli. Do zamknięcia M1 pozostają scenariusze refresh, 401/403, role oraz odbiór nowych ekranów na urządzeniu. S08/pomiary biomedyczne wyłączone do czasu rzeczywistej zgody serwerowej.
 
 ## Kamienie milowe i kolejność
 
@@ -39,7 +39,7 @@ M1 wymaga M0; M2 wymaga M1; M3 i M4 można częściowo rozwijać równolegle po 
 
 ### M2 — fundament biznesowy
 
-- **MOB-020** S01: Today, agenda, aktualne/przyszłe terminy i minimalne sprawy.
+- **MOB-020 (kod wykonany)** S01: Today, agenda, aktualne/przyszłe terminy i minimalne sprawy; odbiór na fizycznym telefonie pozostaje otwarty.
 - **MOB-021** S02: lista/szukaj/dodaj kartotekę; klient bez konta.
 - **MOB-022** S03: workspace, cele, aktywny plan i paginowany timeline.
 - **MOB-023** S04: bezpieczne projekcje Today/worklist; mapowanie webowych navigationReference na znane cele mobilne.
@@ -106,3 +106,11 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 **MOB-011:** [Konfiguracja Android OIDC/Keycloak i bramki odbiorowe](08-m1-oidc-keycloak.md). Fizyczny telefon: login → GET identity → logout → ponowny login potwierdzone ręcznie. Nie przetestowano refresh oraz negatywnych 401/403 i pełnego zestawu uprawnień.
 
 **MOB-012/013:** Repozytorium Kotlin obejmuje cztery odczyty GET, mapowanie 401/403/409/offline/HTTP i pojedynczy retry tylko na 502/503/504 oraz błąd sieci. Navigation Compose udostępnia trzy główne sekcje z odczytami, jawny wybór actingContext/purpose dla worklist, przejścia do nietrwałego kontekstu uczestnika/spotkania i stany loading/empty/error. Szczegółowe ekrany i mutacje nadal pozostają w M2/M3. Brak trwałego PHI; 401 wylogowuje, 403 czyści odczytane projekcje. Odbiór nowego UI na Motoroli pozostaje do wykonania.
+
+## MOB-020 — S01 Dzień (2026-11-15)
+
+**Implementacja:** Android S01 korzysta wyłącznie z istniejącego `GET /api/v1/specialist/today` (opcjonalne `date=YYYY-MM-DD`). Prezentuje datę i strefę IANA specjalisty, poprzedni/następny dzień, powrót do dnia serwerowego, bieżące/następne spotkanie, chronologiczny harmonogram, neutralne sygnały i zadania. Otwarcie terminu przechowuje wyłącznie identyfikatory w RAM i prowadzi do istniejącego, jeszcze niezaimplementowanego kontekstu M3. Przejście do Spraw korzysta z istniejącej zakładki S04.
+
+**Bezpieczeństwo:** brak zapisu danych na dysk, lokalnych pomiarów, mutacji i nowych endpointów. Brak treści medycznych z `neutralReason` oraz zewnętrznych `navigationReference` na liście; kategorie sygnałów są zredukowane do neutralnych etykiet. Zwroty API przeterminowane po zmianie daty lub wylogowaniu nie mogą nadpisać aktualnego stanu.
+
+**Weryfikacja:** wąskie testy API daty, kolejności terminów według Instant, formatowania godzin w strefie specjalisty przy DST oraz wyścigu odpowiedzi przy szybkiej zmianie daty. CI Android buduje APK. Na urządzeniu sprawdzić daty, strefę czasu, nawigację do terminu, brak wpisów, błędy API i logout. **MOB-021 i M3 nie są częścią tego zadania.**

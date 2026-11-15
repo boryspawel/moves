@@ -61,7 +61,7 @@ class ReadinessViewModelTest {
         var identityCalls = 0
         var result: RemoteResult<IdentityResponse> = RemoteResult.Success(IdentityResponse())
         override suspend fun identity(): RemoteResult<IdentityResponse> { identityCalls++; return result }
-        override suspend fun today(): RemoteResult<TodayView> = RemoteResult.Success(TodayView())
+        override suspend fun today(date: java.time.LocalDate?): RemoteResult<TodayView> = RemoteResult.Success(TodayView())
         override suspend fun participants(): RemoteResult<List<ActiveParticipantView>> = RemoteResult.Success(emptyList())
         override suspend fun worklist(context: ActingContext, purpose: WorklistPurpose): RemoteResult<List<WorklistItemView>> = RemoteResult.Success(emptyList())
     }

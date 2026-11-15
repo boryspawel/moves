@@ -14,7 +14,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.motionecosystem.moves.mobile.api.*
-import java.time.ZoneId
 
 private enum class Tab(val route: String, val title: String) {
     DAY("day", "Dzień"), PARTICIPANTS("participants", "Uczestnicy"), CASES("cases", "Sprawy")
@@ -65,10 +64,14 @@ fun MovesNavigation(viewModel: OperationalViewModel, readiness: ReadinessState, 
     ) { padding ->
         NavHost(navigation, startDestination = Tab.DAY.route, modifier = Modifier.padding(padding)) {
             composable(Tab.DAY.route) {
-                TodaySection(viewModel) { participantId, appointmentId ->
-                    viewModel.selectAppointment(participantId, appointmentId)
-                    navigation.navigate(CONTEXT_ROUTE)
-                }
+                TodaySection(
+                    viewModel = viewModel,
+                    onAppointment = { participantId, appointmentId ->
+                        viewModel.selectAppointment(participantId, appointmentId)
+                        navigation.navigate(CONTEXT_ROUTE)
+                    },
+                    onCases = { navigation.navigate(Tab.CASES.route) { launchSingleTop = true } }
+                )
             }
             composable(Tab.PARTICIPANTS.route) {
                 ParticipantsSection(viewModel) { id ->
@@ -108,34 +111,15 @@ fun MovesNavigation(viewModel: OperationalViewModel, readiness: ReadinessState, 
 }
 
 @Composable
-private fun TodaySection(viewModel: OperationalViewModel, onAppointment: (java.util.UUID?, java.util.UUID) -> Unit) {
+private fun TodaySection(
+    viewModel: OperationalViewModel,
+    onAppointment: (java.util.UUID?, java.util.UUID) -> Unit,
+    onCases: () -> Unit
+) {
     val state by viewModel.today.collectAsStateWithLifecycle()
+    val requestedDate by viewModel.requestedDate.collectAsStateWithLifecycle()
     LaunchedEffect(viewModel) { if (viewModel.today.value == ReadState.Idle) viewModel.loadToday() }
-    Column {
-        SectionHeading("Dzień", viewModel::loadToday)
-        ReadPanel(state, viewModel::loadToday, { it.appointments.isNullOrEmpty() && it.attentionItems.isNullOrEmpty() && it.operationalTasks.isNullOrEmpty() }) { today ->
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("${today.localDate ?: ""} • ${today.timeZoneId ?: ""}", style = MaterialTheme.typography.bodyMedium)
-            Text("Spotkania: ${today.appointments.orEmpty().size}", style = MaterialTheme.typography.titleMedium)
-            today.appointments.orEmpty().forEach { item ->
-                val start = runCatching {
-                    item.startsAt?.atZoneSameInstant(ZoneId.of(today.timeZoneId ?: "UTC"))?.toLocalTime()
-                }.getOrNull()
-                val label = item.participantLabel ?: "Uczestnik"
-                val detail = listOfNotNull(start?.toString(), item.status?.name).joinToString(" • ")
-                if (item.appointmentId != null) {
-                    OutlinedButton(onClick = { onAppointment(item.participantId, item.appointmentId) },
-                        modifier = Modifier.fillMaxWidth()) { Text("$label • $detail") }
-                } else {
-                    Text("$label • $detail")
-                }
-            }
-            Text("Sprawy wymagające uwagi: ${today.attentionItems.orEmpty().size}")
-            Text("Zadania operacyjne: ${today.operationalTasks.orEmpty().size}")
-        }
-        }
-    }
+    TodayScreen(state, requestedDate, viewModel::chooseDate, viewModel::loadToday, onAppointment, onCases)
 }
 
 @Composable
@@ -207,7 +191,7 @@ private fun SectionHeading(title: String, onRefresh: () -> Unit) {
 }
 
 @Composable
-private fun <T> ReadPanel(
+internal fun <T> ReadPanel(
     state: ReadState<T>, onRetry: () -> Unit, isEmpty: (T) -> Boolean,
     content: @Composable (T) -> Unit
 ) {
