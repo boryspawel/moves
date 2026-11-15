@@ -58,7 +58,7 @@ flowchart TD
 |---|---|
 | S01 | GET /api/v1/specialist/today |
 | S02 | GET/POST /api/v1/specialist/clients (lista rzeczywistych kartotek, tworzenie lokal/test); GET /api/v1/specialist/participants pozostaje wyłącznie wyborem aktywnych relacji |
-| S03 | /api/v1/specialist/participants/{participantId} oraz workspace/timeline |
+| S03 | GET /api/v1/specialist/participants/{participantId}/workspace i /timeline (bez prezentacji pomiarów; stronicowanie kursorem) |
 | S04 | Today attentionItems i operationalTasks; GET /api/v1/specialist/worklist |
 | S05 | GET /api/v1/specialist/appointments/{id}; POST /{id}/start |
 | S06 | /api/v1/specialist/appointments/{appointmentId}/execution-context i /execution |
