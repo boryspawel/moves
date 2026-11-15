@@ -73,13 +73,17 @@ internal fun TodayScreen(
     requestedDate: LocalDate?,
     onChooseDate: (LocalDate?) -> Unit,
     onRefresh: () -> Unit,
-    onAppointment: (UUID?, UUID) -> Unit
+    onAppointment: (UUID?, UUID) -> Unit,
+    onNewAppointment: () -> Unit
 ) {
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween) {
             Text("Dzień", style = MaterialTheme.typography.headlineMedium)
-            TextButton(onClick = onRefresh) { Text("Odśwież") }
+            Row {
+                TextButton(onClick = onNewAppointment) { Text("+ Termin") }
+                TextButton(onClick = onRefresh) { Text("Odśwież") }
+            }
         }
         if (requestedDate != null && state !is ReadState.Ready) {
             TextButton(onClick = { onChooseDate(null) }, modifier = Modifier.padding(start = 8.dp)) {

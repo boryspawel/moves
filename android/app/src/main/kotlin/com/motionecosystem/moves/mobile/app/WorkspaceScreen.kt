@@ -51,6 +51,7 @@ internal fun WorkspaceScreen(
     onRetryTimeline: () -> Unit,
     onMoreTimeline: () -> Unit,
     onOpenAppointment: (java.util.UUID) -> Unit,
+    onSchedule: () -> Unit,
     onBack: () -> Unit
 ) {
     Column(Modifier.fillMaxSize()) {
@@ -76,6 +77,11 @@ internal fun WorkspaceScreen(
                         val relationship = data.relationship?.status
                         if (relationship != null) Text("Relacja: $relationship",
                             style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                item {
+                    OutlinedButton(onClick = onSchedule, modifier = Modifier.fillMaxWidth()) {
+                        Text("Umów spotkanie")
                     }
                 }
                 item {

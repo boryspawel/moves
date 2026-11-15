@@ -48,7 +48,7 @@ M1 wymaga M0; M2 wymaga M1; M3 i M4 można częściowo rozwijać równolegle po 
 ### M3 — cykl spotkania
 
 - **MOB-030 (kod wykonany)** S05: autoryzowany kontekst wizyty, serwerowy stan lifecycle, rozpoczęcie z wersją i idempotencją, ponowne otwarcie wizyty w toku.
-- **MOB-031** Dodanie/zmiana terminu, dostępność i konflikty 409; request version + Idempotency-Key.
+- **MOB-031 (kod wykonany)** Dodanie/zmiana terminu w Androidzie, wolne sloty z Today, optimistic version, Idempotency-Key i obsługa 409.
 - **MOB-032** Nawigacja do dokumentacji/realizacji i closeout bez utraty participantId; nie udostępniać S08 pomiarów.
 
 ### M4 — dokumentacja
@@ -148,3 +148,11 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 - S01 wskazuje wizytę `IN_PROGRESS` zwróconą przez Today i umożliwia jej ponowne otwarcie również po restarcie aplikacji/logowaniu. S05 nie zapisuje PHI ani sesji na dysku; w razie restartu odtwarza stan wyłącznie przez nowe GET. Powrót nie kończy wizyty. Z S03 można wejść do następnego spotkania; po powrocie ponownie pobierana jest kartoteka.
 - W tym zadaniu **nie** implementowano tworzenia/zmiany terminów (MOB-031), realizacji sesji (MOB-050), dokumentacji (MOB-040), kończenia wizyty (MOB-051) ani pomiarów S08. Na S05 wyświetlany jest stan tych etapów jako informacja, bez pozornie aktywnych przycisków.
 - Weryfikacja: test kontraktu GET/POST nagłówków i `version`, test manualnego retry z tym samym kluczem, re-fetch przy 409, izolacji odpowiedzi różnych spotkań oraz reguły wyświetlania START. Fizyczna Motorola: potwierdzić start w dopuszczonym oknie, powrót do wizyty, logout/403, utratę sieci przed i po POST. Pełny Maven/Playwright poza zakresem zmiany Android.
+
+## MOB-031 — tworzenie i zmiana terminu (2026-11-15)
+
+- Dodanie terminu z S01 lub kartoteki S03, zmiana z S05 wyłącznie przy serwerowym `availableActions=UPDATE`. Formularz używa `GET /api/v1/specialist/today?date=...` do wyboru bieżącej daty i serwerowych `bookableSlots`. Lista uczestników z aktywnych `GET /api/v1/specialist/clients` musi zawierać `SCHEDULE_APPOINTMENT`. Daty i godziny pokazuje strefa IANA kalendarza specjalisty; brak lokalnego rozstrzygania DST albo konfliktów.
+- Istniejące `POST /api/v1/specialist/appointments` oraz `PUT /api/v1/specialist/appointments/{id}` wymagają `Idempotency-Key`. PUT wysyła `version` z uprawnionego GET, zachowuje `participantId` i `plannedSessionId` (nie można ich przypadkowo przepiąć). Serwer sprawdza okna dostępności, kolizję, powiązanie sesji i reguły statusu; naprawiono brak rzucenia wyjątku w `conflictIfOverlapping`.
+- Jeden POST/PUT na próbę i brak automatycznych ponowień. Przy niepewnej odpowiedzi świadomy retry niezmienionego payloadu używa tego samego klucza; zmiana formularza generuje nowy klucz. `409`: nie ponawiać automatycznie, pobrać nowe sloty i — dla PUT — ponownie GET szczegółów wraz z wersją. `401`: logout; `403`: wyczyszczenie projekcji i zamknięcie dostępu.
+- Po zapisie odświeżane są Dzień i lista kartotek, a użytkownik przechodzi do S05 nowego/zmienionego terminu. Dane formularza pozostają w RAM. Obsługa anulowania, powiadomień i planowania cyklicznego nie należy do MOB-031.
+- Walidacja: wąskie testy HTTP POST/PUT (nagłówki, payload, version), ViewModel idempotencji, 409 i izolacji asynchronicznej, reguły slotów oraz jeden test backendu z kolizją. Wymagane jeszcze sprawdzenie na Motoroli.
