@@ -35,6 +35,13 @@ internal fun orderedAgenda(today: TodayView): List<AppointmentView> =
             .thenBy { it.appointmentId?.toString().orEmpty() }
     )
 
+private fun priorityLabel(priority: String): String = when (priority) {
+    "HIGH" -> "Pilne"
+    "MEDIUM" -> "Średnie"
+    "LOW" -> "Niskie"
+    else -> "Do sprawdzenia"
+}
+
 private fun appointmentStatus(status: AppointmentStatus?): String = when (status) {
     AppointmentStatus.SCHEDULED -> "Zaplanowane"
     AppointmentStatus.CONFIRMED -> "Potwierdzone"
@@ -132,9 +139,12 @@ internal fun TodayScreen(
                 if (attentions.isEmpty() && tasks.isEmpty()) Text("Brak bieżących spraw.")
                 attentions.forEach { attention ->
                     ListItem(
-                        headlineContent = { Text(attention.title ?: "Sprawa do sprawdzenia") },
+                        headlineContent = {
+                            Text(if (attention.type == "PARTICIPANT_ISSUE") "Zgłoszenie uczestnika"
+                                else "Sygnał wymagający uwagi")
+                        },
                         supportingContent = { attention.participantLabel?.let { Text(it) } },
-                        trailingContent = { attention.priority?.let { Text(it) } }
+                        trailingContent = { attention.priority?.let { Text(priorityLabel(it)) } }
                     )
                 }
                 tasks.forEach { task ->
