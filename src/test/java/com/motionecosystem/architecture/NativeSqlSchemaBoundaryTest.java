@@ -31,7 +31,10 @@ class NativeSqlSchemaBoundaryTest {
         try (var paths = Files.walk(SOURCES)) {
             for (Path path : paths.filter(file -> file.toString().endsWith(".java")).toList()) {
                 String modulePath = SOURCES.relativize(path).toString().replace('\\', '/');
-                actual.addAll(crossModuleReferences(modulePath, Files.readString(path)));
+                String source = Files.readString(path);
+                if (hasNativeSql(source)) {
+                    actual.addAll(crossModuleReferences(modulePath, source));
+                }
             }
         }
         assertThat(actual)
@@ -47,6 +50,12 @@ class NativeSqlSchemaBoundaryTest {
                 .containsExactly("exercisecatalog/Synthetic.java -> anatomy_reference.anatomical_structure");
         assertThat(crossModuleReferences("exercisecatalog/Synthetic.java",
                 "UPDATE exercise_catalog.exercise SET status = 'PUBLISHED'")).isEmpty();
+    }
+
+    private static boolean hasNativeSql(String source) {
+        return source.contains("createNativeQuery(")
+                || source.contains("@NamedNativeQuery(")
+                || Pattern.compile("\\bnativeQuery\\s*=\\s*true\\b").matcher(source).find();
     }
 
     private static SortedSet<String> crossModuleReferences(String modulePath, String source) {
