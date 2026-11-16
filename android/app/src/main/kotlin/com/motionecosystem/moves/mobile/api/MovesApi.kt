@@ -21,6 +21,12 @@ interface MovesApi {
         @Body command: ClientCommand
     ): Response<ClientView>
 
+    @GET("api/v1/specialist/clients/{participantId}/records/interviews")
+    suspend fun interviews(
+        @Path("participantId") participantId: java.util.UUID,
+        @Query("actingContext") actingContext: ActingContext
+    ): Response<List<InterviewView>>
+
     @GET("api/v1/specialist/participants/{participantId}/workspace")
     suspend fun workspace(@Path("participantId") participantId: java.util.UUID): Response<WorkspaceView>
 

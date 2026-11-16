@@ -853,6 +853,8 @@ class OperationalViewModelTest {
         var pendingAppointment: CompletableDeferred<RemoteResult<AppointmentView>>? = null
         val startResults = ArrayDeque<RemoteResult<AppointmentView>>()
         val startRequests = mutableListOf<Triple<UUID, Long, String>>()
+        override suspend fun interviews(participantId: UUID, actingContext: ActingContext):
+            RemoteResult<List<InterviewView>> = RemoteResult.Success(emptyList())
         override suspend fun appointment(id: UUID): RemoteResult<AppointmentView> =
             pendingAppointment?.await() ?: RemoteResult.Success(appointmentValue ?: AppointmentView(appointmentId = id))
         override suspend fun startAppointment(id: UUID, version: Long, key: String): RemoteResult<AppointmentView> {
