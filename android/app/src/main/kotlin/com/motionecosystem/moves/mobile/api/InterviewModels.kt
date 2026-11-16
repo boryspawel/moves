@@ -35,3 +35,13 @@ data class InterviewView(
     val availableActions: List<String> = emptyList(),
     val version: Long? = null
 )
+
+/** PUT replaces every questionnaire answer; include all existing SELECT values. */
+@Serializable
+data class SaveInterviewDraftCommand(
+    val expectedVersion: Long,
+    val answers: List<InterviewAnswer>
+)
+
+@Serializable
+data class InterviewVersionCommand(val expectedVersion: Long)

@@ -27,6 +27,30 @@ interface MovesApi {
         @Query("actingContext") actingContext: ActingContext
     ): Response<List<InterviewView>>
 
+    @POST("api/v1/specialist/clients/{participantId}/records/interviews")
+    suspend fun startInterview(
+        @Path("participantId") participantId: java.util.UUID,
+        @Query("actingContext") actingContext: ActingContext,
+        @Header("Idempotency-Key") key: String
+    ): Response<InterviewView>
+
+    @PUT("api/v1/specialist/clients/{participantId}/records/interviews/{interviewId}")
+    suspend fun saveInterviewDraft(
+        @Path("participantId") participantId: java.util.UUID,
+        @Path("interviewId") interviewId: java.util.UUID,
+        @Query("actingContext") actingContext: ActingContext,
+        @Body command: SaveInterviewDraftCommand
+    ): Response<InterviewView>
+
+    @POST("api/v1/specialist/clients/{participantId}/records/interviews/{interviewId}/complete")
+    suspend fun completeInterview(
+        @Path("participantId") participantId: java.util.UUID,
+        @Path("interviewId") interviewId: java.util.UUID,
+        @Query("actingContext") actingContext: ActingContext,
+        @Header("Idempotency-Key") key: String,
+        @Body command: InterviewVersionCommand
+    ): Response<InterviewView>
+
     @GET("api/v1/specialist/participants/{participantId}/workspace")
     suspend fun workspace(@Path("participantId") participantId: java.util.UUID): Response<WorkspaceView>
 

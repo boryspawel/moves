@@ -15,6 +15,16 @@ interface SpecialistRepository {
     /** Mutations must never be auto-retried; the caller preserves the UUID key for explicit retries. */
     suspend fun createClient(command: ClientCommand, idempotencyKey: String): RemoteResult<ClientView>
     suspend fun interviews(participantId: java.util.UUID, actingContext: ActingContext): RemoteResult<List<InterviewView>>
+    /** POST endpoints use the original key on explicit retries; PUT is versioned and single-shot. */
+    suspend fun startInterview(participantId: java.util.UUID, actingContext: ActingContext, key: String): RemoteResult<InterviewView>
+    suspend fun saveInterviewDraft(
+        participantId: java.util.UUID, interviewId: java.util.UUID,
+        actingContext: ActingContext, command: SaveInterviewDraftCommand
+    ): RemoteResult<InterviewView>
+    suspend fun completeInterview(
+        participantId: java.util.UUID, interviewId: java.util.UUID,
+        actingContext: ActingContext, command: InterviewVersionCommand, key: String
+    ): RemoteResult<InterviewView>
     suspend fun workspace(participantId: java.util.UUID): RemoteResult<WorkspaceView>
     suspend fun timeline(participantId: java.util.UUID, cursor: String? = null, from: String? = null, to: String? = null): RemoteResult<TimelinePage>
     suspend fun appointment(id: java.util.UUID): RemoteResult<AppointmentView>
@@ -36,6 +46,20 @@ class NetworkSpecialistRepository(private val api: MovesApi, private val calls: 
         withContext(Dispatchers.IO) { calls.execute { api.createClient(idempotencyKey, command) } }
     override suspend fun interviews(participantId: java.util.UUID, actingContext: ActingContext) =
         read { api.interviews(participantId, actingContext) }
+    override suspend fun startInterview(participantId: java.util.UUID, actingContext: ActingContext, key: String) =
+        withContext(Dispatchers.IO) { calls.execute { api.startInterview(participantId, actingContext, key) } }
+    override suspend fun saveInterviewDraft(
+        participantId: java.util.UUID, interviewId: java.util.UUID,
+        actingContext: ActingContext, command: SaveInterviewDraftCommand
+    ) = withContext(Dispatchers.IO) {
+        calls.execute { api.saveInterviewDraft(participantId, interviewId, actingContext, command) }
+    }
+    override suspend fun completeInterview(
+        participantId: java.util.UUID, interviewId: java.util.UUID,
+        actingContext: ActingContext, command: InterviewVersionCommand, key: String
+    ) = withContext(Dispatchers.IO) {
+        calls.execute { api.completeInterview(participantId, interviewId, actingContext, key, command) }
+    }
     override suspend fun workspace(participantId: java.util.UUID) = read { api.workspace(participantId) }
     override suspend fun timeline(participantId: java.util.UUID, cursor: String?, from: String?, to: String?) =
         read { api.timeline(participantId, cursor = cursor, from = from, to = to) }
