@@ -36,6 +36,10 @@ class NavigationBackTest {
             idleStart, idleSchedule, idleClient, InterviewWriteState.Idle,
             NoteWriteState.Saving(NoteOperation.UPDATE)
         ))
+        assertFalse(canManuallyRevalidate(
+            idleStart, idleSchedule, idleClient, InterviewWriteState.Idle,
+            NoteWriteState.Idle, ExecutionSaveState.Saving
+        ))
     }
 
     @Test fun backIsBlockedDuringMutationsButAllowedAfterUncertainResponse() {

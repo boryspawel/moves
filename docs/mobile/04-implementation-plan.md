@@ -60,7 +60,7 @@ M1 wymaga M0; M2 wymaga M1; M3 i M4 można częściowo rozwijać równolegle po 
 
 ### M5 — zamknięcie pionu
 
-- **MOB-050** S06: dawka planowana vs faktyczna, zgodnie/zmieniono/pominięto, reakcja po sesji, idempotentny zapis.
+- **MOB-050 (kod wykonany; odbiór na telefonie otwarty)** S06: aktualny plan z `execution-context`, fakty zgodnie/zmieniono/pominięto, reakcja po sesji i zapis z idempotencją; bez automatycznych powtórzeń.
 - **MOB-051** S09: executionRequired/executionRecorded, tekstowe podsumowanie, canComplete i zakończenie przez serwer. Istniejący closeout-context przesyła także pomiary: nie utrwalać ani nie prezentować ich w mobile; ryzyko ekspozycji jest zapisane w audycie M0.
 - **MOB-052** E2E UJ-01–UJ-06, testy statusów, podwójnego kliknięcia, restartu i utraty sieci.
 
@@ -272,3 +272,11 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 - Konflikt 409 odświeża dane serwera, zachowuje nietknięte pola z nowszej wersji, lokalnie zmienione pola trzyma w RAM i wymaga obejrzenia obu wersji oraz jawnego potwierdzenia scalenia; dopiero potem użytkownik może wysłać nowy PUT. Niepewny PUT nie jest ponawiany automatycznie. Dla niepewnego POST dostępne jest jawne powtórzenie z poprzednim kluczem.
 - Kategoria według istniejących wartości webowych (`GENERAL`, `SESSION`, `HEALTH`, `OTHER`); pole treści współdzieli przygotowanie pod dyktowanie on-device, z nieaktywnym mikrofonem, bez nagrań i chmury. Nie dodano zależności ani migracji.
 - Dodano wąskie testy lokalne: izolacja szkicu, ponowienie POST z tym samym kluczem, brak automatycznego retry PUT po 409, rebase po świadomym potwierdzeniu. **GitHub Actions tylko build**, bez testów.
+
+## MOB-050 — realizacja wizyty S06 (2026-11-16)
+
+- S06 otwierane wyłącznie przy **zweryfikowanym** `appointmentId`, `participantId`, `plannedSessionId` i stanie `IN_PROGRESS` z aktualnego, autoryzowanego GET S05. Następnie `GET /api/v1/specialist/appointments/{appointmentId}/execution-context` zwraca snapshot pozycji planu, dawek, tytułów oraz `recordingAllowed`; identyfikatory są obowiązkowo porównywane z S05. Nie wolno przyjmować parametru planu lub ćwiczeń z deep linku.
+- UI pokazuje dawki planowane, umożliwia dla każdego ćwiczenia zaznaczenie **zgodnie z planem / zmieniono / pominięto**. Zmiana dawki udostępnia właściwe dla typu ćwiczenia pola liczbowe; wysyłane są wyłącznie fakty zadeklarowane przez specjalistę. `painLevel` 0–10 i `difficultyLevel` 1–10 są wymagane, `sessionRpe` oraz `techniqueConfidenceLevel` 1–10 i krótka notatka do 500 znaków są opcjonalne. Serwer waliduje powiązanie ćwiczeń z planem, relację i stan appointment.
+- Po zatwierdzeniu aplikacja wysyła pojedynczy `POST /api/v1/specialist/appointments/{appointmentId}/execution` z `Idempotency-Key`, `declaredCompletion=true` oraz `observationMode=DECLARED`. Klucz i cały payload są zamrażane do czasu potwierdzenia. Przy utracie połączenia/5xx nie ma auto-retry; po GET potwierdzającym brak zapisu użytkownik może jawnie ponowić **dokładnie tę samą operację**. 409 wymaga nowego GET i świadomej decyzji, nigdy automatycznego POST. Po potwierdzonym zapisie UI pokazuje tylko wynik serwera i blokuje kolejną deklarację.
+- Wpisane dane pozostają wyłącznie w pamięci RAM ViewModelu (także przy obrocie i chwilowej rewalidacji). Wylogowanie, 401/403 lub zmiana wizyty usuwa je natychmiast. Brak nagrań, załączników, S08 i lokalnych baz danych. Systemowe Wstecz i ręczne „Sprawdź dostęp” są blokowane podczas zapisu; z niezapisanymi faktami wyjście wymaga potwierdzenia.
+- Testy jednostkowe są ograniczone do walidacji dawek, stanu i identyfikatorów, bezpiecznego ręcznego ponowienia niepewnej operacji oraz zapobiegania duplikatom. **GitHub Actions tylko buduje**, testów nie uruchamia. Odbiór fizycznego telefonu obejmuje brak sieci, zmianę planu, cofnięcie relacji i pracę w trakcie wizyty. S09/MOB-051 nadal osobnym zadaniem.
