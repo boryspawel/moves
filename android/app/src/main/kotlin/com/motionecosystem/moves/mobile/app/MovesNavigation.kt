@@ -308,6 +308,7 @@ private fun ScheduleSection(
     val day by viewModel.scheduleDay.collectAsStateWithLifecycle()
     val chosenDate by viewModel.scheduleDate.collectAsStateWithLifecycle()
     val save by viewModel.scheduleSave.collectAsStateWithLifecycle()
+    val draft by viewModel.scheduleDraft.collectAsStateWithLifecycle()
     val clients by viewModel.clients.collectAsStateWithLifecycle()
     val appointment by viewModel.appointment.collectAsStateWithLifecycle()
     LaunchedEffect(viewModel, target) {
@@ -317,9 +318,11 @@ private fun ScheduleSection(
     LaunchedEffect(completed) {
         completed?.let { onSaved(it.appointment) }
     }
+    if (draft == null) return
     ScheduleScreen(
         target = target, scheduleDay = day, requestedDate = chosenDate, clients = clients,
-        appointment = appointment, saveState = save,
+        appointment = appointment, saveState = save, draft = draft!!,
+        onDraftChange = viewModel::changeScheduleDraft,
         onChooseDate = viewModel::chooseScheduleDate,
         onRefresh = viewModel::loadScheduleDay,
         onSave = viewModel::saveSchedule,
@@ -410,15 +413,24 @@ private fun TodaySection(
 private fun ParticipantsSection(viewModel: OperationalViewModel, onParticipant: (java.util.UUID) -> Unit) {
     val clients by viewModel.clients.collectAsStateWithLifecycle()
     val createState by viewModel.createClientState.collectAsStateWithLifecycle()
+    val draft by viewModel.clientDraft.collectAsStateWithLifecycle()
+    val query by viewModel.clientQuery.collectAsStateWithLifecycle()
     LaunchedEffect(viewModel) { if (viewModel.clients.value == ReadState.Idle) viewModel.loadClients() }
+    // State-based completion survives rotation; no retained coroutine captures an old NavController.
+    LaunchedEffect(createState) {
+        val saved = createState as? CreateClientState.Saved ?: return@LaunchedEffect
+        viewModel.resetClientForm()
+        onParticipant(saved.participantId)
+    }
     ParticipantsScreen(
-        state = clients,
-        creation = createState,
+        state = clients, creation = createState, draft = draft, query = query,
+        onSearch = viewModel::searchClients,
+        onUpdateDraft = viewModel::updateClientForm,
+        onOpenCreate = viewModel::openClientForm,
         onRefresh = viewModel::loadClients,
-        onCreate = { command, key, onCreated -> viewModel.createClient(command, key, onCreated) },
+        onCreate = viewModel::createClient,
         onCancel = viewModel::resetClientForm,
-        onOpen = onParticipant,
-        onResetCreate = viewModel::resetClientForm
+        onOpen = onParticipant
     )
 }
 

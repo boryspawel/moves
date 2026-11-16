@@ -18,6 +18,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.motionecosystem.moves.mobile.BuildConfig
 import com.motionecosystem.moves.mobile.api.*
 import com.motionecosystem.moves.mobile.auth.OidcSession
@@ -66,8 +69,16 @@ fun MovesApp(session: OidcSession, onLogin: () -> Unit, onLogout: () -> Unit) {
     val repository = remember(api) {
         NetworkSpecialistRepository(api, RemoteCall(kotlinx.serialization.json.Json { ignoreUnknownKeys = true }))
     }
-    val readiness = remember(repository) { ReadinessViewModel(session, repository, session::clear) }
-    val operations = remember(repository) { OperationalViewModel(repository, session::freshAccessToken, session::clear) }
+    // Activity ViewModelStore survives configuration changes. Factories run only for a new
+    // owner, so ongoing coroutines and RAM-only drafts are not orphaned on rotation.
+    val readiness: ReadinessViewModel = viewModel(factory = remember(session, repository) {
+        viewModelFactory { initializer { ReadinessViewModel(session, repository, session::clear) } }
+    })
+    val operations: OperationalViewModel = viewModel(factory = remember(session, repository) {
+        viewModelFactory { initializer {
+            OperationalViewModel(repository, session::freshAccessToken, session::clear)
+        } }
+    })
     val status by session.status.collectAsStateWithLifecycle()
     val readinessState by readiness.state.collectAsStateWithLifecycle()
     val professionalContext by operations.professionalContext.collectAsStateWithLifecycle()

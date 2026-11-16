@@ -197,3 +197,11 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 - Po 409 odświeżane są szczegóły wizyty (`version`, `availableActions`) i wolne sloty. Gdy termin zmienił się na serwerze, formularz wyświetla konflikt i wymaga **jawnego wyboru** aktualnej godziny z serwera lub innego dostępnego terminu; dotychczasowa godzina może zostać użyta tylko, gdy nadal jest legalna. Nie ma automatycznego ponawiania PUT ani ukrytego rozstrzygania konfliktu.
 - Własne pola pozostają w szkicu; cel i miejsce z odświeżonej wersji serwerowej są pokazane oddzielnie do porównania. Zapis nadal wymaga potwierdzonego `UPDATE`, wersji i kontroli dostępności przez backend.
 - Dodano wąskie testy reguł snapshotu i braku automatycznego retry. GitHub Actions wykonuje jedynie build; testy jednostkowe pozostają do lokalnego uruchomienia.
+
+## Poprawka audytowa P1: cykl życia ViewModeli i obrót ekranu (2026-11-16)
+
+- `ReadinessViewModel` i `OperationalViewModel` są teraz tworzone przez `androidx.lifecycle.viewmodel.compose.viewModel` i przypięte do `Activity ViewModelStore`. Obrót urządzenia zachowuje tę samą instancję oraz `viewModelScope`, zamiast zostawiać niezależne zadania w starym `remember`.
+- Szkice S05 → edycja/dodanie terminu oraz S02 → nowa kartoteka, wraz z idempotency-key, są przechowywane **wyłącznie w RAM ViewModelu**; nie korzystają z `SavedStateHandle`, `rememberSaveable`, plików ani lokalnej bazy. W szczególności baseline 409 i wybór godziny nie są rekonstruowane z nowego GET po obrocie.
+- Zakończenie zapisu kartoteki jest sygnalizowane stanem `Saved(id)`, który aktualnie wyświetlany ekran konsumuje przez `LaunchedEffect`; coroutine nie przechwytuje już zniszczonego przy obrocie `NavController`.
+- `logout`, 401/403 i zmiana kontekstu zawodowego nadal czyszczą szkice i projekcje; ponowna autoryzacja po obrocie ukrywa dane serwerowe do autoryzowanego GET. Zwykła zmiana konfiguracji nie przenosi danych klinicznych do Android Bundle.
+- W GitHubie tylko build, testy jednostkowe lokalnie przez `cd android && ./gradlew :app:testDevDebugUnitTest`. Odbiór na Motoroli: obrót na S03, S05, otwartej edycji z wpisanym celem, S02 z otwartym formularzem; wylogowanie i ponowne logowanie.

@@ -81,7 +81,7 @@ class OperationalViewModelTest {
             val vm = OperationalViewModel(repository, { "access-token" }, {})
             val requestKey = UUID.randomUUID().toString()
             val command = ClientCommand(displayName = "Nowy uczestnik")
-            vm.createClient(command, requestKey) {}
+            vm.createClient(command, requestKey)
             advanceUntilIdle()
             assertTrue(vm.createClientState.value is CreateClientState.Failed)
             assertEquals(listOf(requestKey), repository.creationKeys)
@@ -89,11 +89,10 @@ class OperationalViewModelTest {
             repository.createResult = RemoteResult.Success(
                 ClientView(participantId = id, displayName = command.displayName, accessStatus = "NO_ACCOUNT")
             )
-            var opened: UUID? = null
-            vm.createClient(command, requestKey) { opened = it }
+            vm.createClient(command, requestKey)
             advanceUntilIdle()
             assertEquals(listOf(requestKey, requestKey), repository.creationKeys)
-            assertEquals(id, opened)
+            assertEquals(CreateClientState.Saved(id), vm.createClientState.value)
             assertEquals("NO_ACCOUNT", (vm.clients.value as ReadState.Ready).value.single().accessStatus)
         } finally { Dispatchers.resetMain() }
     }

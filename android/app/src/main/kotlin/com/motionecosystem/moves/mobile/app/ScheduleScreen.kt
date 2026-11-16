@@ -89,6 +89,8 @@ internal fun ScheduleScreen(
     clients: ReadState<List<ClientView>>,
     appointment: ReadState<AppointmentView>,
     saveState: ScheduleSaveState,
+    draft: ScheduleDraft,
+    onDraftChange: (ScheduleDraft) -> Unit,
     onChooseDate: (LocalDate?) -> Unit,
     onRefresh: () -> Unit,
     onSave: (AppointmentSaveCommand) -> Unit,
@@ -96,32 +98,15 @@ internal fun ScheduleScreen(
 ) {
     val existing = scheduleDetailsFor(target, appointment)
     val edit = target as? ScheduleTarget.Edit
-    // Key only by the edit identity, not by server version. 409 refreshes detail without
-    // silently resetting the user's fields or the originally selected time.
-    val baseline = remember(target) { editBaseline(target, appointment) }
+    val baseline = draft.baseline
     val saving = saveState == ScheduleSaveState.Saving
     val clientOptions = eligibleCalendarClients((clients as? ReadState.Ready)?.value.orEmpty())
-    var participant by remember(target) {
-        mutableStateOf(
-            when (target) {
-                is ScheduleTarget.New -> target.participantId
-                is ScheduleTarget.Edit -> target.participantId
-            }
-        )
-    }
-    var type by remember(target) {
-        mutableStateOf(baseline?.type ?: AppointmentType.CONSULTATION)
-    }
-    var mode by remember(target) {
-        mutableStateOf(baseline?.locationMode ?: AppointmentLocationMode.IN_PERSON)
-    }
-    var location by remember(target) {
-        mutableStateOf(baseline?.location.orEmpty())
-    }
-    var purpose by remember(target) {
-        mutableStateOf(baseline?.shortPurpose.orEmpty())
-    }
-    var selectedSlot by remember(target, requestedDate) { mutableStateOf<BookableSlotView?>(null) }
+    val participant = draft.participantId
+    val type = draft.type
+    val mode = draft.locationMode
+    val location = draft.location
+    val purpose = draft.shortPurpose
+    val selectedSlot = draft.selectedSlot
     var clientMenu by remember { mutableStateOf(false) }
     var typeMenu by remember { mutableStateOf(false) }
     var modeMenu by remember { mutableStateOf(false) }
@@ -175,7 +160,10 @@ internal fun ScheduleScreen(
                     DropdownMenu(expanded = clientMenu, onDismissRequest = { clientMenu = false }) {
                         clientOptions.forEach { item ->
                             DropdownMenuItem(text = { Text(item.displayName ?: "Uczestnik") },
-                                onClick = { participant = item.participantId; clientMenu = false },
+                                onClick = {
+                                    onDraftChange(draft.copy(participantId = item.participantId))
+                                    clientMenu = false
+                                },
                                 enabled = !saving)
                         }
                     }
@@ -195,7 +183,7 @@ internal fun ScheduleScreen(
                 FilterChip(
                     selected = selectedSlot == null && originalStillAllowed,
                     enabled = !saving && originalStillAllowed,
-                    onClick = { selectedSlot = null },
+                    onClick = { onDraftChange(draft.copy(selectedSlot = null)) },
                     label = { Text("Termin pierwotny: ${slotLabel(originalSlot, today?.timeZoneId)}") }
                 )
                 if (serverTimeChanged) {
@@ -207,7 +195,7 @@ internal fun ScheduleScreen(
                     FilterChip(
                         selected = sameScheduleWindow(selectedSlot, currentSlot),
                         enabled = !saving,
-                        onClick = { selectedSlot = currentSlot },
+                        onClick = { onDraftChange(draft.copy(selectedSlot = currentSlot)) },
                         label = { Text("Aktualny termin na serwerze: ${slotLabel(currentSlot!!, today?.timeZoneId)}") }
                     )
                 }
@@ -239,7 +227,7 @@ internal fun ScheduleScreen(
                         FilterChip(
                             selected = checked,
                             enabled = !saving,
-                            onClick = { selectedSlot = slot },
+                            onClick = { onDraftChange(draft.copy(selectedSlot = slot)) },
                             label = { Text(slotLabel(slot, day.timeZoneId)) }
                         )
                     }
@@ -261,7 +249,10 @@ internal fun ScheduleScreen(
                 DropdownMenu(expanded = typeMenu, onDismissRequest = { typeMenu = false }) {
                     AppointmentType.entries.forEach { item ->
                         DropdownMenuItem(text = { Text(item.name) },
-                            onClick = { type = item; typeMenu = false })
+                            onClick = {
+                                onDraftChange(draft.copy(type = item))
+                                typeMenu = false
+                            })
                     }
                 }
             }
@@ -276,14 +267,19 @@ internal fun ScheduleScreen(
                 DropdownMenu(expanded = modeMenu, onDismissRequest = { modeMenu = false }) {
                     AppointmentLocationMode.entries.forEach { item ->
                         DropdownMenuItem(text = { Text(item.name) },
-                            onClick = { mode = item; modeMenu = false })
+                            onClick = {
+                                onDraftChange(draft.copy(locationMode = item))
+                                modeMenu = false
+                            })
                     }
                 }
             }
-            OutlinedTextField(value = location, onValueChange = { location = it },
+            OutlinedTextField(value = location,
+                onValueChange = { onDraftChange(draft.copy(location = it)) },
                 label = { Text("Miejsce (opcjonalnie)") }, singleLine = true,
                 enabled = !saving, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(value = purpose, onValueChange = { purpose = it },
+            OutlinedTextField(value = purpose,
+                onValueChange = { onDraftChange(draft.copy(shortPurpose = it)) },
                 label = { Text("Cel spotkania (opcjonalnie)") },
                 enabled = !saving, modifier = Modifier.fillMaxWidth(), maxLines = 3)
             when (saveState) {

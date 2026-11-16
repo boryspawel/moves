@@ -36,8 +36,19 @@ private fun visibleTimelineEvents(items: List<TimelineEvent>): List<TimelineEven
 sealed interface CreateClientState {
     data object Idle : CreateClientState
     data object Saving : CreateClientState
+    data class Saved(val participantId: UUID) : CreateClientState
     data class Failed(val message: String) : CreateClientState
 }
+
+/** Sensitive draft data lives only in the lifecycle-retained ViewModel, not SavedState/Bundle. */
+data class ClientFormDraft(
+    val open: Boolean = false,
+    val displayName: String = "",
+    val relationship: ClientRelationship? = null,
+    val email: String = "",
+    val phone: String = "",
+    val requestKey: String = UUID.randomUUID().toString()
+)
 
 sealed interface ScheduleTarget {
     data class New(val participantId: UUID? = null) : ScheduleTarget
@@ -69,6 +80,17 @@ internal fun validScheduleWindow(
         it.startsAt?.toInstant() == start && it.endsAt?.toInstant() == end
     }
 }
+
+/** RAM-only scheduling draft, kept through rotation and 409 but deleted on logout/403. */
+data class ScheduleDraft(
+    val participantId: UUID?,
+    val type: AppointmentType = AppointmentType.CONSULTATION,
+    val locationMode: AppointmentLocationMode = AppointmentLocationMode.IN_PERSON,
+    val location: String = "",
+    val shortPurpose: String = "",
+    val baseline: ScheduleEditBaseline? = null,
+    val selectedSlot: BookableSlotView? = null
+)
 
 sealed interface ScheduleSaveState {
     data object Idle : ScheduleSaveState
@@ -108,6 +130,11 @@ class OperationalViewModel(
     val clients = mutableClients.asStateFlow()
     private val mutableCreateClient = MutableStateFlow<CreateClientState>(CreateClientState.Idle)
     val createClientState = mutableCreateClient.asStateFlow()
+    private val mutableClientDraft = MutableStateFlow(ClientFormDraft())
+    val clientDraft = mutableClientDraft.asStateFlow()
+    private val mutableClientQuery = MutableStateFlow("")
+    val clientQuery = mutableClientQuery.asStateFlow()
+    fun searchClients(query: String) { mutableClientQuery.value = query }
     private var clientRequest = 0
     private val mutableParticipants = MutableStateFlow<ReadState<List<ActiveParticipantView>>>(ReadState.Idle)
     val participants = mutableParticipants.asStateFlow()
@@ -131,6 +158,21 @@ class OperationalViewModel(
 
     private val mutableScheduleTarget = MutableStateFlow<ScheduleTarget?>(null)
     val scheduleTarget = mutableScheduleTarget.asStateFlow()
+    private val mutableScheduleDraft = MutableStateFlow<ScheduleDraft?>(null)
+    val scheduleDraft = mutableScheduleDraft.asStateFlow()
+    fun changeScheduleDraft(next: ScheduleDraft) {
+        val current = mutableScheduleDraft.value ?: return
+        val target = mutableScheduleTarget.value ?: return
+        if (mutableScheduleSave.value == ScheduleSaveState.Saving ||
+            mutableScheduleSave.value is ScheduleSaveState.Saved || next.baseline != current.baseline) return
+        if (target is ScheduleTarget.Edit && next.participantId != target.participantId) return
+        mutableScheduleDraft.value = next
+        // Editing after a failed or uncertain submission creates a new payload/key at save time.
+        if (mutableScheduleSave.value is ScheduleSaveState.Failed ||
+            mutableScheduleSave.value == ScheduleSaveState.Uncertain) {
+            mutableScheduleSave.value = ScheduleSaveState.Idle
+        }
+    }
     private val mutableScheduleDate = MutableStateFlow<LocalDate?>(null)
     val scheduleDate = mutableScheduleDate.asStateFlow()
     private val mutableScheduleDay = MutableStateFlow<ReadState<TodayView>>(ReadState.Idle)
@@ -325,6 +367,7 @@ class OperationalViewModel(
         // A new appointment must not retain fields or a pending action from a previous participant.
         resetAppointmentReads()
         mutableScheduleTarget.value = ScheduleTarget.New(participantId)
+        mutableScheduleDraft.value = ScheduleDraft(participantId)
         mutableScheduleDate.value = mutableRequestedDate.value
         loadScheduleDay()
         if (mutableClients.value == ReadState.Idle) loadClients()
@@ -337,7 +380,17 @@ class OperationalViewModel(
             (selection.participantId != null && selection.participantId != detail.participantId) ||
             detail.version == null || "UPDATE" !in detail.availableActions.orEmpty()) return false
         resetSchedule()
-        mutableScheduleTarget.value = ScheduleTarget.Edit(selection.appointmentId, detail.participantId)
+        val target = ScheduleTarget.Edit(selection.appointmentId, detail.participantId)
+        val baseline = editBaseline(target, ReadState.Ready(detail)) ?: return false
+        mutableScheduleTarget.value = target
+        mutableScheduleDraft.value = ScheduleDraft(
+            participantId = detail.participantId,
+            type = baseline.type,
+            locationMode = baseline.locationMode,
+            location = baseline.location,
+            shortPurpose = baseline.shortPurpose,
+            baseline = baseline
+        )
         val zone = runCatching {
             java.time.ZoneId.of((mutableToday.value as? ReadState.Ready)?.value?.timeZoneId ?: "UTC")
         }.getOrDefault(java.time.ZoneOffset.UTC)
@@ -349,6 +402,7 @@ class OperationalViewModel(
     fun chooseScheduleDate(date: LocalDate?) {
         if (mutableScheduleTarget.value == null || mutableScheduleSave.value == ScheduleSaveState.Saving) return
         mutableScheduleDate.value = date
+        mutableScheduleDraft.value = mutableScheduleDraft.value?.copy(selectedSlot = null)
         pendingSchedule = null
         mutableScheduleSave.value = ScheduleSaveState.Idle
         loadScheduleDay()
@@ -461,6 +515,7 @@ class OperationalViewModel(
         scheduleSaveRequest++
         pendingSchedule = null
         mutableScheduleTarget.value = null
+        mutableScheduleDraft.value = null
         mutableScheduleDate.value = null
         mutableScheduleDay.value = ReadState.Idle
         mutableScheduleSave.value = ScheduleSaveState.Idle
@@ -609,12 +664,29 @@ class OperationalViewModel(
         }
     }
 
-    fun resetClientForm() { if (mutableCreateClient.value != CreateClientState.Saving) {
+    fun openClientForm() {
+        if (mutableCreateClient.value == CreateClientState.Saving) return
         mutableCreateClient.value = CreateClientState.Idle
-    } }
+        mutableClientDraft.value = ClientFormDraft(open = true)
+    }
+
+    fun updateClientForm(next: ClientFormDraft) {
+        if (mutableCreateClient.value == CreateClientState.Saving || !mutableClientDraft.value.open ||
+            !next.open) return
+        mutableClientDraft.value = next
+        if (mutableCreateClient.value is CreateClientState.Failed) {
+            mutableCreateClient.value = CreateClientState.Idle
+        }
+    }
+
+    fun resetClientForm() {
+        if (mutableCreateClient.value == CreateClientState.Saving) return
+        mutableCreateClient.value = CreateClientState.Idle
+        mutableClientDraft.value = ClientFormDraft()
+    }
 
     /** The same key is kept for manual retries of an unchanged draft, never an automatic POST retry. */
-    fun createClient(command: ClientCommand, key: String, onCreated: (UUID) -> Unit) {
+    fun createClient(command: ClientCommand, key: String) {
         if (mutableCreateClient.value == CreateClientState.Saving) return
         val currentGeneration = generation
         mutableCreateClient.value = CreateClientState.Saving
@@ -639,8 +711,7 @@ class OperationalViewModel(
                     clientRequest++ // An older list GET must not remove the new record.
                     val old = (mutableClients.value as? ReadState.Ready)?.value.orEmpty()
                     mutableClients.value = ReadState.Ready(old.filterNot { it.participantId == id } + created)
-                    mutableCreateClient.value = CreateClientState.Idle
-                    onCreated(id)
+                    mutableCreateClient.value = CreateClientState.Saved(id)
                 }
                 is RemoteResult.Failure -> when (val error = result.error) {
                     RemoteError.Unauthorized -> {
@@ -688,6 +759,8 @@ class OperationalViewModel(
         resetSchedule()
         mutableClients.value = ReadState.Idle
         mutableCreateClient.value = CreateClientState.Idle
+        mutableClientDraft.value = ClientFormDraft()
+        mutableClientQuery.value = ""
         mutableRequestedDate.value = null
         mutableToday.value = ReadState.Idle
         mutableParticipants.value = ReadState.Idle
