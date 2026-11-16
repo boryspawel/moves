@@ -36,6 +36,11 @@ interface SpecialistRepository {
     ): RemoteResult<InterviewView>
     suspend fun workspace(participantId: java.util.UUID): RemoteResult<WorkspaceView>
     suspend fun timeline(participantId: java.util.UUID, cursor: String? = null, from: String? = null, to: String? = null): RemoteResult<TimelinePage>
+    /** Context is always fetched by the bound appointment, never by an arbitrary participant. */
+    suspend fun executionContext(appointmentId: java.util.UUID): RemoteResult<SpecialistExecutionContext>
+    /** POST is single-shot; manual retry must reuse both exact payload and key. */
+    suspend fun recordExecution(appointmentId: java.util.UUID, key: String,
+        command: RecordSessionExecutionCommand): RemoteResult<RecordedSessionExecution>
     suspend fun appointment(id: java.util.UUID): RemoteResult<AppointmentView>
     /** Calendar writes are single-shot; retry is explicitly initiated by the caller with the original key. */
     suspend fun createAppointment(command: AppointmentSaveCommand, key: String): RemoteResult<AppointmentView>
@@ -94,6 +99,13 @@ class NetworkSpecialistRepository(private val api: MovesApi, private val calls: 
     override suspend fun workspace(participantId: java.util.UUID) = read { api.workspace(participantId) }
     override suspend fun timeline(participantId: java.util.UUID, cursor: String?, from: String?, to: String?) =
         read { api.timeline(participantId, cursor = cursor, from = from, to = to) }
+    override suspend fun executionContext(appointmentId: java.util.UUID) =
+        read { api.executionContext(appointmentId) }
+    override suspend fun recordExecution(appointmentId: java.util.UUID, key: String,
+        command: RecordSessionExecutionCommand
+    ): RemoteResult<RecordedSessionExecution> = withContext(Dispatchers.IO) {
+        calls.execute { api.recordExecution(appointmentId, key, command) }
+    }
     override suspend fun appointment(id: java.util.UUID) = read { api.appointment(id) }
     override suspend fun createAppointment(command: AppointmentSaveCommand, key: String): RemoteResult<AppointmentView> =
         withContext(Dispatchers.IO) { calls.execute { api.createAppointment(key, command) } }

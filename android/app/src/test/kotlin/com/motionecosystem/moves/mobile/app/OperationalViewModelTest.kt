@@ -1154,6 +1154,18 @@ class OperationalViewModelTest {
             completeInterviewCalls += command to key
             return completeInterviewResults.removeFirstOrNull() ?: RemoteResult.Failure(RemoteError.Conflict)
         }
+        var executionContextValue: RemoteResult<SpecialistExecutionContext> =
+            RemoteResult.Failure(RemoteError.Conflict)
+        val executionCalls = mutableListOf<Triple<UUID, String, RecordSessionExecutionCommand>>()
+        val executionResults = ArrayDeque<RemoteResult<RecordedSessionExecution>>()
+        override suspend fun executionContext(appointmentId: java.util.UUID):
+            RemoteResult<SpecialistExecutionContext> = executionContextValue
+        override suspend fun recordExecution(appointmentId: java.util.UUID, key: String,
+            command: RecordSessionExecutionCommand
+        ): RemoteResult<RecordedSessionExecution> {
+            executionCalls += Triple(appointmentId, key, command)
+            return executionResults.removeFirstOrNull() ?: RemoteResult.Failure(RemoteError.Conflict)
+        }
         override suspend fun appointment(id: UUID): RemoteResult<AppointmentView> =
             pendingAppointment?.await() ?: RemoteResult.Success(appointmentValue ?: AppointmentView(appointmentId = id))
         override suspend fun startAppointment(id: UUID, version: Long, key: String): RemoteResult<AppointmentView> {
