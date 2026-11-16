@@ -41,11 +41,13 @@ internal fun canManuallyRevalidate(
     schedule: ScheduleSaveState,
     client: CreateClientState,
     interview: InterviewWriteState = InterviewWriteState.Idle,
-    note: NoteWriteState = NoteWriteState.Idle
+    note: NoteWriteState = NoteWriteState.Idle,
+    execution: ExecutionSaveState = ExecutionSaveState.Idle
 ): Boolean = appointment != AppointmentStartState.SAVING &&
     canLeaveSchedule(schedule) &&
     client != CreateClientState.Saving && client !is CreateClientState.Saved &&
-    interview !is InterviewWriteState.Saving && note !is NoteWriteState.Saving
+    interview !is InterviewWriteState.Saving &&
+    note !is NoteWriteState.Saving && execution != ExecutionSaveState.Saving
 
 @Composable
 fun MovesNavigation(
@@ -63,8 +65,9 @@ fun MovesNavigation(
     val clientWrite by viewModel.createClientState.collectAsStateWithLifecycle()
     val interviewWrite by viewModel.interviewWrite.collectAsStateWithLifecycle()
     val noteWrite by viewModel.noteWrite.collectAsStateWithLifecycle()
+    val executionWrite by viewModel.executionSave.collectAsStateWithLifecycle()
     val mayRevalidate = canManuallyRevalidate(
-        appointmentWrite, scheduleWrite, clientWrite, interviewWrite, noteWrite
+        appointmentWrite, scheduleWrite, clientWrite, interviewWrite, noteWrite, executionWrite
     )
     // The authorization gate blanked all cached server projections. Restore only the
     // current route using fresh, authorized GETs; never replay mutations.
@@ -118,7 +121,8 @@ fun MovesNavigation(
                                     viewModel.scheduleSave.value,
                                     viewModel.createClientState.value,
                                     viewModel.interviewWrite.value,
-                                    viewModel.noteWrite.value
+                                    viewModel.noteWrite.value,
+                                    viewModel.executionSave.value
                                 )
                             ) viewModel.revalidateAccess()
                         },
@@ -327,6 +331,9 @@ private fun VisitStageSection(
     val noteDraft by viewModel.noteDraft.collectAsStateWithLifecycle()
     val noteSelection by viewModel.noteSelection.collectAsStateWithLifecycle()
     val noteWrite by viewModel.noteWrite.collectAsStateWithLifecycle()
+    val executionContext by viewModel.executionContext.collectAsStateWithLifecycle()
+    val executionDraft by viewModel.executionDraft.collectAsStateWithLifecycle()
+    val executionSave by viewModel.executionSave.collectAsStateWithLifecycle()
     LaunchedEffect(stage, selection) {
         when (val current = selection) {
             is ContextSelection.Appointment -> viewModel.loadAppointment(current.appointmentId)
@@ -351,7 +358,25 @@ private fun VisitStageSection(
     LaunchedEffect(stage, documentationParticipant) {
         if (documentationParticipant != null) viewModel.loadInterviews(documentationParticipant)
     }
-    if (stage == VisitStage.DOCUMENTATION && documentationParticipant != null) {
+    val verifiedExecution = if (stage == VisitStage.EXECUTION) {
+        verifiedVisit(selection, appointment)
+            ?.takeIf { canOpenVisitStage(VisitStage.EXECUTION, it) }
+    } else null
+    LaunchedEffect(stage, verifiedExecution) {
+        if (verifiedExecution != null) viewModel.loadExecutionContext()
+    }
+    if (stage == VisitStage.EXECUTION && verifiedExecution != null) {
+        ExecutionScreen(
+            state = executionContext,
+            draft = executionDraft,
+            save = executionSave,
+            onChange = viewModel::changeExecutionDraft,
+            onSave = viewModel::recordSessionExecution,
+            onAcceptConflict = viewModel::acceptExecutionConflict,
+            onRefresh = viewModel::loadExecutionContext,
+            onBack = onBack
+        )
+    } else if (stage == VisitStage.DOCUMENTATION && documentationParticipant != null) {
         DocumentationScreen(
             interviews = interviews,
             notes = notes,

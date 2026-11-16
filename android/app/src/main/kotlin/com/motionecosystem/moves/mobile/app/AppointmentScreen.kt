@@ -179,7 +179,8 @@ internal fun AppointmentScreen(
                         Text("Przejdź do zakończenia")
                     }
                 }
-                Text("Ekrany realizacji, dokumentacji i zakończenia nie zapisują jeszcze danych.",
+                Text("Realizacja ćwiczeń i dokumentacja zapisują dane na serwerze. " +
+                    "Zamknięcie spotkania będzie dostępne w kolejnym etapie.",
                     style = MaterialTheme.typography.bodySmall)
             }
         }

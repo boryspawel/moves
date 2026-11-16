@@ -711,6 +711,7 @@ class OperationalViewModel(
         val visit = verifiedExecutionVisit() ?: return
         if (mutableExecutionSave.value == ExecutionSaveState.Saving) return
         val request = ++executionContextRequest
+        val requestGeneration = generation
         read(mutableExecutionContext, skipIfLoading = false,
             isCurrent = {
                 request == executionContextRequest &&
@@ -719,6 +720,11 @@ class OperationalViewModel(
             when (val result = repository.executionContext(visit.appointmentId)) {
                 is RemoteResult.Failure -> result
                 is RemoteResult.Success -> {
+                    // The read wrapper ignores stale replies; avoid mutating the
+                    // retained draft from this closure before its final guard.
+                    if (requestGeneration != generation ||
+                        request != executionContextRequest ||
+                        verifiedExecutionVisit() != visit) return@read result
                     val current = result.value
                     if (current.appointmentId != visit.appointmentId ||
                         current.participantId != visit.participantId ||
