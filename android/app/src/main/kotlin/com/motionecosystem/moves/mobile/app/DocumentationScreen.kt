@@ -224,7 +224,7 @@ internal fun DocumentationScreen(
                             val canEdit = selected.status == "DRAFT" &&
                                 "SAVE_DRAFT" in selected.availableActions &&
                                 draft?.interviewId == selected.id &&
-                                draft.participantId == selected.participantId
+                                draft?.participantId == selected.participantId
                             selected.questions.groupBy { it.section }.forEach { (section, questions) ->
                                 Text(sectionTitle(section), style = MaterialTheme.typography.titleMedium)
                                 questions.forEach { question ->
