@@ -707,7 +707,34 @@ class OperationalViewModel(
         if (!editableInterviewAnswer(question) || text.length > 4000) return
         val values = draft.values + (code to text)
         mutableInterviewDraft.value = draft.copy(
-            values = values, dirty = values != draft.originalValues
+            values = values,
+            dirty = values != draft.originalValues ||
+                draft.selections != draft.originalSelections
+        )
+        if (mutableInterviewWrite.value is InterviewWriteState.Failed ||
+            mutableInterviewWrite.value is InterviewWriteState.Success) {
+            mutableInterviewWrite.value = InterviewWriteState.Idle
+        }
+    }
+
+    /** The select vocabulary matches the existing web UI, not a guessed consent grant. */
+    fun updateInterviewSelections(code: String, values: List<String>) {
+        val draft = mutableInterviewDraft.value ?: return
+        if (mutableInterviewWrite.value is InterviewWriteState.Saving ||
+            mutableProfessionalContext.value !is ReadState.Ready ||
+            authorizedInterviewParticipant() != draft.participantId) return
+        val record = currentInterview(draft.participantId, draft.interviewId) ?: return
+        if (record.status != "DRAFT" || "SAVE_DRAFT" !in record.availableActions) return
+        val question = record.questions.firstOrNull { it.code == code && isInterviewSelection(it) }
+            ?: return
+        val choices = interviewOptions(code).map { it.value }.toSet()
+        val unique = values.distinct()
+        if (choices.isEmpty() || unique.any { it !in choices } ||
+            (question.type == "SINGLE_SELECT" && unique.size > 1)) return
+        val selected = draft.selections + (code to unique)
+        mutableInterviewDraft.value = draft.copy(
+            selections = selected,
+            dirty = draft.values != draft.originalValues || selected != draft.originalSelections
         )
         if (mutableInterviewWrite.value is InterviewWriteState.Failed ||
             mutableInterviewWrite.value is InterviewWriteState.Success) {
@@ -838,6 +865,13 @@ class OperationalViewModel(
         val draft = mutableInterviewDraft.value ?: return
         if (authorizedInterviewParticipant() != draft.participantId) return
         val latest = currentInterview(draft.participantId, draft.interviewId) ?: return
+        if (latest.status == "COMPLETED" &&
+            state == InterviewWriteState.Uncertain(InterviewOperation.COMPLETE)) {
+            pendingInterviewComplete = null
+            mutableInterviewDraft.value = null
+            mutableInterviewWrite.value = InterviewWriteState.Success("Wywiad został zakończony na serwerze.")
+            return
+        }
         val reconciled = reconcileInterviewDraft(draft, latest) ?: return
         mutableInterviewDraft.value = reconciled
         pendingInterviewComplete = null
