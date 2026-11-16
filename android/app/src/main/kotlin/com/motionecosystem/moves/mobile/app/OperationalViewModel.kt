@@ -172,6 +172,21 @@ class OperationalViewModel(
     private var pendingInterviewStart: PendingInterviewStart? = null
     private var pendingInterviewComplete: PendingInterviewComplete? = null
     private var interviewRequest = 0
+    private val mutableNotes = MutableStateFlow<ReadState<List<NoteView>>>(ReadState.Idle)
+    internal val notes = mutableNotes.asStateFlow()
+    private val mutableNoteDraft = MutableStateFlow<NoteDraft?>(null)
+    internal val noteDraft = mutableNoteDraft.asStateFlow()
+    private val mutableNoteSelection = MutableStateFlow<UUID?>(null)
+    internal val noteSelection = mutableNoteSelection.asStateFlow()
+    private val mutableNoteWrite = MutableStateFlow<NoteWriteState>(NoteWriteState.Idle)
+    internal val noteWrite = mutableNoteWrite.asStateFlow()
+    private var noteRequest = 0
+    private var noteMutationRequest = 0
+    private data class NotePost(
+        val operation: NoteOperation, val participant: UUID, val noteId: UUID,
+        val version: Long, val key: String
+    )
+    private var pendingNotePost: NotePost? = null
     private var workspaceRequest = 0
     private var timelineRequest = 0
 
@@ -315,6 +330,11 @@ class OperationalViewModel(
         if (interviewWriting != null) {
             interviewMutationRequest++
             mutableInterviewWrite.value = InterviewWriteState.Uncertain(interviewWriting.operation)
+        }
+        val noteWriting = mutableNoteWrite.value as? NoteWriteState.Saving
+        if (noteWriting != null) {
+            noteMutationRequest++
+            mutableNoteWrite.value = NoteWriteState.Uncertain(noteWriting.operation)
         }
         mutableToday.value = ReadState.Idle
         mutableClients.value = ReadState.Idle
@@ -617,6 +637,7 @@ class OperationalViewModel(
 
     fun selectParticipant(id: UUID) {
         resetInterviewEditor()
+        resetNoteEditor()
         resetAppointmentReads()
         resetParticipantReads()
         mutableSelection.value = ContextSelection.Participant(id)
@@ -624,6 +645,7 @@ class OperationalViewModel(
 
     fun selectAppointment(participantId: UUID?, appointmentId: UUID) {
         resetInterviewEditor()
+        resetNoteEditor()
         resetAppointmentReads()
         resetParticipantReads()
         mutableSelection.value = ContextSelection.Appointment(participantId, appointmentId)
@@ -641,9 +663,11 @@ class OperationalViewModel(
         workspaceRequest++
         timelineRequest++
         interviewRequest++
+        noteRequest++
         mutableWorkspace.value = ReadState.Idle
         mutableTimeline.value = ReadState.Idle
         mutableInterviews.value = ReadState.Idle
+        mutableNotes.value = ReadState.Idle
     }
 
     /** A documentation GET is permitted only after the current S03/S05 context was reverified. */
@@ -1119,6 +1143,273 @@ class OperationalViewModel(
         }
     }
 
+    /** Notes are fetched only on opening the S07 notes tab, in a fresh authorized context. */
+    fun loadNotes(participantId: UUID) {
+        if (mutableNoteWrite.value is NoteWriteState.Saving ||
+            authorizedInterviewParticipant() != participantId) return
+        val role = verifiedRole ?: return
+        val requestId = ++noteRequest
+        read(mutableNotes, skipIfLoading = false,
+            isCurrent = {
+                requestId == noteRequest && verifiedRole == role &&
+                    authorizedInterviewParticipant() == participantId
+            }) { repository.notes(participantId, role) }
+    }
+
+    private fun resetNoteEditor() {
+        noteMutationRequest++
+        pendingNotePost = null
+        mutableNoteSelection.value = null
+        mutableNoteDraft.value = null
+        mutableNoteWrite.value = NoteWriteState.Idle
+    }
+
+    fun closeNote() {
+        if (mutableNoteWrite.value is NoteWriteState.Saving) return
+        resetNoteEditor()
+    }
+
+    fun openNewNote(participantId: UUID) {
+        if (authorizedInterviewParticipant() != participantId ||
+            mutableNoteWrite.value is NoteWriteState.Saving ||
+            mutableNoteDraft.value?.hasUnsavedContent == true) return
+        val selection = mutableSelection.value as? ContextSelection.Appointment
+        val boundAppointment = if (selection?.participantId == participantId &&
+            (mutableAppointment.value as? ReadState.Ready)?.value?.appointmentId == selection.appointmentId
+        ) selection.appointmentId else null
+        resetNoteEditor()
+        mutableNoteDraft.value = NoteDraft(participantId,
+            values = NoteValues(appointmentId = boundAppointment))
+    }
+
+    fun openNote(participantId: UUID, noteId: UUID) {
+        if (authorizedInterviewParticipant() != participantId ||
+            mutableNoteWrite.value is NoteWriteState.Saving ||
+            mutableNoteDraft.value?.hasUnsavedContent == true) return
+        val note = currentNote(participantId, noteId) ?: return
+        resetNoteEditor()
+        mutableNoteSelection.value = noteId
+        if (note.status == "DRAFT" && "UPDATE" in note.availableActions) {
+            mutableNoteDraft.value = noteFromServer(participantId, note)
+        }
+    }
+
+    private fun currentNote(participantId: UUID, noteId: UUID): NoteView? =
+        (mutableNotes.value as? ReadState.Ready)?.value
+            ?.firstOrNull { it.id == noteId && it.participantId == participantId }
+
+    fun changeNoteDraft(next: NoteValues) {
+        val current = mutableNoteDraft.value ?: return
+        if (authorizedInterviewParticipant() != current.participantId ||
+            mutableNoteWrite.value is NoteWriteState.Saving ||
+            mutableNoteWrite.value is NoteWriteState.Conflict ||
+            mutableNoteWrite.value is NoteWriteState.Uncertain ||
+            next.appointmentId != current.values.appointmentId ||
+            next.title.length > 160 || next.content.length > 8000 ||
+            next.category !in NOTE_CATEGORIES) return
+        mutableNoteDraft.value = current.copy(values = next)
+        if (mutableNoteWrite.value is NoteWriteState.Failed ||
+            mutableNoteWrite.value is NoteWriteState.Success) {
+            mutableNoteWrite.value = NoteWriteState.Idle
+        }
+    }
+
+    private fun replaceNote(saved: NoteView) {
+        val previous = (mutableNotes.value as? ReadState.Ready)?.value.orEmpty()
+        noteRequest++
+        mutableNotes.value = ReadState.Ready(
+            if (previous.any { it.id == saved.id }) previous.map {
+                if (it.id == saved.id) saved else it
+            } else listOf(saved) + previous
+        )
+    }
+
+    /** Creating uses a stable key. A failed response never triggers an automatic POST retry. */
+    fun createNote() {
+        val draft = mutableNoteDraft.value ?: return
+        if (draft.noteId != null || authorizedInterviewParticipant() != draft.participantId ||
+            mutableNoteWrite.value is NoteWriteState.Saving ||
+            mutableNoteWrite.value is NoteWriteState.Conflict) return
+        val payload = createNotePayload(draft) ?: run {
+            mutableNoteWrite.value = NoteWriteState.Failed("Uzupełnij tytuł, kategorię i treść notatki.")
+            return
+        }
+        val role = verifiedRole ?: return
+        val currentGeneration = generation
+        val request = ++noteMutationRequest
+        mutableNoteWrite.value = NoteWriteState.Saving(NoteOperation.CREATE)
+        viewModelScope.launch {
+            if (!ensureFreshToken { generation == currentGeneration && request == noteMutationRequest }) return@launch
+            val result = repository.createNote(draft.participantId, role, draft.requestKey, payload)
+            if (currentGeneration != generation || request != noteMutationRequest ||
+                authorizedInterviewParticipant() != draft.participantId) return@launch
+            when (result) {
+                is RemoteResult.Success -> {
+                    val saved = result.value
+                    if (saved.id == null || saved.participantId != draft.participantId ||
+                        saved.status != "DRAFT") {
+                        clear()
+                        mutableProfessionalContext.value = ReadState.Forbidden
+                    } else {
+                        replaceNote(saved)
+                        mutableNoteSelection.value = saved.id
+                        mutableNoteDraft.value = noteFromServer(draft.participantId, saved)
+                        mutableNoteWrite.value = NoteWriteState.Success("Notatka zapisana na serwerze.")
+                    }
+                }
+                is RemoteResult.Failure -> handleNoteFailure(result.error, NoteOperation.CREATE, draft.participantId)
+            }
+        }
+    }
+
+    /** PUT is versioned and never automatically retried, including after a timeout. */
+    fun updateNote() {
+        val draft = mutableNoteDraft.value ?: return
+        val id = draft.noteId ?: return
+        if (!draft.dirty || authorizedInterviewParticipant() != draft.participantId ||
+            mutableNoteWrite.value is NoteWriteState.Saving ||
+            mutableNoteWrite.value is NoteWriteState.Conflict ||
+            mutableNoteWrite.value is NoteWriteState.Uncertain) return
+        val record = currentNote(draft.participantId, id) ?: return
+        if (draft.version != record.version) {
+            mutableNoteWrite.value = NoteWriteState.Conflict(NoteOperation.UPDATE)
+            loadNotes(draft.participantId)
+            return
+        }
+        val command = updateNotePayload(draft, record) ?: run {
+            mutableNoteWrite.value = NoteWriteState.Failed("Uzupełnij tytuł, kategorię i treść notatki.")
+            return
+        }
+        val role = verifiedRole ?: return
+        val currentGeneration = generation
+        val request = ++noteMutationRequest
+        mutableNoteWrite.value = NoteWriteState.Saving(NoteOperation.UPDATE)
+        viewModelScope.launch {
+            if (!ensureFreshToken { generation == currentGeneration && request == noteMutationRequest }) return@launch
+            val result = repository.updateNote(draft.participantId, id, role, command)
+            if (currentGeneration != generation || request != noteMutationRequest ||
+                authorizedInterviewParticipant() != draft.participantId ||
+                mutableNoteSelection.value != id) return@launch
+            when (result) {
+                is RemoteResult.Success -> {
+                    val saved = result.value
+                    if (saved.id != id || saved.participantId != draft.participantId || saved.status != "DRAFT") {
+                        clear()
+                        mutableProfessionalContext.value = ReadState.Forbidden
+                    } else {
+                        replaceNote(saved)
+                        mutableNoteDraft.value = noteFromServer(draft.participantId, saved)
+                        mutableNoteWrite.value = NoteWriteState.Success("Zapisano zmiany notatki.")
+                    }
+                }
+                is RemoteResult.Failure -> handleNoteFailure(result.error, NoteOperation.UPDATE, draft.participantId)
+            }
+        }
+    }
+
+    /** Rebase only after an explicit review of the freshly downloaded note. */
+    fun reconcileNote() {
+        val state = mutableNoteWrite.value
+        if (state !is NoteWriteState.Conflict && state !is NoteWriteState.Uncertain) return
+        val draft = mutableNoteDraft.value
+        val participant = draft?.participantId ?: return
+        val id = draft.noteId ?: return
+        if (authorizedInterviewParticipant() != participant) return
+        val latest = currentNote(participant, id) ?: return
+        if (latest.status == "FINAL" &&
+            state == NoteWriteState.Uncertain(NoteOperation.FINALISE)) {
+            pendingNotePost = null
+            mutableNoteDraft.value = null
+            mutableNoteWrite.value = NoteWriteState.Success("Notatka została sfinalizowana na serwerze.")
+            return
+        }
+        if (latest.status == "ARCHIVED" &&
+            state == NoteWriteState.Uncertain(NoteOperation.ARCHIVE)) {
+            pendingNotePost = null
+            mutableNoteDraft.value = null
+            mutableNoteWrite.value = NoteWriteState.Success("Notatka została zarchiwizowana.")
+            return
+        }
+        val rebased = rebaseNoteDraft(draft, latest) ?: return
+        mutableNoteDraft.value = rebased
+        pendingNotePost = null
+        mutableNoteWrite.value = NoteWriteState.Idle
+    }
+
+    /** Finalization and archiving are idempotent POSTs with confirmation in the UI. */
+    fun finaliseNote() = noteLifecycle(NoteOperation.FINALISE)
+    fun archiveNote() = noteLifecycle(NoteOperation.ARCHIVE)
+
+    private fun noteLifecycle(kind: NoteOperation) {
+        val id = mutableNoteSelection.value ?: return
+        val participant = authorizedInterviewParticipant() ?: return
+        val current = currentNote(participant, id) ?: return
+        if (mutableNoteDraft.value?.dirty == true ||
+            mutableNoteWrite.value is NoteWriteState.Saving ||
+            mutableNoteWrite.value is NoteWriteState.Conflict ||
+            mutableNoteWrite.value == NoteWriteState.Uncertain(NoteOperation.UPDATE)) return
+        val action = if (kind == NoteOperation.FINALISE) "FINALISE" else "ARCHIVE"
+        if (action !in current.availableActions || current.version == null) return
+        val operation = pendingNotePost?.takeIf {
+            it.operation == kind && it.participant == participant && it.noteId == id
+        } ?: NotePost(kind, participant, id, current.version, UUID.randomUUID().toString())
+        pendingNotePost = operation
+        val role = verifiedRole ?: return
+        val currentGeneration = generation
+        val request = ++noteMutationRequest
+        mutableNoteWrite.value = NoteWriteState.Saving(kind)
+        viewModelScope.launch {
+            if (!ensureFreshToken { generation == currentGeneration && request == noteMutationRequest }) return@launch
+            val result = if (kind == NoteOperation.FINALISE) {
+                repository.finaliseNote(participant, id, role, InterviewVersionCommand(operation.version), operation.key)
+            } else {
+                repository.archiveNote(participant, id, role, InterviewVersionCommand(operation.version), operation.key)
+            }
+            if (currentGeneration != generation || request != noteMutationRequest ||
+                authorizedInterviewParticipant() != participant ||
+                mutableNoteSelection.value != id) return@launch
+            when (result) {
+                is RemoteResult.Success -> {
+                    val saved = result.value
+                    val status = if (kind == NoteOperation.FINALISE) "FINAL" else "ARCHIVED"
+                    if (saved.id != id || saved.participantId != participant || saved.status != status) {
+                        clear()
+                        mutableProfessionalContext.value = ReadState.Forbidden
+                    } else {
+                        pendingNotePost = null
+                        replaceNote(saved)
+                        mutableNoteDraft.value = null
+                        mutableNoteWrite.value = NoteWriteState.Success(
+                            if (kind == NoteOperation.FINALISE) "Notatka sfinalizowana." else "Notatka zarchiwizowana."
+                        )
+                    }
+                }
+                is RemoteResult.Failure -> handleNoteFailure(result.error, kind, participant)
+            }
+        }
+    }
+
+    private fun handleNoteFailure(error: RemoteError, kind: NoteOperation, participant: UUID) {
+        when (error) {
+            RemoteError.Unauthorized -> { clear(); invalidateSession() }
+            RemoteError.Forbidden -> { clear(); mutableProfessionalContext.value = ReadState.Forbidden }
+            RemoteError.Conflict -> {
+                if (kind != NoteOperation.CREATE) pendingNotePost = null
+                mutableNoteWrite.value = NoteWriteState.Conflict(kind)
+                loadNotes(participant)
+            }
+            is RemoteError.Network, is RemoteError.Serialization ->
+                mutableNoteWrite.value = NoteWriteState.Uncertain(kind)
+            is RemoteError.Http -> {
+                if (error.status >= 500) mutableNoteWrite.value = NoteWriteState.Uncertain(kind)
+                else {
+                    pendingNotePost = null
+                    mutableNoteWrite.value = NoteWriteState.Failed("Serwer odrzucił operację na notatce.")
+                }
+            }
+        }
+    }
+
     fun loadParticipants() = read(mutableParticipants) { repository.participants() }
     fun loadWorklist(context: ActingContext) = read(mutableWorklist) {
         val purpose = when (context) {
@@ -1143,6 +1434,7 @@ class OperationalViewModel(
         mutableClientDraft.value = ClientFormDraft()
         mutableClientQuery.value = ""
         resetInterviewEditor()
+        resetNoteEditor()
         mutableRequestedDate.value = null
         mutableToday.value = ReadState.Idle
         mutableParticipants.value = ReadState.Idle
