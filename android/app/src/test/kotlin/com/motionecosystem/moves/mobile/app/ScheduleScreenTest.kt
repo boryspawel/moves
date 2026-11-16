@@ -31,7 +31,7 @@ class ScheduleScreenTest {
             ScheduleTarget.Edit(UUID.randomUUID(), oldParticipant), cached
         ))
         assertEquals(oldAppointment, scheduleDetailsFor(
-            ScheduleTarget.Edit(oldAppointment.appointmentId, oldParticipant), cached
+            ScheduleTarget.Edit(oldAppointment.appointmentId!!, oldParticipant), cached
         ))
     }
 
