@@ -392,12 +392,16 @@ internal fun DocumentationScreen(
                                     modifier = Modifier.fillMaxWidth()
                                 ) { Text("Zapisz szkic") }
                                 val canComplete = canCompleteInterview(selected) && !dirty &&
-                                    !pendingReview && writeState !is InterviewWriteState.Uncertain
+                                    !pendingReview &&
+                                    writeState != InterviewWriteState.Uncertain(InterviewOperation.SAVE)
                                 OutlinedButton(
                                     onClick = { completeConfirmation = true },
                                     enabled = canComplete && canEdit,
                                     modifier = Modifier.fillMaxWidth()
-                                ) { Text("Zakończ wywiad") }
+                                ) {
+                                    Text(if (writeState == InterviewWriteState.Uncertain(InterviewOperation.COMPLETE))
+                                        "Ponów zakończenie tym samym kluczem" else "Zakończ wywiad")
+                                }
                                 if (!canCompleteInterview(selected) && !dirty) {
                                     Text("Aby zakończyć, uzupełnij wymagane odpowiedzi i zapisz szkic. " +
                                         "Nieznane pytania wyboru pozostają tylko do odczytu.",
