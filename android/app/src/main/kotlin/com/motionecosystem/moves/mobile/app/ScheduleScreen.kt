@@ -9,8 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.motionecosystem.moves.mobile.api.*
 import java.time.LocalDate
-import java.time.ZoneId
-import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.util.UUID
@@ -20,7 +18,7 @@ private val labelDate = DateTimeFormatter.ofPattern("EEE, d MMM yyyy", polish)
 private val labelHours = DateTimeFormatter.ofPattern("HH:mm", polish)
 
 internal fun slotLabel(slot: BookableSlotView, zoneName: String?): String {
-    val zone = runCatching { ZoneId.of(zoneName ?: "UTC") }.getOrDefault(ZoneOffset.UTC)
+    val zone = specialistCalendarZone(zoneName) ?: return "Nieznana strefa kalendarza"
     val start = slot.startsAt ?: return "Nieznana godzina"
     val end = slot.endsAt ?: return "Nieznana godzina"
     return "${start.atZoneSameInstant(zone).format(labelHours)}–${end.atZoneSameInstant(zone).format(labelHours)}"
@@ -122,10 +120,11 @@ internal fun ScheduleScreen(
         BookableSlotView(existing.startsAt, existing.endsAt)
     } else null
     val today = (scheduleDay as? ReadState.Ready)?.value
+    val calendarZoneKnown = specialistCalendarZone(today?.timeZoneId) != null
     val serverTimeChanged = originalSlot != null && currentSlot != null &&
         !sameScheduleWindow(originalSlot, currentSlot)
     val slot = when {
-        dateResolving -> null
+        dateResolving || !calendarZoneKnown -> null
         selectedSlot != null -> selectedSlot.takeIf {
             sameScheduleWindow(it, currentSlot) || (today != null && validBookableSlot(it, today))
         }
@@ -184,8 +183,10 @@ internal fun ScheduleScreen(
             }
             if (!dateResolving && originalSlot != null) {
                 Text("Godzina spotkania", style = MaterialTheme.typography.titleMedium)
-                val originalStillAllowed = sameScheduleWindow(originalSlot, currentSlot) ||
-                    (today != null && validBookableSlot(originalSlot, today))
+                val originalStillAllowed = calendarZoneKnown && (
+                    sameScheduleWindow(originalSlot, currentSlot) ||
+                        (today != null && validBookableSlot(originalSlot, today))
+                )
                 FilterChip(
                     selected = selectedSlot == null && originalStillAllowed,
                     enabled = !saving && originalStillAllowed,
@@ -200,7 +201,7 @@ internal fun ScheduleScreen(
                     )
                     FilterChip(
                         selected = sameScheduleWindow(selectedSlot, currentSlot),
-                        enabled = !saving,
+                        enabled = !saving && calendarZoneKnown,
                         onClick = { onDraftChange(draft.copy(selectedSlot = currentSlot)) },
                         label = { Text("Aktualny termin na serwerze: ${slotLabel(currentSlot, today?.timeZoneId)}") }
                     )
@@ -220,8 +221,13 @@ internal fun ScheduleScreen(
                         TextButton(onClick = { actualDate?.let { onChooseDate(it.plusDays(1)) } },
                             enabled = !saving && actualDate != null) { Text("Następny") }
                     }
-                    Text("Strefa kalendarza: ${day.timeZoneId ?: "UTC"}",
-                        style = MaterialTheme.typography.labelSmall)
+                    Text(
+                        if (calendarZoneKnown) "Strefa kalendarza: ${day.timeZoneId}"
+                        else "Brak poprawnej strefy kalendarza — odśwież terminy.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (calendarZoneKnown) MaterialTheme.colorScheme.onSurfaceVariant
+                                else MaterialTheme.colorScheme.error
+                    )
                     Text("Wolne terminy", style = MaterialTheme.typography.titleMedium)
                     val slots = day.bookableSlots.orEmpty()
                         .filter { it.startsAt != null && it.endsAt != null &&
@@ -232,7 +238,7 @@ internal fun ScheduleScreen(
                         val checked = selectedSlot == slot
                         FilterChip(
                             selected = checked,
-                            enabled = !saving,
+                            enabled = !saving && calendarZoneKnown,
                             onClick = { onDraftChange(draft.copy(selectedSlot = slot)) },
                             label = { Text(slotLabel(slot, day.timeZoneId)) }
                         )

@@ -238,3 +238,10 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 - Pomiary nadal są dostępne przez istniejący, osobno autoryzowany `GET /api/v1/specialist/clients/{participantId}/measurements` oraz odczyt szczegółowego zdarzenia osi czasu. Uprawnienia `VIEW_MEASUREMENTS` i zgoda `MEASUREMENTS` pozostają egzekwowane na serwerze.
 - Test regresyjny sprawdza pustą projekcję i brak wywołań portu pomiarów przy renderowaniu workspace. Android S03 już ignoruje `recentMeasurements`, więc jego kontrakt i UI nie wymagają modyfikacji.
 - GitHub Actions wykonuje **wyłącznie build** (bez testów), obejmując także poprzednią poprawkę #30. Testy uruchamia deweloper lokalnie.
+
+## Poprawka audytowa P1: strefa czasu w prezentacji S01/S05 (2026-11-16)
+
+- Ujednolicono wyświetlanie godzin przez `specialistCalendarZone`, która wymaga poprawnego `timeZoneId` z serwera. Brak/niewłaściwa strefa nie prowadzi już do automatycznego użycia UTC ani czasu telefonu.
+- S01 i lista slotów S05 wyświetlają informację o nieznanej strefie zamiast niepoprawnie przeliczonej godziny. Przy nieznanej strefie formularz S05 **nie dopuszcza wyboru ani zapisu terminu**, także przy edycji istniejącego spotkania; szkic zostaje w RAM i można odświeżyć dane.
+- Szczegół spotkania S05, który nie otrzymał jeszcze strefy specjalisty, pokazuje dokładną godzinę z **oryginalnym, jawnie oznaczonym offsetem odpowiedzi serwera** (bez przeliczania według urządzenia). Znana strefa nadal wyświetla czas lokalny specjalisty.
+- Trzy małe testy jednostkowe (S01, szczegół S05, formularz S05), bez nowych zależności lub zmian backendu. GitHub Actions pozostaje wyłącznie build-only, testy do wykonania lokalnie.

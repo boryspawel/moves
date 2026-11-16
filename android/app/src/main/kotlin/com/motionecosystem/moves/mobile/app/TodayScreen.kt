@@ -10,8 +10,6 @@ import androidx.compose.ui.unit.dp
 import com.motionecosystem.moves.mobile.api.*
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
-import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.util.UUID
@@ -23,7 +21,7 @@ private val clockFormat = DateTimeFormatter.ofPattern("HH:mm", polish)
 /** The server's IANA zone, rather than the device zone, controls the displayed agenda. */
 internal fun appointmentHours(appointment: AppointmentView, timeZoneId: String?): String {
     val start = appointment.startsAt ?: return "Godzina nieustalona"
-    val zone = runCatching { ZoneId.of(timeZoneId ?: "UTC") }.getOrDefault(ZoneOffset.UTC)
+    val zone = specialistCalendarZone(timeZoneId) ?: return "Godzina niedostępna — brak strefy kalendarza"
     val first = start.atZoneSameInstant(zone).format(clockFormat)
     val last = appointment.endsAt?.atZoneSameInstant(zone)?.format(clockFormat)
     return if (last == null) first else "$first–$last"
