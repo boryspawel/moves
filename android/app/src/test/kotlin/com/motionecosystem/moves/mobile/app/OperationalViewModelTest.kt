@@ -571,6 +571,75 @@ class OperationalViewModelTest {
         } finally { Dispatchers.resetMain() }
     }
 
+    @Test fun editOpenedWithoutCachedTodayResolvesLocalDayBeforeFetchingSlots() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repo = StubRepository()
+            val participantId = UUID.randomUUID()
+            val appointmentId = UUID.randomUUID()
+            val start = java.time.OffsetDateTime.parse("2026-11-20T00:30:00Z")
+            val specialistDay = java.time.LocalDate.of(2026, 11, 19)
+            repo.appointmentValue = AppointmentView(
+                appointmentId, participantId = participantId,
+                startsAt = start, endsAt = start.plusMinutes(45),
+                version = 3, status = AppointmentStatus.CONFIRMED,
+                availableActions = listOf("UPDATE")
+            )
+            repo.scheduleToday = TodayView(
+                localDate = specialistDay, timeZoneId = "America/Los_Angeles",
+                bookableSlots = emptyList()
+            )
+            val vm = OperationalViewModel(repo, { "token" }, {})
+            vm.selectAppointment(participantId, appointmentId)
+            vm.loadAppointment(appointmentId)
+            advanceUntilIdle()
+            assertTrue(vm.openEditSchedule())
+            assertTrue(vm.scheduleDateResolving.value)
+            assertNull(vm.scheduleDate.value)
+            advanceUntilIdle()
+            val serverToday = (vm.scheduleDay.value as ReadState.Ready).value
+            vm.resolveEditScheduleDate(serverToday)
+            assertFalse(vm.scheduleDateResolving.value)
+            assertEquals(specialistDay, vm.scheduleDate.value)
+            advanceUntilIdle()
+            assertEquals(specialistDay, vm.scheduleDate.value)
+            assertEquals(specialistDay, (vm.scheduleDay.value as ReadState.Ready).value.localDate)
+        } finally { Dispatchers.resetMain() }
+    }
+
+    @Test fun missingCalendarZoneNeverFallsBackToUtcDay() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repo = StubRepository()
+            val participant = UUID.randomUUID()
+            val visitId = UUID.randomUUID()
+            val start = java.time.OffsetDateTime.parse("2026-11-20T00:30:00Z")
+            repo.appointmentValue = AppointmentView(
+                visitId, participantId = participant,
+                startsAt = start, endsAt = start.plusMinutes(45),
+                version = 3, status = AppointmentStatus.SCHEDULED,
+                availableActions = listOf("UPDATE")
+            )
+            repo.scheduleToday = TodayView(localDate = java.time.LocalDate.of(2026,11,20))
+            val vm = OperationalViewModel(repo, { "token" }, {})
+            vm.selectAppointment(participant, visitId)
+            vm.loadAppointment(visitId)
+            advanceUntilIdle()
+            assertTrue(vm.openEditSchedule())
+            advanceUntilIdle()
+            assertNull(vm.scheduleDate.value)
+            vm.resolveEditScheduleDate((vm.scheduleDay.value as ReadState.Ready).value)
+            assertTrue(vm.scheduleDateResolving.value)
+            assertEquals(ReadState.Error, vm.scheduleDay.value)
+            vm.saveSchedule(AppointmentSaveCommand(
+                participant, start, start.plusMinutes(45),
+                AppointmentType.CONSULTATION, AppointmentLocationMode.REMOTE
+            ))
+            assertEquals(0, repo.updateAppointmentCalls.size)
+            assertTrue(vm.scheduleSave.value is ScheduleSaveState.Failed)
+        } finally { Dispatchers.resetMain() }
+    }
+
     @Test fun editMetadataSavesWithoutSelectingAFreeSlotForItsOwnAppointment() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {
@@ -579,7 +648,8 @@ class OperationalViewModelTest {
             val appointmentId = UUID.randomUUID()
             val start = java.time.OffsetDateTime.parse("2026-11-20T10:00:00Z")
             repository.scheduleToday = TodayView(
-                localDate = java.time.LocalDate.parse("2026-11-20"), bookableSlots = emptyList()
+                localDate = java.time.LocalDate.parse("2026-11-20"),
+                timeZoneId = "Europe/Warsaw", bookableSlots = emptyList()
             )
             repository.appointmentValue = AppointmentView(
                 appointmentId, participantId = participantId,
@@ -665,6 +735,7 @@ class OperationalViewModelTest {
             val appointmentId = UUID.randomUUID()
             val start = java.time.OffsetDateTime.parse("2026-11-20T10:00:00Z")
             repository.scheduleToday = TodayView(localDate = java.time.LocalDate.parse("2026-11-20"),
+                timeZoneId = "Europe/Warsaw",
                 bookableSlots = listOf(BookableSlotView(start, start.plusMinutes(50))))
             repository.appointmentValue = AppointmentView(appointmentId, participantId = participantId,
                 startsAt = start, endsAt = start.plusMinutes(50), version = 3,

@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.util.UUID
 
 sealed interface ReadState<out T> {
@@ -54,6 +56,15 @@ data class ClientFormDraft(
 sealed interface ScheduleTarget {
     data class New(val participantId: UUID? = null) : ScheduleTarget
     data class Edit(val appointmentId: UUID, val participantId: UUID) : ScheduleTarget
+}
+
+/** Calendar dates are in the specialist's persisted IANA time zone, never UTC or device time.
+ * The API may omit the zone on an invalid profile; refuse to guess.
+ */
+internal fun appointmentDateInSpecialistZone(start: OffsetDateTime?, timeZoneId: String?): LocalDate? {
+    if (start == null || timeZoneId.isNullOrBlank()) return null
+    val zone = runCatching { ZoneId.of(timeZoneId) }.getOrNull() ?: return null
+    return start.atZoneSameInstant(zone).toLocalDate()
 }
 
 /** Updating metadata may reuse the authorized appointment's own occupied time.
@@ -176,6 +187,9 @@ class OperationalViewModel(
     }
     private val mutableScheduleDate = MutableStateFlow<LocalDate?>(null)
     val scheduleDate = mutableScheduleDate.asStateFlow()
+    // True only while discovering the specialist's calendar zone for an existing visit.
+    private val mutableScheduleDateResolving = MutableStateFlow(false)
+    val scheduleDateResolving = mutableScheduleDateResolving.asStateFlow()
     private val mutableScheduleDay = MutableStateFlow<ReadState<TodayView>>(ReadState.Idle)
     val scheduleDay = mutableScheduleDay.asStateFlow()
     private val mutableScheduleSave = MutableStateFlow<ScheduleSaveState>(ScheduleSaveState.Idle)
@@ -405,16 +419,45 @@ class OperationalViewModel(
             shortPurpose = baseline.shortPurpose,
             baseline = baseline
         )
-        val zone = runCatching {
-            java.time.ZoneId.of((mutableToday.value as? ReadState.Ready)?.value?.timeZoneId ?: "UTC")
-        }.getOrDefault(java.time.ZoneOffset.UTC)
-        mutableScheduleDate.value = detail.startsAt?.atZoneSameInstant(zone)?.toLocalDate()
+        val cachedZone = (mutableToday.value as? ReadState.Ready)?.value?.timeZoneId
+        val date = appointmentDateInSpecialistZone(detail.startsAt, cachedZone)
+        if (date == null) {
+            // A detail opened from S03 may have no cached Today response. Read the
+            // specialist's current calendar only to discover its authoritative zone.
+            // Do not issue a day-scoped query or show UTC-derived dates before this.
+            mutableScheduleDateResolving.value = true
+            mutableScheduleDate.value = null
+        } else {
+            mutableScheduleDate.value = date
+        }
         loadScheduleDay()
         return true
     }
 
+    /** Called only after the unscoped Today GET confirms the persisted specialist zone.
+     * The read remains hidden until the resolved visit day has been fetched.
+     */
+    fun resolveEditScheduleDate(serverToday: TodayView) {
+        val target = mutableScheduleTarget.value as? ScheduleTarget.Edit ?: return
+        if (!mutableScheduleDateResolving.value) return
+        val detail = (mutableAppointment.value as? ReadState.Ready)?.value ?: return
+        if (detail.appointmentId != target.appointmentId || detail.participantId != target.participantId) {
+            mutableScheduleDay.value = ReadState.Error
+            return
+        }
+        val date = appointmentDateInSpecialistZone(detail.startsAt, serverToday.timeZoneId)
+        if (date == null) {
+            mutableScheduleDay.value = ReadState.Error
+            return
+        }
+        mutableScheduleDate.value = date
+        mutableScheduleDateResolving.value = false
+        loadScheduleDay()
+    }
+
     fun chooseScheduleDate(date: LocalDate?) {
-        if (mutableScheduleTarget.value == null || mutableScheduleSave.value == ScheduleSaveState.Saving) return
+        if (mutableScheduleTarget.value == null || mutableScheduleSave.value == ScheduleSaveState.Saving ||
+            mutableScheduleDateResolving.value) return
         mutableScheduleDate.value = date
         mutableScheduleDraft.value = mutableScheduleDraft.value?.copy(selectedSlot = null)
         pendingSchedule = null
@@ -425,7 +468,7 @@ class OperationalViewModel(
     fun loadScheduleDay() {
         val target = mutableScheduleTarget.value ?: return
         if (mutableScheduleSave.value == ScheduleSaveState.Saving) return
-        val date = mutableScheduleDate.value
+        val date = if (mutableScheduleDateResolving.value) null else mutableScheduleDate.value
         val requestId = ++scheduleRequest
         read(mutableScheduleDay, skipIfLoading = false,
             isCurrent = { requestId == scheduleRequest && mutableScheduleTarget.value == target }) {
@@ -437,6 +480,10 @@ class OperationalViewModel(
     fun saveSchedule(command: AppointmentSaveCommand) {
         val target = mutableScheduleTarget.value ?: return
         if (mutableScheduleSave.value == ScheduleSaveState.Saving || mutableScheduleSave.value is ScheduleSaveState.Saved) return
+        if (mutableScheduleDateResolving.value) {
+            mutableScheduleSave.value = ScheduleSaveState.Failed("Nie potwierdzono strefy czasu specjalisty.")
+            return
+        }
         val day = (mutableScheduleDay.value as? ReadState.Ready)?.value
         val currentDetail = (mutableAppointment.value as? ReadState.Ready)?.value
         if (!validScheduleWindow(target, command, currentDetail, day)) {
@@ -525,6 +572,7 @@ class OperationalViewModel(
         mutableScheduleTarget.value = null
         mutableScheduleDraft.value = null
         mutableScheduleDate.value = null
+        mutableScheduleDateResolving.value = false
         mutableScheduleDay.value = ReadState.Idle
         mutableScheduleSave.value = ScheduleSaveState.Idle
     }

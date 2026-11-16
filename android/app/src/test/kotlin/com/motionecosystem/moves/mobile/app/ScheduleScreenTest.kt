@@ -94,6 +94,17 @@ class ScheduleScreenTest {
             TodayView(bookableSlots = listOf(BookableSlotView(free.startsAt, free.endsAt)))))
     }
 
+    @Test fun appointmentCalendarDateUsesSpecialistZoneNotUtcOrPhoneDefault() {
+        val start = OffsetDateTime.parse("2026-11-20T00:30:00Z")
+        assertEquals(java.time.LocalDate.of(2026, 11, 19),
+            appointmentDateInSpecialistZone(start, "America/Los_Angeles"))
+        assertEquals(java.time.LocalDate.of(2026, 11, 20),
+            appointmentDateInSpecialistZone(start, "Europe/Warsaw"))
+        assertNull(appointmentDateInSpecialistZone(start, null))
+        assertNull(appointmentDateInSpecialistZone(start, "Unknown/Zone"))
+        assertNull(appointmentDateInSpecialistZone(null, "Europe/Warsaw"))
+    }
+
     @Test fun slotValidationAndFormattingUseServerCalendarZone() {
         val start = OffsetDateTime.parse("2026-03-29T00:30:00Z")
         val slot = BookableSlotView(start, start.plusHours(1))
