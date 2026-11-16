@@ -82,7 +82,7 @@ internal fun validScheduleWindow(
 }
 
 /** RAM-only scheduling draft, kept through rotation and 409 but deleted on logout/403. */
-data class ScheduleDraft(
+internal data class ScheduleDraft(
     val participantId: UUID?,
     val type: AppointmentType = AppointmentType.CONSULTATION,
     val locationMode: AppointmentLocationMode = AppointmentLocationMode.IN_PERSON,
@@ -159,8 +159,8 @@ class OperationalViewModel(
     private val mutableScheduleTarget = MutableStateFlow<ScheduleTarget?>(null)
     val scheduleTarget = mutableScheduleTarget.asStateFlow()
     private val mutableScheduleDraft = MutableStateFlow<ScheduleDraft?>(null)
-    val scheduleDraft = mutableScheduleDraft.asStateFlow()
-    fun changeScheduleDraft(next: ScheduleDraft) {
+    internal val scheduleDraft = mutableScheduleDraft.asStateFlow()
+    internal fun changeScheduleDraft(next: ScheduleDraft) {
         val current = mutableScheduleDraft.value ?: return
         val target = mutableScheduleTarget.value ?: return
         if (mutableScheduleSave.value == ScheduleSaveState.Saving ||
