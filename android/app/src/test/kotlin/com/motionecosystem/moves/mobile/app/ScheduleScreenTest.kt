@@ -7,6 +7,34 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class ScheduleScreenTest {
+    @Test fun newAppointmentCannotInheritAnotherParticipantsCachedFields() {
+        val oldParticipant = UUID.randomUUID()
+        val nextParticipant = UUID.randomUUID()
+        val oldAppointment = AppointmentView(
+            appointmentId = UUID.randomUUID(),
+            participantId = oldParticipant,
+            type = AppointmentType.PHYSIOTHERAPY,
+            locationMode = AppointmentLocationMode.REMOTE,
+            location = "Prywatny adres poprzedniego uczestnika",
+            shortPurpose = "Poufny opis poprzedniej wizyty",
+            version = 4L
+        )
+        val cached = ReadState.Ready(oldAppointment)
+        // The new form must use its neutral defaults even if an old appointment remains in RAM.
+        assertNull(scheduleDetailsFor(ScheduleTarget.New(nextParticipant), cached))
+        assertNull(scheduleDetailsFor(ScheduleTarget.New(), cached))
+        // An edit may use cached fields only for its own matching appointment AND participant.
+        assertNull(scheduleDetailsFor(
+            ScheduleTarget.Edit(oldAppointment.appointmentId!!, nextParticipant), cached
+        ))
+        assertNull(scheduleDetailsFor(
+            ScheduleTarget.Edit(UUID.randomUUID(), oldParticipant), cached
+        ))
+        assertEquals(oldAppointment, scheduleDetailsFor(
+            ScheduleTarget.Edit(oldAppointment.appointmentId, oldParticipant), cached
+        ))
+    }
+
     @Test fun slotValidationAndFormattingUseServerCalendarZone() {
         val start = OffsetDateTime.parse("2026-03-29T00:30:00Z")
         val slot = BookableSlotView(start, start.plusHours(1))

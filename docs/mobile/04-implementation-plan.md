@@ -164,3 +164,8 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 - Realizacja wymaga `status=IN_PROGRESS` i powiązanej sesji; zakończenie wymaga `status=IN_PROGRESS`. Dokumentacja z S05 nie otwiera się dla odwołanych lub nieodbytych wizyt. Są to ograniczenia nawigacji, nie zamiennik serwerowych warunków zapisów.
 - S06, S07 i S09 są na tym etapie **tylko nieedytowalnymi powłokami nawigacyjnymi**, jasno oznaczonymi jako oczekujące na odpowiednio MOB-050, MOB-040/041 oraz MOB-051. Nie wykonują operacji zapisujących. **Nie wywołano** `closeout-context`, ponieważ backend przesyła w nim także pomiary; brak jakichkolwiek endpointów S08. Właściwe odczyty dokumentacji/realizacji oraz walidacja `canComplete` pozostają odrębnymi zadaniami.
 - Walidacja: skoncentrowane testy identyfikacji kontekstu, wyłączania nieuprawnionych tras, wejścia z kartoteki oraz ponownego GET i cofnięcia uprawnienia. Odbiór przycisków/back na Motoroli pozostaje otwarty.
+
+## Poprawka audytowa: izolacja formularza terminu (2026-11-16)
+
+- Nowy termin `ScheduleTarget.New` nie może odziedziczyć `type`, `locationMode`, `location` ani `shortPurpose` po wcześniej otwartej wizycie innego uczestnika. Przed otwarciem formularza unieważniamy również szczegóły poprzedniego spotkania.
+- Przy edycji `ScheduleTarget.Edit` dane wyjściowe pochodzą wyłącznie z uprawnionego szczegółu o **jednocześnie zgodnych** `appointmentId` i `participantId`. Wąskie testy sprawdzają oba przypadki. Pozostałe ustalenia code review pozostają odrębnymi zadaniami.
