@@ -2,6 +2,7 @@ package com.motionecosystem.moves.mobile.app
 
 import com.motionecosystem.moves.mobile.api.*
 import com.motionecosystem.moves.mobile.repository.SpecialistRepository
+import com.motionecosystem.moves.mobile.auth.TokenRefreshTemporarilyUnavailable
 import java.util.UUID
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -17,6 +18,73 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class OperationalViewModelTest {
+    @Test fun keycloakOutageDuringRefreshGatesDataButPreservesSessionAndDraftForRetry() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            var temporaryOutage = false
+            var invalidated = false
+            val repository = StubRepository()
+            val vm = OperationalViewModel(repository, {
+                if (temporaryOutage) throw TokenRefreshTemporarilyUnavailable()
+                "token"
+            }, { invalidated = true })
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            val epoch = vm.accessEpoch.value
+            val participantId = UUID.randomUUID()
+            vm.selectParticipant(participantId)
+            vm.loadWorkspace(participantId)
+            advanceUntilIdle()
+            vm.openClientForm()
+            vm.updateClientForm(vm.clientDraft.value.copy(displayName = "Robocza kartoteka"))
+            temporaryOutage = true
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            assertEquals(ReadState.Offline, vm.professionalContext.value)
+            assertEquals(ReadState.Idle, vm.workspace.value)
+            assertEquals(ContextSelection.Participant(participantId), vm.selection.value)
+            assertEquals("Robocza kartoteka", vm.clientDraft.value.displayName)
+            assertFalse(invalidated)
+            assertEquals(epoch, vm.accessEpoch.value)
+
+            temporaryOutage = false
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            assertEquals(ActingContext.TRAINER, (vm.professionalContext.value as ReadState.Ready).value)
+            assertEquals(epoch + 1, vm.accessEpoch.value)
+            assertEquals(ContextSelection.Participant(participantId), vm.selection.value)
+            assertEquals(ReadState.Idle, vm.workspace.value)
+        } finally { Dispatchers.resetMain() }
+    }
+
+    @Test fun failureToRefreshBeforePostDoesNotSendOrAutoRetryMutation() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            var temporaryOutage = false
+            var invalidated = false
+            val repository = StubRepository()
+            val vm = OperationalViewModel(repository, {
+                if (temporaryOutage) throw TokenRefreshTemporarilyUnavailable()
+                "token"
+            }, { invalidated = true })
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            vm.openClientForm()
+            vm.updateClientForm(vm.clientDraft.value.copy(displayName = "Nowy"))
+            temporaryOutage = true
+            vm.createClient(ClientCommand(displayName = "Nowy"), vm.clientDraft.value.requestKey)
+            advanceUntilIdle()
+            assertEquals(ReadState.Offline, vm.professionalContext.value)
+            assertEquals(0, repository.creationKeys.size)
+            assertEquals("Nowy", vm.clientDraft.value.displayName)
+            assertFalse(invalidated)
+            temporaryOutage = false
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            assertEquals(0, repository.creationKeys.size)
+        } finally { Dispatchers.resetMain() }
+    }
+
     @Test fun deniedAccessClearsPreviousProjectionWithoutLoggingOut() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {

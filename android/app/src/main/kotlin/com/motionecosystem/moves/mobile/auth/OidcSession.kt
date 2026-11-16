@@ -7,12 +7,15 @@ import com.motionecosystem.moves.mobile.BuildConfig
 import com.motionecosystem.moves.mobile.api.TokenProvider
 import java.net.HttpURLConnection
 import java.net.URL
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
 import net.openid.appauth.AppAuthConfiguration
 import net.openid.appauth.AuthState
+import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationRequest
 import net.openid.appauth.AuthorizationResponse
 import net.openid.appauth.AuthorizationService
@@ -30,6 +33,19 @@ sealed interface SessionStatus {
     data object SignedIn : SessionStatus
     data class Failed(val message: String) : SessionStatus
 }
+
+/** A transport/temporary identity-provider failure: session survives but PHI must stay gated.
+ * Intentionally has no message containing token or endpoint data.
+ */
+class TokenRefreshTemporarilyUnavailable : Exception("Identity provider temporarily unavailable")
+
+/** OAuth token rejections prove an unusable session; network/5xx/unrecognized failures do not. */
+internal fun isDefinitiveTokenRejection(error: AuthorizationException): Boolean =
+    error.type == AuthorizationException.TYPE_OAUTH_TOKEN_ERROR &&
+        error.error in setOf(
+            "invalid_grant", "invalid_client", "unauthorized_client",
+            "invalid_request", "unsupported_grant_type", "invalid_scope"
+        )
 
 /** Volatile session: tokens are never stored on disk; process restart requires login. */
 class OidcSession private constructor(context: Context, private val settings: OidcSettings) : TokenProvider {
@@ -107,20 +123,40 @@ class OidcSession private constructor(context: Context, private val settings: Oi
         }
     }
 
+    /** Only definitive OAuth token rejections terminate the volatile session.
+     * Transient refresh failures are signaled to the access gate, never treated as logout.
+     */
     suspend fun freshAccessToken(): String? {
         val state = active ?: return null
         return try {
-            val value = withTimeout(20_000) {
-                suspendCancellableCoroutine<String?> { continuation ->
-                    state.performActionWithFreshTokens(service) { access, _, error ->
-                        if (continuation.isActive) continuation.resume(if (error == null) access else null)
+            val (value, error) = withTimeout(20_000) {
+                suspendCancellableCoroutine<Pair<String?, AuthorizationException?>> { continuation ->
+                    state.performActionWithFreshTokens(service) { access, _, failure ->
+                        if (continuation.isActive) continuation.resume(access to failure)
                     }
                 }
             }
-            if (state !== active) null else if (value.isNullOrBlank()) { clear(); null } else value
+            if (state !== active) return null // Logout occurred during refresh.
+            if (error != null) {
+                if (isDefinitiveTokenRejection(error)) {
+                    clear()
+                    return null
+                }
+                throw TokenRefreshTemporarilyUnavailable()
+            }
+            if (value.isNullOrBlank()) {
+                clear() // No usable access token or refresh grant.
+                null
+            } else value
+        } catch (_: TimeoutCancellationException) {
+            throw TokenRefreshTemporarilyUnavailable()
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (temporary: TokenRefreshTemporarilyUnavailable) {
+            throw temporary
         } catch (_: Exception) {
-            clear()
-            null
+            // Fail closed while retaining the in-memory session for a manual retry.
+            throw TokenRefreshTemporarilyUnavailable()
         }
     }
 

@@ -109,17 +109,19 @@ fun MovesApp(session: OidcSession, onLogin: () -> Unit, onLogout: () -> Unit) {
 
     LaunchedEffect(status) {
         if (status == SessionStatus.SignedIn) {
-            if (session.freshAccessToken() != null) {
-                readiness.refresh()
-                operations.revalidateAccess()
-            } else {
-                readiness.clear()
-                operations.clear()
-            }
+            readiness.clear()
+            // The ViewModel owns the access gate and distinguishes temporary OIDC outages
+            // from revoked sessions. Never sign out merely because Keycloak is offline.
+            operations.revalidateAccess()
         } else {
             readiness.clear()
             operations.clear()
         }
+    }
+    LaunchedEffect(status, accessEpoch) {
+        // The new token was refreshed and the specialist profile was authorized.
+        if (status == SessionStatus.SignedIn && accessEpoch > 0 &&
+            operations.professionalContext.value is ReadState.Ready) readiness.refresh()
     }
     // Re-check after returning from background; never reveal stale participant data while offline.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
