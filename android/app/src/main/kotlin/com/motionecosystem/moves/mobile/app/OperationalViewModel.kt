@@ -810,7 +810,7 @@ class OperationalViewModel(
                 )
                 return
             }
-            PendingExecution(visit.appointmentId, visit.participantId, visit.plannedSessionId,
+            PendingExecution(visit.appointmentId, visit.participantId, visit.plannedSessionId ?: return,
                 UUID.randomUUID().toString(), payload)
         }
         pendingExecution = pending
