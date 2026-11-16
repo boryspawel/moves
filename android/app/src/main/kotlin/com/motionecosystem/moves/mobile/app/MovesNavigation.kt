@@ -310,6 +310,9 @@ private fun VisitStageSection(
     val selection by viewModel.selection.collectAsStateWithLifecycle()
     val appointment by viewModel.appointment.collectAsStateWithLifecycle()
     val workspace by viewModel.workspace.collectAsStateWithLifecycle()
+    val interviews by viewModel.interviews.collectAsStateWithLifecycle()
+    val interviewDraft by viewModel.interviewDraft.collectAsStateWithLifecycle()
+    val interviewSelection by viewModel.interviewSelection.collectAsStateWithLifecycle()
     LaunchedEffect(stage, selection) {
         when (val current = selection) {
             is ContextSelection.Appointment -> viewModel.loadAppointment(current.appointmentId)
@@ -328,10 +331,30 @@ private fun VisitStageSection(
             null -> Unit
         }
     }
-    VisitStageScreen(
-        stage = stage, selection = selection, appointment = appointment, workspace = workspace,
-        onRefresh = refresh, onBack = onBack
-    )
+    val documentationParticipant = if (stage == VisitStage.DOCUMENTATION) {
+        verifiedDocumentationParticipant(selection, appointment, workspace)
+    } else null
+    LaunchedEffect(stage, documentationParticipant) {
+        if (documentationParticipant != null) viewModel.loadInterviews(documentationParticipant)
+    }
+    if (stage == VisitStage.DOCUMENTATION && documentationParticipant != null) {
+        DocumentationScreen(
+            interviews = interviews,
+            selectedInterviewId = interviewSelection,
+            draft = interviewDraft,
+            onOpenInterview = { viewModel.openInterview(documentationParticipant, it) },
+            onCloseInterview = viewModel::closeInterview,
+            onUpdateText = viewModel::updateInterviewText,
+            onRefresh = refresh,
+            onBack = onBack
+            // On-device recognizer is a separate feature. No cloud fallback or mic permission.
+        )
+    } else {
+        VisitStageScreen(
+            stage = stage, selection = selection, appointment = appointment, workspace = workspace,
+            onRefresh = refresh, onBack = onBack
+        )
+    }
 }
 
 @Composable

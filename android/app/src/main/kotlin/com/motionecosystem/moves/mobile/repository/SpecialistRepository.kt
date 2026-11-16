@@ -14,6 +14,7 @@ interface SpecialistRepository {
     suspend fun clients(): RemoteResult<List<ClientView>>
     /** Mutations must never be auto-retried; the caller preserves the UUID key for explicit retries. */
     suspend fun createClient(command: ClientCommand, idempotencyKey: String): RemoteResult<ClientView>
+    suspend fun interviews(participantId: java.util.UUID, actingContext: ActingContext): RemoteResult<List<InterviewView>>
     suspend fun workspace(participantId: java.util.UUID): RemoteResult<WorkspaceView>
     suspend fun timeline(participantId: java.util.UUID, cursor: String? = null, from: String? = null, to: String? = null): RemoteResult<TimelinePage>
     suspend fun appointment(id: java.util.UUID): RemoteResult<AppointmentView>
@@ -33,6 +34,8 @@ class NetworkSpecialistRepository(private val api: MovesApi, private val calls: 
     override suspend fun clients() = read { api.clients() }
     override suspend fun createClient(command: ClientCommand, idempotencyKey: String): RemoteResult<ClientView> =
         withContext(Dispatchers.IO) { calls.execute { api.createClient(idempotencyKey, command) } }
+    override suspend fun interviews(participantId: java.util.UUID, actingContext: ActingContext) =
+        read { api.interviews(participantId, actingContext) }
     override suspend fun workspace(participantId: java.util.UUID) = read { api.workspace(participantId) }
     override suspend fun timeline(participantId: java.util.UUID, cursor: String?, from: String?, to: String?) =
         read { api.timeline(participantId, cursor = cursor, from = from, to = to) }

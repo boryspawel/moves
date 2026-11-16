@@ -156,6 +156,13 @@ class OperationalViewModel(
     val workspace = mutableWorkspace.asStateFlow()
     private val mutableTimeline = MutableStateFlow<ReadState<TimelineFeed>>(ReadState.Idle)
     val timeline = mutableTimeline.asStateFlow()
+    private val mutableInterviews = MutableStateFlow<ReadState<List<InterviewView>>>(ReadState.Idle)
+    val interviews = mutableInterviews.asStateFlow()
+    private val mutableInterviewDraft = MutableStateFlow<InterviewDraft?>(null)
+    internal val interviewDraft = mutableInterviewDraft.asStateFlow()
+    private val mutableInterviewSelection = MutableStateFlow<UUID?>(null)
+    internal val interviewSelection = mutableInterviewSelection.asStateFlow()
+    private var interviewRequest = 0
     private var workspaceRequest = 0
     private var timelineRequest = 0
 
@@ -595,12 +602,16 @@ class OperationalViewModel(
         (mutableSelection.value as? ContextSelection.Participant)?.participantId
 
     fun selectParticipant(id: UUID) {
+        mutableInterviewSelection.value = null
+        mutableInterviewDraft.value = null
         resetAppointmentReads()
         resetParticipantReads()
         mutableSelection.value = ContextSelection.Participant(id)
     }
 
     fun selectAppointment(participantId: UUID?, appointmentId: UUID) {
+        mutableInterviewSelection.value = null
+        mutableInterviewDraft.value = null
         resetAppointmentReads()
         resetParticipantReads()
         mutableSelection.value = ContextSelection.Appointment(participantId, appointmentId)
@@ -617,8 +628,62 @@ class OperationalViewModel(
     private fun resetParticipantReads() {
         workspaceRequest++
         timelineRequest++
+        interviewRequest++
         mutableWorkspace.value = ReadState.Idle
         mutableTimeline.value = ReadState.Idle
+        mutableInterviews.value = ReadState.Idle
+    }
+
+    /** A documentation GET is permitted only after the current S03/S05 context was reverified. */
+    fun loadInterviews(participantId: UUID) {
+        if (verifiedDocumentationParticipant(
+                mutableSelection.value, mutableAppointment.value, mutableWorkspace.value
+            ) != participantId || verifiedRole == null) return
+        val role = verifiedRole ?: return
+        val requestId = ++interviewRequest
+        read(mutableInterviews, skipIfLoading = false,
+            isCurrent = {
+                requestId == interviewRequest && verifiedRole == role &&
+                    verifiedDocumentationParticipant(
+                        mutableSelection.value, mutableAppointment.value, mutableWorkspace.value
+                    ) == participantId
+            }) { repository.interviews(participantId, role) }
+    }
+
+    fun openInterview(participantId: UUID, interviewId: UUID) {
+        val current = mutableInterviewDraft.value
+        if (current?.dirty == true) return
+        val allowed = verifiedDocumentationParticipant(
+            mutableSelection.value, mutableAppointment.value, mutableWorkspace.value
+        ) == participantId
+        val record = (mutableInterviews.value as? ReadState.Ready)?.value
+            ?.firstOrNull { it.id == interviewId && it.participantId == participantId }
+        if (!allowed || record == null) return
+        mutableInterviewSelection.value = interviewId
+        mutableInterviewDraft.value = initialInterviewDraft(participantId, record)
+    }
+
+    fun closeInterview() {
+        mutableInterviewSelection.value = null
+        mutableInterviewDraft.value = null
+    }
+
+    /** No server write yet: MOB-040 will implement versioned PUT and conflict handling. */
+    fun updateInterviewText(code: String, text: String) {
+        val draft = mutableInterviewDraft.value ?: return
+        if (verifiedDocumentationParticipant(
+                mutableSelection.value, mutableAppointment.value, mutableWorkspace.value
+            ) != draft.participantId) return
+        val record = (mutableInterviews.value as? ReadState.Ready)?.value
+            ?.firstOrNull { it.id == draft.interviewId && it.participantId == draft.participantId }
+            ?: return
+        if (record.status != "DRAFT" || "SAVE_DRAFT" !in record.availableActions) return
+        val question = record.questions.firstOrNull { it.code == code } ?: return
+        if (!editableInterviewAnswer(question) || text.length > 4000) return
+        mutableInterviewDraft.value = draft.copy(
+            values = draft.values + (code to text),
+            dirty = draft.dirty || draft.values[code] != text
+        )
     }
 
     fun loadWorkspace(participantId: UUID) {
@@ -808,6 +873,8 @@ class OperationalViewModel(
         mutableCreateClient.value = CreateClientState.Idle
         mutableClientDraft.value = ClientFormDraft()
         mutableClientQuery.value = ""
+        mutableInterviewSelection.value = null
+        mutableInterviewDraft.value = null
         mutableRequestedDate.value = null
         mutableToday.value = ReadState.Idle
         mutableParticipants.value = ReadState.Idle
