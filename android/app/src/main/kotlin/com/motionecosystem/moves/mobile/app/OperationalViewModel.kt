@@ -1198,7 +1198,7 @@ class OperationalViewModel(
         (mutableNotes.value as? ReadState.Ready)?.value
             ?.firstOrNull { it.id == noteId && it.participantId == participantId }
 
-    fun changeNoteDraft(next: NoteValues) {
+    internal fun changeNoteDraft(next: NoteValues) {
         val current = mutableNoteDraft.value ?: return
         if (authorizedInterviewParticipant() != current.participantId ||
             mutableNoteWrite.value is NoteWriteState.Saving ||
