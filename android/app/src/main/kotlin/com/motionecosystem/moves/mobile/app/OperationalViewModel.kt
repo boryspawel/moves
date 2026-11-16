@@ -1312,25 +1312,27 @@ class OperationalViewModel(
         val state = mutableNoteWrite.value
         if (state !is NoteWriteState.Conflict && state !is NoteWriteState.Uncertain) return
         val draft = mutableNoteDraft.value
-        val participant = draft?.participantId ?: return
-        val id = draft.noteId ?: return
-        if (authorizedInterviewParticipant() != participant) return
+        val participant = authorizedInterviewParticipant() ?: return
+        val id = mutableNoteSelection.value ?: return
+        if (draft != null && (draft.participantId != participant || draft.noteId != id)) return
         val latest = currentNote(participant, id) ?: return
         if (latest.status == "FINAL" &&
-            state == NoteWriteState.Uncertain(NoteOperation.FINALISE)) {
+            (state is NoteWriteState.Conflict && state.operation == NoteOperation.FINALISE ||
+                state == NoteWriteState.Uncertain(NoteOperation.FINALISE))) {
             pendingNotePost = null
             mutableNoteDraft.value = null
             mutableNoteWrite.value = NoteWriteState.Success("Notatka została sfinalizowana na serwerze.")
             return
         }
         if (latest.status == "ARCHIVED" &&
-            state == NoteWriteState.Uncertain(NoteOperation.ARCHIVE)) {
+            (state is NoteWriteState.Conflict && state.operation == NoteOperation.ARCHIVE ||
+                state == NoteWriteState.Uncertain(NoteOperation.ARCHIVE))) {
             pendingNotePost = null
             mutableNoteDraft.value = null
             mutableNoteWrite.value = NoteWriteState.Success("Notatka została zarchiwizowana.")
             return
         }
-        val rebased = rebaseNoteDraft(draft, latest) ?: return
+        val rebased = rebaseNoteDraft(draft ?: return, latest) ?: return
         mutableNoteDraft.value = rebased
         pendingNotePost = null
         mutableNoteWrite.value = NoteWriteState.Idle
@@ -1394,8 +1396,10 @@ class OperationalViewModel(
             RemoteError.Unauthorized -> { clear(); invalidateSession() }
             RemoteError.Forbidden -> { clear(); mutableProfessionalContext.value = ReadState.Forbidden }
             RemoteError.Conflict -> {
-                if (kind != NoteOperation.CREATE) pendingNotePost = null
-                mutableNoteWrite.value = NoteWriteState.Conflict(kind)
+                pendingNotePost = null
+                mutableNoteWrite.value = if (kind == NoteOperation.CREATE) {
+                    NoteWriteState.Failed("Serwer odrzucił utworzenie notatki (409). Sprawdź listę przed ponowieniem.")
+                } else NoteWriteState.Conflict(kind)
                 loadNotes(participant)
             }
             is RemoteError.Network, is RemoteError.Serialization ->
