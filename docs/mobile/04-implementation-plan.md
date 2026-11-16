@@ -231,3 +231,10 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 - S05/S04 przechodzą do innego ekranu po `Saved` tylko wtedy, gdy formularz, jego cel, stan zapisu i autoryzacja nadal są aktualne; nie wykonują spóźnionej nawigacji podczas bramki reautoryzacji. Systemowe Wstecz pozostaje zablokowane podczas zapisu.
 - **Wylogowanie pozostaje zawsze dostępne.** Celowa utrata sesji lub powrót z tła mogą nadal prowadzić do wyniku `Uncertain` (bez automatycznego retry); powyższa blokada dotyczy przypadkowej ręcznej rewalidacji podczas zapisu.
 - Dodano jedynie wąski test polityki interakcji. Na żądanie użytkownika: **bez builda, bez testów, bez uruchamiania GitHub Actions**. Walidację połączyć z następną poprawką.
+
+## Poprawka audytowa P2: minimalizacja pomiarów w S03 workspace (2026-11-16)
+
+- `GET /api/v1/specialist/participants/{participantId}/workspace` nie wykonuje już automatycznie `measurements.recent(...)` ani nie generuje sygnału `RECENT_MEASUREMENT` zawierającego wartości pomiarowe. Dla kompatybilności bieżącego kontraktu pole `recentMeasurements` zwraca pustą listę.
+- Pomiary nadal są dostępne przez istniejący, osobno autoryzowany `GET /api/v1/specialist/clients/{participantId}/measurements` oraz odczyt szczegółowego zdarzenia osi czasu. Uprawnienia `VIEW_MEASUREMENTS` i zgoda `MEASUREMENTS` pozostają egzekwowane na serwerze.
+- Test regresyjny sprawdza pustą projekcję i brak wywołań portu pomiarów przy renderowaniu workspace. Android S03 już ignoruje `recentMeasurements`, więc jego kontrakt i UI nie wymagają modyfikacji.
+- GitHub Actions wykonuje **wyłącznie build** (bez testów), obejmując także poprzednią poprawkę #30. Testy uruchamia deweloper lokalnie.

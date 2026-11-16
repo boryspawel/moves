@@ -137,8 +137,9 @@ public class SpecialistParticipantReadService {
         List<AttentionItemView> attention = attention(subject, participantId, access);
         ParticipantWorkspaceAppointmentView nextAppointment = upcoming.isEmpty() ? null : appointment(subject, participantId, upcoming.getFirst());
         ActivePlanView activePlan = revision.map(value -> activePlan(value, now, recentExecutions)).orElse(null);
-        List<RecentMeasurementView> recentMeasurements = measurements == null ? List.of()
-                : measurements.recent(subject, participantId, actingContext(access.decision().role()), 3).stream().limit(3).map(this::recentMeasurement).toList();
+        // The general workspace must not implicitly load sensitive measurements.
+        // Keep an empty field for existing API consumers; S08 and explicitly requested
+        // measurement timeline events use separately authorized endpoints.
         ParticipantDocumentationEventQueryPort.DraftInterview draftInterview = recordEvents == null
                 || !access.decision().grantedCapabilities().contains(WorkspaceCapability.MANAGE_PARTICIPANT_RECORDS.name()) ? null
                 : recordEvents.latestDraftInterview(subject, participantId, actingContext(access.decision().role())).orElse(null);
@@ -148,8 +149,8 @@ public class SpecialistParticipantReadService {
                 focus, nextAppointment, activePlan,
                 revision.map(value -> goals(value.goals())).orElseGet(List::of),
                 canViewAdherence && adherence != null ? adherence.summarize(participantId, null, null) : AdherenceSummary.noData(), recentProgress(recentExecutions),
-                activeProblems(attention), attention, quickActions(access.decision(), upcoming, revision, attention), recentMeasurements,
-                situation(focus, nextAppointment, activePlan, attention, recentMeasurements));
+                activeProblems(attention), attention, quickActions(access.decision(), upcoming, revision, attention), List.of(),
+                situation(focus, nextAppointment, activePlan, attention));
     }
 
     public AdherenceSummary adherenceSummary(String subject, UUID participantId, LocalDate from, LocalDate to) {
@@ -536,10 +537,6 @@ public class SpecialistParticipantReadService {
         return executions.isEmpty() ? new RecentProgressView("NO_DATA", null, null) : new RecentProgressView("AVAILABLE",
                 executions.getFirst().completedAt() != null ? executions.getFirst().completedAt() : executions.getFirst().startedAt(), executions.getFirst().state());
     }
-    private RecentMeasurementView recentMeasurement(ParticipantMeasurementQueryPort.MeasurementSnapshot item) {
-        return new RecentMeasurementView(item.id(), ParticipantMetricCatalog.labelForMetricCode(item.metricCode()), item.value(),
-                item.unit(), item.measuredAt());
-    }
     private static List<ActiveProblemView> activeProblems(List<AttentionItemView> attention) {
         return attention.stream().map(item -> new ActiveProblemView(item.attentionId(), item.type(), item.priority(), item.status(),
                 item.shortDescription(), item.createdAt(), item.createdAt(), "WORKLIST", item.availableActions())).toList();
@@ -604,8 +601,7 @@ public class SpecialistParticipantReadService {
                 "Nie ma obecnie spraw wymagających reakcji.", null, null, null, null, null, null, null);
     }
     private static List<SituationalSignalView> situation(OperationalFocusView focus, ParticipantWorkspaceAppointmentView appointment,
-                                                          ActivePlanView activePlan, List<AttentionItemView> attention,
-                                                          List<RecentMeasurementView> measurements) {
+                                                          ActivePlanView activePlan, List<AttentionItemView> attention) {
         List<SituationalSignalView> signals = new ArrayList<>();
         attention.stream().filter(item -> !item.attentionId().equals(focus.attentionId())).findFirst().ifPresent(item -> signals.add(
                 new SituationalSignalView("ATTENTION", "Sprawa do obserwacji", item.shortDescription(), "OPEN_ATTENTION_ITEMS", "HISTORY",
@@ -622,9 +618,6 @@ public class SpecialistParticipantReadService {
             signals.add(new SituationalSignalView("ACTIVE_PLAN", "Aktywny plan", "Plan jest obecnie aktywny.",
                     "OPEN_ACTIVE_PLAN", "PLAN", null, null, activePlan.planId()));
         }
-        measurements.stream().findFirst().ifPresent(item -> signals.add(new SituationalSignalView("RECENT_MEASUREMENT", "Ostatni pomiar",
-                item.label() + ": " + item.value() + (item.unit() == null || item.unit().isBlank() ? "" : " " + item.unit()),
-                null, null, null, null, null)));
         return signals.stream().limit(4).toList();
     }
     private static int attentionPriority(AttentionItemView item) {
