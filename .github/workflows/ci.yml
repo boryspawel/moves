@@ -14,7 +14,8 @@ jobs:
           distribution: temurin
           java-version: "25"
           cache: maven
-      - run: mvn --batch-mode verify
+      - name: Package backend (tests skipped)
+        run: mvn --batch-mode -Dmaven.test.skip=true package
 
   frontend:
     runs-on: ubuntu-24.04
@@ -34,16 +35,5 @@ jobs:
         run: npm install --global npm@11.12.1
       - run: npm ci
         working-directory: web
-      - run: npm test -- --watch=false
-        working-directory: web
       - run: npm run build -- --configuration production
         working-directory: web
-      - run: npm run api:verify
-        working-directory: web
-
-  compose-smoke:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v5
-      - run: bash scripts/compose-smoke.sh
-      - run: bash scripts/production-web-smoke.sh

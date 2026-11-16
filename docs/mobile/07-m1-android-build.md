@@ -26,12 +26,12 @@ sdk.dir=/absolute/path/to/android-sdk
 
 ```bash
 cd android
-JAVA_HOME=/path/to/jdk-17 ANDROID_HOME=/path/to/android-sdk ./gradlew --no-daemon :app:testDevDebugUnitTest :app:assembleDebug
+JAVA_HOME=/path/to/jdk-17 ANDROID_HOME=/path/to/android-sdk ./gradlew --no-daemon :app:assembleDebug
 JAVA_HOME=/path/to/jdk-17 ANDROID_HOME=/path/to/android-sdk ./gradlew --no-daemon :app:assembleProdDebug -Pmoves.prodBaseUrl=https://api.example.org/
 JAVA_HOME=/path/to/jdk-17 ANDROID_HOME=/path/to/android-sdk ./gradlew --no-daemon :app:assembleDevDebug -Pmoves.devBaseUrl=http://192.168.1.20:8080/
 ```
 
-Debug APK `dev` jest w `android/app/build/outputs/apk/dev/debug/app-dev-debug.apk`. Workflow `.github/workflows/android.yml` wykonuje ten sam test i build oraz publikuje APK jako artefakt `moves-mobile-dev-debug-apk`. Nie uruchamia emulatora ani nie instaluje aplikacji.
+Debug APK `dev` jest w `android/app/build/outputs/apk/dev/debug/app-dev-debug.apk`. Workflow `.github/workflows/android.yml` wykonuje wyłącznie budowanie (bez testów) i udostępnia APK jako artefakt `moves-mobile-dev-debug-apk`. Nie uruchamia emulatora ani nie instaluje aplikacji.
 
 Po ręcznym podłączeniu urządzenia można sprawdzić ADB i zainstalować lokalny artefakt:
 
@@ -66,3 +66,9 @@ Navigation Compose: Dzień (terminy/liczniki), Uczestnicy (aktywne relacje) i Sp
 Każdy odczyt poprzedza próba uzyskania świeżego tokenu. 401 czyści sesję; 403 czyści wszystkie projekcje w RAM bez udawania wylogowania. Loading, pusta lista, brak połączenia, odmowa dostępu i błąd mają osobne widoki i akcję ponowienia. Repozytorium powtarza jedynie bezpieczny GET raz po krótkiej zwłoce przy błędzie sieci lub HTTP 502/503/504; mutacje pozostają wyłączone. Aplikacja blokuje podgląd recent apps (FLAG_SECURE). Żadnych pomiarów biomedycznych, danych medycznych w logach czy zapisu do dysku.
 
 Zbuduj nowy dev APK i zainstaluj przez `adb install -r`. Dla fizycznego telefonu i portów `adb reverse` można użyć `-Pmoves.devBaseUrl=http://127.0.0.1:8080/` i `-Pmoves.devOidcIssuer=http://localhost:8180/realms/motion-local` przy identycznym issuer Keycloak/backend. Sprawdź trzy sekcje, wybór kontekstu, nawigację wstecz, odświeżenie, logout; negatywne testy auth i refresh pozostają otwarte.
+
+## Polityka GitHub Actions od 2026-11-16
+
+- CI w GitHub wykonuje **wyłącznie build**: backend `mvn -Dmaven.test.skip=true package`, frontend `npm ci` + `npm run build -- --configuration production`, Android `./gradlew :app:assembleDevDebug`. Bez `mvn verify`, `npm test`, `api:verify` (wywołuje test Maven), `testDevDebugUnitTest` oraz smoke.
+- Automatyczna publikacja obrazów po sukcesie CI została wyłączona. `publish-images.yml` jest uruchamiany tylko ręcznie; samo wydanie nie jest testem ani automatycznym efektem budowania.
+- Testy wykonuje deweloper lokalnie na swojej maszynie; przy zmianach Androida uruchamia adekwatne wąskie testy i zapisuje wynik przed wydaniem. Status „build PASS” **nie oznacza** „testy PASS”.

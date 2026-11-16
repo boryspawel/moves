@@ -176,3 +176,10 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 - NavHost pozostaje w kompozycji pod nieprzezroczystą blokadą (bez dotyku, systemowego Wstecz i semantyki dostępności). Po potwierdzeniu **tej samej roli** ekran odzyskuje kontekst przez nowy autoryzowany GET, nigdy przez wcześniej pobrany obiekt ani automatyczne powtórzenie POST/PUT.
 - Zmiana roli, 401, 403, nieaktywny profil i wylogowanie nadal usuwają kontekst oraz niezapisane szkice. Brak sieci blokuje wyświetlanie i pozwala na ponowne sprawdzenie, bez ujawniania poprzednich projekcji. Zapisy w locie oznaczane są jako niepewne, bez samoczynnego retry.
 - Formularz zmiany terminu nie resetuje wpisanych pól, gdy podczas rewalidacji znika wersja szczegółu spotkania lub zostaje pobrana jej nowsza wartość. Minimalne testy: wznowienie z edycją, offline/403, zmiana roli, spóźniony odczyt. Odbiór przejścia do tła i powrotu na Motoroli pozostaje otwarty.
+
+## Poprawka audytowa P1: systemowe Wstecz i spójność kontekstu (2026-11-16)
+
+- Dla S05 i formularza terminu systemowy przycisk/gest Wstecz oraz widoczny przycisk `Wróć` korzystają z **tej samej** procedury nawigacji. Podczas zapisu START lub POST/PUT nawigacja Wstecz jest blokowana; po sukcesie zapisu terminu trasę zmienia wyłącznie handler rezultatu.
+- Wyjście z S05 do poprzedniej S03 przywraca `ContextSelection.Participant` dla rzeczywistego `participantId` i inicjuje świeży autoryzowany GET kartoteki, zamiast zostawiać kontekst spotkania i pusty ekran.
+- Anulowanie formularza zamyka `ScheduleTarget` oraz odświeża właściwą kartotekę albo spotkanie po powrocie; aktualizacja terminu powoduje natychmiastowe ponowne GET S05. Nie zmienia to statusu wizyty, nie uruchamia mutacji i nie odkłada PHI na dysk.
+- Wąskie testy regresyjne strategii Wstecz oraz weryfikacja build-only w GitHub Actions. Testy uruchamia deweloper wyłącznie lokalnie; manualna próba systemowego Wstecz na Motoroli pozostaje do odbioru.
