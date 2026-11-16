@@ -38,28 +38,29 @@ private fun relationshipLabel(role: ClientRelationship?): String = when (role) {
 internal fun ParticipantsScreen(
     state: ReadState<List<ClientView>>,
     creation: CreateClientState,
+    draft: ClientFormDraft,
+    query: String,
+    onSearch: (String) -> Unit,
+    onUpdateDraft: (ClientFormDraft) -> Unit,
+    onOpenCreate: () -> Unit,
     onRefresh: () -> Unit,
-    onCreate: (ClientCommand, String, (UUID) -> Unit) -> Unit,
+    onCreate: (ClientCommand, String) -> Unit,
     onCancel: () -> Unit,
-    onOpen: (UUID) -> Unit,
-    onResetCreate: () -> Unit
+    onOpen: (UUID) -> Unit
 ) {
-    var creating by remember { mutableStateOf(false) }
-    BackHandler(enabled = creating) {
-        if (creation != CreateClientState.Saving) {
-            creating = false
-            onCancel()
-        }
+    BackHandler(enabled = draft.open) {
+        if (creation != CreateClientState.Saving) onCancel()
     }
 
-    if (creating) {
+    if (draft.open) {
         ClientCreateForm(
             state = creation,
-            onSave = { command, key -> onCreate(command, key) { id -> creating = false; onOpen(id) } },
-            onCancel = { creating = false; onCancel() }
+            draft = draft,
+            onUpdateDraft = onUpdateDraft,
+            onSave = onCreate,
+            onCancel = onCancel
         )
     } else {
-        var query by remember { mutableStateOf("") }
         Column(Modifier.fillMaxSize()) {
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -68,7 +69,7 @@ internal fun ParticipantsScreen(
                 Text("Uczestnicy", style = MaterialTheme.typography.headlineMedium)
                 TextButton(onClick = onRefresh) { Text("Odśwież") }
             }
-            Button(onClick = { onResetCreate(); creating = true },
+            Button(onClick = onOpenCreate,
                 modifier = Modifier.padding(horizontal = 16.dp)) {
                 Text("Dodaj kartotekę")
             }
@@ -76,7 +77,7 @@ internal fun ParticipantsScreen(
                 Column(Modifier.fillMaxSize()) {
                     OutlinedTextField(
                         value = query,
-                        onValueChange = { query = it },
+                        onValueChange = onSearch,
                         label = { Text("Szukaj po nazwie") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth().padding(16.dp)
@@ -131,14 +132,16 @@ private fun ClientRow(client: ClientView, onOpen: (UUID) -> Unit) {
 @Composable
 private fun ClientCreateForm(
     state: CreateClientState,
+    draft: ClientFormDraft,
+    onUpdateDraft: (ClientFormDraft) -> Unit,
     onSave: (ClientCommand, String) -> Unit,
     onCancel: () -> Unit
 ) {
-    var displayName by remember { mutableStateOf("") }
-    var relationship by remember { mutableStateOf<ClientRelationship?>(null) }
-    var email by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var requestKey by remember { mutableStateOf(UUID.randomUUID().toString()) }
+    val displayName = draft.displayName
+    val relationship = draft.relationship
+    val email = draft.email
+    val phone = draft.phone
+    val requestKey = draft.requestKey
     var expanded by remember { mutableStateOf(false) }
     val saving = state == CreateClientState.Saving
     val valid = displayName.trim().length in 1..80 && email.length <= 254 && phone.length <= 40
@@ -149,7 +152,9 @@ private fun ClientCreateForm(
             style = MaterialTheme.typography.bodyMedium)
         OutlinedTextField(
             value = displayName,
-            onValueChange = { displayName = it; requestKey = UUID.randomUUID().toString() },
+            onValueChange = {
+                onUpdateDraft(draft.copy(displayName = it, requestKey = UUID.randomUUID().toString()))
+            },
             label = { Text("Imię i nazwisko lub nazwa kartoteki *") },
             singleLine = true, enabled = !saving,
             modifier = Modifier.fillMaxWidth()
@@ -164,8 +169,7 @@ private fun ClientCreateForm(
                         DropdownMenuItem(
                             text = { Text(relationshipLabel(option)) },
                             onClick = {
-                                relationship = option
-                                requestKey = UUID.randomUUID().toString()
+                                onUpdateDraft(draft.copy(relationship = option, requestKey = UUID.randomUUID().toString()))
                                 expanded = false
                             }
                         )
@@ -173,13 +177,17 @@ private fun ClientCreateForm(
             }
         }
         OutlinedTextField(
-            value = email, onValueChange = { email = it; requestKey = UUID.randomUUID().toString() },
+            value = email, onValueChange = {
+                onUpdateDraft(draft.copy(email = it, requestKey = UUID.randomUUID().toString()))
+            },
             label = { Text("E-mail (opcjonalnie)") }, singleLine = true, enabled = !saving,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
-            value = phone, onValueChange = { phone = it; requestKey = UUID.randomUUID().toString() },
+            value = phone, onValueChange = {
+                onUpdateDraft(draft.copy(phone = it, requestKey = UUID.randomUUID().toString()))
+            },
             label = { Text("Telefon (opcjonalnie)") }, singleLine = true, enabled = !saving,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
             modifier = Modifier.fillMaxWidth()

@@ -74,6 +74,32 @@ class OperationalViewModelTest {
         } finally { Dispatchers.resetMain() }
     }
 
+    @Test fun inMemoryClientFormSurvivesRevalidationButIsClearedAfterLogout() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val vm = OperationalViewModel(StubRepository(), { "token" }, {})
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            vm.openClientForm()
+            val initialKey = vm.clientDraft.value.requestKey
+            val draft = vm.clientDraft.value.copy(
+                displayName = "Uczestnik testowy",
+                email = "test@example.invalid",
+                requestKey = UUID.randomUUID().toString()
+            )
+            vm.updateClientForm(draft)
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            assertEquals(draft, vm.clientDraft.value)
+            assertTrue(vm.clientDraft.value.open)
+            assertEquals(initialKey == draft.requestKey, false)
+            vm.clear()
+            assertFalse(vm.clientDraft.value.open)
+            assertEquals("", vm.clientDraft.value.displayName)
+            assertEquals("", vm.clientDraft.value.email)
+        } finally { Dispatchers.resetMain() }
+    }
+
     @Test fun creatingClientUsesOnePostPerAttemptAndPreservesKeyForExplicitRetry() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {
@@ -81,7 +107,7 @@ class OperationalViewModelTest {
             val vm = OperationalViewModel(repository, { "access-token" }, {})
             val requestKey = UUID.randomUUID().toString()
             val command = ClientCommand(displayName = "Nowy uczestnik")
-            vm.createClient(command, requestKey) {}
+            vm.createClient(command, requestKey)
             advanceUntilIdle()
             assertTrue(vm.createClientState.value is CreateClientState.Failed)
             assertEquals(listOf(requestKey), repository.creationKeys)
@@ -89,11 +115,10 @@ class OperationalViewModelTest {
             repository.createResult = RemoteResult.Success(
                 ClientView(participantId = id, displayName = command.displayName, accessStatus = "NO_ACCOUNT")
             )
-            var opened: UUID? = null
-            vm.createClient(command, requestKey) { opened = it }
+            vm.createClient(command, requestKey)
             advanceUntilIdle()
             assertEquals(listOf(requestKey, requestKey), repository.creationKeys)
-            assertEquals(id, opened)
+            assertEquals(CreateClientState.Saved(id), vm.createClientState.value)
             assertEquals("NO_ACCOUNT", (vm.clients.value as ReadState.Ready).value.single().accessStatus)
         } finally { Dispatchers.resetMain() }
     }
@@ -521,6 +546,46 @@ class OperationalViewModelTest {
             assertEquals(start, repository.updateAppointmentCalls.single().second.startsAt)
             assertEquals(start.plusMinutes(45), repository.updateAppointmentCalls.single().second.endsAt)
             assertTrue(vm.scheduleSave.value is ScheduleSaveState.Saved)
+        } finally { Dispatchers.resetMain() }
+    }
+
+    @Test fun schedulingDraftRetainsOriginalTimeAndTextAfterRefreshThenClearsOnLogout() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = StubRepository()
+            val participantId = UUID.randomUUID()
+            val appointmentId = UUID.randomUUID()
+            val start = java.time.OffsetDateTime.parse("2026-11-20T10:00:00Z")
+            repository.appointmentValue = AppointmentView(
+                appointmentId, participantId = participantId,
+                startsAt = start, endsAt = start.plusMinutes(45),
+                shortPurpose = "Pierwotny cel", status = AppointmentStatus.CONFIRMED,
+                version = 3, availableActions = listOf("UPDATE")
+            )
+            val vm = OperationalViewModel(repository, { "token" }, {})
+            vm.selectAppointment(participantId, appointmentId)
+            vm.loadAppointment(appointmentId)
+            advanceUntilIdle()
+            assertTrue(vm.openEditSchedule())
+            advanceUntilIdle()
+            val selected = BookableSlotView(start.plusDays(1), start.plusDays(1).plusMinutes(45))
+            val draft = vm.scheduleDraft.value!!.copy(
+                shortPurpose = "Niezapisana zmiana",
+                location = "Miejsce robocze",
+                selectedSlot = selected
+            )
+            vm.changeScheduleDraft(draft)
+            repository.appointmentValue = repository.appointmentValue!!.copy(
+                version = 4, shortPurpose = "Zmiana serwera"
+            )
+            vm.loadAppointment(appointmentId)
+            advanceUntilIdle()
+            assertEquals(draft, vm.scheduleDraft.value)
+            assertEquals(start, vm.scheduleDraft.value!!.baseline!!.originalSlot!!.startsAt)
+            vm.clear()
+            assertNull(vm.scheduleDraft.value)
+            assertNull(vm.scheduleTarget.value)
+            assertEquals(ReadState.Idle, vm.appointment.value)
         } finally { Dispatchers.resetMain() }
     }
 
