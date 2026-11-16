@@ -71,7 +71,7 @@ data class ExecutionResultCommand(
 
 @Serializable
 data class RecordSessionExecutionCommand(
-    val declaredCompletion: Boolean = true,
+    val declaredCompletion: Boolean,
     val results: List<ExecutionResultCommand>,
     val painLevel: Int,
     val difficultyLevel: Int,
