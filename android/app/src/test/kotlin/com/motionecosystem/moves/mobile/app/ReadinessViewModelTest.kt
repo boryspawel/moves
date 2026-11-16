@@ -69,6 +69,16 @@ class ReadinessViewModelTest {
             RemoteResult.Failure(RemoteError.Conflict)
         override suspend fun interviews(participantId: java.util.UUID, actingContext: ActingContext):
             RemoteResult<List<InterviewView>> = RemoteResult.Success(emptyList())
+        override suspend fun startInterview(participantId: java.util.UUID, actingContext: ActingContext, key: String):
+            RemoteResult<InterviewView> = RemoteResult.Failure(RemoteError.Conflict)
+        override suspend fun saveInterviewDraft(
+            participantId: java.util.UUID, interviewId: java.util.UUID,
+            actingContext: ActingContext, command: SaveInterviewDraftCommand
+        ): RemoteResult<InterviewView> = RemoteResult.Failure(RemoteError.Conflict)
+        override suspend fun completeInterview(
+            participantId: java.util.UUID, interviewId: java.util.UUID,
+            actingContext: ActingContext, command: InterviewVersionCommand, key: String
+        ): RemoteResult<InterviewView> = RemoteResult.Failure(RemoteError.Conflict)
         override suspend fun workspace(participantId: java.util.UUID): RemoteResult<WorkspaceView> =
             RemoteResult.Success(WorkspaceView())
         override suspend fun timeline(participantId: java.util.UUID, cursor: String?, from: String?, to: String?): RemoteResult<TimelinePage> =

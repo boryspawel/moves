@@ -53,7 +53,7 @@ M1 wymaga M0; M2 wymaga M1; M3 i M4 można częściowo rozwijać równolegle po 
 
 ### M4 — dokumentacja
 
-- **MOB-040 (etap 1: widok/GET)** S07: lista wywiadów, sekcje i odpowiedzi z API, formularz RAM i przygotowanie pola dyktowania lokalnego. **Pozostało:** POST nowego wywiadu, PUT szkicu, finalizacja, obsługa 409/idempotencji, opcje wyboru w kontrakcie backendu.
+- **MOB-040 (kod wykonany; odbiór lokalny otwarty)** S07: GET/POST wywiadu, sekcje i odpowiedzi, edycja RAM, wersjonowany PUT szkicu, zakończenie POST oraz kolejny wywiad, 409 i jawne ponowienie z Idempotency-Key. Słowniki wyborów przejęte z istniejącego webowego UI; docelowo powinny znaleźć się w kontrakcie backendu.
 - **MOB-041** Notatki: utwórz, edytuj szkic, finalizuj, archiwizuj tylko według `availableActions`.
 - **MOB-042 — WSTRZYMANE** S08 i inne akcje odczytu/zapisu biomedycznych pomiarów (również przez obserwacje celów). Nie implementować do czasu backendowej kontroli odpowiedniej zgody; nie tworzyć jej w mobile.
 - **MOB-043** Utrata sieci, konflikt wersji, odtworzenie zgodne z polityką M0.
@@ -253,3 +253,13 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 - Zmiany lokalnych pól wywiadu pozostają wyłącznie w RAM istniejącego `OperationalViewModel`, także przy obrocie ekranu i przejściowej rewalidacji. Na utratę relacji, 401/403, zmianę użytkownika lub logout są usuwane. Widok żąda potwierdzenia przed opuszczeniem z niezapisanymi zmianami, bez sugerowania, że szkic jest zapisany na serwerze.
 - **Świadoma granica etapu:** przyciski `Rozpocznij nowy`, `Zapisz szkic`, `Zakończ wywiad`, `Rozpocznij kolejny` są wyłączone. Nie ma mutacji ani ukrytego autozapisu. Backend udostępnia pytania typu `SINGLE_SELECT`/`MULTI_SELECT`, ale **bez listy opcji**; widok tylko pokazuje dotychczasowe wartości i sygnalizuje brak słownika do czasu aktualizacji kontraktu. Notatki to następny etap MOB-041.
 - Dwa wąskie testy: odczyt tylko w zweryfikowanym kontekście i czyszczenie szkicu po wylogowaniu oraz mapowanie pól dynamicznego wywiadu. GitHub Actions **wyłącznie buduje**, testy wykonywane lokalnie. 
+
+## MOB-040 / etap 2 — zapisywanie i zakończenie S07 (2026-11-16)
+
+- `POST /api/v1/specialist/clients/{id}/records/interviews` pozwala rozpocząć wywiad (oraz kolejny, jeśli poprzedni ma `START_NEXT_INTERVIEW`); wymaga `actingContext` i `Idempotency-Key`. Nie tworzy równoległych wywiadów podczas aktywnego szkicu. Przy niepewnej odpowiedzi ręczne ponowienie stosuje **identyczny klucz**, bez automatycznego retry.
+- `PUT .../interviews/{id}` zapisuje `expectedVersion` i pełną listę odpowiedzi; w szczególności nie usuwa nieruszonych wartości wyboru na backendzie, który zastępuje wszystkie odpowiedzi. Pusty tekst usuwa odpowiedź. Daty i liczby są walidowane przed wysłaniem. Błąd sieci w PUT nie powoduje bezwarunkowego powtórzenia.
+- `POST .../interviews/{id}/complete` wykonuje nieodwracalne zakończenie wyłącznie przy `COMPLETE`, brakujących niezapisanych edycjach i wszystkich wymaganych polach; wymaga potwierdzenia oraz `Idempotency-Key`. Ukończone wywiady pozostają nieedytowalne, a ich poprzednie wersje oznaczane jako zastąpione przez backend.
+- `409`: pobierana jest nowa lista wywiadów, lokalne odpowiedzi nie są nadpisywane. Dopiero po świadomym potwierdzeniu przez specjalistę łączone są nowsze wartości serwera (w nietkniętych polach) z jego edycjami; następuje **oddzielne ręczne** PUT/POST. Niepewne POST używają wcześniejszego klucza, a PUT nie jest ponawiany automatycznie.
+- Android wyświetla istniejące słowniki odpowiedzi `SINGLE_SELECT` i `MULTI_SELECT` po kodzie pytania, w zgodzie z `web/src/app/features/specialist-participant-workspace.presentation.ts` (`activity_level`, `sleep`, `consents`). Jest to odtworzenie istniejącego kontraktu UX, bez tworzenia formalnych zgód; nieznane typy pytań pozostają tylko do odczytu. Przeniesienie słowników do backendu pozostaje długiem architektonicznym.
+- Wszystkie dane wprowadzane lokalnie pozostają w RAM (w tym po obrocie i przejściowej reautoryzacji); wylogowanie/401/403/zmiana uczestnika czyści szkice, żądania i odpowiedzi. Przycisk ręcznej reautoryzacji oraz gest Wstecz nie mogą przerwać bieżącej mutacji, a nagrania i rozpoznawanie mowy pozostają nieaktywne.
+- Wąskie testy: zachowanie odpowiedzi wyboru, rebase 409, brak automatycznego retry PUT, ręczny retry POST z oryginalnym kluczem. **W GitHub Actions tylko build.** Lokalnie: `cd android && ./gradlew :app:testDevDebugUnitTest`.
