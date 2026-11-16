@@ -478,6 +478,52 @@ class OperationalViewModelTest {
         } finally { Dispatchers.resetMain() }
     }
 
+    @Test fun editMetadataSavesWithoutSelectingAFreeSlotForItsOwnAppointment() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = StubRepository()
+            val participantId = UUID.randomUUID()
+            val appointmentId = UUID.randomUUID()
+            val start = java.time.OffsetDateTime.parse("2026-11-20T10:00:00Z")
+            repository.scheduleToday = TodayView(
+                localDate = java.time.LocalDate.parse("2026-11-20"), bookableSlots = emptyList()
+            )
+            repository.appointmentValue = AppointmentView(
+                appointmentId, participantId = participantId,
+                startsAt = start, endsAt = start.plusMinutes(45),
+                version = 3, status = AppointmentStatus.SCHEDULED, availableActions = listOf("UPDATE")
+            )
+            val vm = OperationalViewModel(repository, { "token" }, {})
+            vm.selectAppointment(participantId, appointmentId)
+            vm.loadAppointment(appointmentId)
+            advanceUntilIdle()
+            assertTrue(vm.openEditSchedule())
+            advanceUntilIdle()
+            val command = AppointmentSaveCommand(
+                participantId, start, start.plusMinutes(45),
+                AppointmentType.CONSULTATION, AppointmentLocationMode.REMOTE,
+                shortPurpose = "Zaktualizowany cel"
+            )
+            vm.saveSchedule(command.copy(startsAt = start.plusHours(1)))
+            advanceUntilIdle()
+            assertEquals(0, repository.updateAppointmentCalls.size)
+            assertTrue(vm.scheduleSave.value is ScheduleSaveState.Failed)
+
+            repository.updateAppointmentResults.add(RemoteResult.Success(
+                repository.appointmentValue!!.copy(
+                    version = 4, shortPurpose = "Zaktualizowany cel"
+                )
+            ))
+            vm.saveSchedule(command)
+            advanceUntilIdle()
+            assertEquals(1, repository.updateAppointmentCalls.size)
+            assertEquals(3L, repository.updateAppointmentCalls.single().second.version)
+            assertEquals(start, repository.updateAppointmentCalls.single().second.startsAt)
+            assertEquals(start.plusMinutes(45), repository.updateAppointmentCalls.single().second.endsAt)
+            assertTrue(vm.scheduleSave.value is ScheduleSaveState.Saved)
+        } finally { Dispatchers.resetMain() }
+    }
+
     @Test fun scheduleEditConflictRefreshesAuthorizedAppointmentAndDoesNotAutoRetry() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {

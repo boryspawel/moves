@@ -93,6 +93,15 @@ internal fun ScheduleScreen(
     val editable = edit == null || (existing?.appointmentId == edit.appointmentId &&
         existing.participantId == edit.participantId &&
         existing.version != null && "UPDATE" in existing.availableActions.orEmpty())
+    // The current time is occupied by this very appointment and is therefore absent
+    // from Today's free-slot list. It is nevertheless a valid option for editing metadata.
+    val currentSlot = if (edit != null && editable && existing?.startsAt != null && existing.endsAt != null &&
+        existing.endsAt.toInstant().isAfter(existing.startsAt.toInstant())) {
+        BookableSlotView(existing.startsAt, existing.endsAt)
+    } else null
+    val today = (scheduleDay as? ReadState.Ready)?.value
+    val slot = if (selectedSlot == null) currentSlot
+        else selectedSlot.takeIf { today != null && validBookableSlot(it, today) }
 
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
@@ -134,6 +143,15 @@ internal fun ScheduleScreen(
                     ?: "wybrana kartoteka"))
             }
 
+            if (currentSlot != null) {
+                Text("Dotychczasowa godzina", style = MaterialTheme.typography.titleMedium)
+                FilterChip(
+                    selected = selectedSlot == null,
+                    enabled = !saving,
+                    onClick = { selectedSlot = null },
+                    label = { Text("Bez zmiany terminu: ${slotLabel(currentSlot, today?.timeZoneId)}") }
+                )
+            }
             ReadPanel(scheduleDay, onRefresh, { false }) { day ->
                 val actualDate = day.localDate ?: requestedDate
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -155,7 +173,7 @@ internal fun ScheduleScreen(
                         .filter { it.startsAt != null && it.endsAt != null &&
                             it.endsAt.toInstant().isAfter(it.startsAt.toInstant()) }
                         .sortedBy { it.startsAt?.toInstant() }
-                    if (slots.isEmpty()) Text("Brak dostępnych godzin w wybranym dniu.")
+                    if (slots.isEmpty()) Text("Brak nowych wolnych godzin w wybranym dniu.")
                     slots.forEach { slot ->
                         val checked = selectedSlot == slot
                         FilterChip(
@@ -219,8 +237,6 @@ internal fun ScheduleScreen(
                     Text(saveState.message, color = MaterialTheme.colorScheme.error)
                 else -> Unit
             }
-            val today = (scheduleDay as? ReadState.Ready)?.value
-            val slot = selectedSlot?.takeIf { today != null && validBookableSlot(it, today) }
             val allowedParticipant = if (edit == null) {
                 clientOptions.any { it.participantId == participant }
             } else editable

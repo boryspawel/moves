@@ -183,3 +183,10 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 - Wyjście z S05 do poprzedniej S03 przywraca `ContextSelection.Participant` dla rzeczywistego `participantId` i inicjuje świeży autoryzowany GET kartoteki, zamiast zostawiać kontekst spotkania i pusty ekran.
 - Anulowanie formularza zamyka `ScheduleTarget` oraz odświeża właściwą kartotekę albo spotkanie po powrocie; aktualizacja terminu powoduje natychmiastowe ponowne GET S05. Nie zmienia to statusu wizyty, nie uruchamia mutacji i nie odkłada PHI na dysk.
 - Wąskie testy regresyjne strategii Wstecz oraz weryfikacja build-only w GitHub Actions. Testy uruchamia deweloper wyłącznie lokalnie; manualna próba systemowego Wstecz na Motoroli pozostaje do odbioru.
+
+## Poprawka audytowa P1: edycja wizyty bez zmiany terminu (2026-11-16)
+
+- S05 → zmiana terminu umożliwia **zachowanie dotychczasowej daty i godziny** podczas edycji typu, formy, miejsca oraz celu spotkania. Bieżące okno jest zajęte przez tę samą wizytę, więc nie musi znajdować się na liście wolnych slotów `Today`.
+- Zmiana faktycznej godziny wymaga nadal dokładnego dopasowania do aktualnego `bookableSlots`; utworzenie nowej wizyty zawsze tego wymaga. Dla PUT obowiązuje zgodność `appointmentId`, `participantId`, aktualna wersja i serwerowe `UPDATE`.
+- Backend nadal waliduje własne okno dostępności oraz kolizje, pomijając edytowaną wizytę podczas sprawdzania nakładania terminów. Brak zmiany backendu i brak lokalnych reguł przyznawania uprawnień.
+- Dwa wąskie testy jednostkowe dodano do repo, ale **nie uruchamiano ich w GitHub**; CI pozostaje wyłącznie build-only. Testy do uruchomienia lokalnie: `cd android && ./gradlew :app:testDevDebugUnitTest`.
