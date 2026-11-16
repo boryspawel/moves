@@ -39,10 +39,12 @@ internal fun canLeaveSchedule(state: ScheduleSaveState): Boolean =
 internal fun canManuallyRevalidate(
     appointment: AppointmentStartState,
     schedule: ScheduleSaveState,
-    client: CreateClientState
+    client: CreateClientState,
+    interview: InterviewWriteState = InterviewWriteState.Idle
 ): Boolean = appointment != AppointmentStartState.SAVING &&
     canLeaveSchedule(schedule) &&
-    client != CreateClientState.Saving && client !is CreateClientState.Saved
+    client != CreateClientState.Saving && client !is CreateClientState.Saved &&
+    interview !is InterviewWriteState.Saving
 
 @Composable
 fun MovesNavigation(
@@ -58,7 +60,8 @@ fun MovesNavigation(
     val appointmentWrite by viewModel.appointmentStart.collectAsStateWithLifecycle()
     val scheduleWrite by viewModel.scheduleSave.collectAsStateWithLifecycle()
     val clientWrite by viewModel.createClientState.collectAsStateWithLifecycle()
-    val mayRevalidate = canManuallyRevalidate(appointmentWrite, scheduleWrite, clientWrite)
+    val interviewWrite by viewModel.interviewWrite.collectAsStateWithLifecycle()
+    val mayRevalidate = canManuallyRevalidate(appointmentWrite, scheduleWrite, clientWrite, interviewWrite)
     // The authorization gate blanked all cached server projections. Restore only the
     // current route using fresh, authorized GETs; never replay mutations.
     LaunchedEffect(accessEpoch) {
@@ -109,7 +112,8 @@ fun MovesNavigation(
                             if (canManuallyRevalidate(
                                     viewModel.appointmentStart.value,
                                     viewModel.scheduleSave.value,
-                                    viewModel.createClientState.value
+                                    viewModel.createClientState.value,
+                                    viewModel.interviewWrite.value
                                 )
                             ) viewModel.revalidateAccess()
                         },
@@ -313,6 +317,7 @@ private fun VisitStageSection(
     val interviews by viewModel.interviews.collectAsStateWithLifecycle()
     val interviewDraft by viewModel.interviewDraft.collectAsStateWithLifecycle()
     val interviewSelection by viewModel.interviewSelection.collectAsStateWithLifecycle()
+    val interviewWrite by viewModel.interviewWrite.collectAsStateWithLifecycle()
     LaunchedEffect(stage, selection) {
         when (val current = selection) {
             is ContextSelection.Appointment -> viewModel.loadAppointment(current.appointmentId)
@@ -342,10 +347,16 @@ private fun VisitStageSection(
             interviews = interviews,
             selectedInterviewId = interviewSelection,
             draft = interviewDraft,
+            writeState = interviewWrite,
+            onStartInterview = { viewModel.startInterview(documentationParticipant) },
+            onSaveInterview = viewModel::saveInterviewDraft,
+            onCompleteInterview = viewModel::completeInterview,
+            onReconcileInterview = viewModel::reconcileInterviewVersion,
             onOpenInterview = { viewModel.openInterview(documentationParticipant, it) },
             onCloseInterview = viewModel::closeInterview,
             onUpdateText = viewModel::updateInterviewText,
-            onRefresh = refresh,
+            onUpdateSelections = viewModel::updateInterviewSelections,
+            onRefresh = { viewModel.loadInterviews(documentationParticipant) },
             onBack = onBack
             // On-device recognizer is a separate feature. No cloud fallback or mic permission.
         )

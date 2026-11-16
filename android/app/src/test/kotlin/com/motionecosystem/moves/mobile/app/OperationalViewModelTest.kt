@@ -18,6 +18,115 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class OperationalViewModelTest {
+    @Test fun interview409PreservesDraftAndRequiresExplicitMergeBeforeResubmitting() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val participant = UUID.randomUUID()
+            val id = UUID.randomUUID()
+            val q = listOf(
+                InterviewQuestion("reason", "First", "Why?", "TEXT"),
+                InterviewQuestion("activity_level", "Activity", "Activity?", "SINGLE_SELECT")
+            )
+            val first = InterviewView(
+                id = id, participantId = participant, status = "DRAFT", version = 1,
+                availableActions = listOf("SAVE_DRAFT", "COMPLETE"), questions = q,
+                answers = listOf(
+                    InterviewAnswer("reason", textValue = "Stara odpowiedź"),
+                    InterviewAnswer("activity_level", selections = listOf("LOW"))
+                )
+            )
+            val latest = first.copy(version = 2,
+                answers = listOf(
+                    InterviewAnswer("reason", textValue = "Nowszy wpis"),
+                    InterviewAnswer("activity_level", selections = listOf("MODERATE"))
+                )
+            )
+            val repository = StubRepository()
+            repository.interviewResult = RemoteResult.Success(listOf(first))
+            repository.saveInterviewResults.add(RemoteResult.Failure(RemoteError.Conflict))
+            val vm = OperationalViewModel(repository, { "token" }, {})
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            vm.selectParticipant(participant)
+            vm.loadWorkspace(participant)
+            advanceUntilIdle()
+            vm.loadInterviews(participant)
+            advanceUntilIdle()
+            vm.openInterview(participant, id)
+            vm.updateInterviewText("reason", "Moja odpowiedź")
+            assertTrue(vm.interviewDraft.value!!.dirty)
+            repository.interviewResult = RemoteResult.Success(listOf(latest))
+            vm.saveInterviewDraft()
+            advanceUntilIdle()
+            assertEquals(InterviewWriteState.Conflict(InterviewOperation.SAVE), vm.interviewWrite.value)
+            assertEquals(1, repository.saveInterviewCalls.size)
+            assertEquals(1L, repository.saveInterviewCalls.single().expectedVersion)
+            assertEquals(listOf("LOW"),
+                repository.saveInterviewCalls.single().answers.first { it.code == "activity_level" }.selections)
+            assertEquals("Moja odpowiedź", vm.interviewDraft.value!!.values["reason"])
+            vm.saveInterviewDraft() // No blind retry while conflicted.
+            advanceUntilIdle()
+            assertEquals(1, repository.saveInterviewCalls.size)
+            vm.reconcileInterviewVersion()
+            assertEquals(2L, vm.interviewDraft.value!!.baseVersion)
+            assertEquals("Moja odpowiedź", vm.interviewDraft.value!!.values["reason"])
+            val saved = latest.copy(version = 3,
+                answers = listOf(
+                    InterviewAnswer("reason", textValue = "Moja odpowiedź"),
+                    InterviewAnswer("activity_level", selections = listOf("MODERATE"))
+                )
+            )
+            repository.saveInterviewResults.add(RemoteResult.Success(saved))
+            vm.saveInterviewDraft()
+            advanceUntilIdle()
+            assertEquals(2L, repository.saveInterviewCalls.last().expectedVersion)
+            assertFalse(vm.interviewDraft.value!!.dirty)
+            assertTrue(vm.interviewWrite.value is InterviewWriteState.Success)
+        } finally { Dispatchers.resetMain() }
+    }
+
+    @Test fun uncertainCompletionReusesOriginalIdempotencyKeyOnManualRetry() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val participant = UUID.randomUUID()
+            val id = UUID.randomUUID()
+            val draft = InterviewView(
+                id = id, participantId = participant, status = "DRAFT", version = 4,
+                availableActions = listOf("SAVE_DRAFT", "COMPLETE"),
+                questions = listOf(InterviewQuestion("reason", "First", "Why?", "TEXT", true)),
+                answers = listOf(InterviewAnswer("reason", textValue = "Zapisano wcześniej"))
+            )
+            val repository = StubRepository()
+            repository.interviewResult = RemoteResult.Success(listOf(draft))
+            repository.completeInterviewResults.add(
+                RemoteResult.Failure(RemoteError.Network(java.io.IOException("offline")))
+            )
+            repository.completeInterviewResults.add(
+                RemoteResult.Success(draft.copy(status = "COMPLETED", version = 5,
+                    availableActions = listOf("START_NEXT_INTERVIEW")))
+            )
+            val vm = OperationalViewModel(repository, { "token" }, {})
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            vm.selectParticipant(participant)
+            vm.loadWorkspace(participant)
+            advanceUntilIdle()
+            vm.loadInterviews(participant)
+            advanceUntilIdle()
+            vm.openInterview(participant, id)
+            vm.completeInterview()
+            advanceUntilIdle()
+            assertEquals(InterviewWriteState.Uncertain(InterviewOperation.COMPLETE), vm.interviewWrite.value)
+            assertEquals(1, repository.completeInterviewCalls.size)
+            vm.completeInterview()
+            advanceUntilIdle()
+            assertEquals(2, repository.completeInterviewCalls.size)
+            assertEquals(repository.completeInterviewCalls[0], repository.completeInterviewCalls[1])
+            assertNull(vm.interviewDraft.value)
+            assertTrue(vm.interviewWrite.value is InterviewWriteState.Success)
+        } finally { Dispatchers.resetMain() }
+    }
+
     @Test fun interviewViewRequiresVerifiedParticipantAndClearsSensitiveDraftOnLogout() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {
@@ -896,10 +1005,33 @@ class OperationalViewModelTest {
         val startRequests = mutableListOf<Triple<UUID, Long, String>>()
         var interviewResult: RemoteResult<List<InterviewView>> = RemoteResult.Success(emptyList())
         val interviewRequests = mutableListOf<Pair<UUID, ActingContext>>()
+        val startInterviewCalls = mutableListOf<String>()
+        val startInterviewResults = ArrayDeque<RemoteResult<InterviewView>>()
+        val saveInterviewCalls = mutableListOf<SaveInterviewDraftCommand>()
+        val saveInterviewResults = ArrayDeque<RemoteResult<InterviewView>>()
+        val completeInterviewCalls = mutableListOf<Pair<InterviewVersionCommand, String>>()
+        val completeInterviewResults = ArrayDeque<RemoteResult<InterviewView>>()
         override suspend fun interviews(participantId: UUID, actingContext: ActingContext):
             RemoteResult<List<InterviewView>> {
             interviewRequests += participantId to actingContext
             return interviewResult
+        }
+        override suspend fun startInterview(participantId: UUID, actingContext: ActingContext, key: String):
+            RemoteResult<InterviewView> {
+            startInterviewCalls += key
+            return startInterviewResults.removeFirstOrNull() ?: RemoteResult.Failure(RemoteError.Conflict)
+        }
+        override suspend fun saveInterviewDraft(participantId: UUID, interviewId: UUID,
+            actingContext: ActingContext, command: SaveInterviewDraftCommand
+        ): RemoteResult<InterviewView> {
+            saveInterviewCalls += command
+            return saveInterviewResults.removeFirstOrNull() ?: RemoteResult.Failure(RemoteError.Conflict)
+        }
+        override suspend fun completeInterview(participantId: UUID, interviewId: UUID,
+            actingContext: ActingContext, command: InterviewVersionCommand, key: String
+        ): RemoteResult<InterviewView> {
+            completeInterviewCalls += command to key
+            return completeInterviewResults.removeFirstOrNull() ?: RemoteResult.Failure(RemoteError.Conflict)
         }
         override suspend fun appointment(id: UUID): RemoteResult<AppointmentView> =
             pendingAppointment?.await() ?: RemoteResult.Success(appointmentValue ?: AppointmentView(appointmentId = id))

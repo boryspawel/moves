@@ -162,6 +162,15 @@ class OperationalViewModel(
     internal val interviewDraft = mutableInterviewDraft.asStateFlow()
     private val mutableInterviewSelection = MutableStateFlow<UUID?>(null)
     internal val interviewSelection = mutableInterviewSelection.asStateFlow()
+    private val mutableInterviewWrite = MutableStateFlow<InterviewWriteState>(InterviewWriteState.Idle)
+    internal val interviewWrite = mutableInterviewWrite.asStateFlow()
+    private var interviewMutationRequest = 0
+    private data class PendingInterviewStart(val participant: UUID, val key: String)
+    private data class PendingInterviewComplete(
+        val participant: UUID, val interview: UUID, val version: Long, val key: String
+    )
+    private var pendingInterviewStart: PendingInterviewStart? = null
+    private var pendingInterviewComplete: PendingInterviewComplete? = null
     private var interviewRequest = 0
     private var workspaceRequest = 0
     private var timelineRequest = 0
@@ -301,6 +310,11 @@ class OperationalViewModel(
             mutableCreateClient.value = CreateClientState.Failed(
                 "Niepewny wynik zapisu. Przed ponowieniem sprawdź, czy kartoteka już istnieje."
             )
+        }
+        val interviewWriting = mutableInterviewWrite.value as? InterviewWriteState.Saving
+        if (interviewWriting != null) {
+            interviewMutationRequest++
+            mutableInterviewWrite.value = InterviewWriteState.Uncertain(interviewWriting.operation)
         }
         mutableToday.value = ReadState.Idle
         mutableClients.value = ReadState.Idle
@@ -602,16 +616,14 @@ class OperationalViewModel(
         (mutableSelection.value as? ContextSelection.Participant)?.participantId
 
     fun selectParticipant(id: UUID) {
-        mutableInterviewSelection.value = null
-        mutableInterviewDraft.value = null
+        resetInterviewEditor()
         resetAppointmentReads()
         resetParticipantReads()
         mutableSelection.value = ContextSelection.Participant(id)
     }
 
     fun selectAppointment(participantId: UUID?, appointmentId: UUID) {
-        mutableInterviewSelection.value = null
-        mutableInterviewDraft.value = null
+        resetInterviewEditor()
         resetAppointmentReads()
         resetParticipantReads()
         mutableSelection.value = ContextSelection.Appointment(participantId, appointmentId)
@@ -636,6 +648,8 @@ class OperationalViewModel(
 
     /** A documentation GET is permitted only after the current S03/S05 context was reverified. */
     fun loadInterviews(participantId: UUID) {
+        if (mutableInterviewWrite.value is InterviewWriteState.Saving) return
+        if (mutableProfessionalContext.value !is ReadState.Ready) return
         if (verifiedDocumentationParticipant(
                 mutableSelection.value, mutableAppointment.value, mutableWorkspace.value
             ) != participantId || verifiedRole == null) return
@@ -658,19 +672,30 @@ class OperationalViewModel(
         ) == participantId
         val record = (mutableInterviews.value as? ReadState.Ready)?.value
             ?.firstOrNull { it.id == interviewId && it.participantId == participantId }
-        if (!allowed || record == null) return
+        if (!allowed || record == null || mutableInterviewWrite.value is InterviewWriteState.Saving) return
         mutableInterviewSelection.value = interviewId
         mutableInterviewDraft.value = initialInterviewDraft(participantId, record)
+        mutableInterviewWrite.value = InterviewWriteState.Idle
+    }
+
+    private fun resetInterviewEditor() {
+        interviewMutationRequest++
+        pendingInterviewStart = null
+        pendingInterviewComplete = null
+        mutableInterviewSelection.value = null
+        mutableInterviewDraft.value = null
+        mutableInterviewWrite.value = InterviewWriteState.Idle
     }
 
     fun closeInterview() {
-        mutableInterviewSelection.value = null
-        mutableInterviewDraft.value = null
+        if (mutableInterviewWrite.value is InterviewWriteState.Saving) return
+        resetInterviewEditor()
     }
 
-    /** No server write yet: MOB-040 will implement versioned PUT and conflict handling. */
     fun updateInterviewText(code: String, text: String) {
         val draft = mutableInterviewDraft.value ?: return
+        if (mutableInterviewWrite.value is InterviewWriteState.Saving ||
+            mutableProfessionalContext.value !is ReadState.Ready) return
         if (verifiedDocumentationParticipant(
                 mutableSelection.value, mutableAppointment.value, mutableWorkspace.value
             ) != draft.participantId) return
@@ -680,10 +705,254 @@ class OperationalViewModel(
         if (record.status != "DRAFT" || "SAVE_DRAFT" !in record.availableActions) return
         val question = record.questions.firstOrNull { it.code == code } ?: return
         if (!editableInterviewAnswer(question) || text.length > 4000) return
+        val values = draft.values + (code to text)
         mutableInterviewDraft.value = draft.copy(
-            values = draft.values + (code to text),
-            dirty = draft.dirty || draft.values[code] != text
+            values = values,
+            dirty = values != draft.originalValues ||
+                draft.selections != draft.originalSelections
         )
+        if (mutableInterviewWrite.value is InterviewWriteState.Failed ||
+            mutableInterviewWrite.value is InterviewWriteState.Success) {
+            mutableInterviewWrite.value = InterviewWriteState.Idle
+        }
+    }
+
+    /** The select vocabulary matches the existing web UI, not a guessed consent grant. */
+    fun updateInterviewSelections(code: String, values: List<String>) {
+        val draft = mutableInterviewDraft.value ?: return
+        if (mutableInterviewWrite.value is InterviewWriteState.Saving ||
+            mutableProfessionalContext.value !is ReadState.Ready ||
+            authorizedInterviewParticipant() != draft.participantId) return
+        val record = currentInterview(draft.participantId, draft.interviewId) ?: return
+        if (record.status != "DRAFT" || "SAVE_DRAFT" !in record.availableActions) return
+        val question = record.questions.firstOrNull { it.code == code && isInterviewSelection(it) }
+            ?: return
+        val choices = interviewOptions(code).map { it.value }.toSet()
+        val unique = values.distinct()
+        if (choices.isEmpty() || unique.any { it !in choices } ||
+            (question.type == "SINGLE_SELECT" && unique.size > 1)) return
+        val selected = draft.selections + (code to unique)
+        mutableInterviewDraft.value = draft.copy(
+            selections = selected,
+            dirty = draft.values != draft.originalValues || selected != draft.originalSelections
+        )
+        if (mutableInterviewWrite.value is InterviewWriteState.Failed ||
+            mutableInterviewWrite.value is InterviewWriteState.Success) {
+            mutableInterviewWrite.value = InterviewWriteState.Idle
+        }
+    }
+
+    private fun authorizedInterviewParticipant(): UUID? {
+        if (mutableProfessionalContext.value !is ReadState.Ready || verifiedRole == null) return null
+        return verifiedDocumentationParticipant(
+            mutableSelection.value, mutableAppointment.value, mutableWorkspace.value
+        )
+    }
+
+    private fun currentInterview(participant: UUID, id: UUID): InterviewView? =
+        (mutableInterviews.value as? ReadState.Ready)?.value
+            ?.firstOrNull { it.id == id && it.participantId == participant }
+
+    private fun replaceInterview(saved: InterviewView) {
+        val previous = (mutableInterviews.value as? ReadState.Ready)?.value.orEmpty()
+        val updated = if (previous.any { it.id == saved.id }) {
+            previous.map { if (it.id == saved.id) saved else it }
+        } else listOf(saved) + previous
+        interviewRequest++ // An older GET must not overwrite the committed record.
+        mutableInterviews.value = ReadState.Ready(updated)
+    }
+
+    /** All new writes are single-shot; only the two POSTs may reuse a key after uncertainty. */
+    fun startInterview(participantId: UUID) {
+        if (mutableInterviewWrite.value is InterviewWriteState.Saving ||
+            authorizedInterviewParticipant() != participantId) return
+        val records = (mutableInterviews.value as? ReadState.Ready)?.value ?: return
+        if (records.any { it.status == "DRAFT" }) return
+        val selected = mutableInterviewSelection.value
+        if (selected != null && records.none {
+                it.id == selected && "START_NEXT_INTERVIEW" in it.availableActions
+            }) return
+        val operation = pendingInterviewStart?.takeIf { it.participant == participantId }
+            ?: PendingInterviewStart(participantId, UUID.randomUUID().toString())
+        pendingInterviewStart = operation
+        val role = verifiedRole ?: return
+        val currentGeneration = generation
+        val requestId = ++interviewMutationRequest
+        mutableInterviewWrite.value = InterviewWriteState.Saving(InterviewOperation.START)
+        viewModelScope.launch {
+            if (!ensureFreshToken {
+                    generation == currentGeneration && requestId == interviewMutationRequest
+                }) return@launch
+            val result = repository.startInterview(participantId, role, operation.key)
+            if (currentGeneration != generation || requestId != interviewMutationRequest ||
+                authorizedInterviewParticipant() != participantId) return@launch
+            when (result) {
+                is RemoteResult.Success -> {
+                    val saved = result.value
+                    if (saved.participantId != participantId || saved.id == null || saved.status != "DRAFT") {
+                        clear()
+                        mutableProfessionalContext.value = ReadState.Forbidden
+                    } else {
+                        pendingInterviewStart = null
+                        replaceInterview(saved)
+                        mutableInterviewSelection.value = saved.id
+                        mutableInterviewDraft.value = initialInterviewDraft(participantId, saved)
+                        mutableInterviewWrite.value = InterviewWriteState.Success("Rozpoczęto wywiad.")
+                    }
+                }
+                is RemoteResult.Failure -> handleInterviewFailure(result.error, InterviewOperation.START, participantId)
+            }
+        }
+    }
+
+    /** One versioned PUT, with all existing SELECT answers preserved. No automatic retry. */
+    fun saveInterviewDraft() {
+        val draft = mutableInterviewDraft.value ?: return
+        if (authorizedInterviewParticipant() != draft.participantId ||
+            mutableInterviewWrite.value is InterviewWriteState.Saving ||
+            mutableInterviewWrite.value is InterviewWriteState.Conflict ||
+            mutableInterviewWrite.value is InterviewWriteState.Uncertain) return
+        val record = currentInterview(draft.participantId, draft.interviewId) ?: return
+        if (draft.baseVersion != record.version) {
+            mutableInterviewWrite.value = InterviewWriteState.Conflict(InterviewOperation.SAVE)
+            return
+        }
+        val command = interviewSaveCommand(record, draft)
+        if (command == null) {
+            mutableInterviewWrite.value = InterviewWriteState.Failed(
+                "Sprawdź odpowiedzi liczbowe i daty (RRRR-MM-DD)."
+            )
+            return
+        }
+        if (!draft.dirty) return
+        val role = verifiedRole ?: return
+        val currentGeneration = generation
+        val requestId = ++interviewMutationRequest
+        mutableInterviewWrite.value = InterviewWriteState.Saving(InterviewOperation.SAVE)
+        viewModelScope.launch {
+            if (!ensureFreshToken {
+                    generation == currentGeneration && requestId == interviewMutationRequest
+                }) return@launch
+            val result = repository.saveInterviewDraft(
+                draft.participantId, draft.interviewId, role, command
+            )
+            if (currentGeneration != generation || requestId != interviewMutationRequest ||
+                authorizedInterviewParticipant() != draft.participantId ||
+                mutableInterviewSelection.value != draft.interviewId) return@launch
+            when (result) {
+                is RemoteResult.Success -> {
+                    val saved = result.value
+                    if (saved.participantId != draft.participantId ||
+                        saved.id != draft.interviewId || saved.status != "DRAFT") {
+                        clear()
+                        mutableProfessionalContext.value = ReadState.Forbidden
+                    } else {
+                        replaceInterview(saved)
+                        mutableInterviewDraft.value = initialInterviewDraft(draft.participantId, saved)
+                        mutableInterviewWrite.value = InterviewWriteState.Success("Szkic zapisano na serwerze.")
+                    }
+                }
+                is RemoteResult.Failure -> handleInterviewFailure(result.error, InterviewOperation.SAVE, draft.participantId)
+            }
+        }
+    }
+
+    /** Explicit review after 409 or an uncertain PUT; local edits win only for touched fields. */
+    fun reconcileInterviewVersion() {
+        val state = mutableInterviewWrite.value
+        if (state !is InterviewWriteState.Conflict &&
+            state !is InterviewWriteState.Uncertain) return
+        val draft = mutableInterviewDraft.value ?: return
+        if (authorizedInterviewParticipant() != draft.participantId) return
+        val latest = currentInterview(draft.participantId, draft.interviewId) ?: return
+        if (latest.status == "COMPLETED" &&
+            state == InterviewWriteState.Uncertain(InterviewOperation.COMPLETE)) {
+            pendingInterviewComplete = null
+            mutableInterviewDraft.value = null
+            mutableInterviewWrite.value = InterviewWriteState.Success("Wywiad został zakończony na serwerze.")
+            return
+        }
+        val reconciled = reconcileInterviewDraft(draft, latest) ?: return
+        mutableInterviewDraft.value = reconciled
+        pendingInterviewComplete = null
+        mutableInterviewWrite.value = InterviewWriteState.Idle
+    }
+
+    /** Completion requires a confirmed server-side draft, no local edits and all required answers. */
+    fun completeInterview() {
+        val draft = mutableInterviewDraft.value ?: return
+        if (authorizedInterviewParticipant() != draft.participantId || draft.dirty ||
+            mutableInterviewWrite.value is InterviewWriteState.Saving ||
+            mutableInterviewWrite.value is InterviewWriteState.Conflict ||
+            mutableInterviewWrite.value == InterviewWriteState.Uncertain(InterviewOperation.SAVE)) return
+        val record = currentInterview(draft.participantId, draft.interviewId) ?: return
+        if (!canCompleteInterview(record)) return
+        if (draft.baseVersion != record.version) {
+            mutableInterviewWrite.value = InterviewWriteState.Conflict(InterviewOperation.COMPLETE)
+            return
+        }
+        val version = record.version ?: return
+        val operation = pendingInterviewComplete?.takeIf {
+            it.participant == draft.participantId && it.interview == draft.interviewId
+        } ?: PendingInterviewComplete(
+            draft.participantId, draft.interviewId, version, UUID.randomUUID().toString()
+        )
+        pendingInterviewComplete = operation
+        val role = verifiedRole ?: return
+        val currentGeneration = generation
+        val requestId = ++interviewMutationRequest
+        mutableInterviewWrite.value = InterviewWriteState.Saving(InterviewOperation.COMPLETE)
+        viewModelScope.launch {
+            if (!ensureFreshToken {
+                    generation == currentGeneration && requestId == interviewMutationRequest
+                }) return@launch
+            val result = repository.completeInterview(
+                draft.participantId, draft.interviewId, role,
+                InterviewVersionCommand(operation.version), operation.key
+            )
+            if (currentGeneration != generation || requestId != interviewMutationRequest ||
+                authorizedInterviewParticipant() != draft.participantId ||
+                mutableInterviewSelection.value != draft.interviewId) return@launch
+            when (result) {
+                is RemoteResult.Success -> {
+                    val saved = result.value
+                    if (saved.participantId != draft.participantId ||
+                        saved.id != draft.interviewId || saved.status != "COMPLETED") {
+                        clear()
+                        mutableProfessionalContext.value = ReadState.Forbidden
+                    } else {
+                        pendingInterviewComplete = null
+                        replaceInterview(saved)
+                        mutableInterviewDraft.value = null
+                        mutableInterviewWrite.value = InterviewWriteState.Success("Wywiad zakończony.")
+                    }
+                }
+                is RemoteResult.Failure -> handleInterviewFailure(result.error, InterviewOperation.COMPLETE, draft.participantId)
+            }
+        }
+    }
+
+    private fun handleInterviewFailure(error: RemoteError, operation: InterviewOperation, participantId: UUID) {
+        when (error) {
+            RemoteError.Unauthorized -> { clear(); invalidateSession() }
+            RemoteError.Forbidden -> { clear(); mutableProfessionalContext.value = ReadState.Forbidden }
+            RemoteError.Conflict -> {
+                if (operation == InterviewOperation.START) pendingInterviewStart = null
+                if (operation == InterviewOperation.COMPLETE) pendingInterviewComplete = null
+                mutableInterviewWrite.value = InterviewWriteState.Conflict(operation)
+                loadInterviews(participantId)
+            }
+            is RemoteError.Network, is RemoteError.Serialization ->
+                mutableInterviewWrite.value = InterviewWriteState.Uncertain(operation)
+            is RemoteError.Http -> {
+                if (error.status >= 500) mutableInterviewWrite.value = InterviewWriteState.Uncertain(operation)
+                else {
+                    if (operation == InterviewOperation.START) pendingInterviewStart = null
+                    if (operation == InterviewOperation.COMPLETE) pendingInterviewComplete = null
+                    mutableInterviewWrite.value = InterviewWriteState.Failed("Serwer odrzucił zapis wywiadu.")
+                }
+            }
+        }
     }
 
     fun loadWorkspace(participantId: UUID) {
@@ -873,8 +1142,7 @@ class OperationalViewModel(
         mutableCreateClient.value = CreateClientState.Idle
         mutableClientDraft.value = ClientFormDraft()
         mutableClientQuery.value = ""
-        mutableInterviewSelection.value = null
-        mutableInterviewDraft.value = null
+        resetInterviewEditor()
         mutableRequestedDate.value = null
         mutableToday.value = ReadState.Idle
         mutableParticipants.value = ReadState.Idle
