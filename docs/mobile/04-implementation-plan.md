@@ -205,3 +205,10 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 - Zakończenie zapisu kartoteki jest sygnalizowane stanem `Saved(id)`, który aktualnie wyświetlany ekran konsumuje przez `LaunchedEffect`; coroutine nie przechwytuje już zniszczonego przy obrocie `NavController`.
 - `logout`, 401/403 i zmiana kontekstu zawodowego nadal czyszczą szkice i projekcje; po obrocie dodatkowa bramka wymaga **nowego epoch pozytywnej autoryzacji**, aby zachowane w ViewModelu dane nie pojawiły się choćby na jedną klatkę przed ponownym GET. Zwykła zmiana konfiguracji nie przenosi danych klinicznych do Android Bundle.
 - W GitHubie tylko build, testy jednostkowe lokalnie przez `cd android && ./gradlew :app:testDevDebugUnitTest`. Odbiór na Motoroli: obrót na S03, S05, otwartej edycji z wpisanym celem, S02 z otwartym formularzem; wylogowanie i ponowne logowanie.
+
+## Poprawka audytowa P1: błędy odświeżania OIDC (2026-11-16)
+
+- `OidcSession.freshAccessToken()` rozróżnia definitywne błędy OAuth token endpoint (`invalid_grant`, `invalid_client` itp.) od timeoutów, braku sieci i niejednoznacznych błędów Keycloak. Tylko potwierdzone wygaśnięcie uprawnienia lub brak używalnego grantu wywołuje `clear()`; błędy przejściowe nie wylogowują.
+- Przejściowy błąd odświeżenia jest sygnalizowany typowanym `TokenRefreshTemporarilyUnavailable`; wszystkie wywołania wymagające świeżego tokenu zatrzymują HTTP GET/POST/PUT. ViewModel **natychmiast ukrywa** ostatnie odpowiedzi serwera, ustawia `Offline`, zachowuje identyfikatory kontekstu i szkice tylko w RAM. Powrót wymaga świadomego `Sprawdź ponownie`, nowego tokenu i autoryzowanego odczytu `onboarding`. Bez automatycznego retry mutacji.
+- Usunięto dodatkowe wywołanie `freshAccessToken()` z `MovesApp` przed rewalidacją, które wcześniej mogło wylogować poza kontrolą bramki dostępu; status `readiness` odświeża się dopiero po autoryzacji.
+- Dodano wąskie testy polityki AppAuth oraz zachowania ViewModelu przy niedostępnym Keycloak i zapisie przed wysłaniem POST. Testy pozostają **wyłącznie lokalne**; GitHub Actions wykonuje tylko build.

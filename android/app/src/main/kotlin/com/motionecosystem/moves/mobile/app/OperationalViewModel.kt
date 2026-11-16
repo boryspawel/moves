@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.motionecosystem.moves.mobile.api.*
 import com.motionecosystem.moves.mobile.repository.SpecialistRepository
+import com.motionecosystem.moves.mobile.auth.TokenRefreshTemporarilyUnavailable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -188,6 +189,31 @@ class OperationalViewModel(
     val selection = mutableSelection.asStateFlow()
     private var generation = 0
 
+    /** A failed refresh can mean offline Keycloak, not invalid credentials.
+     * Mark the entire professional view offline without retaining authorized projections.
+     */
+    private fun blockForTemporaryIdentityFailure() {
+        if (verifiedRole != null) suspendAuthorizedReads() else clear()
+        mutableProfessionalContext.value = ReadState.Offline
+    }
+
+    /** Refresh never retries a mutation; all callers must stop before their HTTP request on failure. */
+    private suspend fun ensureFreshToken(current: () -> Boolean): Boolean {
+        val token = try {
+            freshToken()
+        } catch (_: TokenRefreshTemporarilyUnavailable) {
+            if (current()) blockForTemporaryIdentityFailure()
+            return false
+        }
+        if (!current()) return false
+        if (token.isNullOrBlank()) {
+            clear()
+            invalidateSession()
+            return false
+        }
+        return true
+    }
+
     /** Hide all previously authorized responses immediately, but retain the route and unsent drafts.
      * The UI is completely gated until the server confirms the SAME professional role again.
      * On denial or a role change, even the in-memory navigation/draft context is destroyed.
@@ -198,13 +224,7 @@ class OperationalViewModel(
         val currentGeneration = generation
         mutableProfessionalContext.value = ReadState.Loading
         viewModelScope.launch {
-            if (freshToken().isNullOrBlank()) {
-                if (currentGeneration == generation && requestId == profileRequest) {
-                    clear()
-                    invalidateSession()
-                }
-                return@launch
-            }
+            if (!ensureFreshToken { currentGeneration == generation && requestId == profileRequest }) return@launch
             val response = repository.onboarding()
             if (generation != currentGeneration || requestId != profileRequest) return@launch
             when (response) {
@@ -318,13 +338,7 @@ class OperationalViewModel(
         appointmentRequest++ // Ignore a GET started before this mutation.
         mutableAppointmentStart.value = AppointmentStartState.SAVING
         viewModelScope.launch {
-            if (freshToken().isNullOrBlank()) {
-                if (generation == currentGeneration && startRequest == requestId) {
-                    clear()
-                    invalidateSession()
-                }
-                return@launch
-            }
+            if (!ensureFreshToken { generation == currentGeneration && startRequest == requestId }) return@launch
             val result = repository.startAppointment(id, command.version, command.key)
             if (currentGeneration != generation || requestId != startRequest || selectedAppointment()?.appointmentId != id) return@launch
             when (result) {
@@ -461,13 +475,7 @@ class OperationalViewModel(
         scheduleRequest++ // An older slot response must not replace the draft after a write.
         mutableScheduleSave.value = ScheduleSaveState.Saving
         viewModelScope.launch {
-            if (freshToken().isNullOrBlank()) {
-                if (generation == currentGeneration && requestId == scheduleSaveRequest) {
-                    clear()
-                    invalidateSession()
-                }
-                return@launch
-            }
+            if (!ensureFreshToken { generation == currentGeneration && requestId == scheduleSaveRequest }) return@launch
             val result = when (target) {
                 is ScheduleTarget.New -> repository.createAppointment(operation.command, operation.key)
                 is ScheduleTarget.Edit -> repository.updateAppointment(target.appointmentId, operation.command, operation.key)
@@ -605,13 +613,10 @@ class OperationalViewModel(
         val requestId = timelineRequest
         mutableTimeline.value = ReadState.Ready(feed.copy(loadingMore = true, loadMoreFailed = false))
         viewModelScope.launch {
-            if (freshToken().isNullOrBlank()) {
-                if (generation == currentGeneration && requestId == timelineRequest) {
-                    clear()
-                    invalidateSession()
-                }
-                return@launch
-            }
+            if (!ensureFreshToken {
+                generation == currentGeneration && requestId == timelineRequest &&
+                    selectedParticipantId() == participantId
+            }) return@launch
             val result = repository.timeline(participantId, cursor = cursor, from = feed.from, to = feed.to)
             if (generation != currentGeneration || requestId != timelineRequest ||
                 selectedParticipantId() != participantId) return@launch
@@ -691,13 +696,7 @@ class OperationalViewModel(
         val currentGeneration = generation
         mutableCreateClient.value = CreateClientState.Saving
         viewModelScope.launch {
-            if (freshToken().isNullOrBlank()) {
-                if (currentGeneration == generation) {
-                    clear()
-                    invalidateSession()
-                }
-                return@launch
-            }
+            if (!ensureFreshToken { currentGeneration == generation }) return@launch
             val result = repository.createClient(command, key)
             if (currentGeneration != generation) return@launch
             when (result) {
@@ -778,13 +777,7 @@ class OperationalViewModel(
         val currentGeneration = generation
         target.value = ReadState.Loading
         viewModelScope.launch {
-            if (freshToken().isNullOrBlank()) {
-                if (currentGeneration == generation && isCurrent()) {
-                    clear()
-                    invalidateSession()
-                }
-                return@launch
-            }
+            if (!ensureFreshToken { currentGeneration == generation && isCurrent() }) return@launch
             val result = request()
             if (currentGeneration != generation || !isCurrent()) return@launch
             target.value = when (result) {
