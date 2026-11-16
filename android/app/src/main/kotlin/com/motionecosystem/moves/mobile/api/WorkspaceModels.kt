@@ -6,8 +6,9 @@ import java.util.UUID
 import kotlinx.serialization.Serializable
 
 /**
- * Allowlist of S03 fields. Deliberately excludes recentMeasurements, goal measurement values,
- * adherence metrics, free-text clinical detail and all executable actions.
+ * Allowlist of S03 fields. The backend no longer fetches recent measurements for
+ * this workspace; the compatibility field is empty. We intentionally exclude it here,
+ * along with goal measurements, adherence metrics, clinical free text and executable actions.
  * Unknown server fields are ignored by the shared JSON decoder, not persisted or displayed.
  */
 @Serializable
