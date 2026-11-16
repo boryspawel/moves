@@ -1,5 +1,6 @@
 package com.motionecosystem.moves.mobile.app
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,6 +20,17 @@ private enum class Tab(val route: String, val title: String) {
 private const val CONTEXT_ROUTE = "context"
 private const val APPOINTMENT_ROUTE = "appointment"
 private const val SCHEDULE_ROUTE = "schedule"
+
+/** The shared system/UI Back policy. This restores S03 only for a visit entered from S03. */
+internal fun participantToRestoreOnAppointmentBack(previousRoute: String?, selection: ContextSelection?): java.util.UUID? =
+    if (previousRoute == CONTEXT_ROUTE) (selection as? ContextSelection.Appointment)?.participantId else null
+
+/** A pending write must remain in the foreground; success navigates via its completion handler. */
+internal fun canLeaveAppointment(state: AppointmentStartState): Boolean =
+    state != AppointmentStartState.SAVING
+
+internal fun canLeaveSchedule(state: ScheduleSaveState): Boolean =
+    state != ScheduleSaveState.Saving && state !is ScheduleSaveState.Saved
 
 @Composable
 fun MovesNavigation(
@@ -153,11 +165,27 @@ fun MovesNavigation(
             }
             composable(APPOINTMENT_ROUTE) {
                 val selection by viewModel.selection.collectAsStateWithLifecycle()
+                val startState by viewModel.appointmentStart.collectAsStateWithLifecycle()
                 val selected = selection as? ContextSelection.Appointment
+                val goBack = {
+                    if (canLeaveAppointment(startState)) {
+                        participantToRestoreOnAppointmentBack(
+                            navigation.previousBackStackEntry?.destination?.route,
+                            viewModel.selection.value
+                        )?.let { participantId ->
+                            // The appointment selection replaced S03's participant selection.
+                            // Restore S03 and its authorized GET before showing the old route.
+                            viewModel.selectParticipant(participantId)
+                            viewModel.loadWorkspace(participantId)
+                        }
+                        navigation.popBackStack()
+                    }
+                }
+                BackHandler { goBack() }
                 if (selected == null) {
                     Column(Modifier.padding(20.dp)) {
                         Text("Wybierz spotkanie z agendy.")
-                        OutlinedButton(onClick = { navigation.popBackStack() }) { Text("Wróć") }
+                        OutlinedButton(onClick = goBack) { Text("Wróć") }
                     }
                 } else {
                     AppointmentSection(
@@ -174,12 +202,7 @@ fun MovesNavigation(
                                 navigation.navigate(stage.route) { launchSingleTop = true }
                             }
                         },
-                        onBack = {
-                            if (navigation.previousBackStackEntry?.destination?.route == CONTEXT_ROUTE) {
-                                selected.participantId?.let(viewModel::selectParticipant)
-                            }
-                            navigation.popBackStack()
-                        }
+                        onBack = goBack
                     )
                 }
             }
@@ -190,11 +213,35 @@ fun MovesNavigation(
             }
             composable(SCHEDULE_ROUTE) {
                 val target by viewModel.scheduleTarget.collectAsStateWithLifecycle()
+                val saveState by viewModel.scheduleSave.collectAsStateWithLifecycle()
+                val closeForm = {
+                    if (canLeaveSchedule(saveState)) {
+                        viewModel.closeSchedule()
+                        when (val selected = viewModel.selection.value) {
+                            is ContextSelection.Participant -> {
+                                if (navigation.previousBackStackEntry?.destination?.route == CONTEXT_ROUTE) {
+                                    viewModel.loadWorkspace(selected.participantId)
+                                }
+                            }
+                            is ContextSelection.Appointment -> {
+                                if (navigation.previousBackStackEntry?.destination?.route == APPOINTMENT_ROUTE) {
+                                    viewModel.loadAppointment(selected.appointmentId)
+                                }
+                            }
+                            null -> Unit
+                        }
+                        navigation.popBackStack()
+                    }
+                }
+                BackHandler { closeForm() }
                 if (target == null) {
-                    Text("Wróć do Dnia, aby wybrać termin.", modifier = Modifier.padding(20.dp))
+                    Column(Modifier.padding(20.dp)) {
+                        Text("Wróć do Dnia, aby wybrać termin.")
+                        OutlinedButton(onClick = closeForm) { Text("Wróć") }
+                    }
                 } else {
                     ScheduleSection(viewModel, target!!,
-                        onBack = { viewModel.closeSchedule(); navigation.popBackStack() },
+                        onBack = closeForm,
                         onSaved = { saved ->
                             val wasEditing = target is ScheduleTarget.Edit
                             val id = saved.appointmentId
@@ -202,8 +249,11 @@ fun MovesNavigation(
                             if (id != null && participantId != null) {
                                 viewModel.closeSchedule()
                                 viewModel.selectAppointment(participantId, id)
-                                if (wasEditing) navigation.popBackStack()
-                                else navigation.navigate(APPOINTMENT_ROUTE) {
+                                if (wasEditing) {
+                                    navigation.popBackStack()
+                                    // S05 may still be composed; always reload its newly updated detail.
+                                    viewModel.loadAppointment(id)
+                                } else navigation.navigate(APPOINTMENT_ROUTE) {
                                     popUpTo(SCHEDULE_ROUTE) { inclusive = true }
                                 }
                             }

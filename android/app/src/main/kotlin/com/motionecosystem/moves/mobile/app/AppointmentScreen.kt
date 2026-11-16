@@ -58,7 +58,7 @@ internal fun AppointmentScreen(
             Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            TextButton(onClick = onBack) { Text("Wróć") }
+            TextButton(onClick = onBack, enabled = canLeaveAppointment(startState)) { Text("Wróć") }
             TextButton(onClick = onRefresh, enabled = startState != AppointmentStartState.SAVING) {
                 Text("Odśwież")
             }

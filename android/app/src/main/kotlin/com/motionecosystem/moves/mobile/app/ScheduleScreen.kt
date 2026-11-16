@@ -97,7 +97,7 @@ internal fun ScheduleScreen(
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween) {
-            TextButton(onClick = onBack, enabled = !saving) { Text("Wróć") }
+            TextButton(onClick = onBack, enabled = canLeaveSchedule(saveState)) { Text("Wróć") }
             TextButton(onClick = onRefresh, enabled = !saving) { Text("Odśwież terminy") }
         }
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
