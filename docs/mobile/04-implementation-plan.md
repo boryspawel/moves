@@ -219,3 +219,8 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 - Przy wejściu z S03 bez wczytanego Dnia wykonywany jest najpierw autoryzowany `GET /api/v1/specialist/today` (bez `date`) w celu odczytu `timeZoneId`. Dopiero po walidacji strefy i przeliczeniu `startsAt` pobierany jest `GET .../today?date=YYYY-MM-DD` dla właściwego dnia. Do czasu uzyskania strefy UI nie pokazuje przypadkowej daty i nie dopuszcza PUT.
 - Brak lub niepoprawna strefa IANA skutkuje błędem odczytu, **bez fallbacku**. Ponowienie następuje ręcznie. Użytkownik może dalej anulować formularz.
 - Testy w repo obejmują wizyty blisko północy, brak skonfigurowanej strefy oraz właściwą kolejność wczytywania. GitHub Actions pozostaje build-only; testy uruchamiane lokalnie.
+
+## Drobne porządki kompilatora Kotlin (2026-11-16)
+
+- Usunięto cztery ostrzeżenia o redundantnych operacjach: niepotrzebne `!!` w etykiecie terminu i w asercji testowej, zbędne `?: return null` po sprawdzeniu identyfikatora wizyty oraz `toString()` dla tekstowego issuer OIDC.
+- Bez zmiany działania, API, zależności ani testów. GitHub Actions nadal wykonuje jedynie build; testy uruchamiane lokalnie.

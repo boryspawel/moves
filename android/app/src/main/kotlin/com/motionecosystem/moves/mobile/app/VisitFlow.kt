@@ -32,7 +32,7 @@ internal fun verifiedVisit(
     val participant = detail.participantId ?: return null
     if (detail.appointmentId != selected.appointmentId ||
         (selected.participantId != null && selected.participantId != participant)) return null
-    return VerifiedVisit(detail.appointmentId ?: return null, participant,
+    return VerifiedVisit(detail.appointmentId, participant,
         detail.plannedSessionId, detail.status ?: return null)
 }
 

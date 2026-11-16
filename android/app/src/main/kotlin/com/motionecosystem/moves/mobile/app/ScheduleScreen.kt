@@ -202,7 +202,7 @@ internal fun ScheduleScreen(
                         selected = sameScheduleWindow(selectedSlot, currentSlot),
                         enabled = !saving,
                         onClick = { onDraftChange(draft.copy(selectedSlot = currentSlot)) },
-                        label = { Text("Aktualny termin na serwerze: ${slotLabel(currentSlot!!, today?.timeZoneId)}") }
+                        label = { Text("Aktualny termin na serwerze: ${slotLabel(currentSlot, today?.timeZoneId)}") }
                     )
                 }
             }
