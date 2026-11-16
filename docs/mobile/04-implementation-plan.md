@@ -224,3 +224,10 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 
 - Usunięto cztery ostrzeżenia o redundantnych operacjach: niepotrzebne `!!` w etykiecie terminu i w asercji testowej, zbędne `?: return null` po sprawdzeniu identyfikatora wizyty oraz `toString()` dla tekstowego issuer OIDC.
 - Bez zmiany działania, API, zależności ani testów. GitHub Actions nadal wykonuje jedynie build; testy uruchamiane lokalnie.
+
+## Poprawka audytowa P1: ręczna rewalidacja a asynchroniczny zapis (2026-11-16)
+
+- Przycisk **Sprawdź dostęp** jest niedostępny podczas START wizyty, POST/PUT terminu oraz tworzenia kartoteki. Pozostaje zablokowany także dla zapisanego terminu/kartoteki do chwili obsłużenia wyniku przez aktualny ekran. Sprawdzany jest również aktualny stan ViewModelu wewnątrz callbacka, aby drugi szybki klik nie unieważnił właśnie rozpoczętej mutacji.
+- S05/S04 przechodzą do innego ekranu po `Saved` tylko wtedy, gdy formularz, jego cel, stan zapisu i autoryzacja nadal są aktualne; nie wykonują spóźnionej nawigacji podczas bramki reautoryzacji. Systemowe Wstecz pozostaje zablokowane podczas zapisu.
+- **Wylogowanie pozostaje zawsze dostępne.** Celowa utrata sesji lub powrót z tła mogą nadal prowadzić do wyniku `Uncertain` (bez automatycznego retry); powyższa blokada dotyczy przypadkowej ręcznej rewalidacji podczas zapisu.
+- Dodano jedynie wąski test polityki interakcji. Na żądanie użytkownika: **bez builda, bez testów, bez uruchamiania GitHub Actions**. Walidację połączyć z następną poprawką.

@@ -32,6 +32,18 @@ internal fun canLeaveAppointment(state: AppointmentStartState): Boolean =
 internal fun canLeaveSchedule(state: ScheduleSaveState): Boolean =
     state != ScheduleSaveState.Saving && state !is ScheduleSaveState.Saved
 
+/** A manual access recheck invalidates pending writes. Do not allow it to interrupt a
+ * mutation or consume a just-saved result before its current route handles completion.
+ * Explicit logout must remain available and still invalidates all local state.
+ */
+internal fun canManuallyRevalidate(
+    appointment: AppointmentStartState,
+    schedule: ScheduleSaveState,
+    client: CreateClientState
+): Boolean = appointment != AppointmentStartState.SAVING &&
+    canLeaveSchedule(schedule) &&
+    client != CreateClientState.Saving && client !is CreateClientState.Saved
+
 @Composable
 fun MovesNavigation(
     viewModel: OperationalViewModel,
@@ -43,6 +55,10 @@ fun MovesNavigation(
 ) {
     val navigation = rememberNavController()
     val route = navigation.currentBackStackEntryAsState().value?.destination?.route
+    val appointmentWrite by viewModel.appointmentStart.collectAsStateWithLifecycle()
+    val scheduleWrite by viewModel.scheduleSave.collectAsStateWithLifecycle()
+    val clientWrite by viewModel.createClientState.collectAsStateWithLifecycle()
+    val mayRevalidate = canManuallyRevalidate(appointmentWrite, scheduleWrite, clientWrite)
     // The authorization gate blanked all cached server projections. Restore only the
     // current route using fresh, authorized GETs; never replay mutations.
     LaunchedEffect(accessEpoch) {
@@ -86,7 +102,19 @@ fun MovesNavigation(
                     }
                 }
                 Row {
-                    TextButton(onClick = viewModel::revalidateAccess) { Text("Sprawdź dostęp") }
+                    TextButton(
+                        onClick = {
+                            // Check the latest state as well as the Compose enabled flag:
+                            // a rapid second tap must not invalidate a newly started write.
+                            if (canManuallyRevalidate(
+                                    viewModel.appointmentStart.value,
+                                    viewModel.scheduleSave.value,
+                                    viewModel.createClientState.value
+                                )
+                            ) viewModel.revalidateAccess()
+                        },
+                        enabled = mayRevalidate
+                    ) { Text("Sprawdź dostęp") }
                     TextButton(onClick = onLogout) { Text("Wyloguj") }
                 }
             }
@@ -243,18 +271,26 @@ fun MovesNavigation(
                     ScheduleSection(viewModel, target!!,
                         onBack = closeForm,
                         onSaved = { saved ->
-                            val wasEditing = target is ScheduleTarget.Edit
-                            val id = saved.appointmentId
-                            val participantId = saved.participantId
-                            if (id != null && participantId != null) {
-                                viewModel.closeSchedule()
-                                viewModel.selectAppointment(participantId, id)
-                                if (wasEditing) {
-                                    navigation.popBackStack()
-                                    // S05 may still be composed; always reload its newly updated detail.
-                                    viewModel.loadAppointment(id)
-                                } else navigation.navigate(APPOINTMENT_ROUTE) {
-                                    popUpTo(SCHEDULE_ROUTE) { inclusive = true }
+                            // A delayed result must not navigate from an obsolete form,
+                            // after a route change, or after access invalidation.
+                            if (navigation.currentBackStackEntry?.destination?.route == SCHEDULE_ROUTE &&
+                                viewModel.scheduleTarget.value == target &&
+                                (viewModel.scheduleSave.value as? ScheduleSaveState.Saved)?.appointment == saved &&
+                                viewModel.professionalContext.value is ReadState.Ready
+                            ) {
+                                val wasEditing = target is ScheduleTarget.Edit
+                                val id = saved.appointmentId
+                                val participantId = saved.participantId
+                                if (id != null && participantId != null) {
+                                    viewModel.closeSchedule()
+                                    viewModel.selectAppointment(participantId, id)
+                                    if (wasEditing) {
+                                        navigation.popBackStack()
+                                        // S05 may still be composed; reload the new server detail.
+                                        viewModel.loadAppointment(id)
+                                    } else navigation.navigate(APPOINTMENT_ROUTE) {
+                                        popUpTo(SCHEDULE_ROUTE) { inclusive = true }
+                                    }
                                 }
                             }
                         }
@@ -321,9 +357,15 @@ private fun ScheduleSection(
             viewModel.resolveEditScheduleDate((day as ReadState.Ready<TodayView>).value)
         }
     }
+    val access by viewModel.professionalContext.collectAsStateWithLifecycle()
     val completed = save as? ScheduleSaveState.Saved
-    LaunchedEffect(completed) {
-        completed?.let { onSaved(it.appointment) }
+    LaunchedEffect(target, completed, access) {
+        // Do not navigate a hidden screen while its authorization is being
+        // revalidated, or after a different form replaced the original target.
+        if (access is ReadState.Ready && completed != null &&
+            viewModel.scheduleTarget.value == target && viewModel.scheduleSave.value == completed) {
+            onSaved(completed.appointment)
+        }
     }
     if (draft == null) return
     ScheduleScreen(

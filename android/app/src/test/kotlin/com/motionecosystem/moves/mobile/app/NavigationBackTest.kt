@@ -15,6 +15,25 @@ class NavigationBackTest {
         assertNull(participantToRestoreOnAppointmentBack(null, appointment))
     }
 
+    @Test fun manualAccessRecheckDoesNotInvalidateAnActiveOrJustCompletedWrite() {
+        val idleStart = AppointmentStartState.IDLE
+        val idleSchedule = ScheduleSaveState.Idle
+        val idleClient = CreateClientState.Idle
+        assertTrue(canManuallyRevalidate(idleStart, idleSchedule, idleClient))
+        assertFalse(canManuallyRevalidate(AppointmentStartState.SAVING, idleSchedule, idleClient))
+        assertFalse(canManuallyRevalidate(idleStart, ScheduleSaveState.Saving, idleClient))
+        assertFalse(canManuallyRevalidate(idleStart, idleSchedule, CreateClientState.Saving))
+        assertFalse(canManuallyRevalidate(idleStart, idleSchedule, CreateClientState.Saved(UUID.randomUUID())))
+        assertFalse(canManuallyRevalidate(
+            idleStart, ScheduleSaveState.Saved(com.motionecosystem.moves.mobile.api.AppointmentView(
+                appointmentId = UUID.randomUUID()
+            )), idleClient
+        ))
+        assertTrue(canManuallyRevalidate(AppointmentStartState.UNCERTAIN, idleSchedule, idleClient))
+        assertTrue(canManuallyRevalidate(idleStart, ScheduleSaveState.Uncertain, idleClient))
+        assertTrue(canManuallyRevalidate(idleStart, idleSchedule, CreateClientState.Failed("offline")))
+    }
+
     @Test fun backIsBlockedDuringMutationsButAllowedAfterUncertainResponse() {
         assertFalse(canLeaveAppointment(AppointmentStartState.SAVING))
         assertTrue(canLeaveAppointment(AppointmentStartState.UNCERTAIN))
