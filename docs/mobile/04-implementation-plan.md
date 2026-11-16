@@ -169,3 +169,10 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 
 - Nowy termin `ScheduleTarget.New` nie może odziedziczyć `type`, `locationMode`, `location` ani `shortPurpose` po wcześniej otwartej wizycie innego uczestnika. Przed otwarciem formularza unieważniamy również szczegóły poprzedniego spotkania.
 - Przy edycji `ScheduleTarget.Edit` dane wyjściowe pochodzą wyłącznie z uprawnionego szczegółu o **jednocześnie zgodnych** `appointmentId` i `participantId`. Wąskie testy sprawdzają oba przypadki. Pozostałe ustalenia code review pozostają odrębnymi zadaniami.
+
+## Poprawka audytowa: zachowanie kontekstu po wznowieniu (2026-11-16)
+
+- Powrót na pierwszy plan oraz „Sprawdź dostęp” **natychmiast ukrywają** dane serwerowe i unieważniają spóźnione odpowiedzi, ale przy przejściowej rewalidacji zachowują identyfikatory aktualnej trasy, wybraną datę i niezapisane pola formularzy wyłącznie w pamięci RAM.
+- NavHost pozostaje w kompozycji pod nieprzezroczystą blokadą (bez dotyku, systemowego Wstecz i semantyki dostępności). Po potwierdzeniu **tej samej roli** ekran odzyskuje kontekst przez nowy autoryzowany GET, nigdy przez wcześniej pobrany obiekt ani automatyczne powtórzenie POST/PUT.
+- Zmiana roli, 401, 403, nieaktywny profil i wylogowanie nadal usuwają kontekst oraz niezapisane szkice. Brak sieci blokuje wyświetlanie i pozwala na ponowne sprawdzenie, bez ujawniania poprzednich projekcji. Zapisy w locie oznaczane są jako niepewne, bez samoczynnego retry.
+- Formularz zmiany terminu nie resetuje wpisanych pól, gdy podczas rewalidacji znika wersja szczegółu spotkania lub zostaje pobrana jej nowsza wartość. Minimalne testy: wznowienie z edycją, offline/403, zmiana roli, spóźniony odczyt. Odbiór przejścia do tła i powrotu na Motoroli pozostaje otwarty.
