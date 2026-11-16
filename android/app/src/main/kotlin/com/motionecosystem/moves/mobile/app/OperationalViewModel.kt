@@ -44,6 +44,32 @@ sealed interface ScheduleTarget {
     data class Edit(val appointmentId: UUID, val participantId: UUID) : ScheduleTarget
 }
 
+/** Updating metadata may reuse the authorized appointment's own occupied time.
+ * A different time still requires an exact server-provided free slot.
+ * The backend remains responsible for overlap and availability checks.
+ */
+internal fun validScheduleWindow(
+    target: ScheduleTarget,
+    command: AppointmentSaveCommand,
+    detail: AppointmentView?,
+    day: TodayView?
+): Boolean {
+    val start = command.startsAt.toInstant()
+    val end = command.endsAt.toInstant()
+    if (!end.isAfter(start)) return false
+    if (target is ScheduleTarget.Edit) {
+        if (detail?.appointmentId != target.appointmentId ||
+            detail.participantId != target.participantId ||
+            command.participantId != target.participantId) return false
+        if (detail.startsAt?.toInstant() == start && detail.endsAt?.toInstant() == end) {
+            return true
+        }
+    }
+    return day?.bookableSlots.orEmpty().any {
+        it.startsAt?.toInstant() == start && it.endsAt?.toInstant() == end
+    }
+}
+
 sealed interface ScheduleSaveState {
     data object Idle : ScheduleSaveState
     data object Saving : ScheduleSaveState
@@ -343,13 +369,12 @@ class OperationalViewModel(
     fun saveSchedule(command: AppointmentSaveCommand) {
         val target = mutableScheduleTarget.value ?: return
         if (mutableScheduleSave.value == ScheduleSaveState.Saving || mutableScheduleSave.value is ScheduleSaveState.Saved) return
-        val day = (mutableScheduleDay.value as? ReadState.Ready)?.value ?: return
-        if (!command.endsAt.toInstant().isAfter(command.startsAt.toInstant()) ||
-            day.bookableSlots.orEmpty().none {
-                it.startsAt?.toInstant() == command.startsAt.toInstant() &&
-                    it.endsAt?.toInstant() == command.endsAt.toInstant()
-            }) {
-            mutableScheduleSave.value = ScheduleSaveState.Failed("Wybierz dostępny termin z aktualnej listy.")
+        val day = (mutableScheduleDay.value as? ReadState.Ready)?.value
+        val currentDetail = (mutableAppointment.value as? ReadState.Ready)?.value
+        if (!validScheduleWindow(target, command, currentDetail, day)) {
+            mutableScheduleSave.value = ScheduleSaveState.Failed(
+                "Zachowaj dotychczasowy termin albo wybierz dostępny termin z aktualnej listy."
+            )
             return
         }
         val verified = when (target) {
