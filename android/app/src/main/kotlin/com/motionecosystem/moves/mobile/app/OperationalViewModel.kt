@@ -235,6 +235,8 @@ class OperationalViewModel(
     /** Only the server-provided bookable slots are selectable. All access control still belongs to the server. */
     fun openNewSchedule(participantId: UUID? = null) {
         resetSchedule()
+        // A new appointment must not retain fields or a pending action from a previous participant.
+        resetAppointmentReads()
         mutableScheduleTarget.value = ScheduleTarget.New(participantId)
         mutableScheduleDate.value = mutableRequestedDate.value
         loadScheduleDay()

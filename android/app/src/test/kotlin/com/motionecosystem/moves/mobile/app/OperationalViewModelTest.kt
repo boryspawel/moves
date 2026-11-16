@@ -318,6 +318,31 @@ class OperationalViewModelTest {
         } finally { Dispatchers.resetMain() }
     }
 
+    @Test fun openingNewAppointmentDropsPreviousParticipantsAuthorizedDetail() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = StubRepository()
+            val previousParticipant = UUID.randomUUID()
+            val nextParticipant = UUID.randomUUID()
+            val previousAppointmentId = UUID.randomUUID()
+            repository.appointmentValue = AppointmentView(
+                appointmentId = previousAppointmentId, participantId = previousParticipant,
+                shortPurpose = "Poufna treść", location = "Adres poprzedniego uczestnika",
+                version = 1, status = AppointmentStatus.CONFIRMED
+            )
+            val vm = OperationalViewModel(repository, { "token" }, {})
+            vm.selectAppointment(previousParticipant, previousAppointmentId)
+            vm.loadAppointment(previousAppointmentId)
+            advanceUntilIdle()
+            assertTrue(vm.appointment.value is ReadState.Ready)
+
+            vm.openNewSchedule(nextParticipant)
+            assertEquals(ScheduleTarget.New(nextParticipant), vm.scheduleTarget.value)
+            assertEquals(ReadState.Idle, vm.appointment.value)
+            assertEquals(AppointmentStartState.IDLE, vm.appointmentStart.value)
+        } finally { Dispatchers.resetMain() }
+    }
+
     @Test fun scheduleCreateUncertainResultRequiresManualRetryWithIdenticalKey() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {

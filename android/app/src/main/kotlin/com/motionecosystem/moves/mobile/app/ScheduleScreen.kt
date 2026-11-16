@@ -38,6 +38,17 @@ internal fun validBookableSlot(slot: BookableSlotView?, day: TodayView): Boolean
                 it.endsAt?.toInstant() == slot.endsAt.toInstant()
         }
 
+/** Never reuse another participant's cached appointment when opening a new calendar entry.
+ * An edit may read fields only from the exact appointment and participant being edited.
+ */
+internal fun scheduleDetailsFor(target: ScheduleTarget, state: ReadState<AppointmentView>): AppointmentView? {
+    val edit = target as? ScheduleTarget.Edit ?: return null
+    val detail = (state as? ReadState.Ready)?.value ?: return null
+    return detail.takeIf {
+        it.appointmentId == edit.appointmentId && it.participantId == edit.participantId
+    }
+}
+
 @Composable
 internal fun ScheduleScreen(
     target: ScheduleTarget,
@@ -51,7 +62,7 @@ internal fun ScheduleScreen(
     onSave: (AppointmentSaveCommand) -> Unit,
     onBack: () -> Unit
 ) {
-    val existing = (appointment as? ReadState.Ready)?.value
+    val existing = scheduleDetailsFor(target, appointment)
     val edit = target as? ScheduleTarget.Edit
     val saving = saveState == ScheduleSaveState.Saving
     val clientOptions = eligibleCalendarClients((clients as? ReadState.Ready)?.value.orEmpty())
