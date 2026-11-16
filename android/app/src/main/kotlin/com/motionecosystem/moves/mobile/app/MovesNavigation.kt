@@ -307,12 +307,19 @@ private fun ScheduleSection(
 ) {
     val day by viewModel.scheduleDay.collectAsStateWithLifecycle()
     val chosenDate by viewModel.scheduleDate.collectAsStateWithLifecycle()
+    val resolvingDate by viewModel.scheduleDateResolving.collectAsStateWithLifecycle()
     val save by viewModel.scheduleSave.collectAsStateWithLifecycle()
     val draft by viewModel.scheduleDraft.collectAsStateWithLifecycle()
     val clients by viewModel.clients.collectAsStateWithLifecycle()
     val appointment by viewModel.appointment.collectAsStateWithLifecycle()
     LaunchedEffect(viewModel, target) {
         if (viewModel.clients.value == ReadState.Idle) viewModel.loadClients()
+    }
+    LaunchedEffect(target, resolvingDate, day, appointment) {
+        if (target is ScheduleTarget.Edit && resolvingDate &&
+            day is ReadState.Ready && appointment is ReadState.Ready) {
+            viewModel.resolveEditScheduleDate((day as ReadState.Ready<TodayView>).value)
+        }
     }
     val completed = save as? ScheduleSaveState.Saved
     LaunchedEffect(completed) {
@@ -322,6 +329,7 @@ private fun ScheduleSection(
     ScheduleScreen(
         target = target, scheduleDay = day, requestedDate = chosenDate, clients = clients,
         appointment = appointment, saveState = save, draft = draft!!,
+        dateResolving = resolvingDate,
         onDraftChange = viewModel::changeScheduleDraft,
         onChooseDate = viewModel::chooseScheduleDate,
         onRefresh = viewModel::loadScheduleDay,

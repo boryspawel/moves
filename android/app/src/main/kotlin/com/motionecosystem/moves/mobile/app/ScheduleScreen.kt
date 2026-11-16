@@ -90,6 +90,7 @@ internal fun ScheduleScreen(
     appointment: ReadState<AppointmentView>,
     saveState: ScheduleSaveState,
     draft: ScheduleDraft,
+    dateResolving: Boolean,
     onDraftChange: (ScheduleDraft) -> Unit,
     onChooseDate: (LocalDate?) -> Unit,
     onRefresh: () -> Unit,
@@ -124,6 +125,7 @@ internal fun ScheduleScreen(
     val serverTimeChanged = originalSlot != null && currentSlot != null &&
         !sameScheduleWindow(originalSlot, currentSlot)
     val slot = when {
+        dateResolving -> null
         selectedSlot != null -> selectedSlot.takeIf {
             sameScheduleWindow(it, currentSlot) || (today != null && validBookableSlot(it, today))
         }
@@ -176,7 +178,11 @@ internal fun ScheduleScreen(
                     ?: "wybrana kartoteka"))
             }
 
-            if (originalSlot != null) {
+            if (dateResolving) {
+                Text("Ustalanie daty spotkania w strefie czasowej specjalisty…")
+                ReadPanel(scheduleDay, onRefresh, { false }) { }
+            }
+            if (!dateResolving && originalSlot != null) {
                 Text("Godzina spotkania", style = MaterialTheme.typography.titleMedium)
                 val originalStillAllowed = sameScheduleWindow(originalSlot, currentSlot) ||
                     (today != null && validBookableSlot(originalSlot, today))
@@ -200,7 +206,7 @@ internal fun ScheduleScreen(
                     )
                 }
             }
-            ReadPanel(scheduleDay, onRefresh, { false }) { day ->
+            if (!dateResolving) ReadPanel(scheduleDay, onRefresh, { false }) { day ->
                 val actualDate = day.localDate ?: requestedDate
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(actualDate?.format(labelDate)?.replaceFirstChar { it.titlecase(polish) }
@@ -323,7 +329,7 @@ internal fun ScheduleScreen(
                         ))
                     }
                 },
-                enabled = !saving && participant != null && allowedParticipant && slot != null &&
+                enabled = !saving && !dateResolving && participant != null && allowedParticipant && slot != null &&
                     location.length <= 160 && purpose.length <= 500 && saveState !is ScheduleSaveState.Saved,
                 modifier = Modifier.fillMaxWidth()
             ) {

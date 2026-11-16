@@ -212,3 +212,10 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 - Przejściowy błąd odświeżenia jest sygnalizowany typowanym `TokenRefreshTemporarilyUnavailable`; wszystkie wywołania wymagające świeżego tokenu zatrzymują HTTP GET/POST/PUT. ViewModel **natychmiast ukrywa** ostatnie odpowiedzi serwera, ustawia `Offline`, zachowuje identyfikatory kontekstu i szkice tylko w RAM. Powrót wymaga świadomego `Sprawdź ponownie`, nowego tokenu i autoryzowanego odczytu `onboarding`. Bez automatycznego retry mutacji.
 - Usunięto dodatkowe wywołanie `freshAccessToken()` z `MovesApp` przed rewalidacją, które wcześniej mogło wylogować poza kontrolą bramki dostępu; status `readiness` odświeża się dopiero po autoryzacji.
 - Dodano wąskie testy polityki AppAuth oraz zachowania ViewModelu przy niedostępnym Keycloak i zapisie przed wysłaniem POST. Testy pozostają **wyłącznie lokalne**; GitHub Actions wykonuje tylko build.
+
+## Poprawka audytowa P1: data wizyty według strefy specjalisty (2026-11-16)
+
+- Podczas otwierania edycji S05 aplikacja **nigdy nie zakłada UTC ani strefy telefonu**. Jeśli istnieje aktualna uprawniona odpowiedź `Today` ze strefą IANA, wyznacza datę rozpoczęcia wizyty w tej strefie.
+- Przy wejściu z S03 bez wczytanego Dnia wykonywany jest najpierw autoryzowany `GET /api/v1/specialist/today` (bez `date`) w celu odczytu `timeZoneId`. Dopiero po walidacji strefy i przeliczeniu `startsAt` pobierany jest `GET .../today?date=YYYY-MM-DD` dla właściwego dnia. Do czasu uzyskania strefy UI nie pokazuje przypadkowej daty i nie dopuszcza PUT.
+- Brak lub niepoprawna strefa IANA skutkuje błędem odczytu, **bez fallbacku**. Ponowienie następuje ręcznie. Użytkownik może dalej anulować formularz.
+- Testy w repo obejmują wizyty blisko północy, brak skonfigurowanej strefy oraz właściwą kolejność wczytywania. GitHub Actions pozostaje build-only; testy uruchamiane lokalnie.
