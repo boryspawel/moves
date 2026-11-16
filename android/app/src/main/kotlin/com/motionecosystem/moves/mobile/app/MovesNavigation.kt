@@ -21,10 +21,43 @@ private const val APPOINTMENT_ROUTE = "appointment"
 private const val SCHEDULE_ROUTE = "schedule"
 
 @Composable
-fun MovesNavigation(viewModel: OperationalViewModel, readiness: ReadinessState, actingContext: ActingContext, onLogout: () -> Unit) {
+fun MovesNavigation(
+    viewModel: OperationalViewModel,
+    readiness: ReadinessState,
+    actingContext: ActingContext,
+    onLogout: () -> Unit,
+    accessEpoch: Int = 0,
+    modifier: Modifier = Modifier
+) {
     val navigation = rememberNavController()
     val route = navigation.currentBackStackEntryAsState().value?.destination?.route
-    Scaffold(
+    // The authorization gate blanked all cached server projections. Restore only the
+    // current route using fresh, authorized GETs; never replay mutations.
+    LaunchedEffect(accessEpoch) {
+        if (accessEpoch <= 1) return@LaunchedEffect
+        when (route) {
+            Tab.DAY.route -> viewModel.loadToday()
+            Tab.PARTICIPANTS.route -> viewModel.loadClients()
+            CONTEXT_ROUTE -> (viewModel.selection.value as? ContextSelection.Participant)
+                ?.let { viewModel.loadWorkspace(it.participantId) }
+            APPOINTMENT_ROUTE -> (viewModel.selection.value as? ContextSelection.Appointment)
+                ?.let { viewModel.loadAppointment(it.appointmentId) }
+            SCHEDULE_ROUTE -> {
+                viewModel.loadClients()
+                (viewModel.selection.value as? ContextSelection.Appointment)
+                    ?.let { viewModel.loadAppointment(it.appointmentId) }
+                viewModel.loadScheduleDay()
+            }
+            else -> if (VisitStage.entries.any { it.route == route }) {
+                when (val current = viewModel.selection.value) {
+                    is ContextSelection.Appointment -> viewModel.loadAppointment(current.appointmentId)
+                    is ContextSelection.Participant -> viewModel.loadWorkspace(current.participantId)
+                    null -> Unit
+                }
+            }
+        }
+    }
+    Scaffold(modifier = modifier,
         topBar = {
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween) {

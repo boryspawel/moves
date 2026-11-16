@@ -1,9 +1,17 @@
 package com.motionecosystem.moves.mobile.app
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.Lifecycle
@@ -63,6 +71,27 @@ fun MovesApp(session: OidcSession, onLogin: () -> Unit, onLogout: () -> Unit) {
     val status by session.status.collectAsStateWithLifecycle()
     val readinessState by readiness.state.collectAsStateWithLifecycle()
     val professionalContext by operations.professionalContext.collectAsStateWithLifecycle()
+    val accessEpoch by operations.accessEpoch.collectAsStateWithLifecycle()
+    val lastVerifiedRole = remember(session) { mutableStateOf<ActingContext?>(null) }
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    val isAuthorized = status == SessionStatus.SignedIn &&
+        professionalContext is ReadState.Ready && lastVerifiedRole.value ==
+        (professionalContext as ReadState.Ready<ActingContext>).value
+    LaunchedEffect(isAuthorized) {
+        if (!isAuthorized) {
+            focusManager.clearFocus(force = true)
+            keyboard?.hide()
+        }
+    }
+
+    LaunchedEffect(status, professionalContext) {
+        if (status != SessionStatus.SignedIn || professionalContext == ReadState.Forbidden) {
+            lastVerifiedRole.value = null
+        } else if (professionalContext is ReadState.Ready) {
+            lastVerifiedRole.value = (professionalContext as ReadState.Ready<ActingContext>).value
+        }
+    }
 
     LaunchedEffect(status) {
         if (status == SessionStatus.SignedIn) {
@@ -85,21 +114,56 @@ fun MovesApp(session: OidcSession, onLogin: () -> Unit, onLogout: () -> Unit) {
     }
     MaterialTheme {
         when (status) {
-            SessionStatus.SignedIn -> when (val access = professionalContext) {
-                is ReadState.Ready -> MovesNavigation(operations, readinessState, access.value, onLogout)
-                else -> Column(Modifier.fillMaxSize().padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text("Moves", style = MaterialTheme.typography.headlineMedium)
-                    Text(when (access) {
-                        ReadState.Idle, ReadState.Loading -> "Sprawdzanie kontekstu zawodowego i dostępu…"
-                        ReadState.Forbidden -> "Serwer odmówił dostępu. Sprawdź profil zawodowy, relację z uczestnikiem lub zgodę."
-                        ReadState.Offline -> "Brak połączenia. Ze względów bezpieczeństwa ukryto dane uczestników."
-                        else -> "Nie udało się potwierdzić dostępu. Dane uczestników są ukryte."
-                    })
-                    if (access != ReadState.Loading) {
-                        OutlinedButton(onClick = operations::revalidateAccess) { Text("Sprawdź ponownie") }
+            SessionStatus.SignedIn -> {
+                val role = lastVerifiedRole.value
+                val granted = professionalContext is ReadState.Ready &&
+                    (professionalContext as ReadState.Ready<ActingContext>).value == role
+                Box(Modifier.fillMaxSize()) {
+                    // Keep the NavHost and its Compose draft fields alive while gated.
+                    // Hidden routes are not interactive or exposed to accessibility services.
+                    if (role != null) {
+                        key(role) {
+                            MovesNavigation(
+                                operations, readinessState, role, onLogout,
+                                accessEpoch = accessEpoch,
+                                modifier = if (granted) Modifier
+                                    else Modifier.alpha(0f).clearAndSetSemantics { }
+                            )
+                        }
                     }
-                    TextButton(onClick = onLogout) { Text("Wyloguj") }
+                    if (!granted) {
+                        BackHandler { } // A denied/unfinished check must not navigate stale routes.
+                        // Separate blocker is behind the gate controls, but above the hidden NavHost.
+                        Box(
+                            Modifier.fillMaxSize()
+                                .background(MaterialTheme.colorScheme.surface)
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) { }
+                        )
+                        Column(
+                            Modifier.fillMaxSize().padding(24.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Text("Moves", style = MaterialTheme.typography.headlineMedium)
+                            Text(when (professionalContext) {
+                                ReadState.Idle, ReadState.Loading ->
+                                    "Sprawdzanie kontekstu zawodowego i dostępu…"
+                                ReadState.Forbidden ->
+                                    "Serwer odmówił dostępu. Sprawdź profil zawodowy, relację z uczestnikiem lub zgodę."
+                                ReadState.Offline ->
+                                    "Brak połączenia. Dane uczestników są ukryte do czasu potwierdzenia dostępu."
+                                else -> "Nie udało się potwierdzić dostępu. Dane uczestników są ukryte."
+                            })
+                            if (professionalContext != ReadState.Loading) {
+                                OutlinedButton(onClick = operations::revalidateAccess) {
+                                    Text("Sprawdź ponownie")
+                                }
+                            }
+                            TextButton(onClick = onLogout) { Text("Wyloguj") }
+                        }
+                    }
                 }
             }
             else -> Column(Modifier.fillMaxSize().padding(24.dp),

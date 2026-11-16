@@ -174,15 +174,115 @@ class OperationalViewModelTest {
             vm.selectParticipant(id)
             vm.loadWorkspace(id)
             runCurrent()
+            val profileResult = RemoteResult.Success(
+                MobileOnboardingState("READY", "SPECIALIST", MobileSpecialistProfile(ActingContext.PHYSIOTHERAPIST))
+            )
+            val delayedProfile = CompletableDeferred<RemoteResult<MobileOnboardingState>>()
+            repository.pendingOnboarding = delayedProfile
+            vm.revalidateAccess()
+            runCurrent()
+            // The navigation identity remains while checked, but server data is hidden.
+            assertEquals(ContextSelection.Participant(id), vm.selection.value)
+            assertEquals(ReadState.Idle, vm.workspace.value)
+            delayed.complete(RemoteResult.Success(WorkspaceView(participant = WorkspaceParticipant(id, "old"))))
+            delayedProfile.complete(profileResult)
+            advanceUntilIdle()
+            assertNull(vm.selection.value)
+            assertEquals(ReadState.Idle, vm.workspace.value)
+            assertEquals(ActingContext.PHYSIOTHERAPIST, (vm.professionalContext.value as ReadState.Ready).value)
+        } finally { Dispatchers.resetMain() }
+    }
+
+    @Test fun resumeKeepsSelectedAppointmentAndDraftUntilAccessIsReconfirmed() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = StubRepository()
+            val vm = OperationalViewModel(repository, { "token" }, {})
+            val participant = UUID.randomUUID()
+            val appointmentId = UUID.randomUUID()
+            repository.appointmentValue = AppointmentView(
+                appointmentId, participantId = participant,
+                version = 4, status = AppointmentStatus.CONFIRMED, availableActions = listOf("UPDATE")
+            )
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            vm.selectAppointment(participant, appointmentId)
+            vm.loadAppointment(appointmentId)
+            advanceUntilIdle()
+            assertTrue(vm.openEditSchedule())
+            advanceUntilIdle()
+            val target = vm.scheduleTarget.value
+            val date = vm.scheduleDate.value
+            val previousEpoch = vm.accessEpoch.value
+
+            val pending = CompletableDeferred<RemoteResult<MobileOnboardingState>>()
+            repository.pendingOnboarding = pending
+            vm.revalidateAccess()
+            runCurrent()
+            assertEquals(ReadState.Loading, vm.professionalContext.value)
+            assertEquals(ReadState.Idle, vm.appointment.value)
+            assertEquals(ReadState.Idle, vm.scheduleDay.value)
+            assertEquals(ContextSelection.Appointment(participant, appointmentId), vm.selection.value)
+            assertEquals(target, vm.scheduleTarget.value)
+            assertEquals(date, vm.scheduleDate.value)
+
+            pending.complete(repository.onboardingResult)
+            advanceUntilIdle()
+            assertEquals(ActingContext.TRAINER, (vm.professionalContext.value as ReadState.Ready).value)
+            assertEquals(previousEpoch + 1, vm.accessEpoch.value)
+            assertEquals(target, vm.scheduleTarget.value)
+            assertEquals(ContextSelection.Appointment(participant, appointmentId), vm.selection.value)
+            // Detail becomes visible only after the route explicitly refetches it.
+            assertEquals(ReadState.Idle, vm.appointment.value)
+            vm.loadAppointment(appointmentId)
+            advanceUntilIdle()
+            assertEquals(appointmentId, (vm.appointment.value as ReadState.Ready).value.appointmentId)
+        } finally { Dispatchers.resetMain() }
+    }
+
+    @Test fun offlineResumeHidesProjectionWithoutLosingDraftAndDeniedRetryDestroysIt() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = StubRepository()
+            val vm = OperationalViewModel(repository, { "token" }, {})
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            val participant = UUID.randomUUID()
+            vm.selectParticipant(participant)
+            vm.loadWorkspace(participant)
+            advanceUntilIdle()
+            repository.onboardingResult = RemoteResult.Failure(RemoteError.Network(java.io.IOException("offline")))
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            assertEquals(ReadState.Offline, vm.professionalContext.value)
+            assertEquals(ReadState.Idle, vm.workspace.value)
+            assertEquals(ContextSelection.Participant(participant), vm.selection.value)
+            repository.onboardingResult = RemoteResult.Failure(RemoteError.Forbidden)
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            assertEquals(ReadState.Forbidden, vm.professionalContext.value)
+            assertNull(vm.selection.value)
+            assertNull(vm.scheduleTarget.value)
+        } finally { Dispatchers.resetMain() }
+    }
+
+    @Test fun differentProfessionalRoleDiscardsPreviouslySelectedContext() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = StubRepository()
+            val vm = OperationalViewModel(repository, { "token" }, {})
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            vm.selectParticipant(UUID.randomUUID())
+            vm.loadWorkspace((vm.selection.value as ContextSelection.Participant).participantId)
+            advanceUntilIdle()
             repository.onboardingResult = RemoteResult.Success(
                 MobileOnboardingState("READY", "SPECIALIST", MobileSpecialistProfile(ActingContext.PHYSIOTHERAPIST))
             )
             vm.revalidateAccess()
-            runCurrent()
-            assertNull(vm.selection.value)
-            delayed.complete(RemoteResult.Success(WorkspaceView(participant = WorkspaceParticipant(id, "old"))))
             advanceUntilIdle()
             assertEquals(ReadState.Idle, vm.workspace.value)
+            assertNull(vm.selection.value)
             assertEquals(ActingContext.PHYSIOTHERAPIST, (vm.professionalContext.value as ReadState.Ready).value)
         } finally { Dispatchers.resetMain() }
     }
@@ -488,7 +588,9 @@ class OperationalViewModelTest {
             MobileOnboardingState(stage = "READY", profileType = "SPECIALIST",
                 profile = MobileSpecialistProfile(specialistKind = ActingContext.TRAINER))
         )
-        override suspend fun onboarding(): RemoteResult<MobileOnboardingState> = onboardingResult
+        var pendingOnboarding: CompletableDeferred<RemoteResult<MobileOnboardingState>>? = null
+        override suspend fun onboarding(): RemoteResult<MobileOnboardingState> =
+            pendingOnboarding?.await() ?: onboardingResult
         val pendingWorkspaces = mutableMapOf<UUID, CompletableDeferred<RemoteResult<WorkspaceView>>>()
         val timelineResults = mutableMapOf<String?, RemoteResult<TimelinePage>>()
         val timelineRequests = mutableListOf<Triple<String?, String?, String?>>()

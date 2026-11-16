@@ -71,6 +71,9 @@ class OperationalViewModel(
     private val mutableProfessionalContext = MutableStateFlow<ReadState<ActingContext>>(ReadState.Idle)
     val professionalContext = mutableProfessionalContext.asStateFlow()
     private var profileRequest = 0
+    private var verifiedRole: ActingContext? = null
+    private val mutableAccessEpoch = MutableStateFlow(0)
+    val accessEpoch = mutableAccessEpoch.asStateFlow()
     val today = mutableToday.asStateFlow()
     private val mutableRequestedDate = MutableStateFlow<LocalDate?>(null)
     val requestedDate = mutableRequestedDate.asStateFlow()
@@ -117,25 +120,83 @@ class OperationalViewModel(
     val selection = mutableSelection.asStateFlow()
     private var generation = 0
 
-    /** Invalidate all cached data before checking the server profile again (e.g. app resume).
-     * S01/S03 use the server profile role; selecting an arbitrary local role is not an access grant.
+    /** Hide all previously authorized responses immediately, but retain the route and unsent drafts.
+     * The UI is completely gated until the server confirms the SAME professional role again.
+     * On denial or a role change, even the in-memory navigation/draft context is destroyed.
      */
     fun revalidateAccess() {
-        clear()
+        if (verifiedRole == null) clear() else suspendAuthorizedReads()
         val requestId = ++profileRequest
-        read(mutableProfessionalContext, skipIfLoading = false,
-            isCurrent = { requestId == profileRequest }) {
-            when (val result = repository.onboarding()) {
-                is RemoteResult.Success -> {
-                    val state = result.value
-                    val kind = state.profile?.specialistKind
-                    if (state.stage == "READY" && state.profileType == "SPECIALIST" && kind != null) {
-                        RemoteResult.Success(kind)
-                    } else RemoteResult.Failure(RemoteError.Forbidden)
+        val currentGeneration = generation
+        mutableProfessionalContext.value = ReadState.Loading
+        viewModelScope.launch {
+            if (freshToken().isNullOrBlank()) {
+                if (currentGeneration == generation && requestId == profileRequest) {
+                    clear()
+                    invalidateSession()
                 }
-                is RemoteResult.Failure -> result
+                return@launch
+            }
+            val response = repository.onboarding()
+            if (generation != currentGeneration || requestId != profileRequest) return@launch
+            when (response) {
+                is RemoteResult.Success -> {
+                    val state = response.value
+                    val role = state.profile?.specialistKind
+                    if (state.stage != "READY" || state.profileType != "SPECIALIST" || role == null) {
+                        clear()
+                        mutableProfessionalContext.value = ReadState.Forbidden
+                    } else {
+                        if (verifiedRole != null && verifiedRole != role) clear()
+                        verifiedRole = role
+                        mutableProfessionalContext.value = ReadState.Ready(role)
+                        mutableAccessEpoch.value++
+                    }
+                }
+                is RemoteResult.Failure -> when (response.error) {
+                    RemoteError.Unauthorized -> { clear(); invalidateSession() }
+                    RemoteError.Forbidden -> {
+                        clear()
+                        mutableProfessionalContext.value = ReadState.Forbidden
+                    }
+                    is RemoteError.Network -> mutableProfessionalContext.value = ReadState.Offline
+                    else -> mutableProfessionalContext.value = ReadState.Error
+                }
             }
         }
+    }
+
+    /** Drop old PHI and invalidate outstanding GETs before a foreground authorization check.
+     * Only non-authorizing identifiers and unsent RAM-only drafts survive a transient check.
+     * In-flight mutations become uncertain; they must never be automatically retried.
+     */
+    private fun suspendAuthorizedReads() {
+        generation++
+        profileRequest++
+        todayRequest++
+        clientRequest++
+        resetParticipantReads()
+        appointmentRequest++
+        startRequest++
+        mutableAppointment.value = ReadState.Idle
+        if (mutableAppointmentStart.value == AppointmentStartState.SAVING) {
+            mutableAppointmentStart.value = AppointmentStartState.UNCERTAIN
+        }
+        scheduleRequest++
+        scheduleSaveRequest++
+        mutableScheduleDay.value = ReadState.Idle
+        if (mutableScheduleSave.value == ScheduleSaveState.Saving) {
+            mutableScheduleSave.value = ScheduleSaveState.Uncertain
+        }
+        if (mutableCreateClient.value == CreateClientState.Saving) {
+            mutableCreateClient.value = CreateClientState.Failed(
+                "Niepewny wynik zapisu. Przed ponowieniem sprawdź, czy kartoteka już istnieje."
+            )
+        }
+        mutableToday.value = ReadState.Idle
+        mutableClients.value = ReadState.Idle
+        mutableParticipants.value = ReadState.Idle
+        mutableWorklist.value = ReadState.Idle
     }
 
     private fun selectedAppointment(): ContextSelection.Appointment? =
@@ -593,6 +654,7 @@ class OperationalViewModel(
     fun clear() {
         generation++
         profileRequest++
+        verifiedRole = null
         mutableProfessionalContext.value = ReadState.Idle
         todayRequest++
         clientRequest++

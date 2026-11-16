@@ -74,16 +74,16 @@ internal fun ScheduleScreen(
             }
         )
     }
-    var type by remember(target, existing?.version) {
+    var type by remember(target) {
         mutableStateOf(existing?.type ?: AppointmentType.CONSULTATION)
     }
-    var mode by remember(target, existing?.version) {
+    var mode by remember(target) {
         mutableStateOf(existing?.locationMode ?: AppointmentLocationMode.IN_PERSON)
     }
-    var location by remember(target, existing?.version) {
+    var location by remember(target) {
         mutableStateOf(existing?.location.orEmpty())
     }
-    var purpose by remember(target, existing?.version) {
+    var purpose by remember(target) {
         mutableStateOf(existing?.shortPurpose.orEmpty())
     }
     var selectedSlot by remember(target, requestedDate) { mutableStateOf<BookableSlotView?>(null) }
