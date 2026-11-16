@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -63,12 +64,13 @@ internal fun DictationReadyTextField(
     canEdit: Boolean,
     keyboardType: KeyboardType,
     onTextChange: (String) -> Unit,
+    maxLength: Int = 4000,
     onRequestOnDeviceDictation: ((String) -> Unit)? = null
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         OutlinedTextField(
             value = text,
-            onValueChange = { onTextChange(it.take(4000)) },
+            onValueChange = { onTextChange(it.take(maxLength)) },
             label = { Text(title) },
             readOnly = !canEdit,
             minLines = if (keyboardType == KeyboardType.Text) 3 else 1,
@@ -98,6 +100,20 @@ internal fun DictationReadyTextField(
 @Composable
 internal fun DocumentationScreen(
     interviews: ReadState<List<InterviewView>>,
+    notes: ReadState<List<com.motionecosystem.moves.mobile.api.NoteView>>,
+    selectedNoteId: UUID?,
+    noteDraft: NoteDraft?,
+    noteWrite: NoteWriteState,
+    onLoadNotes: () -> Unit,
+    onNewNote: () -> Unit,
+    onOpenNote: (UUID) -> Unit,
+    onCloseNote: () -> Unit,
+    onChangeNote: (NoteValues) -> Unit,
+    onCreateNote: () -> Unit,
+    onUpdateNote: () -> Unit,
+    onFinaliseNote: () -> Unit,
+    onArchiveNote: () -> Unit,
+    onReconcileNote: () -> Unit,
     selectedInterviewId: UUID?,
     draft: InterviewDraft?,
     writeState: InterviewWriteState,
@@ -113,13 +129,16 @@ internal fun DocumentationScreen(
     onBack: () -> Unit,
     onRequestOnDeviceDictation: ((String) -> Unit)? = null
 ) {
-    var showNotes by remember { mutableStateOf(false) }
+    var showNotes by rememberSaveable { mutableStateOf(false) }
     var exitConfirmation by remember { mutableStateOf(false) }
     var discardConfirmation by remember { mutableStateOf(false) }
     var versionConfirmation by remember { mutableStateOf(false) }
     var completeConfirmation by remember { mutableStateOf(false) }
-    val dirty = draft?.dirty == true
-    val saving = writeState is InterviewWriteState.Saving
+    val dirty = draft?.dirty == true || noteDraft?.hasUnsavedContent == true
+    val saving = writeState is InterviewWriteState.Saving || noteWrite is NoteWriteState.Saving
+    LaunchedEffect(showNotes, notes is ReadState.Idle) {
+        if (showNotes && notes is ReadState.Idle) onLoadNotes()
+    }
 
     fun back() {
         if (saving) return
@@ -130,8 +149,8 @@ internal fun DocumentationScreen(
     if (exitConfirmation) {
         AlertDialog(
             onDismissRequest = { exitConfirmation = false },
-            title = { Text("Niezapisane odpowiedzi") },
-            text = { Text("Zmiany nie zostały wysłane na serwer. Pozostaną tylko w pamięci aplikacji do wylogowania lub jej zamknięcia.") },
+            title = { Text("Niezapisana dokumentacja") },
+            text = { Text("Zmiany nie zostały wysłane na serwer. Pozostaną wyłącznie w pamięci aplikacji do wylogowania lub jej zamknięcia.") },
             confirmButton = {
                 TextButton(onClick = { exitConfirmation = false; onBack() }) { Text("Wróć do poprzedniego ekranu") }
             },
@@ -198,7 +217,8 @@ internal fun DocumentationScreen(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             TextButton(onClick = ::back, enabled = !saving) { Text("Wróć") }
-            TextButton(onClick = onRefresh, enabled = !saving) { Text("Odśwież") }
+            TextButton(onClick = { if (showNotes) onLoadNotes() else onRefresh() },
+                enabled = !saving) { Text("Odśwież") }
         }
         Column(
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
@@ -228,20 +248,34 @@ internal fun DocumentationScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 FilterChip(
                     selected = !showNotes,
-                    onClick = { if (!dirty && !saving) showNotes = false },
+                    enabled = !dirty && !saving,
+                    onClick = { showNotes = false },
                     label = { Text("Wywiady") }
                 )
                 FilterChip(
                     selected = showNotes,
-                    onClick = { if (!dirty && !saving) showNotes = true },
+                    enabled = !dirty && !saving,
+                    onClick = { showNotes = true },
                     label = { Text("Notatki") }
                 )
             }
             if (showNotes) {
-                Text("Notatki", style = MaterialTheme.typography.titleLarge)
-                Text("Widok notatek i operacje zapisu zostaną podłączone w MOB-041.")
-                Text("Bez załączników, nagrań i danych zapisanych na urządzeniu.",
-                    style = MaterialTheme.typography.bodySmall)
+                NotesSection(
+                    notes = notes,
+                    selectedNoteId = selectedNoteId,
+                    draft = noteDraft,
+                    writeState = noteWrite,
+                    onNew = onNewNote,
+                    onOpen = onOpenNote,
+                    onClose = onCloseNote,
+                    onChange = onChangeNote,
+                    onCreate = onCreateNote,
+                    onUpdate = onUpdateNote,
+                    onFinalise = onFinaliseNote,
+                    onArchive = onArchiveNote,
+                    onReconcile = onReconcileNote,
+                    onRefresh = onLoadNotes
+                )
             } else {
                 ReadPanel(interviews, onRefresh, { false }) { records ->
                     if (selectedInterviewId == null) {

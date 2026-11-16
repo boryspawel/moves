@@ -67,6 +67,18 @@ class ReadinessViewModelTest {
             RemoteResult.Failure(RemoteError.Conflict)
         override suspend fun updateAppointment(id: java.util.UUID, command: AppointmentSaveCommand, key: String): RemoteResult<AppointmentView> =
             RemoteResult.Failure(RemoteError.Conflict)
+        override suspend fun notes(participantId: java.util.UUID, actingContext: ActingContext):
+            RemoteResult<List<NoteView>> = RemoteResult.Success(emptyList())
+        override suspend fun createNote(participantId: java.util.UUID, actingContext: ActingContext,
+            key: String, command: CreateNoteCommand): RemoteResult<NoteView> = RemoteResult.Failure(RemoteError.Conflict)
+        override suspend fun updateNote(participantId: java.util.UUID, noteId: java.util.UUID,
+            actingContext: ActingContext, command: UpdateNoteCommand): RemoteResult<NoteView> = RemoteResult.Failure(RemoteError.Conflict)
+        override suspend fun finaliseNote(participantId: java.util.UUID, noteId: java.util.UUID,
+            actingContext: ActingContext, command: InterviewVersionCommand, key: String
+        ): RemoteResult<NoteView> = RemoteResult.Failure(RemoteError.Conflict)
+        override suspend fun archiveNote(participantId: java.util.UUID, noteId: java.util.UUID,
+            actingContext: ActingContext, command: InterviewVersionCommand, key: String
+        ): RemoteResult<NoteView> = RemoteResult.Failure(RemoteError.Conflict)
         override suspend fun interviews(participantId: java.util.UUID, actingContext: ActingContext):
             RemoteResult<List<InterviewView>> = RemoteResult.Success(emptyList())
         override suspend fun startInterview(participantId: java.util.UUID, actingContext: ActingContext, key: String):

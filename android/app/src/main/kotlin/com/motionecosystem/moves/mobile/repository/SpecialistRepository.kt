@@ -15,6 +15,15 @@ interface SpecialistRepository {
     /** Mutations must never be auto-retried; the caller preserves the UUID key for explicit retries. */
     suspend fun createClient(command: ClientCommand, idempotencyKey: String): RemoteResult<ClientView>
     suspend fun interviews(participantId: java.util.UUID, actingContext: ActingContext): RemoteResult<List<InterviewView>>
+    suspend fun notes(participantId: java.util.UUID, actingContext: ActingContext): RemoteResult<List<NoteView>>
+    suspend fun createNote(participantId: java.util.UUID, actingContext: ActingContext, key: String,
+        command: CreateNoteCommand): RemoteResult<NoteView>
+    suspend fun updateNote(participantId: java.util.UUID, noteId: java.util.UUID,
+        actingContext: ActingContext, command: UpdateNoteCommand): RemoteResult<NoteView>
+    suspend fun finaliseNote(participantId: java.util.UUID, noteId: java.util.UUID,
+        actingContext: ActingContext, command: InterviewVersionCommand, key: String): RemoteResult<NoteView>
+    suspend fun archiveNote(participantId: java.util.UUID, noteId: java.util.UUID,
+        actingContext: ActingContext, command: InterviewVersionCommand, key: String): RemoteResult<NoteView>
     /** POST endpoints use the original key on explicit retries; PUT is versioned and single-shot. */
     suspend fun startInterview(participantId: java.util.UUID, actingContext: ActingContext, key: String): RemoteResult<InterviewView>
     suspend fun saveInterviewDraft(
@@ -59,6 +68,28 @@ class NetworkSpecialistRepository(private val api: MovesApi, private val calls: 
         actingContext: ActingContext, command: InterviewVersionCommand, key: String
     ) = withContext(Dispatchers.IO) {
         calls.execute { api.completeInterview(participantId, interviewId, actingContext, key, command) }
+    }
+    override suspend fun notes(participantId: java.util.UUID, actingContext: ActingContext) =
+        read { api.notes(participantId, actingContext) }
+    override suspend fun createNote(participantId: java.util.UUID, actingContext: ActingContext,
+        key: String, command: CreateNoteCommand
+    ): RemoteResult<NoteView> = withContext(Dispatchers.IO) {
+        calls.execute { api.createNote(participantId, actingContext, key, command) }
+    }
+    override suspend fun updateNote(participantId: java.util.UUID, noteId: java.util.UUID,
+        actingContext: ActingContext, command: UpdateNoteCommand
+    ): RemoteResult<NoteView> = withContext(Dispatchers.IO) {
+        calls.execute { api.updateNote(participantId, noteId, actingContext, command) }
+    }
+    override suspend fun finaliseNote(participantId: java.util.UUID, noteId: java.util.UUID,
+        actingContext: ActingContext, command: InterviewVersionCommand, key: String
+    ): RemoteResult<NoteView> = withContext(Dispatchers.IO) {
+        calls.execute { api.finaliseNote(participantId, noteId, actingContext, key, command) }
+    }
+    override suspend fun archiveNote(participantId: java.util.UUID, noteId: java.util.UUID,
+        actingContext: ActingContext, command: InterviewVersionCommand, key: String
+    ): RemoteResult<NoteView> = withContext(Dispatchers.IO) {
+        calls.execute { api.archiveNote(participantId, noteId, actingContext, key, command) }
     }
     override suspend fun workspace(participantId: java.util.UUID) = read { api.workspace(participantId) }
     override suspend fun timeline(participantId: java.util.UUID, cursor: String?, from: String?, to: String?) =

@@ -51,6 +51,46 @@ interface MovesApi {
         @Body command: InterviewVersionCommand
     ): Response<InterviewView>
 
+    @GET("api/v1/specialist/clients/{participantId}/records/notes")
+    suspend fun notes(
+        @Path("participantId") participantId: java.util.UUID,
+        @Query("actingContext") actingContext: ActingContext
+    ): Response<List<NoteView>>
+
+    @POST("api/v1/specialist/clients/{participantId}/records/notes")
+    suspend fun createNote(
+        @Path("participantId") participantId: java.util.UUID,
+        @Query("actingContext") actingContext: ActingContext,
+        @Header("Idempotency-Key") key: String,
+        @Body command: CreateNoteCommand
+    ): Response<NoteView>
+
+    @PUT("api/v1/specialist/clients/{participantId}/records/notes/{noteId}")
+    suspend fun updateNote(
+        @Path("participantId") participantId: java.util.UUID,
+        @Path("noteId") noteId: java.util.UUID,
+        @Query("actingContext") actingContext: ActingContext,
+        @Body command: UpdateNoteCommand
+    ): Response<NoteView>
+
+    @POST("api/v1/specialist/clients/{participantId}/records/notes/{noteId}/finalise")
+    suspend fun finaliseNote(
+        @Path("participantId") participantId: java.util.UUID,
+        @Path("noteId") noteId: java.util.UUID,
+        @Query("actingContext") actingContext: ActingContext,
+        @Header("Idempotency-Key") key: String,
+        @Body command: InterviewVersionCommand
+    ): Response<NoteView>
+
+    @POST("api/v1/specialist/clients/{participantId}/records/notes/{noteId}/archive")
+    suspend fun archiveNote(
+        @Path("participantId") participantId: java.util.UUID,
+        @Path("noteId") noteId: java.util.UUID,
+        @Query("actingContext") actingContext: ActingContext,
+        @Header("Idempotency-Key") key: String,
+        @Body command: InterviewVersionCommand
+    ): Response<NoteView>
+
     @GET("api/v1/specialist/participants/{participantId}/workspace")
     suspend fun workspace(@Path("participantId") participantId: java.util.UUID): Response<WorkspaceView>
 

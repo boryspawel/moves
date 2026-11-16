@@ -18,6 +18,97 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class OperationalViewModelTest {
+    @Test fun noteCreateAfterNetworkFailureReusesKeyAndDeletesDataOnLogout() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val participant = UUID.randomUUID()
+            val id = UUID.randomUUID()
+            val repository = StubRepository()
+            val saved = NoteView(
+                id = id, participantId = participant, status = "DRAFT", version = 0L,
+                title = "Wizyta", content = "Opis", category = "GENERAL",
+                availableActions = listOf("UPDATE", "FINALISE", "ARCHIVE")
+            )
+            repository.createNoteResults.add(
+                RemoteResult.Failure(RemoteError.Network(java.io.IOException("offline")))
+            )
+            repository.createNoteResults.add(RemoteResult.Success(saved))
+            val vm = OperationalViewModel(repository, { "token" }, {})
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            vm.selectParticipant(participant)
+            vm.loadNotes(participant)
+            advanceUntilIdle()
+            assertEquals(ReadState.Idle, vm.notes.value)
+            vm.loadWorkspace(participant)
+            advanceUntilIdle()
+            vm.loadNotes(participant)
+            advanceUntilIdle()
+            vm.openNewNote(participant)
+            vm.changeNoteDraft(NoteValues(title = "Wizyta", content = "Opis"))
+            vm.createNote()
+            advanceUntilIdle()
+            assertEquals(NoteWriteState.Uncertain(NoteOperation.CREATE), vm.noteWrite.value)
+            assertEquals(1, repository.noteCalls.size)
+            vm.createNote()
+            advanceUntilIdle()
+            assertEquals(2, repository.noteCalls.size)
+            assertEquals(repository.noteCalls.first(), repository.noteCalls.last())
+            assertEquals(id, vm.noteDraft.value?.noteId)
+            assertFalse(vm.noteDraft.value!!.dirty)
+            vm.clear()
+            assertNull(vm.noteDraft.value)
+            assertNull(vm.noteSelection.value)
+            assertEquals(ReadState.Idle, vm.notes.value)
+        } finally { Dispatchers.resetMain() }
+    }
+
+    @Test fun noteUpdate409RetainsLocalChangesAndRequiresExplicitRebase() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val participant = UUID.randomUUID()
+            val id = UUID.randomUUID()
+            val first = NoteView(
+                id = id, participantId = participant, status = "DRAFT", version = 1L,
+                title = "Stary tytuł", content = "Stary opis", category = "GENERAL",
+                availableActions = listOf("UPDATE", "FINALISE", "ARCHIVE")
+            )
+            val latest = first.copy(version = 2L, content = "Nowy opis")
+            val repository = StubRepository()
+            repository.noteResult = RemoteResult.Success(listOf(first))
+            repository.updateNoteResults.add(RemoteResult.Failure(RemoteError.Conflict))
+            val vm = OperationalViewModel(repository, { "token" }, {})
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            vm.selectParticipant(participant)
+            vm.loadWorkspace(participant)
+            advanceUntilIdle()
+            vm.loadNotes(participant)
+            advanceUntilIdle()
+            vm.openNote(participant, id)
+            vm.changeNoteDraft(vm.noteDraft.value!!.values.copy(title = "Mój tytuł"))
+            repository.noteResult = RemoteResult.Success(listOf(latest))
+            vm.updateNote()
+            advanceUntilIdle()
+            assertEquals(NoteWriteState.Conflict(NoteOperation.UPDATE), vm.noteWrite.value)
+            assertEquals(1, repository.noteCalls.count { it.startsWith("UPDATE:") })
+            vm.updateNote()
+            advanceUntilIdle()
+            assertEquals(1, repository.noteCalls.count { it.startsWith("UPDATE:") })
+            vm.reconcileNote()
+            assertEquals(2L, vm.noteDraft.value?.version)
+            assertEquals("Mój tytuł", vm.noteDraft.value?.values?.title)
+            assertEquals("Nowy opis", vm.noteDraft.value?.values?.content)
+            repository.updateNoteResults.add(RemoteResult.Success(
+                latest.copy(version = 3L, title = "Mój tytuł")
+            ))
+            vm.updateNote()
+            advanceUntilIdle()
+            assertEquals(2, repository.noteCalls.count { it.startsWith("UPDATE:") })
+            assertFalse(vm.noteDraft.value!!.dirty)
+        } finally { Dispatchers.resetMain() }
+    }
+
     @Test fun interview409PreservesDraftAndRequiresExplicitMergeBeforeResubmitting() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {
@@ -1003,6 +1094,36 @@ class OperationalViewModelTest {
         var pendingAppointment: CompletableDeferred<RemoteResult<AppointmentView>>? = null
         val startResults = ArrayDeque<RemoteResult<AppointmentView>>()
         val startRequests = mutableListOf<Triple<UUID, Long, String>>()
+        var noteResult: RemoteResult<List<NoteView>> = RemoteResult.Success(emptyList())
+        val noteCalls = mutableListOf<String>()
+        val createNoteResults = ArrayDeque<RemoteResult<NoteView>>()
+        val updateNoteResults = ArrayDeque<RemoteResult<NoteView>>()
+        val finaliseNoteResults = ArrayDeque<RemoteResult<NoteView>>()
+        val archiveNoteResults = ArrayDeque<RemoteResult<NoteView>>()
+        override suspend fun notes(participantId: java.util.UUID, actingContext: ActingContext):
+            RemoteResult<List<NoteView>> = noteResult
+        override suspend fun createNote(participantId: java.util.UUID, actingContext: ActingContext,
+            key: String, command: CreateNoteCommand): RemoteResult<NoteView> {
+            noteCalls += "CREATE:$key"
+            return createNoteResults.removeFirstOrNull() ?: RemoteResult.Failure(RemoteError.Conflict)
+        }
+        override suspend fun updateNote(participantId: java.util.UUID, noteId: java.util.UUID,
+            actingContext: ActingContext, command: UpdateNoteCommand): RemoteResult<NoteView> {
+            noteCalls += "UPDATE:${command.expectedVersion}"
+            return updateNoteResults.removeFirstOrNull() ?: RemoteResult.Failure(RemoteError.Conflict)
+        }
+        override suspend fun finaliseNote(participantId: java.util.UUID, noteId: java.util.UUID,
+            actingContext: ActingContext, command: InterviewVersionCommand, key: String
+        ): RemoteResult<NoteView> {
+            noteCalls += "FINALISE:$key"
+            return finaliseNoteResults.removeFirstOrNull() ?: RemoteResult.Failure(RemoteError.Conflict)
+        }
+        override suspend fun archiveNote(participantId: java.util.UUID, noteId: java.util.UUID,
+            actingContext: ActingContext, command: InterviewVersionCommand, key: String
+        ): RemoteResult<NoteView> {
+            noteCalls += "ARCHIVE:$key"
+            return archiveNoteResults.removeFirstOrNull() ?: RemoteResult.Failure(RemoteError.Conflict)
+        }
         var interviewResult: RemoteResult<List<InterviewView>> = RemoteResult.Success(emptyList())
         val interviewRequests = mutableListOf<Pair<UUID, ActingContext>>()
         val startInterviewCalls = mutableListOf<String>()

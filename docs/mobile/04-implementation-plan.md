@@ -54,7 +54,7 @@ M1 wymaga M0; M2 wymaga M1; M3 i M4 można częściowo rozwijać równolegle po 
 ### M4 — dokumentacja
 
 - **MOB-040 (kod wykonany; odbiór lokalny otwarty)** S07: GET/POST wywiadu, sekcje i odpowiedzi, edycja RAM, wersjonowany PUT szkicu, zakończenie POST oraz kolejny wywiad, 409 i jawne ponowienie z Idempotency-Key. Słowniki wyborów przejęte z istniejącego webowego UI; docelowo powinny znaleźć się w kontrakcie backendu.
-- **MOB-041** Notatki: utwórz, edytuj szkic, finalizuj, archiwizuj tylko według `availableActions`.
+- **MOB-041 (kod wykonany; odbiór lokalny otwarty)** Notatki: utwórz, edytuj szkic, finalizuj i archiwizuj według `availableActions`, z obsługą konfliktu 409 i niepewnego POST/PUT.
 - **MOB-042 — WSTRZYMANE** S08 i inne akcje odczytu/zapisu biomedycznych pomiarów (również przez obserwacje celów). Nie implementować do czasu backendowej kontroli odpowiedniej zgody; nie tworzyć jej w mobile.
 - **MOB-043** Utrata sieci, konflikt wersji, odtworzenie zgodne z polityką M0.
 
@@ -263,3 +263,12 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 - Android wyświetla istniejące słowniki odpowiedzi `SINGLE_SELECT` i `MULTI_SELECT` po kodzie pytania, w zgodzie z `web/src/app/features/specialist-participant-workspace.presentation.ts` (`activity_level`, `sleep`, `consents`). Jest to odtworzenie istniejącego kontraktu UX, bez tworzenia formalnych zgód; nieznane typy pytań pozostają tylko do odczytu. Przeniesienie słowników do backendu pozostaje długiem architektonicznym.
 - Wszystkie dane wprowadzane lokalnie pozostają w RAM (w tym po obrocie i przejściowej reautoryzacji); wylogowanie/401/403/zmiana uczestnika czyści szkice, żądania i odpowiedzi. Przycisk ręcznej reautoryzacji oraz gest Wstecz nie mogą przerwać bieżącej mutacji, a nagrania i rozpoznawanie mowy pozostają nieaktywne.
 - Wąskie testy: zachowanie odpowiedzi wyboru, rebase 409, brak automatycznego retry PUT, ręczny retry POST z oryginalnym kluczem. **W GitHub Actions tylko build.** Lokalnie: `cd android && ./gradlew :app:testDevDebugUnitTest`.
+
+## MOB-041 — notatki S07 (2026-11-16)
+
+- Zakładka Notatki pobiera dane **dopiero po otwarciu**: `GET /api/v1/specialist/clients/{participantId}/records/notes?actingContext=...`, tylko po ponownej autoryzacji kontekstu S03/S05. Odpowiedź pozostaje przypisana do uczestnika i bieżącej roli.
+- Dostępny jest POST nowej notatki (stabilny `Idempotency-Key`), wersjonowany PUT szkicu (`expectedVersion`), finalizacja i archiwizacja (POST z oryginalnym kluczem przy jawnym retry). Dostępność wyłącznie według `availableActions`; statusy `DRAFT`, `FINAL`, `ARCHIVED` są egzekwowane. Zweryfikowana bieżąca wizyta może być przypisana do nowej notatki.
+- Szkic zawierający dane medyczne istnieje **wyłącznie w RAM** ViewModelu, nie w `SavedState`, Bundle ani plikach. Obrót i czasowa reautoryzacja zachowują szkic, natomiast logout, 401/403 i zmiana uczestnika go usuwają. Nawigacja systemowa i ręczna rewalidacja nie mogą przerwać zapisu.
+- Konflikt 409 odświeża dane serwera, zachowuje nietknięte pola z nowszej wersji, lokalnie zmienione pola trzyma w RAM i wymaga obejrzenia obu wersji oraz jawnego potwierdzenia scalenia; dopiero potem użytkownik może wysłać nowy PUT. Niepewny PUT nie jest ponawiany automatycznie. Dla niepewnego POST dostępne jest jawne powtórzenie z poprzednim kluczem.
+- Kategoria według istniejących wartości webowych (`GENERAL`, `SESSION`, `HEALTH`, `OTHER`); pole treści współdzieli przygotowanie pod dyktowanie on-device, z nieaktywnym mikrofonem, bez nagrań i chmury. Nie dodano zależności ani migracji.
+- Dodano wąskie testy lokalne: izolacja szkicu, ponowienie POST z tym samym kluczem, brak automatycznego retry PUT po 409, rebase po świadomym potwierdzeniu. **GitHub Actions tylko build**, bez testów.
