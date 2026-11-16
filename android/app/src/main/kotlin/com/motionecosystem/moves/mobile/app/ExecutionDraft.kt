@@ -166,6 +166,7 @@ internal fun buildExecutionCommand(context: SpecialistExecutionContext, draft: E
         resultFor(p, draft.exercises[p.id] ?: ExerciseActualDraft()) ?: return null
     }
     return RecordSessionExecutionCommand(
+        declaredCompletion = true,
         results = results, painLevel = pain, difficultyLevel = difficulty,
         techniqueConfidenceLevel = confidence, sessionRpe = rpe,
         note = draft.note.trim().takeIf { it.isNotEmpty() }
