@@ -552,6 +552,8 @@ class OperationalViewModelTest {
             assertEquals(1, repository.updateAppointmentCalls.size)
             assertEquals(3L, repository.updateAppointmentCalls.single().second.version)
             assertEquals(4L, (vm.appointment.value as ReadState.Ready).value.version)
+            assertEquals(ScheduleTarget.Edit(appointmentId, participantId), vm.scheduleTarget.value)
+            assertEquals(1, repository.updateAppointmentCalls.size) // No automatic retry after re-fetch.
         } finally { Dispatchers.resetMain() }
     }
 
