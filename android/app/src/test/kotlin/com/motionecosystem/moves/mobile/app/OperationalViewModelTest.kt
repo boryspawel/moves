@@ -1003,6 +1003,36 @@ class OperationalViewModelTest {
         var pendingAppointment: CompletableDeferred<RemoteResult<AppointmentView>>? = null
         val startResults = ArrayDeque<RemoteResult<AppointmentView>>()
         val startRequests = mutableListOf<Triple<UUID, Long, String>>()
+        var noteResult: RemoteResult<List<NoteView>> = RemoteResult.Success(emptyList())
+        val noteCalls = mutableListOf<String>()
+        val createNoteResults = ArrayDeque<RemoteResult<NoteView>>()
+        val updateNoteResults = ArrayDeque<RemoteResult<NoteView>>()
+        val finaliseNoteResults = ArrayDeque<RemoteResult<NoteView>>()
+        val archiveNoteResults = ArrayDeque<RemoteResult<NoteView>>()
+        override suspend fun notes(participantId: java.util.UUID, actingContext: ActingContext):
+            RemoteResult<List<NoteView>> = noteResult
+        override suspend fun createNote(participantId: java.util.UUID, actingContext: ActingContext,
+            key: String, command: CreateNoteCommand): RemoteResult<NoteView> {
+            noteCalls += "CREATE:$key"
+            return createNoteResults.removeFirstOrNull() ?: RemoteResult.Failure(RemoteError.Conflict)
+        }
+        override suspend fun updateNote(participantId: java.util.UUID, noteId: java.util.UUID,
+            actingContext: ActingContext, command: UpdateNoteCommand): RemoteResult<NoteView> {
+            noteCalls += "UPDATE:${command.expectedVersion}"
+            return updateNoteResults.removeFirstOrNull() ?: RemoteResult.Failure(RemoteError.Conflict)
+        }
+        override suspend fun finaliseNote(participantId: java.util.UUID, noteId: java.util.UUID,
+            actingContext: ActingContext, command: InterviewVersionCommand, key: String
+        ): RemoteResult<NoteView> {
+            noteCalls += "FINALISE:$key"
+            return finaliseNoteResults.removeFirstOrNull() ?: RemoteResult.Failure(RemoteError.Conflict)
+        }
+        override suspend fun archiveNote(participantId: java.util.UUID, noteId: java.util.UUID,
+            actingContext: ActingContext, command: InterviewVersionCommand, key: String
+        ): RemoteResult<NoteView> {
+            noteCalls += "ARCHIVE:$key"
+            return archiveNoteResults.removeFirstOrNull() ?: RemoteResult.Failure(RemoteError.Conflict)
+        }
         var interviewResult: RemoteResult<List<InterviewView>> = RemoteResult.Success(emptyList())
         val interviewRequests = mutableListOf<Pair<UUID, ActingContext>>()
         val startInterviewCalls = mutableListOf<String>()
