@@ -413,11 +413,13 @@ private fun TodaySection(
 private fun ParticipantsSection(viewModel: OperationalViewModel, onParticipant: (java.util.UUID) -> Unit) {
     val clients by viewModel.clients.collectAsStateWithLifecycle()
     val createState by viewModel.createClientState.collectAsStateWithLifecycle()
+    val authorized by viewModel.professionalContext.collectAsStateWithLifecycle()
     val draft by viewModel.clientDraft.collectAsStateWithLifecycle()
     val query by viewModel.clientQuery.collectAsStateWithLifecycle()
     LaunchedEffect(viewModel) { if (viewModel.clients.value == ReadState.Idle) viewModel.loadClients() }
     // State-based completion survives rotation; no retained coroutine captures an old NavController.
-    LaunchedEffect(createState) {
+    LaunchedEffect(createState, authorized) {
+        if (authorized !is ReadState.Ready) return@LaunchedEffect
         val saved = createState as? CreateClientState.Saved ?: return@LaunchedEffect
         viewModel.resetClientForm()
         onParticipant(saved.participantId)

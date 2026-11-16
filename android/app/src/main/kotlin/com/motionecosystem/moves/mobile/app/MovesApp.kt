@@ -83,10 +83,13 @@ fun MovesApp(session: OidcSession, onLogin: () -> Unit, onLogout: () -> Unit) {
     val readinessState by readiness.state.collectAsStateWithLifecycle()
     val professionalContext by operations.professionalContext.collectAsStateWithLifecycle()
     val accessEpoch by operations.accessEpoch.collectAsStateWithLifecycle()
+    // A retained ViewModel can still hold the previously authorized profile after rotation.
+    // Never render it until a NEW access check succeeds in this Activity composition.
+    val requiredAccessEpoch = remember(operations) { operations.accessEpoch.value + 1 }
     val lastVerifiedRole = remember(session) { mutableStateOf<ActingContext?>(null) }
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
-    val isAuthorized = status == SessionStatus.SignedIn &&
+    val isAuthorized = status == SessionStatus.SignedIn && accessEpoch >= requiredAccessEpoch &&
         professionalContext is ReadState.Ready && lastVerifiedRole.value ==
         (professionalContext as ReadState.Ready<ActingContext>).value
     LaunchedEffect(isAuthorized) {
@@ -127,7 +130,8 @@ fun MovesApp(session: OidcSession, onLogin: () -> Unit, onLogout: () -> Unit) {
         when (status) {
             SessionStatus.SignedIn -> {
                 val role = lastVerifiedRole.value
-                val granted = professionalContext is ReadState.Ready &&
+                val granted = accessEpoch >= requiredAccessEpoch &&
+                    professionalContext is ReadState.Ready &&
                     (professionalContext as ReadState.Ready<ActingContext>).value == role
                 Box(Modifier.fillMaxSize()) {
                     // Keep the NavHost and its Compose draft fields alive while gated.
