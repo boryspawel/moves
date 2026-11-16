@@ -49,6 +49,38 @@ internal fun scheduleDetailsFor(target: ScheduleTarget, state: ReadState<Appoint
     }
 }
 
+/** Freeze the exact authorized edit baseline; a later GET after 409 must not overwrite it.
+ * This snapshot stays only in Compose RAM and is dropped with the form.
+ */
+internal data class ScheduleEditBaseline(
+    val type: AppointmentType,
+    val locationMode: AppointmentLocationMode,
+    val location: String,
+    val shortPurpose: String,
+    val originalSlot: BookableSlotView?
+)
+
+internal fun editBaseline(target: ScheduleTarget, state: ReadState<AppointmentView>): ScheduleEditBaseline? {
+    val detail = scheduleDetailsFor(target, state) ?: return null
+    val window = if (detail.startsAt != null && detail.endsAt != null &&
+        detail.endsAt.toInstant().isAfter(detail.startsAt.toInstant())) {
+        BookableSlotView(detail.startsAt, detail.endsAt)
+    } else null
+    return ScheduleEditBaseline(
+        type = detail.type ?: AppointmentType.CONSULTATION,
+        locationMode = detail.locationMode ?: AppointmentLocationMode.IN_PERSON,
+        location = detail.location.orEmpty(),
+        shortPurpose = detail.shortPurpose.orEmpty(),
+        originalSlot = window
+    )
+}
+
+internal fun sameScheduleWindow(first: BookableSlotView?, second: BookableSlotView?): Boolean =
+    first?.startsAt != null && first.endsAt != null &&
+        second?.startsAt != null && second.endsAt != null &&
+        first.startsAt.toInstant() == second.startsAt.toInstant() &&
+        first.endsAt.toInstant() == second.endsAt.toInstant()
+
 @Composable
 internal fun ScheduleScreen(
     target: ScheduleTarget,
@@ -64,6 +96,9 @@ internal fun ScheduleScreen(
 ) {
     val existing = scheduleDetailsFor(target, appointment)
     val edit = target as? ScheduleTarget.Edit
+    // Key only by the edit identity, not by server version. 409 refreshes detail without
+    // silently resetting the user's fields or the originally selected time.
+    val baseline = remember(target) { editBaseline(target, appointment) }
     val saving = saveState == ScheduleSaveState.Saving
     val clientOptions = eligibleCalendarClients((clients as? ReadState.Ready)?.value.orEmpty())
     var participant by remember(target) {
@@ -75,33 +110,43 @@ internal fun ScheduleScreen(
         )
     }
     var type by remember(target) {
-        mutableStateOf(existing?.type ?: AppointmentType.CONSULTATION)
+        mutableStateOf(baseline?.type ?: AppointmentType.CONSULTATION)
     }
     var mode by remember(target) {
-        mutableStateOf(existing?.locationMode ?: AppointmentLocationMode.IN_PERSON)
+        mutableStateOf(baseline?.locationMode ?: AppointmentLocationMode.IN_PERSON)
     }
     var location by remember(target) {
-        mutableStateOf(existing?.location.orEmpty())
+        mutableStateOf(baseline?.location.orEmpty())
     }
     var purpose by remember(target) {
-        mutableStateOf(existing?.shortPurpose.orEmpty())
+        mutableStateOf(baseline?.shortPurpose.orEmpty())
     }
     var selectedSlot by remember(target, requestedDate) { mutableStateOf<BookableSlotView?>(null) }
     var clientMenu by remember { mutableStateOf(false) }
     var typeMenu by remember { mutableStateOf(false) }
     var modeMenu by remember { mutableStateOf(false) }
-    val editable = edit == null || (existing?.appointmentId == edit.appointmentId &&
-        existing.participantId == edit.participantId &&
+    val editable = edit == null || (baseline != null &&
+        existing?.appointmentId == edit.appointmentId && existing.participantId == edit.participantId &&
         existing.version != null && "UPDATE" in existing.availableActions.orEmpty())
-    // The current time is occupied by this very appointment and is therefore absent
-    // from Today's free-slot list. It is nevertheless a valid option for editing metadata.
+    // A 409 may return a different reserved time. Preserve the time from the original
+    // draft until the user explicitly chooses the refreshed server time or a free slot.
+    val originalSlot = baseline?.originalSlot
     val currentSlot = if (edit != null && editable && existing?.startsAt != null && existing.endsAt != null &&
         existing.endsAt.toInstant().isAfter(existing.startsAt.toInstant())) {
         BookableSlotView(existing.startsAt, existing.endsAt)
     } else null
     val today = (scheduleDay as? ReadState.Ready)?.value
-    val slot = if (selectedSlot == null) currentSlot
-        else selectedSlot.takeIf { today != null && validBookableSlot(it, today) }
+    val serverTimeChanged = originalSlot != null && currentSlot != null &&
+        !sameScheduleWindow(originalSlot, currentSlot)
+    val slot = when {
+        selectedSlot != null -> selectedSlot.takeIf {
+            sameScheduleWindow(it, currentSlot) || (today != null && validBookableSlot(it, today))
+        }
+        originalSlot != null -> originalSlot.takeIf {
+            sameScheduleWindow(it, currentSlot) || (today != null && validBookableSlot(it, today))
+        }
+        else -> null
+    }
 
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
@@ -115,7 +160,7 @@ internal fun ScheduleScreen(
                 style = MaterialTheme.typography.headlineMedium)
             if (edit != null) {
                 Text("Zmiana istniejącego terminu zachowa powiązanie z sesją ćwiczeń.")
-                if (!editable) Text("Brak aktualnego uprawnienia UPDATE. Wróć do spotkania i odśwież jego stan.",
+                if (!editable) Text("Brak potwierdzonego prawa UPDATE lub danych wizyty. Wróć do spotkania i odśwież.",
                     color = MaterialTheme.colorScheme.error)
             }
             if (clients !is ReadState.Ready && edit == null) {
@@ -143,14 +188,29 @@ internal fun ScheduleScreen(
                     ?: "wybrana kartoteka"))
             }
 
-            if (currentSlot != null) {
-                Text("Dotychczasowa godzina", style = MaterialTheme.typography.titleMedium)
+            if (originalSlot != null) {
+                Text("Godzina spotkania", style = MaterialTheme.typography.titleMedium)
+                val originalStillAllowed = sameScheduleWindow(originalSlot, currentSlot) ||
+                    (today != null && validBookableSlot(originalSlot, today))
                 FilterChip(
-                    selected = selectedSlot == null,
-                    enabled = !saving,
+                    selected = selectedSlot == null && originalStillAllowed,
+                    enabled = !saving && originalStillAllowed,
                     onClick = { selectedSlot = null },
-                    label = { Text("Bez zmiany terminu: ${slotLabel(currentSlot, today?.timeZoneId)}") }
+                    label = { Text("Termin pierwotny: ${slotLabel(originalSlot, today?.timeZoneId)}") }
                 )
+                if (serverTimeChanged) {
+                    Text(
+                        "Termin został zmieniony na serwerze. Pierwotna godzina może być niedostępna. " +
+                            "Wybierz bieżącą godzinę lub dostępny nowy termin; pozostałe pola szkicu zachowano.",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    FilterChip(
+                        selected = sameScheduleWindow(selectedSlot, currentSlot),
+                        enabled = !saving,
+                        onClick = { selectedSlot = currentSlot },
+                        label = { Text("Aktualny termin na serwerze: ${slotLabel(currentSlot!!, today?.timeZoneId)}") }
+                    )
+                }
             }
             ReadPanel(scheduleDay, onRefresh, { false }) { day ->
                 val actualDate = day.localDate ?: requestedDate
@@ -230,9 +290,20 @@ internal fun ScheduleScreen(
                 ScheduleSaveState.Uncertain ->
                     Text("Niepewna odpowiedź serwera. Ponowienie bez zmian użyje tego samego klucza.",
                         color = MaterialTheme.colorScheme.error)
-                ScheduleSaveState.Conflict ->
-                    Text("Konflikt 409: odświeżono wolne sloty i stan spotkania. Wybierz termin ponownie.",
-                        color = MaterialTheme.colorScheme.error)
+                ScheduleSaveState.Conflict -> {
+                    Text(
+                        "Konflikt 409: pobrano nową wersję wizyty i wolne terminy. " +
+                            "Twoje niezapisane pola pozostały bez zmian. Sprawdź je przed ręcznym ponowieniem zapisu.",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    if (existing != null) {
+                        Text(
+                            "Stan na serwerze — cel: ${existing.shortPurpose.orEmpty().ifBlank { "(brak)" }}, " +
+                                "miejsce: ${existing.location.orEmpty().ifBlank { "(brak)" }}.",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
                 is ScheduleSaveState.Failed ->
                     Text(saveState.message, color = MaterialTheme.colorScheme.error)
                 else -> Unit

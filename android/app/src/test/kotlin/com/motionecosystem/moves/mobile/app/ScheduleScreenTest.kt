@@ -35,6 +35,39 @@ class ScheduleScreenTest {
         ))
     }
 
+    @Test fun editBaselineKeepsOriginalFieldsAndTimeAfterServerChangesVersionAndSlot() {
+        val participant = UUID.randomUUID()
+        val appointmentId = UUID.randomUUID()
+        val start = OffsetDateTime.parse("2026-11-20T10:00:00Z")
+        val target = ScheduleTarget.Edit(appointmentId, participant)
+        val old = AppointmentView(
+            appointmentId, participantId = participant, version = 3,
+            startsAt = start, endsAt = start.plusMinutes(45),
+            type = AppointmentType.TRAINING, locationMode = AppointmentLocationMode.IN_PERSON,
+            location = "Sala A", shortPurpose = "Konsultacja wstępna"
+        )
+        val baseline = editBaseline(target, ReadState.Ready(old))!!
+        val latest = old.copy(
+            version = 4, startsAt = start.plusHours(2), endsAt = start.plusHours(2).plusMinutes(45),
+            shortPurpose = "Cel zmieniony na innym urządzeniu", location = "Sala B"
+        )
+        assertEquals("Konsultacja wstępna", baseline.shortPurpose)
+        assertEquals("Sala A", baseline.location)
+        assertEquals(AppointmentType.TRAINING, baseline.type)
+        assertTrue(sameScheduleWindow(baseline.originalSlot,
+            BookableSlotView(old.startsAt, old.endsAt)))
+        assertFalse(sameScheduleWindow(baseline.originalSlot,
+            BookableSlotView(latest.startsAt, latest.endsAt)))
+        val now = editBaseline(target, ReadState.Ready(latest))!!
+        assertEquals(4L, latest.version)
+        assertEquals("Cel zmieniony na innym urządzeniu", now.shortPurpose)
+        // Existing in-memory draft still references the original baseline; it isn't overwritten.
+        assertEquals("Konsultacja wstępna", baseline.shortPurpose)
+        assertNull(editBaseline(
+            ScheduleTarget.Edit(appointmentId, UUID.randomUUID()), ReadState.Ready(latest)))
+        assertNull(editBaseline(ScheduleTarget.New(participant), ReadState.Ready(latest)))
+    }
+
     @Test fun originalOccupiedTimeIsAllowedForAuthorizedEditButNotForCreation() {
         val participant = UUID.randomUUID()
         val appointmentId = UUID.randomUUID()

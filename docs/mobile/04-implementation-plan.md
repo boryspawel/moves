@@ -190,3 +190,10 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 - Zmiana faktycznej godziny wymaga nadal dokładnego dopasowania do aktualnego `bookableSlots`; utworzenie nowej wizyty zawsze tego wymaga. Dla PUT obowiązuje zgodność `appointmentId`, `participantId`, aktualna wersja i serwerowe `UPDATE`.
 - Backend nadal waliduje własne okno dostępności oraz kolizje, pomijając edytowaną wizytę podczas sprawdzania nakładania terminów. Brak zmiany backendu i brak lokalnych reguł przyznawania uprawnień.
 - Dwa wąskie testy jednostkowe dodano do repo, ale **nie uruchamiano ich w GitHub**; CI pozostaje wyłącznie build-only. Testy do uruchomienia lokalnie: `cd android && ./gradlew :app:testDevDebugUnitTest`.
+
+## Poprawka audytowa P1: konflikt 409 bez utraty szkicu (2026-11-16)
+
+- Formularz edycji utrwala w pamięci RAM pierwotne pola i **pierwotny przedział czasu**, przypisane do konkretnego `appointmentId` i `participantId`. Nowy GET po 409 nie inicjalizuje ponownie pól formularza ani nie podstawia automatycznie nowej godziny.
+- Po 409 odświeżane są szczegóły wizyty (`version`, `availableActions`) i wolne sloty. Gdy termin zmienił się na serwerze, formularz wyświetla konflikt i wymaga **jawnego wyboru** aktualnej godziny z serwera lub innego dostępnego terminu; dotychczasowa godzina może zostać użyta tylko, gdy nadal jest legalna. Nie ma automatycznego ponawiania PUT ani ukrytego rozstrzygania konfliktu.
+- Własne pola pozostają w szkicu; cel i miejsce z odświeżonej wersji serwerowej są pokazane oddzielnie do porównania. Zapis nadal wymaga potwierdzonego `UPDATE`, wersji i kontroli dostępności przez backend.
+- Dodano wąskie testy reguł snapshotu i braku automatycznego retry. GitHub Actions wykonuje jedynie build; testy jednostkowe pozostają do lokalnego uruchomienia.
