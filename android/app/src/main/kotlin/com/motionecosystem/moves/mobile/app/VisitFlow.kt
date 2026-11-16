@@ -8,7 +8,7 @@ import androidx.compose.ui.unit.dp
 import com.motionecosystem.moves.mobile.api.*
 import java.util.UUID
 
-/** These are read-only navigation shells. Their writes are intentionally deferred to M4/M5. */
+/** Navigation shells for yet-unimplemented stages; S06 and S07 are now active screens. */
 internal enum class VisitStage(val route: String, val title: String) {
     EXECUTION("visit-execution", "Realizacja sesji"),
     DOCUMENTATION("visit-documentation", "Dokumentacja"),
@@ -117,7 +117,7 @@ private fun StageBody(stage: VisitStage, contextLabel: String) {
         Text(contextLabel, style = MaterialTheme.typography.titleMedium)
         Text(when (stage) {
             VisitStage.EXECUTION ->
-                "Powiązana sesja została potwierdzona. Rejestrowanie wykonania ćwiczeń będzie dostępne w MOB-050."
+                "Powiązana sesja wymaga ponownego potwierdzenia. Wróć do spotkania i odśwież dostęp."
             VisitStage.DOCUMENTATION ->
                 "Kontekst uczestnika został zweryfikowany. Wywiady i notatki zostaną podłączone w MOB-040/041."
             VisitStage.CLOSEOUT ->

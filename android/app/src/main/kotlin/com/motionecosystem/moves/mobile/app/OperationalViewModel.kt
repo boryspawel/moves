@@ -192,6 +192,19 @@ class OperationalViewModel(
 
     private val mutableAppointment = MutableStateFlow<ReadState<AppointmentView>>(ReadState.Idle)
     val appointment = mutableAppointment.asStateFlow()
+    private val mutableExecutionContext = MutableStateFlow<ReadState<SpecialistExecutionContext>>(ReadState.Idle)
+    internal val executionContext = mutableExecutionContext.asStateFlow()
+    private val mutableExecutionDraft = MutableStateFlow<ExecutionDraft?>(null)
+    internal val executionDraft = mutableExecutionDraft.asStateFlow()
+    private val mutableExecutionSave = MutableStateFlow<ExecutionSaveState>(ExecutionSaveState.Idle)
+    internal val executionSave = mutableExecutionSave.asStateFlow()
+    private data class PendingExecution(
+        val appointmentId: UUID, val participantId: UUID, val plannedSessionId: UUID,
+        val key: String, val command: RecordSessionExecutionCommand
+    )
+    private var pendingExecution: PendingExecution? = null
+    private var executionContextRequest = 0
+    private var executionSaveRequest = 0
     private val mutableAppointmentStart = MutableStateFlow(AppointmentStartState.IDLE)
     val appointmentStart = mutableAppointmentStart.asStateFlow()
     private data class PendingStart(val id: UUID, val participantId: UUID, val version: Long, val key: String)
@@ -311,6 +324,12 @@ class OperationalViewModel(
         resetParticipantReads()
         appointmentRequest++
         startRequest++
+        executionContextRequest++
+        mutableExecutionContext.value = ReadState.Idle
+        if (mutableExecutionSave.value == ExecutionSaveState.Saving) {
+            executionSaveRequest++
+            mutableExecutionSave.value = ExecutionSaveState.Uncertain
+        }
         mutableAppointment.value = ReadState.Idle
         if (mutableAppointmentStart.value == AppointmentStartState.SAVING) {
             mutableAppointmentStart.value = AppointmentStartState.UNCERTAIN
@@ -636,6 +655,7 @@ class OperationalViewModel(
         (mutableSelection.value as? ContextSelection.Participant)?.participantId
 
     fun selectParticipant(id: UUID) {
+        resetExecutionEditor()
         resetInterviewEditor()
         resetNoteEditor()
         resetAppointmentReads()
@@ -644,6 +664,7 @@ class OperationalViewModel(
     }
 
     fun selectAppointment(participantId: UUID?, appointmentId: UUID) {
+        resetExecutionEditor()
         resetInterviewEditor()
         resetNoteEditor()
         resetAppointmentReads()
@@ -668,6 +689,186 @@ class OperationalViewModel(
         mutableTimeline.value = ReadState.Idle
         mutableInterviews.value = ReadState.Idle
         mutableNotes.value = ReadState.Idle
+    }
+
+    private fun verifiedExecutionVisit(): VerifiedVisit? {
+        if (mutableProfessionalContext.value !is ReadState.Ready || verifiedRole == null) return null
+        return verifiedVisit(mutableSelection.value, mutableAppointment.value)
+            ?.takeIf { canOpenVisitStage(VisitStage.EXECUTION, it) }
+    }
+
+    private fun resetExecutionEditor() {
+        executionContextRequest++
+        executionSaveRequest++
+        pendingExecution = null
+        mutableExecutionContext.value = ReadState.Idle
+        mutableExecutionDraft.value = null
+        mutableExecutionSave.value = ExecutionSaveState.Idle
+    }
+
+    /** Every S06 entry requires an authorized appointment GET first, then this bound snapshot. */
+    fun loadExecutionContext() {
+        val visit = verifiedExecutionVisit() ?: return
+        if (mutableExecutionSave.value == ExecutionSaveState.Saving) return
+        val request = ++executionContextRequest
+        val requestGeneration = generation
+        read(mutableExecutionContext, skipIfLoading = false,
+            isCurrent = {
+                request == executionContextRequest &&
+                    verifiedExecutionVisit() == visit
+            }) {
+            when (val result = repository.executionContext(visit.appointmentId)) {
+                is RemoteResult.Failure -> result
+                is RemoteResult.Success -> {
+                    // The read wrapper ignores stale replies; avoid mutating the
+                    // retained draft from this closure before its final guard.
+                    if (requestGeneration != generation ||
+                        request != executionContextRequest ||
+                        verifiedExecutionVisit() != visit) return@read result
+                    val current = result.value
+                    if (current.appointmentId != visit.appointmentId ||
+                        current.participantId != visit.participantId ||
+                        current.plannedSessionId != visit.plannedSessionId) {
+                        RemoteResult.Failure(RemoteError.Forbidden)
+                    } else {
+                        if (current.recordedExecution != null) {
+                            pendingExecution = null
+                            mutableExecutionDraft.value = null
+                            mutableExecutionSave.value = ExecutionSaveState.Saved
+                        } else if (current.recordingAllowed && mutableExecutionDraft.value == null) {
+                            mutableExecutionDraft.value = initialExecutionDraft(current)
+                        } else if (current.recordingAllowed &&
+                            mutableExecutionDraft.value?.let { !matchesExecutionDraft(it, current) } == true) {
+                            mutableExecutionSave.value = ExecutionSaveState.Conflict
+                        }
+                        RemoteResult.Success(current)
+                    }
+                }
+            }
+        }
+    }
+
+    internal fun changeExecutionDraft(next: ExecutionDraft) {
+        val existing = mutableExecutionDraft.value ?: return
+        val visit = verifiedExecutionVisit() ?: return
+        val context = (mutableExecutionContext.value as? ReadState.Ready)?.value ?: return
+        if (mutableExecutionSave.value in setOf(
+                ExecutionSaveState.Saving, ExecutionSaveState.Uncertain,
+                ExecutionSaveState.Conflict, ExecutionSaveState.Saved
+            ) || visit.appointmentId != existing.appointmentId ||
+            next.appointmentId != existing.appointmentId ||
+            next.participantId != existing.participantId ||
+            next.plannedSessionId != existing.plannedSessionId ||
+            next.revisionId != existing.revisionId ||
+            next.prescriptionIds != existing.prescriptionIds ||
+            !context.recordingAllowed || !matchesExecutionDraft(next, context)) return
+        mutableExecutionDraft.value = next
+        if (mutableExecutionSave.value is ExecutionSaveState.Failed) {
+            pendingExecution = null
+            mutableExecutionSave.value = ExecutionSaveState.Idle
+        }
+    }
+
+    /** A 409 requires fresh confirmation and explicit acceptance; never auto replay. */
+    fun acceptExecutionConflict() {
+        if (mutableExecutionSave.value != ExecutionSaveState.Conflict ||
+            verifiedExecutionVisit() == null) return
+        val current = (mutableExecutionContext.value as? ReadState.Ready)?.value ?: return
+        if (!current.recordingAllowed || current.recordedExecution != null ||
+            current.appointmentStatus != "IN_PROGRESS") return
+        val previous = mutableExecutionDraft.value
+        if (previous == null || !matchesExecutionDraft(previous, current)) {
+            mutableExecutionDraft.value = initialExecutionDraft(current) ?: return
+        }
+        pendingExecution = null
+        mutableExecutionSave.value = ExecutionSaveState.Idle
+    }
+
+    /** Freeze the exact command and key. A manual retry of an uncertain POST is a byte-for-byte replay. */
+    fun recordSessionExecution() {
+        val visit = verifiedExecutionVisit() ?: return
+        val context = (mutableExecutionContext.value as? ReadState.Ready)?.value ?: return
+        val draft = mutableExecutionDraft.value ?: return
+        val state = mutableExecutionSave.value
+        if (state == ExecutionSaveState.Saving || state == ExecutionSaveState.Saved ||
+            state == ExecutionSaveState.Conflict ||
+            context.appointmentId != visit.appointmentId ||
+            context.participantId != visit.participantId ||
+            context.plannedSessionId != visit.plannedSessionId ||
+            !context.recordingAllowed || context.recordedExecution != null ||
+            !matchesExecutionDraft(draft, context)) return
+        val pending = if (state == ExecutionSaveState.Uncertain) {
+            pendingExecution?.takeIf {
+                it.appointmentId == visit.appointmentId &&
+                    it.participantId == visit.participantId &&
+                    it.plannedSessionId == visit.plannedSessionId
+            } ?: return
+        } else {
+            val payload = buildExecutionCommand(context, draft) ?: run {
+                mutableExecutionSave.value = ExecutionSaveState.Failed(
+                    "Zaznacz wynik każdego ćwiczenia i uzupełnij poprawnie reakcję po sesji."
+                )
+                return
+            }
+            PendingExecution(visit.appointmentId, visit.participantId, visit.plannedSessionId ?: return,
+                UUID.randomUUID().toString(), payload)
+        }
+        pendingExecution = pending
+        val currentGeneration = generation
+        val request = ++executionSaveRequest
+        executionContextRequest++ // A stale GET cannot overwrite the write result.
+        mutableExecutionSave.value = ExecutionSaveState.Saving
+        viewModelScope.launch {
+            if (!ensureFreshToken {
+                    generation == currentGeneration && request == executionSaveRequest &&
+                        verifiedExecutionVisit() == visit
+                }) return@launch
+            val response = repository.recordExecution(
+                pending.appointmentId, pending.key, pending.command
+            )
+            if (generation != currentGeneration || request != executionSaveRequest ||
+                verifiedExecutionVisit() != visit) return@launch
+            when (response) {
+                is RemoteResult.Success -> {
+                    val saved = response.value
+                    if (saved.id == null || saved.plannedSessionId != pending.plannedSessionId ||
+                        saved.participantId != pending.participantId) {
+                        clear()
+                        mutableProfessionalContext.value = ReadState.Forbidden
+                    } else {
+                        pendingExecution = null
+                        mutableExecutionDraft.value = null
+                        mutableExecutionContext.value = ReadState.Ready(
+                            context.copy(
+                                recordingAllowed = false,
+                                recordedExecution = RecordedExecutionSummary(saved.id, saved.outcome)
+                            )
+                        )
+                        mutableExecutionSave.value = ExecutionSaveState.Saved
+                        loadAppointment(pending.appointmentId)
+                    }
+                }
+                is RemoteResult.Failure -> when (val error = response.error) {
+                    RemoteError.Unauthorized -> { clear(); invalidateSession() }
+                    RemoteError.Forbidden -> { clear(); mutableProfessionalContext.value = ReadState.Forbidden }
+                    RemoteError.Conflict -> {
+                        mutableExecutionSave.value = ExecutionSaveState.Conflict
+                        loadExecutionContext()
+                    }
+                    is RemoteError.Network, is RemoteError.Serialization ->
+                        mutableExecutionSave.value = ExecutionSaveState.Uncertain
+                    is RemoteError.Http -> {
+                        if (error.status >= 500) mutableExecutionSave.value = ExecutionSaveState.Uncertain
+                        else {
+                            pendingExecution = null
+                            mutableExecutionSave.value = ExecutionSaveState.Failed(
+                                "Serwer odrzucił zapis wykonania. Sprawdź parametry i odśwież sesję."
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /** A documentation GET is permitted only after the current S03/S05 context was reverified. */
@@ -1432,6 +1633,7 @@ class OperationalViewModel(
         clientRequest++
         resetParticipantReads()
         resetAppointmentReads()
+        resetExecutionEditor()
         resetSchedule()
         mutableClients.value = ReadState.Idle
         mutableCreateClient.value = CreateClientState.Idle

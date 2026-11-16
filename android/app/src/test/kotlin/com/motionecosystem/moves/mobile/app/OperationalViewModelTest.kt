@@ -18,6 +18,105 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class OperationalViewModelTest {
+    @Test fun executionRetryAfterNetworkFailureReusesSamePayloadAndIdempotencyKey() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val appointment = UUID.randomUUID()
+            val participant = UUID.randomUUID()
+            val session = UUID.randomUUID()
+            val prescription = UUID.randomUUID()
+            val context = SpecialistExecutionContext(
+                appointmentId = appointment, participantId = participant,
+                appointmentStatus = "IN_PROGRESS", plannedSessionId = session,
+                recordingAllowed = true,
+                prescriptions = listOf(SpecialistExecutionPrescription(
+                    id = prescription, sets = 3, repetitions = 8,
+                    canonicalDoseType = "STRENGTH"
+                ))
+            )
+            val repo = StubRepository()
+            repo.appointmentValue = AppointmentView(appointmentId = appointment,
+                participantId = participant, plannedSessionId = session,
+                status = AppointmentStatus.IN_PROGRESS)
+            repo.executionContextValue = RemoteResult.Success(context)
+            val result = RecordedSessionExecution(
+                id = UUID.randomUUID(), participantId = participant,
+                plannedSessionId = session, outcome = "COMPLETED"
+            )
+            repo.executionResults.add(RemoteResult.Failure(
+                RemoteError.Network(java.io.IOException("Lost response"))
+            ))
+            repo.executionResults.add(RemoteResult.Success(result))
+            val vm = OperationalViewModel(repo, { "token" }, {})
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            vm.selectAppointment(participant, appointment)
+            vm.loadAppointment(appointment)
+            advanceUntilIdle()
+            vm.loadExecutionContext()
+            advanceUntilIdle()
+            assertTrue(vm.executionContext.value is ReadState.Ready)
+            val draft = vm.executionDraft.value!!
+            vm.changeExecutionDraft(draft.copy(
+                exercises = mapOf(prescription to ExerciseActualDraft(ExecutionChoice.AS_PLANNED)),
+                pain = "0", difficulty = "3"
+            ))
+            vm.recordSessionExecution()
+            vm.recordSessionExecution()
+            advanceUntilIdle()
+            assertEquals(ExecutionSaveState.Uncertain, vm.executionSave.value)
+            assertEquals(1, repo.executionCalls.size)
+            val before = vm.executionDraft.value
+            vm.changeExecutionDraft(before!!.copy(pain = "9"))
+            assertEquals(before, vm.executionDraft.value)
+            vm.recordSessionExecution()
+            advanceUntilIdle()
+            assertEquals(2, repo.executionCalls.size)
+            assertEquals(repo.executionCalls[0], repo.executionCalls[1])
+            assertEquals(ExecutionSaveState.Saved, vm.executionSave.value)
+            assertNull(vm.executionDraft.value)
+            assertEquals(result.id,
+                (vm.executionContext.value as ReadState.Ready).value.recordedExecution?.executionId)
+            vm.clear()
+            assertEquals(ReadState.Idle, vm.executionContext.value)
+        } finally { Dispatchers.resetMain() }
+    }
+
+    @Test fun executionContextRejectsDifferentParticipantAndPreventsMutation() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val appointment = UUID.randomUUID()
+            val participant = UUID.randomUUID()
+            val session = UUID.randomUUID()
+            val repo = StubRepository()
+            repo.appointmentValue = AppointmentView(appointmentId = appointment,
+                participantId = participant, plannedSessionId = session,
+                status = AppointmentStatus.IN_PROGRESS)
+            repo.executionContextValue = RemoteResult.Success(
+                SpecialistExecutionContext(
+                    appointmentId = appointment, participantId = UUID.randomUUID(),
+                    appointmentStatus = "IN_PROGRESS", plannedSessionId = session,
+                    recordingAllowed = true,
+                    prescriptions = listOf(SpecialistExecutionPrescription(id = UUID.randomUUID()))
+                )
+            )
+            val vm = OperationalViewModel(repo, { "token" }, {})
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            vm.selectAppointment(participant, appointment)
+            vm.loadExecutionContext() // No authorized S05 detail has been loaded.
+            advanceUntilIdle()
+            assertEquals(ReadState.Idle, vm.executionContext.value)
+            vm.loadAppointment(appointment)
+            advanceUntilIdle()
+            vm.loadExecutionContext()
+            advanceUntilIdle()
+            assertNull(vm.selection.value)
+            assertEquals(ReadState.Forbidden, vm.professionalContext.value)
+            assertTrue(repo.executionCalls.isEmpty())
+        } finally { Dispatchers.resetMain() }
+    }
+
     @Test fun noteCreateAfterNetworkFailureReusesKeyAndDeletesDataOnLogout() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {
@@ -1153,6 +1252,18 @@ class OperationalViewModelTest {
         ): RemoteResult<InterviewView> {
             completeInterviewCalls += command to key
             return completeInterviewResults.removeFirstOrNull() ?: RemoteResult.Failure(RemoteError.Conflict)
+        }
+        var executionContextValue: RemoteResult<SpecialistExecutionContext> =
+            RemoteResult.Failure(RemoteError.Conflict)
+        val executionCalls = mutableListOf<Triple<UUID, String, RecordSessionExecutionCommand>>()
+        val executionResults = ArrayDeque<RemoteResult<RecordedSessionExecution>>()
+        override suspend fun executionContext(appointmentId: java.util.UUID):
+            RemoteResult<SpecialistExecutionContext> = executionContextValue
+        override suspend fun recordExecution(appointmentId: java.util.UUID, key: String,
+            command: RecordSessionExecutionCommand
+        ): RemoteResult<RecordedSessionExecution> {
+            executionCalls += Triple(appointmentId, key, command)
+            return executionResults.removeFirstOrNull() ?: RemoteResult.Failure(RemoteError.Conflict)
         }
         override suspend fun appointment(id: UUID): RemoteResult<AppointmentView> =
             pendingAppointment?.await() ?: RemoteResult.Success(appointmentValue ?: AppointmentView(appointmentId = id))

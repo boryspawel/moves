@@ -60,6 +60,11 @@ class ReadinessViewModelTest {
     private class RecordingRepository : SpecialistRepository {
         var identityCalls = 0
         var result: RemoteResult<IdentityResponse> = RemoteResult.Success(IdentityResponse())
+        override suspend fun executionContext(appointmentId: java.util.UUID):
+            RemoteResult<SpecialistExecutionContext> = RemoteResult.Failure(RemoteError.Conflict)
+        override suspend fun recordExecution(appointmentId: java.util.UUID, key: String,
+            command: RecordSessionExecutionCommand
+        ): RemoteResult<RecordedSessionExecution> = RemoteResult.Failure(RemoteError.Conflict)
         override suspend fun appointment(id: java.util.UUID): RemoteResult<AppointmentView> = RemoteResult.Success(AppointmentView(appointmentId = id))
         override suspend fun startAppointment(id: java.util.UUID, version: Long, key: String): RemoteResult<AppointmentView> =
             RemoteResult.Failure(RemoteError.Conflict)

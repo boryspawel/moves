@@ -91,6 +91,18 @@ interface MovesApi {
         @Body command: InterviewVersionCommand
     ): Response<NoteView>
 
+    @GET("api/v1/specialist/appointments/{id}/execution-context")
+    suspend fun executionContext(
+        @Path("id") appointmentId: java.util.UUID
+    ): Response<SpecialistExecutionContext>
+
+    @POST("api/v1/specialist/appointments/{id}/execution")
+    suspend fun recordExecution(
+        @Path("id") appointmentId: java.util.UUID,
+        @Header("Idempotency-Key") key: String,
+        @Body command: RecordSessionExecutionCommand
+    ): Response<RecordedSessionExecution>
+
     @GET("api/v1/specialist/participants/{participantId}/workspace")
     suspend fun workspace(@Path("participantId") participantId: java.util.UUID): Response<WorkspaceView>
 
