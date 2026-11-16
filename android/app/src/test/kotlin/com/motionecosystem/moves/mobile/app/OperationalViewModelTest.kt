@@ -174,15 +174,18 @@ class OperationalViewModelTest {
             vm.selectParticipant(id)
             vm.loadWorkspace(id)
             runCurrent()
-            repository.onboardingResult = RemoteResult.Success(
+            val profileResult = RemoteResult.Success(
                 MobileOnboardingState("READY", "SPECIALIST", MobileSpecialistProfile(ActingContext.PHYSIOTHERAPIST))
             )
+            val delayedProfile = CompletableDeferred<RemoteResult<MobileOnboardingState>>()
+            repository.pendingOnboarding = delayedProfile
             vm.revalidateAccess()
             runCurrent()
             // The navigation identity remains while checked, but server data is hidden.
             assertEquals(ContextSelection.Participant(id), vm.selection.value)
             assertEquals(ReadState.Idle, vm.workspace.value)
             delayed.complete(RemoteResult.Success(WorkspaceView(participant = WorkspaceParticipant(id, "old"))))
+            delayedProfile.complete(profileResult)
             advanceUntilIdle()
             assertNull(vm.selection.value)
             assertEquals(ReadState.Idle, vm.workspace.value)

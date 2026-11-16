@@ -2,13 +2,15 @@ package com.motionecosystem.moves.mobile.app
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -71,6 +73,17 @@ fun MovesApp(session: OidcSession, onLogin: () -> Unit, onLogout: () -> Unit) {
     val professionalContext by operations.professionalContext.collectAsStateWithLifecycle()
     val accessEpoch by operations.accessEpoch.collectAsStateWithLifecycle()
     val lastVerifiedRole = remember(session) { mutableStateOf<ActingContext?>(null) }
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    val isAuthorized = status == SessionStatus.SignedIn &&
+        professionalContext is ReadState.Ready && lastVerifiedRole.value ==
+        (professionalContext as ReadState.Ready<ActingContext>).value
+    LaunchedEffect(isAuthorized) {
+        if (!isAuthorized) {
+            focusManager.clearFocus(force = true)
+            keyboard?.hide()
+        }
+    }
 
     LaunchedEffect(status, professionalContext) {
         if (status != SessionStatus.SignedIn || professionalContext == ReadState.Forbidden) {
@@ -120,18 +133,17 @@ fun MovesApp(session: OidcSession, onLogin: () -> Unit, onLogout: () -> Unit) {
                     }
                     if (!granted) {
                         BackHandler { } // A denied/unfinished check must not navigate stale routes.
-                        Column(
+                        // Separate blocker is behind the gate controls, but above the hidden NavHost.
+                        Box(
                             Modifier.fillMaxSize()
                                 .background(MaterialTheme.colorScheme.surface)
-                                .pointerInput(Unit) {
-                                    awaitPointerEventScope {
-                                        while (true) {
-                                            val event = awaitPointerEvent(PointerEventPass.Initial)
-                                            event.changes.forEach { it.consume() }
-                                        }
-                                    }
-                                }
-                                .padding(24.dp),
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) { }
+                        )
+                        Column(
+                            Modifier.fillMaxSize().padding(24.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             Text("Moves", style = MaterialTheme.typography.headlineMedium)
