@@ -355,6 +355,7 @@ private fun VisitStageSection(
             onOpenInterview = { viewModel.openInterview(documentationParticipant, it) },
             onCloseInterview = viewModel::closeInterview,
             onUpdateText = viewModel::updateInterviewText,
+            onUpdateSelections = viewModel::updateInterviewSelections,
             onRefresh = { viewModel.loadInterviews(documentationParticipant) },
             onBack = onBack
             // On-device recognizer is a separate feature. No cloud fallback or mic permission.
