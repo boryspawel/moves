@@ -160,6 +160,8 @@ class OperationalViewModel(
     val interviews = mutableInterviews.asStateFlow()
     private val mutableInterviewDraft = MutableStateFlow<InterviewDraft?>(null)
     internal val interviewDraft = mutableInterviewDraft.asStateFlow()
+    private val mutableInterviewSelection = MutableStateFlow<UUID?>(null)
+    internal val interviewSelection = mutableInterviewSelection.asStateFlow()
     private var interviewRequest = 0
     private var workspaceRequest = 0
     private var timelineRequest = 0
@@ -600,6 +602,7 @@ class OperationalViewModel(
         (mutableSelection.value as? ContextSelection.Participant)?.participantId
 
     fun selectParticipant(id: UUID) {
+        mutableInterviewSelection.value = null
         mutableInterviewDraft.value = null
         resetAppointmentReads()
         resetParticipantReads()
@@ -607,6 +610,7 @@ class OperationalViewModel(
     }
 
     fun selectAppointment(participantId: UUID?, appointmentId: UUID) {
+        mutableInterviewSelection.value = null
         mutableInterviewDraft.value = null
         resetAppointmentReads()
         resetParticipantReads()
@@ -655,10 +659,12 @@ class OperationalViewModel(
         val record = (mutableInterviews.value as? ReadState.Ready)?.value
             ?.firstOrNull { it.id == interviewId && it.participantId == participantId }
         if (!allowed || record == null) return
+        mutableInterviewSelection.value = interviewId
         mutableInterviewDraft.value = initialInterviewDraft(participantId, record)
     }
 
     fun closeInterview() {
+        mutableInterviewSelection.value = null
         mutableInterviewDraft.value = null
     }
 
@@ -867,6 +873,7 @@ class OperationalViewModel(
         mutableCreateClient.value = CreateClientState.Idle
         mutableClientDraft.value = ClientFormDraft()
         mutableClientQuery.value = ""
+        mutableInterviewSelection.value = null
         mutableInterviewDraft.value = null
         mutableRequestedDate.value = null
         mutableToday.value = ReadState.Idle
