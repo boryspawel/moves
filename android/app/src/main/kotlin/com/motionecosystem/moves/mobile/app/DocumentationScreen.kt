@@ -100,6 +100,11 @@ internal fun DocumentationScreen(
     interviews: ReadState<List<InterviewView>>,
     selectedInterviewId: UUID?,
     draft: InterviewDraft?,
+    writeState: InterviewWriteState,
+    onStartInterview: () -> Unit,
+    onSaveInterview: () -> Unit,
+    onCompleteInterview: () -> Unit,
+    onReconcileInterview: () -> Unit,
     onOpenInterview: (UUID) -> Unit,
     onCloseInterview: () -> Unit,
     onUpdateText: (String, String) -> Unit,
@@ -110,12 +115,16 @@ internal fun DocumentationScreen(
     var showNotes by remember { mutableStateOf(false) }
     var exitConfirmation by remember { mutableStateOf(false) }
     var discardConfirmation by remember { mutableStateOf(false) }
+    var versionConfirmation by remember { mutableStateOf(false) }
+    var completeConfirmation by remember { mutableStateOf(false) }
     val dirty = draft?.dirty == true
+    val saving = writeState is InterviewWriteState.Saving
 
     fun back() {
+        if (saving) return
         if (dirty) exitConfirmation = true else onBack()
     }
-    BackHandler(enabled = dirty) { back() }
+    BackHandler(enabled = dirty || saving) { back() }
 
     if (exitConfirmation) {
         AlertDialog(
@@ -145,28 +154,85 @@ internal fun DocumentationScreen(
         )
     }
 
+    if (versionConfirmation) {
+        AlertDialog(
+            onDismissRequest = { versionConfirmation = false },
+            title = { Text("Połączyć zmiany z nową wersją?") },
+            text = {
+                Text("Odpowiedzi zmienione przez Ciebie pozostaną w szkicu. " +
+                    "Pozostałe pola przyjmą wartości z aktualnego odczytu serwera. " +
+                    "Następnie świadomie zapisz szkic ponownie.")
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    versionConfirmation = false
+                    onReconcileInterview()
+                }) { Text("Zastosuj nową wersję") }
+            },
+            dismissButton = {
+                TextButton(onClick = { versionConfirmation = false }) { Text("Anuluj") }
+            }
+        )
+    }
+    if (completeConfirmation) {
+        AlertDialog(
+            onDismissRequest = { completeConfirmation = false },
+            title = { Text("Zakończyć wywiad?") },
+            text = { Text("Zakończony wywiad jest niezmienny. Tej operacji nie można cofnąć.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    completeConfirmation = false
+                    onCompleteInterview()
+                }) { Text("Zakończ wywiad") }
+            },
+            dismissButton = {
+                TextButton(onClick = { completeConfirmation = false }) { Text("Anuluj") }
+            }
+        )
+    }
+
     Column(Modifier.fillMaxSize()) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            TextButton(onClick = ::back) { Text("Wróć") }
-            TextButton(onClick = onRefresh) { Text("Odśwież") }
+            TextButton(onClick = ::back, enabled = !saving) { Text("Wróć") }
+            TextButton(onClick = onRefresh, enabled = !saving) { Text("Odśwież") }
         }
         Column(
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text("Dokumentacja", style = MaterialTheme.typography.headlineMedium)
+            when (val state = writeState) {
+                is InterviewWriteState.Saving ->
+                    Text("Zapisywanie: ${state.operation.name.lowercase()}…")
+                is InterviewWriteState.Success ->
+                    Text(state.message, color = MaterialTheme.colorScheme.primary)
+                is InterviewWriteState.Failed ->
+                    Text(state.message, color = MaterialTheme.colorScheme.error)
+                is InterviewWriteState.Conflict ->
+                    Text("Konflikt 409. Serwer zmienił wersję wywiadu. " +
+                        "Nie wysłano ponownie danych; sprawdź najnowszą wersję i potwierdź połączenie zmian.",
+                        color = MaterialTheme.colorScheme.error)
+                is InterviewWriteState.Uncertain ->
+                    Text(
+                        if (state.operation == InterviewOperation.SAVE)
+                            "Nie wiadomo, czy szkic został zapisany. Najpierw odśwież dane i sprawdź wersję; PUT nie jest ponawiany automatycznie."
+                        else "Wynik operacji jest niepewny. Odśwież listę; ręczne ponowienie użyje tego samego klucza.",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                InterviewWriteState.Idle -> Unit
+            }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 FilterChip(
                     selected = !showNotes,
-                    onClick = { if (!dirty) showNotes = false },
+                    onClick = { if (!dirty && !saving) showNotes = false },
                     label = { Text("Wywiady") }
                 )
                 FilterChip(
                     selected = showNotes,
-                    onClick = { if (!dirty) showNotes = true },
+                    onClick = { if (!dirty && !saving) showNotes = true },
                     label = { Text("Notatki") }
                 )
             }
@@ -193,16 +259,25 @@ internal fun DocumentationScreen(
                                             style = MaterialTheme.typography.bodySmall)
                                         OutlinedButton(
                                             onClick = { record.id?.let(onOpenInterview) },
-                                            enabled = record.id != null
+                                            enabled = record.id != null && !saving
                                         ) { Text(if (record.status == "DRAFT") "Otwórz szkic" else "Przejrzyj wywiad") }
                                     }
                                 }
                             }
                         }
-                        Button(onClick = {}, enabled = false, modifier = Modifier.fillMaxWidth()) {
-                            Text("Rozpocznij nowy wywiad")
+                        val activeDraft = records.any { it.status == "DRAFT" }
+                        Button(
+                            onClick = onStartInterview,
+                            enabled = !saving && !activeDraft,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                if (writeState == InterviewWriteState.Uncertain(InterviewOperation.START))
+                                    "Ponów rozpoczęcie tym samym kluczem"
+                                else "Rozpocznij nowy wywiad"
+                            )
                         }
-                        Text("Rozpoczęcie i zapis wywiadu zostaną podłączone w kolejnym etapie MOB-040.",
+                        if (activeDraft) Text("Najpierw otwórz istniejący szkic wywiadu.",
                             style = MaterialTheme.typography.bodySmall)
                     } else {
                         val selected = records.firstOrNull { it.id == selectedInterviewId }
@@ -216,22 +291,28 @@ internal fun DocumentationScreen(
                                     style = MaterialTheme.typography.titleLarge)
                                 TextButton(onClick = {
                                     if (dirty) discardConfirmation = true else onCloseInterview()
-                                }) { Text("Lista") }
+                                }, enabled = !saving) { Text("Lista") }
                             }
                             Text("Pytania i sekcje są pobierane z backendu. Ukończony wywiad jest nieedytowalny.",
                                 style = MaterialTheme.typography.bodySmall)
                             val answers = selected.answers.associateBy { it.code }
                             val canEdit = selected.status == "DRAFT" &&
-                                "SAVE_DRAFT" in selected.availableActions &&
+                                "SAVE_DRAFT" in selected.availableActions && !saving &&
                                 draft?.interviewId == selected.id &&
                                 draft?.participantId == selected.participantId
+                            val pendingReview = writeState is InterviewWriteState.Conflict ||
+                                writeState is InterviewWriteState.Uncertain &&
+                                writeState.operation == InterviewOperation.SAVE
                             selected.questions.groupBy { it.section }.forEach { (section, questions) ->
                                 Text(sectionTitle(section), style = MaterialTheme.typography.titleMedium)
                                 questions.forEach { question ->
                                     val title = questionTitle(question) + if (question.required) " *" else ""
                                     val fromServer = interviewAnswerText(answers[question.code], question)
-                                    val value = if (canEdit && editableInterviewAnswer(question)) {
-                                        draft?.values?.get(question.code) ?: fromServer
+                                    val changed = draft?.values?.get(question.code) !=
+                                        draft?.originalValues?.get(question.code)
+                                    val value = if (canEdit && editableInterviewAnswer(question) &&
+                                        changed && draft != null) {
+                                        draft.values[question.code] ?: fromServer
                                     } else fromServer
                                     if (editableInterviewAnswer(question)) {
                                         DictationReadyTextField(
@@ -260,20 +341,45 @@ internal fun DocumentationScreen(
                                     HorizontalDivider()
                                 }
                             }
-                            if (canEdit) {
-                                if (dirty) Text("Zmiany tylko w pamięci telefonu — jeszcze niezapisane.",
+                            if (selected.status == "DRAFT" && draft?.interviewId == selected.id) {
+                                if (dirty) Text("Odpowiedzi zmienione lokalnie — niezapisane na serwerze.",
                                     color = MaterialTheme.colorScheme.error)
-                                Button(onClick = {}, enabled = false, modifier = Modifier.fillMaxWidth()) {
-                                    Text("Zapisz szkic")
+                                if (pendingReview && !saving) {
+                                    Text("Porównaj odpowiedzi z bieżącą wersją. " +
+                                        "Twoje edytowane pola są zachowane w pamięci.",
+                                        style = MaterialTheme.typography.bodySmall)
+                                    OutlinedButton(
+                                        onClick = { versionConfirmation = true },
+                                        enabled = interviews is ReadState.Ready && selected.version != null,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) { Text("Przejrzałem zmiany — połącz wersje") }
                                 }
-                                OutlinedButton(onClick = {}, enabled = false, modifier = Modifier.fillMaxWidth()) {
-                                    Text("Zakończ wywiad")
+                                Button(
+                                    onClick = onSaveInterview,
+                                    enabled = canEdit && dirty && !pendingReview &&
+                                        writeState !is InterviewWriteState.Uncertain,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) { Text("Zapisz szkic") }
+                                val canComplete = canCompleteInterview(selected) && !dirty &&
+                                    !pendingReview && writeState !is InterviewWriteState.Uncertain
+                                OutlinedButton(
+                                    onClick = { completeConfirmation = true },
+                                    enabled = canComplete && canEdit,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) { Text("Zakończ wywiad") }
+                                if (!canCompleteInterview(selected) && !dirty) {
+                                    Text("Aby zakończyć, uzupełnij wymagane odpowiedzi i zapisz szkic. " +
+                                        "Pola wyboru bez opcji w API mogą blokować zakończenie.",
+                                        style = MaterialTheme.typography.bodySmall)
                                 }
-                                Text("Operacje zapisu i finalizacji zostaną podłączone w kolejnym kroku.",
-                                    style = MaterialTheme.typography.bodySmall)
                             } else if ("START_NEXT_INTERVIEW" in selected.availableActions) {
-                                OutlinedButton(onClick = {}, enabled = false, modifier = Modifier.fillMaxWidth()) {
-                                    Text("Rozpocznij kolejny wywiad")
+                                OutlinedButton(
+                                    onClick = onStartInterview,
+                                    enabled = !saving && records.none { it.status == "DRAFT" },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(if (writeState == InterviewWriteState.Uncertain(InterviewOperation.START))
+                                        "Ponów rozpoczęcie tym samym kluczem" else "Rozpocznij kolejny wywiad")
                                 }
                             }
                         }
