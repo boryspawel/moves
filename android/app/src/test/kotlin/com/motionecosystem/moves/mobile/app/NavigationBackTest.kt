@@ -32,6 +32,10 @@ class NavigationBackTest {
         assertTrue(canManuallyRevalidate(AppointmentStartState.UNCERTAIN, idleSchedule, idleClient))
         assertTrue(canManuallyRevalidate(idleStart, ScheduleSaveState.Uncertain, idleClient))
         assertTrue(canManuallyRevalidate(idleStart, idleSchedule, CreateClientState.Failed("offline")))
+        assertFalse(canManuallyRevalidate(
+            idleStart, idleSchedule, idleClient, InterviewWriteState.Idle,
+            NoteWriteState.Saving(NoteOperation.UPDATE)
+        ))
     }
 
     @Test fun backIsBlockedDuringMutationsButAllowedAfterUncertainResponse() {
