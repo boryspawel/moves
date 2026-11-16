@@ -108,6 +108,7 @@ internal fun DocumentationScreen(
     onOpenInterview: (UUID) -> Unit,
     onCloseInterview: () -> Unit,
     onUpdateText: (String, String) -> Unit,
+    onUpdateSelections: (String, List<String>) -> Unit,
     onRefresh: () -> Unit,
     onBack: () -> Unit,
     onRequestOnDeviceDictation: ((String) -> Unit)? = null
@@ -332,10 +333,40 @@ internal fun DocumentationScreen(
                                         if (question.type == "DATE") {
                                             Text("Data w formacie RRRR-MM-DD", style = MaterialTheme.typography.bodySmall)
                                         }
+                                    } else if (isInterviewSelection(question) &&
+                                        interviewOptions(question.code).isNotEmpty()) {
+                                        Text(title, style = MaterialTheme.typography.labelLarge)
+                                        val options = interviewOptions(question.code)
+                                        val original = answers[question.code]?.selections.orEmpty()
+                                        val selectedValues = if (draft?.selections?.get(question.code) !=
+                                            draft?.originalSelections?.get(question.code)) {
+                                            draft?.selections?.get(question.code).orEmpty()
+                                        } else original
+                                        options.forEach { option ->
+                                            val checked = option.value in selectedValues
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            ) {
+                                                Checkbox(
+                                                    checked = checked,
+                                                    enabled = canEdit,
+                                                    onCheckedChange = { isSelected ->
+                                                        val updated = if (question.type == "SINGLE_SELECT") {
+                                                            if (isSelected) listOf(option.value) else emptyList()
+                                                        } else if (isSelected) {
+                                                            selectedValues + option.value
+                                                        } else selectedValues - option.value
+                                                        onUpdateSelections(question.code, updated)
+                                                    }
+                                                )
+                                                Text(option.label, style = MaterialTheme.typography.bodyLarge)
+                                            }
+                                        }
                                     } else {
                                         Text(title, style = MaterialTheme.typography.labelLarge)
                                         Text(value.ifBlank { "Nie uzupełniono" })
-                                        Text("Opcje wyboru nie są jeszcze udostępniane przez API; nie wprowadzamy domyślnych wartości.",
+                                        Text("Brak słownika odpowiedzi dla tego pytania. Pole dostępne tylko do odczytu.",
                                             style = MaterialTheme.typography.bodySmall)
                                     }
                                     HorizontalDivider()
@@ -369,7 +400,7 @@ internal fun DocumentationScreen(
                                 ) { Text("Zakończ wywiad") }
                                 if (!canCompleteInterview(selected) && !dirty) {
                                     Text("Aby zakończyć, uzupełnij wymagane odpowiedzi i zapisz szkic. " +
-                                        "Pola wyboru bez opcji w API mogą blokować zakończenie.",
+                                        "Nieznane pytania wyboru pozostają tylko do odczytu.",
                                         style = MaterialTheme.typography.bodySmall)
                                 }
                             } else if ("START_NEXT_INTERVIEW" in selected.availableActions) {
