@@ -85,7 +85,7 @@ class OidcSession private constructor(context: Context, private val settings: Oi
                     }, connectionBuilder)
                 }
             }
-            require(config.discoveryDoc?.issuer?.toString() == settings.issuer) { "Issuer mismatch" }
+            require(config.discoveryDoc?.issuer == settings.issuer) { "Issuer mismatch" }
             val request = AuthorizationRequest.Builder(
                 config, settings.clientId, ResponseTypeValues.CODE, Uri.parse(settings.redirectUri)
             ).setScope("openid profile").build() // AppAuth generates S256 PKCE, state and nonce.

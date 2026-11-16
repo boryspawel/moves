@@ -25,13 +25,13 @@ class ScheduleScreenTest {
         assertNull(scheduleDetailsFor(ScheduleTarget.New(), cached))
         // An edit may use cached fields only for its own matching appointment AND participant.
         assertNull(scheduleDetailsFor(
-            ScheduleTarget.Edit(oldAppointment.appointmentId!!, nextParticipant), cached
+            ScheduleTarget.Edit(oldAppointment.appointmentId, nextParticipant), cached
         ))
         assertNull(scheduleDetailsFor(
             ScheduleTarget.Edit(UUID.randomUUID(), oldParticipant), cached
         ))
         assertEquals(oldAppointment, scheduleDetailsFor(
-            ScheduleTarget.Edit(oldAppointment.appointmentId!!, oldParticipant), cached
+            ScheduleTarget.Edit(oldAppointment.appointmentId, oldParticipant), cached
         ))
     }
 
