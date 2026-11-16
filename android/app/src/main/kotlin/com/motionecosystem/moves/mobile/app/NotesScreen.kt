@@ -152,7 +152,7 @@ internal fun NotesSection(
                 }
                 val canEdit = draft != null &&
                     (draft.noteId == null || selected?.status == "DRAFT" &&
-                        "UPDATE" in selected.availableActions) && !saving &&
+                        "UPDATE" in selected?.availableActions.orEmpty()) && !saving &&
                     writeState !is NoteWriteState.Conflict &&
                     writeState !is NoteWriteState.Uncertain
                 val values = draft?.values ?: selected?.let {
@@ -197,8 +197,19 @@ internal fun NotesSection(
                 if (writeState is NoteWriteState.Conflict ||
                     writeState is NoteWriteState.Uncertain) {
                     if (draft?.noteId != null && selected?.status == "DRAFT" &&
-                        (writeState == NoteWriteState.Conflict(NoteOperation.UPDATE) ||
-                            writeState == NoteWriteState.Uncertain(NoteOperation.UPDATE))) {
+                        writeState != NoteWriteState.Uncertain(NoteOperation.CREATE)) {
+                        Text("Aktualna wersja serwera do porównania:",
+                            style = MaterialTheme.typography.titleSmall)
+                        Text("Kategoria: ${NOTE_CATEGORIES[selected.category] ?: "nieznana"}")
+                        Text("Tytuł: ${selected.title.orEmpty()}")
+                        Text("Treść:", style = MaterialTheme.typography.labelLarge)
+                        Text(selected.content.orEmpty())
+                        HorizontalDivider()
+                        Text("Twoje niezapisane wartości:", style = MaterialTheme.typography.titleSmall)
+                        Text("Tytuł: ${draft.values.title}")
+                        Text(draft.values.content)
+                        Text("Sprawdź różnice przed potwierdzeniem; nie wykonamy automatycznego zapisu.",
+                            style = MaterialTheme.typography.bodySmall)
                         OutlinedButton(onClick = { mergeDialog = true },
                             modifier = Modifier.fillMaxWidth()) {
                             Text("Przejrzałem wersję serwera — połącz zmiany")
