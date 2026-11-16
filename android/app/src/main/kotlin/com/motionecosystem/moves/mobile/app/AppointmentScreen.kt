@@ -10,11 +10,21 @@ import androidx.compose.ui.unit.dp
 import com.motionecosystem.moves.mobile.api.AppointmentStatus
 import com.motionecosystem.moves.mobile.api.AppointmentType
 import com.motionecosystem.moves.mobile.api.AppointmentView
-import java.time.ZoneId
+import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 private val dateTime = DateTimeFormatter.ofPattern("d MMMM yyyy, HH:mm", Locale.forLanguageTag("pl-PL"))
+
+/** When the specialist zone is unknown, retain the offset received from the server
+ * and mark it explicitly. This is never a guessed local appointment time.
+ */
+internal fun appointmentTimeLabel(value: OffsetDateTime, timeZoneId: String?): String {
+    val zone = specialistCalendarZone(timeZoneId)
+    if (zone != null) return value.atZoneSameInstant(zone).format(dateTime)
+    val offset = value.offset.id.takeUnless { it == "Z" } ?: "+00:00"
+    return "${value.format(dateTime)} (UTC$offset)"
+}
 
 internal fun mayStartAppointment(item: AppointmentView): Boolean =
     item.appointmentId != null && item.participantId != null && item.version != null &&
@@ -64,9 +74,7 @@ internal fun AppointmentScreen(
             }
         }
         ReadPanel(state, onRefresh, { false }) { item ->
-            val zone = runCatching {
-                ZoneId.of(timeZoneId ?: ZoneId.systemDefault().id)
-            }.getOrDefault(ZoneId.systemDefault())
+            val knownZone = specialistCalendarZone(timeZoneId) != null
             Column(
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -80,13 +88,16 @@ internal fun AppointmentScreen(
                         Text(statusText(item.status), style = MaterialTheme.typography.titleLarge)
                         Text(appointmentTypeText(item.type), style = MaterialTheme.typography.titleMedium)
                         item.startsAt?.let {
-                            Text("Od: ${it.atZoneSameInstant(zone).format(dateTime)}")
+                            Text("Od: ${appointmentTimeLabel(it, timeZoneId)}")
                         }
                         item.endsAt?.let {
-                            Text("Do: ${it.atZoneSameInstant(zone).format(dateTime)}")
+                            Text("Do: ${appointmentTimeLabel(it, timeZoneId)}")
                         }
-                        Text("Strefa czasu: ${timeZoneId ?: "czas telefonu"}",
-                            style = MaterialTheme.typography.labelMedium)
+                        Text(
+                            if (knownZone) "Strefa czasu: $timeZoneId"
+                            else "Strefa specjalisty nieustalona — pokazano offset z odpowiedzi serwera.",
+                            style = MaterialTheme.typography.labelMedium
+                        )
                         item.shortPurpose?.takeIf { it.isNotBlank() }?.let {
                             Text("Cel: $it", style = MaterialTheme.typography.bodyMedium)
                         }

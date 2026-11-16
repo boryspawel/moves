@@ -105,6 +105,14 @@ class ScheduleScreenTest {
         assertNull(appointmentDateInSpecialistZone(null, "Europe/Warsaw"))
     }
 
+    @Test fun slotHoursMustNotAssumeUtcWhenCalendarZoneMissing() {
+        val start = OffsetDateTime.parse("2026-11-20T23:30:00Z")
+        val slot = BookableSlotView(start, start.plusMinutes(45))
+        assertEquals("Nieznana strefa kalendarza", slotLabel(slot, null))
+        assertEquals("Nieznana strefa kalendarza", slotLabel(slot, "Not/A_Zone"))
+        assertEquals("00:30–01:15", slotLabel(slot, "Europe/Warsaw"))
+    }
+
     @Test fun slotValidationAndFormattingUseServerCalendarZone() {
         val start = OffsetDateTime.parse("2026-03-29T00:30:00Z")
         val slot = BookableSlotView(start, start.plusHours(1))
