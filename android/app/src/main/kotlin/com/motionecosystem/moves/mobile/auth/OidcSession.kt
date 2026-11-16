@@ -128,6 +128,12 @@ class OidcSession private constructor(context: Context, private val settings: Oi
      */
     suspend fun freshAccessToken(): String? {
         val state = active ?: return null
+        // AppAuth reports a local client error when an expiring access token has no refresh
+        // grant. This is not a network outage and requires a fresh interactive login.
+        if (state.getNeedsTokenRefresh() && state.refreshToken.isNullOrBlank()) {
+            if (state === active) clear()
+            return null
+        }
         return try {
             val (value, error) = withTimeout(20_000) {
                 suspendCancellableCoroutine<Pair<String?, AuthorizationException?>> { continuation ->
