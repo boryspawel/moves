@@ -53,7 +53,7 @@ M1 wymaga M0; M2 wymaga M1; M3 i M4 można częściowo rozwijać równolegle po 
 
 ### M4 — dokumentacja
 
-- **MOB-040** S07: wywiad sekcyjny, zapis szkicu, zakończenie i kolejny wywiad.
+- **MOB-040 (etap 1: widok/GET)** S07: lista wywiadów, sekcje i odpowiedzi z API, formularz RAM i przygotowanie pola dyktowania lokalnego. **Pozostało:** POST nowego wywiadu, PUT szkicu, finalizacja, obsługa 409/idempotencji, opcje wyboru w kontrakcie backendu.
 - **MOB-041** Notatki: utwórz, edytuj szkic, finalizuj, archiwizuj tylko według `availableActions`.
 - **MOB-042 — WSTRZYMANE** S08 i inne akcje odczytu/zapisu biomedycznych pomiarów (również przez obserwacje celów). Nie implementować do czasu backendowej kontroli odpowiedniej zgody; nie tworzyć jej w mobile.
 - **MOB-043** Utrata sieci, konflikt wersji, odtworzenie zgodne z polityką M0.
@@ -245,3 +245,11 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 - S01 i lista slotów S05 wyświetlają informację o nieznanej strefie zamiast niepoprawnie przeliczonej godziny. Przy nieznanej strefie formularz S05 **nie dopuszcza wyboru ani zapisu terminu**, także przy edycji istniejącego spotkania; szkic zostaje w RAM i można odświeżyć dane.
 - Szczegół spotkania S05, który nie otrzymał jeszcze strefy specjalisty, pokazuje dokładną godzinę z **oryginalnym, jawnie oznaczonym offsetem odpowiedzi serwera** (bez przeliczania według urządzenia). Znana strefa nadal wyświetla czas lokalny specjalisty.
 - Trzy małe testy jednostkowe (S01, szczegół S05, formularz S05), bez nowych zależności lub zmian backendu. GitHub Actions pozostaje wyłącznie build-only, testy do wykonania lokalnie.
+
+## MOB-040 / etap 1 — widok S07 i przygotowanie dyktowania (2026-11-16)
+
+- Wejście z S03/S05 wymaga uprzedniego, autoryzowanego GET kartoteki/wizyty z potwierdzonym participantId. Dopiero potem wykonywany jest `GET /api/v1/specialist/clients/{participantId}/records/interviews?actingContext=...`; odpowiedź jest przypisana do bieżącej roli i uczestnika. Lista pokazuje stan szkicu, zakończonych i zastąpionych wywiadów.
+- Edytor pokazuje pytania i sekcje otrzymane z serwera; istniejące odpowiedzi tekstowe, liczbowe i daty. Ukończone wywiady są tylko do odczytu. Pola tekstowe mają wspólny komponent `DictationReadyTextField` z opcjonalnym callbackiem po identyfikatorze pola do przyszłego silnika **on-device only**. Dopóki silnik nie istnieje, akcja mikrofonu jest nieaktywna i nic nie nasłuchuje ani nie wysyła głosu. Dyktowanie samej klawiatury zależy od producenta/usługi, nie jest uznawane za gwarantowane offline.
+- Zmiany lokalnych pól wywiadu pozostają wyłącznie w RAM istniejącego `OperationalViewModel`, także przy obrocie ekranu i przejściowej rewalidacji. Na utratę relacji, 401/403, zmianę użytkownika lub logout są usuwane. Widok żąda potwierdzenia przed opuszczeniem z niezapisanymi zmianami, bez sugerowania, że szkic jest zapisany na serwerze.
+- **Świadoma granica etapu:** przyciski `Rozpocznij nowy`, `Zapisz szkic`, `Zakończ wywiad`, `Rozpocznij kolejny` są wyłączone. Nie ma mutacji ani ukrytego autozapisu. Backend udostępnia pytania typu `SINGLE_SELECT`/`MULTI_SELECT`, ale **bez listy opcji**; widok tylko pokazuje dotychczasowe wartości i sygnalizuje brak słownika do czasu aktualizacji kontraktu. Notatki to następny etap MOB-041.
+- Dwa wąskie testy: odczyt tylko w zweryfikowanym kontekście i czyszczenie szkicu po wylogowaniu oraz mapowanie pól dynamicznego wywiadu. GitHub Actions **wyłącznie buduje**, testy wykonywane lokalnie. 

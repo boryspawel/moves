@@ -18,6 +18,47 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class OperationalViewModelTest {
+    @Test fun interviewViewRequiresVerifiedParticipantAndClearsSensitiveDraftOnLogout() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = StubRepository()
+            val participant = UUID.randomUUID()
+            val interview = UUID.randomUUID()
+            repository.interviewResult = RemoteResult.Success(listOf(InterviewView(
+                id = interview, participantId = participant, status = "DRAFT",
+                questions = listOf(InterviewQuestion(
+                    "presenting_concern", "Presenting concern", "Why?", "TEXT", true
+                )),
+                answers = listOf(InterviewAnswer("presenting_concern", textValue = "Pierwotne dane")),
+                availableActions = listOf("SAVE_DRAFT"), version = 1
+            )))
+            val vm = OperationalViewModel(repository, { "token" }, {})
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            vm.selectParticipant(participant)
+            vm.loadInterviews(participant) // Workspace has not been authorized yet.
+            advanceUntilIdle()
+            assertTrue(repository.interviewRequests.isEmpty())
+            vm.loadWorkspace(participant)
+            advanceUntilIdle()
+            vm.loadInterviews(participant)
+            advanceUntilIdle()
+            vm.openInterview(participant, interview)
+            vm.updateInterviewText("presenting_concern", "Robocza odpowiedź")
+            assertEquals("Robocza odpowiedź",
+                vm.interviewDraft.value?.values?.get("presenting_concern"))
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            assertEquals(ReadState.Idle, vm.interviews.value)
+            assertEquals("Robocza odpowiedź",
+                vm.interviewDraft.value?.values?.get("presenting_concern"))
+            vm.clear()
+            assertNull(vm.interviewDraft.value)
+            assertNull(vm.interviewSelection.value)
+            assertEquals(ReadState.Idle, vm.interviews.value)
+        } finally { Dispatchers.resetMain() }
+    }
+
     @Test fun keycloakOutageDuringRefreshGatesDataButPreservesSessionAndDraftForRetry() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {
@@ -853,8 +894,13 @@ class OperationalViewModelTest {
         var pendingAppointment: CompletableDeferred<RemoteResult<AppointmentView>>? = null
         val startResults = ArrayDeque<RemoteResult<AppointmentView>>()
         val startRequests = mutableListOf<Triple<UUID, Long, String>>()
+        var interviewResult: RemoteResult<List<InterviewView>> = RemoteResult.Success(emptyList())
+        val interviewRequests = mutableListOf<Pair<UUID, ActingContext>>()
         override suspend fun interviews(participantId: UUID, actingContext: ActingContext):
-            RemoteResult<List<InterviewView>> = RemoteResult.Success(emptyList())
+            RemoteResult<List<InterviewView>> {
+            interviewRequests += participantId to actingContext
+            return interviewResult
+        }
         override suspend fun appointment(id: UUID): RemoteResult<AppointmentView> =
             pendingAppointment?.await() ?: RemoteResult.Success(appointmentValue ?: AppointmentView(appointmentId = id))
         override suspend fun startAppointment(id: UUID, version: Long, key: String): RemoteResult<AppointmentView> {
