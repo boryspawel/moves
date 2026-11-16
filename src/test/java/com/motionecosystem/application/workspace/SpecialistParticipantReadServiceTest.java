@@ -20,6 +20,7 @@ import com.motionecosystem.identityaccess.api.ProfileType;
 import com.motionecosystem.participant.api.ParticipantClientPort;
 import com.motionecosystem.participant.api.ParticipantContextQueryPort;
 import com.motionecosystem.participantdocumentation.api.ParticipantDocumentationEventQueryPort;
+import com.motionecosystem.participantmeasurements.api.ParticipantMeasurementQueryPort;
 import com.motionecosystem.specialist.api.SpecialistWorkspacePort;
 import com.motionecosystem.trainingexecution.api.ParticipantExecutionHistoryQueryPort;
 import com.motionecosystem.trainingplanning.api.PlanRevisionQueryPort;
@@ -54,6 +55,7 @@ class SpecialistParticipantReadServiceTest {
         AppointmentSessionLinkPort linkedSessions = mock(AppointmentSessionLinkPort.class);
         ParticipantExecutionHistoryQueryPort executions = mock(ParticipantExecutionHistoryQueryPort.class);
         SpecialistAppointmentExecutionService appointmentExecution = mock(SpecialistAppointmentExecutionService.class);
+        ParticipantMeasurementQueryPort measurementHistory = mock(ParticipantMeasurementQueryPort.class);
         AuditRecorder audit = mock(AuditRecorder.class);
         var decision = new SpecialistWorkspacePort.AuthorizationDecision(SpecialistWorkspacePort.WorkspaceRole.TRAINER,
                 SpecialistWorkspacePort.WorkspacePurpose.PERFORMANCE_PLANNING, Set.of("MANAGE_PARTICIPANT_RECORDS"));
@@ -76,10 +78,13 @@ class SpecialistParticipantReadServiceTest {
                 new AppointmentSessionLinkPort.AppointmentSessionContext(sessionId, "Linked session", planId, revisionId)));
         SpecialistParticipantReadService service = new SpecialistParticipantReadService(accounts, workspace, participants, contexts,
                 appointments, appointmentEvents, revisions, linkedSessions, executions, null, null, null, audit, Clock.fixed(now, ZoneOffset.UTC),
-                null, appointmentExecution);
+                measurementHistory, appointmentExecution);
 
         var view = service.workspace("specialist", participantId);
 
+        assertThat(view.recentMeasurements()).isEmpty();
+        assertThat(view.situationalSignals()).noneMatch(signal -> "RECENT_MEASUREMENT".equals(signal.kind()));
+        verifyNoInteractions(measurementHistory);
         assertThat(view.focus()).extracting(SpecialistParticipantReadService.OperationalFocusView::kind,
                 SpecialistParticipantReadService.OperationalFocusView::primaryAction)
                 .containsExactly(SpecialistParticipantReadService.FocusKind.NEXT_APPOINTMENT, "START_APPOINTMENT");
@@ -111,6 +116,7 @@ class SpecialistParticipantReadServiceTest {
                 .extracting(SpecialistParticipantReadService.OperationalFocusView::primaryAction,
                         SpecialistParticipantReadService.OperationalFocusView::navigationTarget)
                 .containsExactly("CONTINUE_CLOSEOUT", "APPOINTMENT_CLOSEOUT");
+        verifyNoInteractions(measurementHistory);
     }
 
     @Test
