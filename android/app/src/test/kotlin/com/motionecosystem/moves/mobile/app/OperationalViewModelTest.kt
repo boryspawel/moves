@@ -18,6 +18,124 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class OperationalViewModelTest {
+    @Test fun closeoutNetworkUncertaintyRequiresRefreshAndReusesSameKey() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val participant = UUID.randomUUID()
+            val appointmentId = UUID.randomUUID()
+            val detail = AppointmentView(appointmentId, participantId = participant,
+                status = AppointmentStatus.IN_PROGRESS, version = 7, availableActions = listOf("COMPLETE"))
+            val context = CloseoutContextView(
+                appointmentId = appointmentId, participantId = participant,
+                status = AppointmentStatus.IN_PROGRESS, version = 7,
+                executionRequired = true, executionRecorded = true, canComplete = true
+            )
+            val repository = StubRepository()
+            repository.appointmentValue = detail
+            repository.closeoutResult = RemoteResult.Success(context)
+            repository.completeResults.add(RemoteResult.Failure(
+                RemoteError.Network(java.io.IOException("lost response"))))
+            repository.completeResults.add(RemoteResult.Success(
+                detail.copy(status = AppointmentStatus.COMPLETED, version = 8, availableActions = emptyList())))
+            val vm = OperationalViewModel(repository, { "token" }, {})
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            vm.selectAppointment(participant, appointmentId)
+            vm.loadAppointment(appointmentId)
+            advanceUntilIdle()
+            vm.loadCloseoutContext()
+            advanceUntilIdle()
+            vm.completeAppointment()
+            vm.completeAppointment() // A double tap cannot send two POSTs.
+            advanceUntilIdle()
+            assertEquals(1, repository.completeCalls.size)
+            assertEquals(CloseoutSaveState.Uncertain, vm.closeoutSave.value)
+            assertEquals(ReadState.Idle, vm.closeoutContext.value)
+            vm.completeAppointment() // No stale context can authorize another POST.
+            advanceUntilIdle()
+            assertEquals(1, repository.completeCalls.size)
+            vm.loadCloseoutContext()
+            advanceUntilIdle()
+            vm.completeAppointment() // Explicit retry after a fresh GET.
+            advanceUntilIdle()
+            assertEquals(2, repository.completeCalls.size)
+            assertEquals(repository.completeCalls[0], repository.completeCalls[1])
+            assertEquals(CloseoutSaveState.Saved, vm.closeoutSave.value)
+            assertEquals(AppointmentStatus.COMPLETED, (vm.appointment.value as ReadState.Ready).value.status)
+        } finally { Dispatchers.resetMain() }
+    }
+
+    @Test fun closeoutConflictRequiresExplicitAcceptanceOfFreshVersions() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val participant = UUID.randomUUID()
+            val appointmentId = UUID.randomUUID()
+            val detail = AppointmentView(appointmentId, participantId = participant,
+                status = AppointmentStatus.IN_PROGRESS, version = 2, availableActions = listOf("COMPLETE"))
+            val context = CloseoutContextView(appointmentId = appointmentId, participantId = participant,
+                status = AppointmentStatus.IN_PROGRESS, version = 2, canComplete = true)
+            val repository = StubRepository()
+            repository.appointmentValue = detail
+            repository.closeoutResult = RemoteResult.Success(context)
+            repository.completeResults.add(RemoteResult.Failure(RemoteError.Conflict))
+            val vm = OperationalViewModel(repository, { "token" }, {})
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            vm.selectAppointment(participant, appointmentId)
+            vm.loadAppointment(appointmentId)
+            advanceUntilIdle()
+            vm.loadCloseoutContext()
+            advanceUntilIdle()
+            repository.appointmentValue = detail.copy(version = 3)
+            repository.closeoutResult = RemoteResult.Success(context.copy(version = 3))
+            vm.completeAppointment()
+            advanceUntilIdle()
+            assertEquals(CloseoutSaveState.Conflict, vm.closeoutSave.value)
+            assertEquals(3L, (vm.appointment.value as ReadState.Ready).value.version)
+            vm.completeAppointment()
+            advanceUntilIdle()
+            assertEquals(1, repository.completeCalls.size)
+            vm.loadCloseoutContext()
+            advanceUntilIdle()
+            vm.acceptCloseoutConflict()
+            assertEquals(CloseoutSaveState.Idle, vm.closeoutSave.value)
+            repository.completeResults.add(RemoteResult.Success(
+                detail.copy(status = AppointmentStatus.COMPLETED, version = 4, availableActions = emptyList())))
+            vm.completeAppointment()
+            advanceUntilIdle()
+            assertEquals(2, repository.completeCalls.size)
+            assertEquals(3L, repository.completeCalls.last().second)
+            assertTrue(repository.completeCalls.first().third != repository.completeCalls.last().third)
+            assertEquals(CloseoutSaveState.Saved, vm.closeoutSave.value)
+        } finally { Dispatchers.resetMain() }
+    }
+
+    @Test fun closeoutRejectsDifferentParticipantAndClearsProtectedState() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val participant = UUID.randomUUID()
+            val appointmentId = UUID.randomUUID()
+            val repository = StubRepository()
+            repository.appointmentValue = AppointmentView(appointmentId, participantId = participant,
+                status = AppointmentStatus.IN_PROGRESS, version = 2, availableActions = listOf("COMPLETE"))
+            repository.closeoutResult = RemoteResult.Success(CloseoutContextView(
+                appointmentId = appointmentId, participantId = UUID.randomUUID(),
+                status = AppointmentStatus.IN_PROGRESS, version = 2, canComplete = true))
+            val vm = OperationalViewModel(repository, { "token" }, {})
+            vm.revalidateAccess()
+            advanceUntilIdle()
+            vm.selectAppointment(participant, appointmentId)
+            vm.loadAppointment(appointmentId)
+            advanceUntilIdle()
+            vm.loadCloseoutContext()
+            advanceUntilIdle()
+            assertEquals(ReadState.Forbidden, vm.professionalContext.value)
+            assertNull(vm.selection.value)
+            assertEquals(ReadState.Idle, vm.closeoutContext.value)
+            assertTrue(repository.completeCalls.isEmpty())
+        } finally { Dispatchers.resetMain() }
+    }
+
     @Test fun executionRetryAfterNetworkFailureReusesSamePayloadAndIdempotencyKey() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {
