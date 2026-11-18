@@ -154,6 +154,37 @@ class MovesApiTest {
         assertEquals("""{"version":4}""", post.body?.utf8())
     }
 
+    @Test fun closeoutReadsOnlySafeFieldsAndCompleteSendsVersionWithOneKey() = runBlocking {
+        val appointmentId = UUID.randomUUID()
+        val participantId = UUID.randomUUID()
+        server.enqueue(MockResponse.Builder().body(
+            """{"appointmentId":"$appointmentId","participantId":"$participantId","status":"IN_PROGRESS","version":9,"executionRequired":true,"executionRecorded":true,"canComplete":true,"summaryNote":{"title":"Podsumowanie","content":"Opis"},"measurements":[{"metricCode":"weight","value":75.8,"unit":"kg"}]}"""
+        ).addHeader("Content-Type", "application/json").build())
+        server.enqueue(MockResponse.Builder().body(
+            """{"appointmentId":"$appointmentId","participantId":"$participantId","status":"COMPLETED","version":10}"""
+        ).addHeader("Content-Type", "application/json").build())
+        val api = createMovesApi(server.url("/").toString(), TokenProvider { "token" })
+        val context = api.closeoutContext(appointmentId, ActingContext.TRAINER).body()!!
+        assertTrue(context.canComplete)
+        assertEquals("Podsumowanie", context.summaryNote?.title)
+        assertFalse(CloseoutContextView.serializer().descriptor.elementNames().asSequence()
+            .any { it == "measurements" })
+        val get = server.takeRequest()
+        assertEquals("GET", get.method)
+        assertEquals("/api/v1/specialist/appointments/$appointmentId/closeout-context", get.url.encodedPath)
+        assertEquals("TRAINER", get.url.queryParameter("actingContext"))
+        assertEquals(null, get.headers["Idempotency-Key"])
+        val key = UUID.randomUUID().toString()
+        val completed = api.completeAppointment(appointmentId, key, AppointmentVersionCommand(9)).body()
+        assertEquals(AppointmentStatus.COMPLETED, completed?.status)
+        val post = server.takeRequest()
+        assertEquals("POST", post.method)
+        assertEquals("/api/v1/specialist/appointments/$appointmentId/complete", post.url.encodedPath)
+        assertEquals(key, post.headers["Idempotency-Key"])
+        assertEquals("Bearer token", post.headers["Authorization"])
+        assertEquals("""{"version":9}""", post.body?.utf8())
+    }
+
     @Test fun onboardingReadsActualServerSpecialistKindWithoutAClientRoleOverride() = runBlocking {
         server.enqueue(MockResponse.Builder().body(
             """{"stage":"READY","profileType":"SPECIALIST","profile":{"specialistKind":"PHYSIOTHERAPIST"},"availability":[]}"""
