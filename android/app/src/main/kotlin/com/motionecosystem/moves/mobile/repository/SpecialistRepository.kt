@@ -41,6 +41,10 @@ interface SpecialistRepository {
     /** POST is single-shot; manual retry must reuse both exact payload and key. */
     suspend fun recordExecution(appointmentId: java.util.UUID, key: String,
         command: RecordSessionExecutionCommand): RemoteResult<RecordedSessionExecution>
+    /** The response deliberately excludes measurement fields from the Android model. */
+    suspend fun closeoutContext(id: java.util.UUID, role: ActingContext): RemoteResult<CloseoutContextView>
+    /** Single-shot completion; the caller owns the original key for explicit retry. */
+    suspend fun completeAppointment(id: java.util.UUID, version: Long, key: String): RemoteResult<AppointmentView>
     suspend fun appointment(id: java.util.UUID): RemoteResult<AppointmentView>
     /** Calendar writes are single-shot; retry is explicitly initiated by the caller with the original key. */
     suspend fun createAppointment(command: AppointmentSaveCommand, key: String): RemoteResult<AppointmentView>
@@ -106,6 +110,10 @@ class NetworkSpecialistRepository(private val api: MovesApi, private val calls: 
     ): RemoteResult<RecordedSessionExecution> = withContext(Dispatchers.IO) {
         calls.execute { api.recordExecution(appointmentId, key, command) }
     }
+    override suspend fun closeoutContext(id: java.util.UUID, role: ActingContext) =
+        read { api.closeoutContext(id, role) }
+    override suspend fun completeAppointment(id: java.util.UUID, version: Long, key: String): RemoteResult<AppointmentView> =
+        withContext(Dispatchers.IO) { calls.execute { api.completeAppointment(id, key, AppointmentVersionCommand(version)) } }
     override suspend fun appointment(id: java.util.UUID) = read { api.appointment(id) }
     override suspend fun createAppointment(command: AppointmentSaveCommand, key: String): RemoteResult<AppointmentView> =
         withContext(Dispatchers.IO) { calls.execute { api.createAppointment(key, command) } }
