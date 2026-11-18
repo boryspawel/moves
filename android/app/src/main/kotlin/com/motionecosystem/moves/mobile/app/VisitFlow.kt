@@ -8,7 +8,7 @@ import androidx.compose.ui.unit.dp
 import com.motionecosystem.moves.mobile.api.*
 import java.util.UUID
 
-/** Navigation shells for yet-unimplemented stages; S06 and S07 are now active screens. */
+/** Visit stage routing and context validation; S06, S07 and S09 are implemented screens. */
 internal enum class VisitStage(val route: String, val title: String) {
     EXECUTION("visit-execution", "Realizacja sesji"),
     DOCUMENTATION("visit-documentation", "Dokumentacja"),
@@ -121,7 +121,7 @@ private fun StageBody(stage: VisitStage, contextLabel: String) {
             VisitStage.DOCUMENTATION ->
                 "Kontekst uczestnika został zweryfikowany. Wywiady i notatki zostaną podłączone w MOB-040/041."
             VisitStage.CLOSEOUT ->
-                "Spotkanie jest w toku. Kontrola kompletności i zakończenie będą dostępne w MOB-051."
+                "Oczekiwanie na aktualny, autoryzowany stan spotkania."
         })
         Text("Ten ekran nie zapisuje ani nie wysyła danych. Powrót nie zmienia stanu spotkania.",
             style = MaterialTheme.typography.bodySmall)
