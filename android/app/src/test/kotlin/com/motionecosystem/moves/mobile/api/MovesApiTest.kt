@@ -167,8 +167,8 @@ class MovesApiTest {
         val context = api.closeoutContext(appointmentId, ActingContext.TRAINER).body()!!
         assertTrue(context.canComplete)
         assertEquals("Podsumowanie", context.summaryNote?.title)
-        assertFalse(CloseoutContextView.serializer().descriptor.elementNames().asSequence()
-            .any { it == "measurements" })
+        val descriptor = CloseoutContextView.serializer().descriptor
+        assertFalse((0 until descriptor.elementsCount).any { descriptor.getElementName(it) == "measurements" })
         val get = server.takeRequest()
         assertEquals("GET", get.method)
         assertEquals("/api/v1/specialist/appointments/$appointmentId/closeout-context", get.url.encodedPath)
