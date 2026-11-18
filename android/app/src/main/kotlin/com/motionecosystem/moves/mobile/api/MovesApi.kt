@@ -91,6 +91,19 @@ interface MovesApi {
         @Body command: InterviewVersionCommand
     ): Response<NoteView>
 
+    @GET("api/v1/specialist/appointments/{id}/closeout-context")
+    suspend fun closeoutContext(
+        @Path("id") id: java.util.UUID,
+        @Query("actingContext") actingContext: ActingContext
+    ): Response<CloseoutContextView>
+
+    @POST("api/v1/specialist/appointments/{id}/complete")
+    suspend fun completeAppointment(
+        @Path("id") id: java.util.UUID,
+        @Header("Idempotency-Key") key: String,
+        @Body command: AppointmentVersionCommand
+    ): Response<AppointmentView>
+
     @GET("api/v1/specialist/appointments/{id}/execution-context")
     suspend fun executionContext(
         @Path("id") appointmentId: java.util.UUID
