@@ -1253,6 +1253,18 @@ class OperationalViewModelTest {
             completeInterviewCalls += command to key
             return completeInterviewResults.removeFirstOrNull() ?: RemoteResult.Failure(RemoteError.Conflict)
         }
+        var closeoutResult: RemoteResult<CloseoutContextView> = RemoteResult.Failure(RemoteError.Conflict)
+        val closeoutCalls = mutableListOf<Pair<UUID, ActingContext>>()
+        val completeCalls = mutableListOf<Triple<UUID, Long, String>>()
+        val completeResults = ArrayDeque<RemoteResult<AppointmentView>>()
+        override suspend fun closeoutContext(id: UUID, role: ActingContext): RemoteResult<CloseoutContextView> {
+            closeoutCalls += id to role
+            return closeoutResult
+        }
+        override suspend fun completeAppointment(id: UUID, version: Long, key: String): RemoteResult<AppointmentView> {
+            completeCalls += Triple(id, version, key)
+            return completeResults.removeFirstOrNull() ?: RemoteResult.Failure(RemoteError.Conflict)
+        }
         var executionContextValue: RemoteResult<SpecialistExecutionContext> =
             RemoteResult.Failure(RemoteError.Conflict)
         val executionCalls = mutableListOf<Triple<UUID, String, RecordSessionExecutionCommand>>()
