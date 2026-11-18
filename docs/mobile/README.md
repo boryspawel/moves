@@ -1,6 +1,6 @@
 # Moves Mobile — aplikacja Android dla specjalisty
 
-**Status:** M2 S01/S02/S03 i MOB-024 zaimplementowane; S04 odroczony. M3: MOB-030 Spotkanie, MOB-031 terminy i MOB-032 kontekstowe trasy S06/S07/S09 (bez zapisów).  Odbiór na Motoroli i serwerowa kontrola odczytu pomiarów pozostają otwarte. **Data:** 2026-11-15.
+**Status:** M2 i M3 zaimplementowane; S04 odroczony. M4: S07 wywiady/notatki wdrożone; S08 pomiary odroczone. M5: MOB-050 realizacja sesji i MOB-051 zamknięcie spotkania w kodzie. Odbiór na Motoroli, E2E i przegląd bezpieczeństwa pozostają otwarte. **Data:** 2026-11-18.
 
 ## Dokumentacja i prototyp
 
@@ -18,7 +18,10 @@
 - [MOB-024: aktualizacja uprawnień](04-implementation-plan.md): weryfikacja serwerowego profilu po resume, fail-closed na 403/offline i czyszczenie RAM; S04 odroczony.
 - [MOB-030: Spotkanie S05](04-implementation-plan.md#mob-030--s05-spotkanie-2026-11-15): autoryzowany odczyt, idempotentny start i wznowienie wizyty; następne etapy spotkania jeszcze niedostępne.
 - [MOB-031: terminy](04-implementation-plan.md): tworzenie z S01/S03 i zmiana z S05, dostępność i konflikty, idempotencja.
-- [MOB-032: kontekst wizyty](04-implementation-plan.md): S05 → S06/S07/S09 i S03 → S07, ponowne sprawdzanie dostępu; ekrany bez funkcji zapisu.
+- [MOB-032: kontekst wizyty](04-implementation-plan.md): S05 → S06/S07/S09 i S03 → S07, ponowne sprawdzanie dostępu.
+- [MOB-040/041: dokumentacja](04-implementation-plan.md): edycja/finalizacja wywiadu i notatek, podsumowanie wizyty jako notatka typu APPOINTMENT_SUMMARY.
+- [MOB-050: realizacja](04-implementation-plan.md): autoryzowany zapis rzeczywistych faktów wykonania.
+- [MOB-051: zakończenie](04-implementation-plan.md): serwerowy closeout-context, kontrola kompletności, single-shot complete i jawne odzyskiwanie stanu po konflikcie.
 - [Interaktywny prototyp dziewięciu ekranów](prototype/index.html) — demonstrator HTML z fikcyjnymi danymi, **bez backendu**, nie jest kodem produkcyjnym Androida.
 
 Prototyp jest samowystarczalnym plikiem HTML. Zrzuty PNG z sesji projektowej nie są załączane do repozytorium; komplet dziewięciu ekranów można otwierać przez menu prototypu.
@@ -34,4 +37,4 @@ Prototyp jest samowystarczalnym plikiem HTML. Zrzuty PNG z sesji projektowej nie
 
 **Android:** operacyjna obsługa całej wizyty od agendy po zakończenie. **Web:** projektowanie planów, zestawów ćwiczeń, analizy i administracja. **Backend:** jedyne źródło prawdy dla danych, praw dostępu, safety, zgód, planów i zamknięcia wizyty.
 
-Implementacja: natywny Kotlin + Jetpack Compose, online-first. Stan AS-IS przed M1 nie miał modułu Android; M1 dodał minimalny moduł i build APK. **M0 wykonał statyczny audyt źródeł, nie potwierdził logowania na emulatorze.** Zapis i mobilna prezentacja pomiarów biomedycznych S08 pozostają wyłączone z bieżącego MVP do czasu egzekwowania właściwej zgody na backendzie. Nie tworzymy w mobile mechanizmu zgód; dokumentacja medyczna ogranicza się do notatek z informacji ustnych, bez załączników, wyników badań ani skanów.
+Implementacja: natywny Kotlin + Jetpack Compose, online-first. Stan AS-IS przed M1 nie miał modułu Android; M1 dodał minimalny moduł i build APK. **M0 wykonał statyczny audyt źródeł, nie potwierdził logowania na emulatorze.** Zapis i mobilna prezentacja pomiarów biomedycznych S08 pozostają wyłączone z bieżącego MVP do czasu odbioru właściwej zgody na backendzie. Nie tworzymy w mobile mechanizmu zgód; dokumentacja medyczna ogranicza się do notatek z informacji ustnych, bez załączników, wyników badań ani skanów.

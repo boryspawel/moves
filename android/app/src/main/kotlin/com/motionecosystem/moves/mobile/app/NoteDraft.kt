@@ -40,6 +40,7 @@ internal sealed interface NoteWriteState {
 internal val NOTE_CATEGORIES: Map<String, String> = linkedMapOf(
     "GENERAL" to "Notatka ogólna",
     "SESSION" to "Notatka ze spotkania",
+    "APPOINTMENT_SUMMARY" to "Podsumowanie wizyty",
     "HEALTH" to "Notatka zdrowotna",
     "OTHER" to "Inna notatka"
 )

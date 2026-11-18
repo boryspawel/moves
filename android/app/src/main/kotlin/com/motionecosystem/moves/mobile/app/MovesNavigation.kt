@@ -42,12 +42,14 @@ internal fun canManuallyRevalidate(
     client: CreateClientState,
     interview: InterviewWriteState = InterviewWriteState.Idle,
     note: NoteWriteState = NoteWriteState.Idle,
-    execution: ExecutionSaveState = ExecutionSaveState.Idle
+    execution: ExecutionSaveState = ExecutionSaveState.Idle,
+    closeout: CloseoutSaveState = CloseoutSaveState.Idle
 ): Boolean = appointment != AppointmentStartState.SAVING &&
     canLeaveSchedule(schedule) &&
     client != CreateClientState.Saving && client !is CreateClientState.Saved &&
     interview !is InterviewWriteState.Saving &&
-    note !is NoteWriteState.Saving && execution != ExecutionSaveState.Saving
+    note !is NoteWriteState.Saving && execution != ExecutionSaveState.Saving &&
+    closeout != CloseoutSaveState.Saving
 
 @Composable
 fun MovesNavigation(
@@ -66,8 +68,9 @@ fun MovesNavigation(
     val interviewWrite by viewModel.interviewWrite.collectAsStateWithLifecycle()
     val noteWrite by viewModel.noteWrite.collectAsStateWithLifecycle()
     val executionWrite by viewModel.executionSave.collectAsStateWithLifecycle()
+    val closeoutWrite by viewModel.closeoutSave.collectAsStateWithLifecycle()
     val mayRevalidate = canManuallyRevalidate(
-        appointmentWrite, scheduleWrite, clientWrite, interviewWrite, noteWrite, executionWrite
+        appointmentWrite, scheduleWrite, clientWrite, interviewWrite, noteWrite, executionWrite, closeoutWrite
     )
     // The authorization gate blanked all cached server projections. Restore only the
     // current route using fresh, authorized GETs; never replay mutations.
@@ -122,7 +125,8 @@ fun MovesNavigation(
                                     viewModel.createClientState.value,
                                     viewModel.interviewWrite.value,
                                     viewModel.noteWrite.value,
-                                    viewModel.executionSave.value
+                                    viewModel.executionSave.value,
+                                    viewModel.closeoutSave.value
                                 )
                             ) viewModel.revalidateAccess()
                         },
@@ -249,7 +253,17 @@ fun MovesNavigation(
             }
             VisitStage.entries.forEach { stage ->
                 composable(stage.route) {
-                    VisitStageSection(viewModel, stage, onBack = { navigation.popBackStack() })
+                    VisitStageSection(
+                        viewModel, stage,
+                        onBack = { navigation.popBackStack() },
+                        onFinished = {
+                            navigation.navigate(Tab.DAY.route) {
+                                popUpTo(Tab.DAY.route) { inclusive = false }
+                                launchSingleTop = true
+                                restoreState = false
+                            }
+                        }
+                    )
                 }
             }
             composable(SCHEDULE_ROUTE) {
@@ -318,7 +332,8 @@ fun MovesNavigation(
 private fun VisitStageSection(
     viewModel: OperationalViewModel,
     stage: VisitStage,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onFinished: () -> Unit
 ) {
     val selection by viewModel.selection.collectAsStateWithLifecycle()
     val appointment by viewModel.appointment.collectAsStateWithLifecycle()
@@ -334,6 +349,8 @@ private fun VisitStageSection(
     val executionContext by viewModel.executionContext.collectAsStateWithLifecycle()
     val executionDraft by viewModel.executionDraft.collectAsStateWithLifecycle()
     val executionSave by viewModel.executionSave.collectAsStateWithLifecycle()
+    val closeoutContext by viewModel.closeoutContext.collectAsStateWithLifecycle()
+    val closeoutSave by viewModel.closeoutSave.collectAsStateWithLifecycle()
     LaunchedEffect(stage, selection) {
         when (val current = selection) {
             is ContextSelection.Appointment -> viewModel.loadAppointment(current.appointmentId)
@@ -364,6 +381,14 @@ private fun VisitStageSection(
     } else null
     LaunchedEffect(stage, verifiedExecution) {
         if (verifiedExecution != null) viewModel.loadExecutionContext()
+    }
+    val verifiedCloseout = if (stage == VisitStage.CLOSEOUT) {
+        verifiedVisit(selection, appointment)?.takeIf {
+            it.status == AppointmentStatus.IN_PROGRESS || it.status == AppointmentStatus.COMPLETED
+        }
+    } else null
+    LaunchedEffect(stage, verifiedCloseout) {
+        if (verifiedCloseout != null) viewModel.loadCloseoutContext()
     }
     if (stage == VisitStage.EXECUTION && verifiedExecution != null) {
         ExecutionScreen(
@@ -407,6 +432,17 @@ private fun VisitStageSection(
             onRefresh = { viewModel.loadInterviews(documentationParticipant) },
             onBack = onBack
             // On-device recognizer is a separate feature. No cloud fallback or mic permission.
+        )
+    } else if (stage == VisitStage.CLOSEOUT && verifiedCloseout != null) {
+        CloseoutScreen(
+            appointment = appointment,
+            context = closeoutContext,
+            save = closeoutSave,
+            onRefresh = refresh,
+            onComplete = viewModel::completeAppointment,
+            onResolveConflict = viewModel::acceptCloseoutConflict,
+            onBack = onBack,
+            onFinished = onFinished
         )
     } else {
         VisitStageScreen(

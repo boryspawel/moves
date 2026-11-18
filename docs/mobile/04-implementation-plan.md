@@ -1,6 +1,6 @@
 # Moves Mobile — plan wdrożenia v0.1
 
-**Cel:** natywna aplikacja Android realizująca UJ-01…UJ-06 w zakresie tekstowych notatek i wizyt, oparta na istniejącym backendzie. **Status:** M2 (S01/S02/S03/MOB-024) zaimplementowane, S04 odroczony; M3 rozpoczęty: MOB-030 (S05) — kod, wąskie testy i CI. OIDC login/GET/logout/ponowny login zweryfikowane na Motoroli. Pozostają odbiór M2/M3 na urządzeniu oraz weryfikacja refresh, 401/403 i ról. S08/pomiary biomedyczne wyłączone do czasu serwerowej zgody.
+**Cel:** natywna aplikacja Android realizująca UJ-01…UJ-06 w zakresie tekstowych notatek i wizyt, oparta na istniejącym backendzie. **Status 2026-11-18:** M2–M4 w kodzie; M5: MOB-050 (S06) i MOB-051 (S09) w kodzie, MOB-052 E2E otwarty. S04 odroczony; S08 pomiary wstrzymane. OIDC login/GET/logout/ponowny login zweryfikowane na Motoroli; odbiór pełnego procesu, refresh, 401/403 i ról pozostaje otwarty.
 
 ## Kamienie milowe i kolejność
 
@@ -61,7 +61,7 @@ M1 wymaga M0; M2 wymaga M1; M3 i M4 można częściowo rozwijać równolegle po 
 ### M5 — zamknięcie pionu
 
 - **MOB-050 (kod wykonany; odbiór na telefonie otwarty)** S06: aktualny plan z `execution-context`, fakty zgodnie/zmieniono/pominięto, reakcja po sesji i zapis z idempotencją; bez automatycznych powtórzeń.
-- **MOB-051** S09: executionRequired/executionRecorded, tekstowe podsumowanie, canComplete i zakończenie przez serwer. Istniejący closeout-context przesyła także pomiary: nie utrwalać ani nie prezentować ich w mobile; ryzyko ekspozycji jest zapisane w audycie M0.
+- **MOB-051 (kod wykonany; odbiór na telefonie otwarty)** S09: executionRequired/executionRecorded, serwerowe podsumowanie dokumentacji, canComplete i zakończenie przez serwer. DTO Android ignoruje obecne w odpowiedzi pola pomiarów; danych tych nie prezentuje ani nie utrwala.
 - **MOB-052** E2E UJ-01–UJ-06, testy statusów, podwójnego kliknięcia, restartu i utraty sieci.
 
 ### M6 — produkcja
@@ -280,3 +280,12 @@ M1 zrealizował fundament MOB-010 i kod MOB-011 (AppAuth/PKCE, sesja RAM, provis
 - Po zatwierdzeniu aplikacja wysyła pojedynczy `POST /api/v1/specialist/appointments/{appointmentId}/execution` z `Idempotency-Key`, `declaredCompletion=true` oraz `observationMode=DECLARED`. Klucz i cały payload są zamrażane do czasu potwierdzenia. Przy utracie połączenia/5xx nie ma auto-retry; po GET potwierdzającym brak zapisu użytkownik może jawnie ponowić **dokładnie tę samą operację**. 409 wymaga nowego GET i świadomej decyzji, nigdy automatycznego POST. Po potwierdzonym zapisie UI pokazuje tylko wynik serwera i blokuje kolejną deklarację.
 - Wpisane dane pozostają wyłącznie w pamięci RAM ViewModelu (także przy obrocie i chwilowej rewalidacji). Wylogowanie, 401/403 lub zmiana wizyty usuwa je natychmiast. Brak nagrań, załączników, S08 i lokalnych baz danych. Systemowe Wstecz i ręczne „Sprawdź dostęp” są blokowane podczas zapisu; z niezapisanymi faktami wyjście wymaga potwierdzenia.
 - Testy jednostkowe są ograniczone do walidacji dawek, stanu i identyfikatorów, bezpiecznego ręcznego ponowienia niepewnej operacji oraz zapobiegania duplikatom. **GitHub Actions tylko buduje**, testów nie uruchamia. Odbiór fizycznego telefonu obejmuje brak sieci, zmianę planu, cofnięcie relacji i pracę w trakcie wizyty. S09/MOB-051 nadal osobnym zadaniem.
+
+## MOB-051 — kontrola kompletności i zakończenie S09 (2026-11-18)
+
+- **Odczyt:** S09 wymaga świeżego, autoryzowanego S05, następnie GET `/api/v1/specialist/appointments/{id}/closeout-context?actingContext=...`. Dopasowuje `appointmentId` i `participantId` i sprawdza stan `IN_PROGRESS` (albo `COMPLETED` przy odzyskiwaniu wyniku). Prezentuje wymaganie i status zapisanej realizacji, `canComplete` oraz opcjonalne tekstowe `summaryNote`; pole `measurements` jest celowo nieobecne w typowanym DTO Androida.
+- **Podsumowanie:** endpoint `POST /complete` przyjmuje **wyłącznie wersję** spotkania. Android nie dodaje pozornego pola, które nie zostałoby zapisane. W S07 udostępniono backendową kategorię notatki `APPOINTMENT_SUMMARY` dla notatki przypisanej do bieżącej wizyty. S09 wyświetla wynik istniejącego mechanizmu `summaryNote`; brak podsumowania nie blokuje, jeżeli serwer zwraca `canComplete=true`.
+- **Zapis:** `POST /api/v1/specialist/appointments/{id}/complete` wysyła pojedyncze `{ "version": N }` i `Idempotency-Key`. Przycisk jest aktywny tylko przy `canComplete`, serwerowym `COMPLETE` w `availableActions`, zgodności obu identyfikatorów i wersji oraz zapisanej realizacji, jeżeli wymagana. Serwer samodzielnie egzekwuje obowiązek wykonania powiązanej sesji.
+- **Niepewny wynik:** po zerwaniu sieci, 5xx lub niejednoznacznej deserializacji kontekst jest ukrywany. Po świeżym GET można świadomie ponowić **identyczny** klucz i wersję; gdy serwer już zakończył wizytę, ekran potwierdza sukces bez kolejnego POST. `409` pobiera nowy stan i wymaga jawnego zaakceptowania wersji przed kolejnym zapisem — nigdy nie wykonuje automatycznego retry.
+- **Bezpieczeństwo:** `401` usuwa sesję, `403` usuwa dane i szkice, także przy cofnięciu relacji. Zapis i podsumowanie istnieją wyłącznie w RAM. Ręczna rewalidacja i Wstecz są zablokowane podczas mutacji; po sukcesie odświeżane są Dzień oraz lista uczestników i można wrócić do Dnia.
+- **Walidacja:** wąskie testy DTO i żądania HTTP, reguł przycisku, ponowienia po braku odpowiedzi, konfliktu 409 i izolacji uczestnika. CI Android pozostaje build-only; wymagany odbiór S09 na Motoroli w ramach MOB-052. Brak zmian backendu i migracji.

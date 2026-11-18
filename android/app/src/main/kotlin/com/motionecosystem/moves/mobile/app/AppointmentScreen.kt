@@ -179,8 +179,8 @@ internal fun AppointmentScreen(
                         Text("Przejdź do zakończenia")
                     }
                 }
-                Text("Realizacja ćwiczeń i dokumentacja zapisują dane na serwerze. " +
-                    "Zamknięcie spotkania będzie dostępne w kolejnym etapie.",
+                Text("Realizacja sesji i dokumentacja zapisują dane na serwerze. " +
+                    "Przed zakończeniem sprawdź ich aktualny stan.",
                     style = MaterialTheme.typography.bodySmall)
             }
         }
