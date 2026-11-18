@@ -116,6 +116,15 @@ sealed interface ScheduleSaveState {
 /** Manual retry after an uncertain START reuses exactly the same request key and version. */
 enum class AppointmentStartState { IDLE, SAVING, UNCERTAIN, CONFLICT, FAILED }
 
+internal sealed interface CloseoutSaveState {
+    data object Idle : CloseoutSaveState
+    data object Saving : CloseoutSaveState
+    data object Uncertain : CloseoutSaveState
+    data object Conflict : CloseoutSaveState
+    data object Saved : CloseoutSaveState
+    data class Failed(val message: String) : CloseoutSaveState
+}
+
 sealed interface ContextSelection {
     data class Participant(val participantId: UUID) : ContextSelection
     data class Appointment(val participantId: UUID?, val appointmentId: UUID) : ContextSelection
@@ -192,6 +201,14 @@ class OperationalViewModel(
 
     private val mutableAppointment = MutableStateFlow<ReadState<AppointmentView>>(ReadState.Idle)
     val appointment = mutableAppointment.asStateFlow()
+    private val mutableCloseoutContext = MutableStateFlow<ReadState<CloseoutContextView>>(ReadState.Idle)
+    internal val closeoutContext = mutableCloseoutContext.asStateFlow()
+    private val mutableCloseoutSave = MutableStateFlow<CloseoutSaveState>(CloseoutSaveState.Idle)
+    internal val closeoutSave = mutableCloseoutSave.asStateFlow()
+    private data class PendingCloseout(val appointmentId: UUID, val participantId: UUID, val version: Long, val key: String)
+    private var pendingCloseout: PendingCloseout? = null
+    private var closeoutContextRequest = 0
+    private var closeoutSaveRequest = 0
     private val mutableExecutionContext = MutableStateFlow<ReadState<SpecialistExecutionContext>>(ReadState.Idle)
     internal val executionContext = mutableExecutionContext.asStateFlow()
     private val mutableExecutionDraft = MutableStateFlow<ExecutionDraft?>(null)
@@ -326,6 +343,12 @@ class OperationalViewModel(
         startRequest++
         executionContextRequest++
         mutableExecutionContext.value = ReadState.Idle
+        closeoutContextRequest++
+        mutableCloseoutContext.value = ReadState.Idle
+        if (mutableCloseoutSave.value == CloseoutSaveState.Saving) {
+            closeoutSaveRequest++
+            mutableCloseoutSave.value = CloseoutSaveState.Uncertain
+        }
         if (mutableExecutionSave.value == ExecutionSaveState.Saving) {
             executionSaveRequest++
             mutableExecutionSave.value = ExecutionSaveState.Uncertain
@@ -641,8 +664,11 @@ class OperationalViewModel(
      * The destination MUST perform a new GET, and no prior response may paint a frame.
      */
     fun prepareVisitStage() {
-        if (selectedAppointment() == null || mutableAppointmentStart.value == AppointmentStartState.SAVING) return
+        if (selectedAppointment() == null || mutableAppointmentStart.value == AppointmentStartState.SAVING ||
+            mutableCloseoutSave.value == CloseoutSaveState.Saving) return
         appointmentRequest++
+        closeoutContextRequest++
+        mutableCloseoutContext.value = ReadState.Idle
         mutableAppointment.value = ReadState.Idle
     }
 
@@ -673,6 +699,7 @@ class OperationalViewModel(
     }
 
     private fun resetAppointmentReads() {
+        resetCloseoutEditor()
         appointmentRequest++
         startRequest++
         pendingStart = null
@@ -689,6 +716,148 @@ class OperationalViewModel(
         mutableTimeline.value = ReadState.Idle
         mutableInterviews.value = ReadState.Idle
         mutableNotes.value = ReadState.Idle
+    }
+
+    private fun resetCloseoutEditor() {
+        closeoutContextRequest++
+        closeoutSaveRequest++
+        pendingCloseout = null
+        mutableCloseoutContext.value = ReadState.Idle
+        mutableCloseoutSave.value = CloseoutSaveState.Idle
+    }
+
+    /** S09 is only available for an authorized, fresh S05 appointment. */
+    private fun verifiedCloseoutVisit(): VerifiedVisit? {
+        if (mutableProfessionalContext.value !is ReadState.Ready || verifiedRole == null) return null
+        return verifiedVisit(mutableSelection.value, mutableAppointment.value)
+            ?.takeIf { it.status == AppointmentStatus.IN_PROGRESS || it.status == AppointmentStatus.COMPLETED }
+    }
+
+    /** GET includes measurement fields on the wire, but Android only decodes the minimal projection. */
+    fun loadCloseoutContext() {
+        val visit = verifiedCloseoutVisit() ?: return
+        val role = verifiedRole ?: return
+        if (mutableCloseoutSave.value == CloseoutSaveState.Saving) return
+        val request = ++closeoutContextRequest
+        val requestGeneration = generation
+        read(mutableCloseoutContext, skipIfLoading = false,
+            isCurrent = {
+                request == closeoutContextRequest && verifiedCloseoutVisit() == visit && verifiedRole == role
+            }) {
+            when (val result = repository.closeoutContext(visit.appointmentId, role)) {
+                is RemoteResult.Failure -> result
+                is RemoteResult.Success -> {
+                    if (requestGeneration != generation || request != closeoutContextRequest ||
+                        verifiedCloseoutVisit() != visit || verifiedRole != role) return@read result
+                    val current = result.value
+                    if (current.appointmentId != visit.appointmentId ||
+                        current.participantId != visit.participantId ||
+                        current.status !in setOf(AppointmentStatus.IN_PROGRESS, AppointmentStatus.COMPLETED) ||
+                        current.version == null) {
+                        RemoteResult.Failure(RemoteError.Forbidden)
+                    } else {
+                        if (current.status == AppointmentStatus.COMPLETED) {
+                            pendingCloseout = null
+                            mutableCloseoutSave.value = CloseoutSaveState.Saved
+                        } else if (mutableCloseoutSave.value == CloseoutSaveState.Uncertain &&
+                            pendingCloseout?.version != current.version) {
+                            pendingCloseout = null
+                            mutableCloseoutSave.value = CloseoutSaveState.Conflict
+                        }
+                        RemoteResult.Success(current)
+                    }
+                }
+            }
+        }
+    }
+
+    /** A conflict requires an explicit acceptance of refreshed appointment and closeout versions. */
+    fun acceptCloseoutConflict() {
+        if (mutableCloseoutSave.value != CloseoutSaveState.Conflict) return
+        val visit = verifiedCloseoutVisit() ?: return
+        val appointment = (mutableAppointment.value as? ReadState.Ready)?.value ?: return
+        val context = (mutableCloseoutContext.value as? ReadState.Ready)?.value ?: return
+        if (visit.appointmentId != appointment.appointmentId ||
+            !canCompleteVisit(appointment, context, CloseoutSaveState.Idle)) return
+        pendingCloseout = null
+        mutableCloseoutSave.value = CloseoutSaveState.Idle
+    }
+
+    /** A versioned, idempotent POST. Never repeat it without an explicit user confirmation. */
+    fun completeAppointment() {
+        val visit = verifiedCloseoutVisit() ?: return
+        val appointment = (mutableAppointment.value as? ReadState.Ready)?.value ?: return
+        val context = (mutableCloseoutContext.value as? ReadState.Ready)?.value ?: return
+        val currentState = mutableCloseoutSave.value
+        if (!canCompleteVisit(appointment, context, currentState)) return
+        val operation = if (currentState == CloseoutSaveState.Uncertain) {
+            pendingCloseout?.takeIf {
+                it.appointmentId == visit.appointmentId &&
+                    it.participantId == visit.participantId && it.version == context.version
+            } ?: return
+        } else {
+            PendingCloseout(visit.appointmentId, visit.participantId,
+                appointment.version ?: return, UUID.randomUUID().toString())
+        }
+        pendingCloseout = operation
+        val currentGeneration = generation
+        val request = ++closeoutSaveRequest
+        closeoutContextRequest++ // A stale GET cannot restore pre-completion state.
+        mutableCloseoutSave.value = CloseoutSaveState.Saving
+        viewModelScope.launch {
+            if (!ensureFreshToken {
+                currentGeneration == generation && request == closeoutSaveRequest &&
+                    verifiedCloseoutVisit() == visit
+            }) return@launch
+            val response = repository.completeAppointment(operation.appointmentId, operation.version, operation.key)
+            if (currentGeneration != generation || request != closeoutSaveRequest ||
+                (mutableSelection.value as? ContextSelection.Appointment)?.appointmentId != operation.appointmentId) return@launch
+            when (response) {
+                is RemoteResult.Success -> {
+                    val completed = response.value
+                    if (completed.appointmentId != operation.appointmentId ||
+                        completed.participantId != operation.participantId) {
+                        clear()
+                        mutableProfessionalContext.value = ReadState.Forbidden
+                    } else if (completed.status != AppointmentStatus.COMPLETED) {
+                        pendingCloseout = null
+                        mutableCloseoutSave.value = CloseoutSaveState.Conflict
+                        loadAppointment(operation.appointmentId)
+                    } else {
+                        pendingCloseout = null
+                        mutableCloseoutContext.value = ReadState.Idle
+                        mutableAppointment.value = ReadState.Ready(completed)
+                        mutableCloseoutSave.value = CloseoutSaveState.Saved
+                        loadToday()
+                        loadClients()
+                    }
+                }
+                is RemoteResult.Failure -> when (val error = response.error) {
+                    RemoteError.Unauthorized -> { clear(); invalidateSession() }
+                    RemoteError.Forbidden -> { clear(); mutableProfessionalContext.value = ReadState.Forbidden }
+                    RemoteError.Conflict -> {
+                        pendingCloseout = null
+                        mutableCloseoutContext.value = ReadState.Idle
+                        mutableCloseoutSave.value = CloseoutSaveState.Conflict
+                        loadAppointment(operation.appointmentId)
+                    }
+                    is RemoteError.Network, is RemoteError.Serialization -> {
+                        mutableCloseoutContext.value = ReadState.Idle
+                        mutableCloseoutSave.value = CloseoutSaveState.Uncertain
+                    }
+                    is RemoteError.Http -> {
+                        if (error.status >= 500) {
+                            mutableCloseoutContext.value = ReadState.Idle
+                            mutableCloseoutSave.value = CloseoutSaveState.Uncertain
+                        } else {
+                            pendingCloseout = null
+                            mutableCloseoutSave.value = CloseoutSaveState.Failed(
+                                "Nie udało się zakończyć spotkania. Odśwież jego stan.")
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun verifiedExecutionVisit(): VerifiedVisit? {
